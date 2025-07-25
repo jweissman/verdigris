@@ -1,0 +1,173 @@
+microtypes:
+  # religio
+  - name: zealot
+    subtypes: religious, nobility
+    abilities:
+      - target: enemies.closest
+        effect: spot.damage(my.faith + 1)
+        condition: enemies.closest.hp_remaining <= my.faith
+      - target: self
+        condition: self.health_percent < 0.2
+        effect: burst.buff(my.faith ** 2, :attack)
+        trigger: :once
+      - target: allies.nearby
+        effect: aoe.buff(my.faith, :attack, :defense)
+
+  - name: inquisitor
+    subtypes: religious, occult
+  - name: paladin
+    subtypes: military, religious
+    abilities:
+      - target: enemies.weakest
+        effect: spot.damage(my.faith * 2)
+      - target: enemies.middle
+        effect: aoe.damage(my.faith)
+      - target: allies.weakest
+        condition: allies.weakest.health_percent < 0.6
+        effect: spot.heal(my.faith * 2)
+      - target: allies.middle
+        condition: not allies.spread_out?
+        effect: aoe.buff(my.faith, :defense)
+
+  - name: oracle
+    subtypes: religious, agricultural
+    abilities:
+      - target: enemies.farthest
+        effect: spot.debuff(:accuracy, my.faith)
+      - target: allies.all
+        condition: tick % 10 == 0
+        effect: aoe.buff(:initiative, my.wisdom)
+      - target: self
+        effect: engage(enemies.weakest)
+        condition: enemies.weakest.health_percent < 0.25
+
+  - name: theologian
+    subtypes: religious, scientific
+  - name: monk
+    subtypes: religious, divine
+  - name: demon
+    subtypes: religious, beast
+  - name: hierophant
+    subtypes: religious, nobility
+  - name: heretic
+    subtypes: religious, criminal
+    abilities:
+      - target: enemies.random
+        effect: spot.damage(my.faith * my.kills * 2)
+      - target: self
+        effect: self.buff(:power, my.faith)
+        trigger: :on_kill
+      - target: enemies.weakest
+        condition: self.kills > 0
+        effect: aoe.debuff(:faith, -my.kills)
+
+  - name: saint
+    subtypes: religious, economic
+  - name: hospitaller
+    subtypes: religious, medical
+    abilities:
+      - target: allies.weakest
+        effect: spot.heal(my.faith * 1.5)
+      - target: allies.nearby.first
+        condition: allies.nearby.health_percent < 0.45
+        effect: aoe.buff(:regen, 1)
+      - target: self
+        effect: cleanse(:poison)
+        condition: has_debuff?(:poison)
+
+  - name: prophet
+    subtypes: religious, construction
+  - name: missionary
+    subtypes: religious, culinary
+  - name: crusader
+    subtypes: religious, creative
+  - name: theocrat
+    subtypes: religious, government
+  - name: monster
+    subtypes: religious, toxic
+  - name: sphinx
+    subtypes: religious, mystery
+  - name: martyr
+    subtypes: religious, legendary
+
+  # criminals
+  - name: spy
+    subtypes: government, criminal
+    abilities:
+      - target: enemies.strongest
+        effect: spot.debuff(:morale, my.agility)
+      - target: self
+        effect: hide 5.turns
+      - target: enemies.nearby.middle
+        condition: hidden? && enemies.nearby.count > 1
+        effect: aoe.debuff(:defense, my.agility)
+
+  - name: mutilator
+    subtypes: military, criminal
+  - name: moloch
+    subtypes: occult, criminal
+    abilities:
+      - target: self
+        condition: self.kills > 1
+        effect: buff(:power, 1 + (my.kills * 0.5))
+        trigger: :on_kill
+      - target: enemies.nearby.closest(5).middle
+        condition: enemies.nearby.closest(5).count > 3
+        effect: aoe.damage(my.sacrifices * my.rage)
+      - target: allies.weakest
+        effect: spot.kill(target); buff(:rage, 3); buff(:sacrifices, 1)
+        trigger: :once
+
+  - name: assassin
+    subtypes: nobility, criminal
+  - name: deceiver
+    subtypes: criminal, legendary
+  - name: thief
+    subtypes: criminal, economic
+  - name: trickster
+    subtypes: criminal, creative
+    abilities:
+      - target: enemies.random
+        effect: confuse 4.turns
+      - target: self
+        effect: teleport(random.lane)
+      - target: enemies.nearby
+        condition: enemies.stack? > 2
+        effect: aoe.debuff(:coordination, -3)
+  - name: smuggler
+    subtypes: criminal, government
+  - name: saboteur
+    subtypes: criminal, construction
+    abilities:
+      - target: enemies.middle
+        effect: spot.damage(my.agility * 2)
+      - target: self
+        effect: hide 3.turns
+      - target: enemies.weakest
+        condition: hidden? && enemies.weakest.hp_remaining < my.agility * 2
+        effect: spot.kill(target)
+      - target: enemies.middle
+        condition: enemies.middle.count > 1
+        effect: aoe.debuff(:defense, -my.agility)
+  - name: outlaw
+    subtypes: criminal, beast
+  - name: brigand
+    subtypes: criminal, military
+  - name: rogue
+    subtypes: criminal, divine
+  - name: bandit
+    subtypes: criminal, toxic
+  - name: conman
+    subtypes: criminal, mystery
+  - name: hinterlander
+    subtypes: criminal, agricultural
+  - name: hotelier
+    subtypes: criminal, culinary
+  - name: gambler
+    subtypes: criminal, scientific
+  - name: fence
+    subtypes: criminal, economic
+  - name: brigand
+    subtypes: criminal, medical
+
+  

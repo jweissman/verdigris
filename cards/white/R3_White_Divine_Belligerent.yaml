@@ -1,0 +1,35 @@
+---
+id: R3_White_Divine_Belligerent
+name: Divine Belligerent
+body_type: human
+rank: 3
+faction: White
+color: "#ffffff"
+moiety: Divine
+stats:
+  attack: 9
+  hp: 11
+  defense: 4
+cost: 9
+abilities:
+  - target: enemies.middle
+    effect: spot.damage(80)
+
+  # could have really structured effects but maybe simpler just to take an expression?
+  # effects:
+  #   - type: projectile
+  #     on_impact: aoe
+  #     aspect: nova
+  #     damage: 400
+  # we could try to configure inner values too
+  # nova.inner_radius: 2
+  # nova.outer_radius: 4
+  # nova.weakens_as: sqrt(distance)
+  # - target: enemies.weakest
+  #   condition: enemies.spread_out?
+  #   effects:
+  #     - type: line
+  #       on_impact: drain
+  #       aspect: divine
+  #       damage: 8
+  #       lifegain: 4

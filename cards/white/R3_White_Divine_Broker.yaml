@@ -1,0 +1,13 @@
+---
+id: R3_White_Divine_Broker
+name: Divine Broker
+body_type: human
+rank: 3
+faction: White
+color: "#ffffff"
+moiety: Divine
+stats:
+  attack: 7
+  hp: 12
+  defense: 4
+cost: 9

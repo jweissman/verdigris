@@ -1,0 +1,37 @@
+# Flavfile 0.1
+
+# Could Wrap a CLI around existing scripts:
+# test:
+#   generates:
+#     creatures:
+#       - task: assembly
+#       - task: distribution
+#       - task: threat
+#       - task: alignment
+#     house:
+#       - task: consistency
+#     squad:
+#       - task: integrity
+#     combat:
+#       - task: sanity
+
+# app:
+#   generates:
+# Core duel pipeline
+app:
+  generates:
+    - task: body
+    - task: identity
+    - task: moiety
+    - task: faction
+    - task: archetype
+    - task: creature
+      wants: body, identity, moiety
+    - task: rare.creature
+      wants: creature, archetype, faction
+    - task: duel
+      wants: faction, creature:a, creature:b
+    - task: creature.set
+      wants: faction, creature:3, rare.creature:1
+    - name: prowess
+      command: ruby furnace.rb all-pairs
