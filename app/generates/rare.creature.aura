@@ -25,4 +25,5 @@ write_file(filename, dump_yaml(rarified_creature))
 
 say("✓ Generated: ${name}")
 say("  └─ Saved to: ${filename}")
-rarified_creature
+# rarified_creature
+creature.id

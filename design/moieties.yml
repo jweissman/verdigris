@@ -81,7 +81,6 @@ moieties:
         - balance
         - negotiation
         - diplomacy
-
   agricultural:
     - type: Guild
       name: "${crop} Guild of ${region}"
@@ -535,28 +534,29 @@ moieties:
         - innovation
         - cruelty
         - freedom
-mystery:
-  - type: Divine Conspiracy
-    name: "Divine Conspiracy"
-    description: "A secret plan orchestrated by divine beings to influence mortal affairs."
-    aspects:
-      - faith
-      - wisdom
-      - balance
-  - type: Cosmic Enigma
-    name: "Cosmic Enigma"
-    description: "A mysterious force that shapes the universe and its inhabitants."
-    aspects:
-      - mystery
-      - knowledge
-      - chaos
-  - type: Titanomachy
-    name: "Titanomachy"
-    description: "A legendary conflict between the Titans and the Olympians."
-    aspects:
-      - chaos
-      - ambition
-      - power
-      - transformation
-      - legacy
-      - wisdom
+  mystery:
+    - type: Divine Conspiracy
+      name: "Divine Conspiracy"
+      description: "A secret plan orchestrated by divine beings to influence mortal affairs."
+      aspects:
+        - faith
+        - wisdom
+        - balance
+    - type: Cosmic Enigma
+      name: "Cosmic Enigma"
+      description: "A mysterious force that shapes the universe and its inhabitants."
+      aspects:
+        - mystery
+        - knowledge
+        - chaos
+    - type: Titanomachy
+      name: "Titanomachy"
+      description: "A legendary conflict between the Titans and the Olympians."
+      aspects:
+        - chaos
+        - ambition
+        - power
+        - transformation
+        - legacy
+        - wisdom
+  

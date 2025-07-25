@@ -1,23 +1,4 @@
-# Flavfile 0.1
-
-# Could Wrap a CLI around existing scripts:
-# test:
-#   generates:
-#     creatures:
-#       - task: assembly
-#       - task: distribution
-#       - task: threat
-#       - task: alignment
-#     house:
-#       - task: consistency
-#     squad:
-#       - task: integrity
-#     combat:
-#       - task: sanity
-
-# app:
-#   generates:
-# Core duel pipeline
+# Verdigris Flavfile
 app:
   generates:
     - task: body
