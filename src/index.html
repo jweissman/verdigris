@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./freehold.ts" type="module"></script>
+  </head>
+  <body>
+    <img src="./logo.png" width="200" alt="Freehold Game Logo" />
+    <canvas id="battlefield" width="320" height="200"></canvas>
+  </body>
+  <script type="module">
+    let game = null;
+    const canvas = document.getElementById('battlefield');
+    console.log('Canvas element:', canvas);
+    if (canvas) {
+      game = new Freehold(canvas, {
+        addInputListener: (cb) => {
+          document.addEventListener('keydown', (e) => {
+            cb({ key: e.key });
+          });
+        },
+        animationFrame: (cb) => {
+          requestAnimationFrame(cb);
+        }
+      });
+    } else {
+      console.error('Canvas element not found!');
+    }
+    console.log('Game initialized:', game);
+    function gameLoop() {
+      if (game) { game.update(); }
+      requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
+  </script>
+</html>

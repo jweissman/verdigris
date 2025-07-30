@@ -1,4 +1,6 @@
 require 'rspec'
+require 'aua'
+require 'flav/runner'
 
 # Custom matcher: expect("body").to generate(hash_including(...))
 RSpec::Matchers.define :generate do |expected_matcher|
@@ -30,6 +32,7 @@ end
 def run_flav(task_name)
     runner = Flav::Runner.new("Flavfile")
     ret = runner.run_task(task_name)
+    puts "=== Running task '#{task_name}' with result: #{ret.inspect} (#{ret.class})"
     begin
       YAML.safe_load(ret) || ret
     rescue
