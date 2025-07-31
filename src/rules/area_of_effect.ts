@@ -4,12 +4,13 @@ export class AreaOfEffect extends Rule {
   apply = () => {
     const effects: Record<string, { hp: number; x: number; y: number }> = {};
     for (const proj of this.sim.projectiles) {
+      // console.log(`AreaOfEffect: Processing projectile ${proj.id} at position (${proj.pos.x}, ${proj.pos.y}) with radius ${proj.radius}`);
       for (const unit of this.sim.units) {
         if (unit.team !== proj.team && unit.state !== 'dead') {
           const dx = unit.pos.x - proj.pos.x;
           const dy = unit.pos.y - proj.pos.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < (proj.radius || 1.5)) {
+          if (dist <= (proj.radius || 5)) {
             if (!effects[unit.id]) effects[unit.id] = { hp: 0, x: 0, y: 0 };
             effects[unit.id].hp -= proj.damage || 5;
             const knockback = 6.5;
@@ -21,6 +22,9 @@ export class AreaOfEffect extends Rule {
         }
       }
     }
+
+    // console.log(`AreaOfEffect: Applying effects to ${Object.keys(effects).length} units`);
+    // console.log(`Effects:`, effects);
 
     this.sim.units = this.sim.units.map(unit => {
       if (effects[unit.id]) {

@@ -49,7 +49,7 @@ class Game {
     this.loop = this.loop.bind(this);
     this.animationFrame(this.loop);
 
-    console.log('Game constructor called with canvas:', canvas);
+    // console.log('Game constructor called with canvas:', canvas);
     let width = 128;
     if (this.canvas) {
       width = this.canvas.width / 8; // 8 pixels per grid cell
@@ -58,7 +58,7 @@ class Game {
     if (this.canvas) {
       height = this.canvas.height / 8; // 8 pixels per grid cell
     }
-    console.log(`Initializing game with field size: ${width}x${height}`);
+    // console.log(`Initializing game with field size: ${width}x${height}`);
     this.sim = new Simulator(width, height);
     
     // Load sprites

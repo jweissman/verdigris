@@ -32,42 +32,58 @@ class Freehold extends Game {
     };
   }
 
-  addWorm(x: number, y: number, tags: string[] = ["swarm"]): this {
+  addWorm(x: number, y: number, tags: string[] = ["swarm"]): string {
     console.log(`Adding worm at (${x}, ${y}) with tags: ${tags.join(", ")}`);
     // Prevent duplicate placement
-    if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) return this;
+    if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) {
+      // throw new Error(`Cannot place worm at (${x}, ${y}): position already occupied`);
+      return;
+    }
+    let id = "worm" + this.id("worm");
     this.sim.addUnit({
-      id: "worm" + Date.now() + Math.random(),
+      // id: "worm" + this.id("worm"), //Date.now() + Math.random(),
+      id,
       pos: { x, y },
-      vel: { x: 0, y: 0 },
+      intendedMove: { x: 0, y: 0 },
       team: "hostile",
       sprite: "worm",
       state: "idle",
       hp: 20, // Tougher worms for longer battles
       mass: 1,
-      stepCount: 0,
       tags
     });
-    return this;
+    return id;
   }
 
-  addFarmer(x: number, y: number, tags: string[] = ["hunt"]): this {
+  counts: { [seriesName: string]: number } = {}
+  id(seriesName: string): number | string {
+    this.counts = this.counts || {};
+    let count = (this.counts[seriesName] || 0);
+    this.counts[seriesName] = count + 1;
+    return count || "";
+  }
+
+  addFarmer(x: number, y: number, tags: string[] = ["hunt"]): string {
     console.log(`Adding farmer at (${x}, ${y}) with tags: ${tags.join(", ")}`);
     // Prevent duplicate placement
-    if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) return this;
+    if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) {
+      // throw new Error(`Cannot place farmer at (${x}, ${y}): position already occupied`);
+      return;
+    }
+    let id = "farmer" + this.id("farmer"); //Date.now() + Math.random();
     this.sim.addUnit({
-      id: "farmer" + Date.now() + Math.random(),
+      // id: "farmer" + this.id("farmer"), //Date.now() + Math.random(),
+      id,
       pos: { x, y },
-      vel: { x: 0, y: 0 },
+      intendedMove: { x: 0, y: 0 },
       team: "friendly", // Opposite of worms!
       sprite: "soldier", // Use soldier sprite for farmers
       state: "idle",
       hp: 25, // Tough farmers for epic battles
       mass: 1,
-      stepCount: 0,
       tags
     });
-    return this;
+    return id;
   }
 
   // Try to move a unit by (dx, dy). Returns true if moved, false if blocked.

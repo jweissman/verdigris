@@ -5,6 +5,7 @@ import { ProjectileMotion } from "./rules/projectile_motion";
 import { UnitMovement } from "./rules/unit_movement";
 import { AreaOfEffect } from "./rules/area_of_effect";
 import { Rule } from "./rules/rule";
+import { UnitBehavior } from "./rules/unit_behavior";
 
 class Simulator {
   fieldWidth: number;
@@ -21,18 +22,25 @@ class Simulator {
     this.units = [];
     this.projectiles = [];
     this.rulebook = [
+      new UnitBehavior(this),
+      new UnitMovement(this),
+      new AreaOfEffect(this),
       new MeleeCombat(this),
       new Knockback(this),
       new ProjectileMotion(this),
-      new UnitMovement(this),
-      new AreaOfEffect(this)
     ];
   }
 
-  addUnit(unit) {
+  addUnit(unit: Unit) {
     this.units.push(unit);
 
     return this;
+  }
+
+  create(unit: Unit) {
+    const newUnit = { ...unit, id: unit.id || `unit_${Date.now()}` };
+    this.units.push(newUnit);
+    return newUnit;
   }
 
   get roster() {
@@ -43,8 +51,14 @@ class Simulator {
     return this.rulebook;
   }
 
+  ticks = 0;
   step() {
+    this.ticks++;
+    console.log("# Step", this.ticks);
+    this._debugUnits();
+
     for (const rule of this.rules) {
+      // console.log(`## ${rule.constructor.name}`);
       rule.execute();
     }
 
@@ -107,10 +121,18 @@ class Simulator {
     return true;
   }
 
+  creatureById(id) {
+    return this.units.find(unit => unit.id === id);
+  }
+
   _debugUnits() {
-    console.log('[sim.debugUnits] Current unit positions:');
+    console.log('[sim.debugUnits] unit positions');
     for (const u of this.units) {
       console.log(`  ${u.id}: (${u.pos.x},${u.pos.y})`);
+        // `| posture: ${u.posture || '--'}`,
+        // `| state: ${u.state}`,
+        // `| intendedMove: (${u.intendedMove?.x ?? '--'},${u.intendedMove?.y ?? '--'})`,
+        // u.intendedTarget ? `→ ${u.intendedTarget}` : '');
     }
   }
 
@@ -120,7 +142,7 @@ class Simulator {
       if (command) {
         for (const cmd of command) {
           if (cmd.action === 'move') {
-            unit.vel = { x: 1, y: 0 };
+            unit.intendedMove = { x: 1, y: 0 };
           }
           if (cmd.action === 'fire' && cmd.target) {
             // Find target unit
