@@ -34,8 +34,8 @@ describe('Projectile simulation', () => {
 
   it('should create a projectile when a unit receives a fire command', () => {
     const sim = new Simulator()
-      .addUnit({ id: 'shooter', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'friendly', sprite: 'tiny', state: 'idle', hp: 10, mass: 1 })
-      .addUnit({ id: 'target', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'idle', hp: 10, mass: 1 });
+      .addUnit({ id: 'shooter', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'friendly', sprite: 'tiny', state: 'idle', hp: 10, maxHp: 10, mass: 1 })
+      .addUnit({ id: 'target', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
 
     // Shooter receives a fire command targeting 'target'
     sim.accept({

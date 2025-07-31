@@ -10,7 +10,7 @@ export class MeleeCombat extends Rule {
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < 1.1) {
         // Combat! Set both units to attack state
-        a.state = 'attack';
+        // a.state = 'attack';
         // a.posture = 'fight';
         a.intendedTarget = b.id;
 
@@ -19,8 +19,8 @@ export class MeleeCombat extends Rule {
         
         // console.log(`⚔️  Combat: ${a.sprite} vs ${b.sprite} at (${a.pos.x},${a.pos.y})`);
         
-        // const oldHpA = a.hp;
-        // const oldHpB = b.hp;
+        const oldHpA = a.hp;
+        const oldHpB = b.hp;
         
         a.hp -= 1;
         b.hp -= 1;

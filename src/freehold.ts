@@ -37,7 +37,7 @@ class Freehold extends Game {
     // Prevent duplicate placement
     if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) {
       // throw new Error(`Cannot place worm at (${x}, ${y}): position already occupied`);
-      return;
+      return '';
     }
     let id = "worm" + this.id("worm");
     this.sim.addUnit({
@@ -49,6 +49,7 @@ class Freehold extends Game {
       sprite: "worm",
       state: "idle",
       hp: 20, // Tougher worms for longer battles
+      maxHp: 20,
       mass: 1,
       tags
     });
@@ -67,8 +68,8 @@ class Freehold extends Game {
     console.log(`Adding farmer at (${x}, ${y}) with tags: ${tags.join(", ")}`);
     // Prevent duplicate placement
     if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) {
-      // throw new Error(`Cannot place farmer at (${x}, ${y}): position already occupied`);
-      return;
+      throw new Error(`Cannot place farmer at (${x}, ${y}): position already occupied`);
+      // return '';
     }
     let id = "farmer" + this.id("farmer"); //Date.now() + Math.random();
     this.sim.addUnit({
@@ -80,6 +81,7 @@ class Freehold extends Game {
       sprite: "soldier", // Use soldier sprite for farmers
       state: "idle",
       hp: 25, // Tough farmers for epic battles
+      maxHp: 25,
       mass: 1,
       tags
     });

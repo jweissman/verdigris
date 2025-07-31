@@ -6,7 +6,7 @@ describe('Game harness', () => {
   it('spawns a worm on keypress and updates sim', async () => {
     // Minimal DOM stub
     const canvas = { width: 320, height: 200, getContext: () => ({ clearRect: () => {}, fillRect: () => {}, fillStyle: '' }) } as any;
-    let inputCallback: ((e: { key: string }) => void) | null = null;
+    let inputCallback: ((e: { key: string }) => void) = null as any;
     // Dynamically import Game
     // const { Game } = await import('../src/game.ts');
     const game = new Freehold(canvas, {

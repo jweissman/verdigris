@@ -31,7 +31,7 @@ export class UnitBehavior extends Rule {
         return closest.id;
       }
       let target = this.sim.creatureById(unit.intendedTarget || find_new_target());
-      console.log(`[UnitBehavior] Processing ${unit.id} with posture=${unit.posture} (target=${target?.id}) at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove?.x ?? 0}, ${unit.intendedMove?.y ?? 0})`);
+      // console.log(`[UnitBehavior] Processing ${unit.id} with posture=${unit.posture} (target=${target?.id}) at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove?.x ?? 0}, ${unit.intendedMove?.y ?? 0})`);
       switch (unit.posture) {
         case 'idle': return { ...unit, intendedMove: { x: 0, y: 0 }, target: undefined };
         case 'bully': // try to occupy _same space_ as target

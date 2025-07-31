@@ -3,7 +3,7 @@ import { Unit } from "./sim/types";
 
 export class UnitOperations {
   static move(unit: Unit, deltaTime: number = 1, sim?: any): Unit {
-    console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
+    // console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
     let x = unit.pos.x + unit.intendedMove.x * deltaTime;
     let y = unit.pos.y + unit.intendedMove.y * deltaTime;
 
@@ -13,7 +13,7 @@ export class UnitOperations {
       y = Math.max(0, Math.min(y, sim.fieldHeight - 1));
     }
 
-    console.log(`Unit ${unit.id} moved to (${x}, ${y})`);
+    // console.log(`Unit ${unit.id} moved to (${x}, ${y})`);
 
     // console.log(`Moving unit ${unit.id} from (${unit.pos.x}, ${unit.pos.y}) to (${x}, ${y}) with velocity (${unit.vel.x}, ${unit.vel.y})`);
     return {
@@ -47,7 +47,7 @@ export class UnitOperations {
       u.team !== unit.team && u.state !== 'dead'
     );
     if (hostiles.length === 0) {
-      console.log(`🕵️ ${unit.sprite} found no hostiles to hunt`);
+      // console.log(`🕵️ ${unit.sprite} found no hostiles to hunt`);
       // No hostiles, just wander
       return UnitOperations.wander(unit);
     }

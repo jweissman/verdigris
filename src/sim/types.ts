@@ -26,6 +26,7 @@ export interface Unit {
   posture?: UnitPosture;
   intendedTarget?: Vec2 | UnitID; // Target for attacks or abilities
   hp: number;
+  maxHp: number;
   mass: number;
   tags?: string[];
 }

@@ -22,7 +22,7 @@ describe('End-to-end combat', () => {
     
     // Minions should be dead and culled from battlefield
     for (let i = 0; i < 10; i++) {
-      console.log(`Minion ${i} state:`, sim.roster[`minion${i}`]);
+      // console.log(`Minion ${i} state:`, sim.roster[`minion${i}`]);
       expect(sim.roster[`minion${i}`]).toBeUndefined(); // Dead units are culled
     }
     

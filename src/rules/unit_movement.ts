@@ -21,7 +21,7 @@ export class UnitMovement extends Rule {
           } else {
             // If target is gone, reset intended move
             unit.intendedMove = { x: 0, y: 0 };
-            unit.posture = 'wait'; // Reset posture if no target
+            unit.posture = 'alert';
             unit.state = 'idle'; // Reset state
             unit.intendedTarget = undefined;
           }
