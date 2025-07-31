@@ -13,11 +13,13 @@ class Freehold extends Game {
   getInputHandler(): (e: { key: string }) => void {
     return (e) => {
       if (e.key === "w") {
-        // const x = Math.floor(Math.random() * this.fieldWidth);
-        // const y = Math.floor(Math.random() * this.fieldHeight);
         const { x, y } = this.randomGridPosition();
         console.log(`Spawning worm at (${x}, ${y})`);
         this.addWorm(x, y);
+      } else if (e.key === "f") {
+        const { x, y } = this.randomGridPosition();
+        console.log(`Spawning farmer at (${x}, ${y})`);
+        this.addFarmer(x, y);
       }
     };
   }
@@ -30,7 +32,7 @@ class Freehold extends Game {
     };
   }
 
-  addWorm(x: number, y: number, tags: string[] = ["wanderer"]): this {
+  addWorm(x: number, y: number, tags: string[] = ["swarm"]): this {
     console.log(`Adding worm at (${x}, ${y}) with tags: ${tags.join(", ")}`);
     // Prevent duplicate placement
     if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) return this;
@@ -41,7 +43,26 @@ class Freehold extends Game {
       team: "hostile",
       sprite: "worm",
       state: "idle",
-      hp: 10,
+      hp: 20, // Tougher worms for longer battles
+      mass: 1,
+      stepCount: 0,
+      tags
+    });
+    return this;
+  }
+
+  addFarmer(x: number, y: number, tags: string[] = ["hunt"]): this {
+    console.log(`Adding farmer at (${x}, ${y}) with tags: ${tags.join(", ")}`);
+    // Prevent duplicate placement
+    if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) return this;
+    this.sim.addUnit({
+      id: "farmer" + Date.now() + Math.random(),
+      pos: { x, y },
+      vel: { x: 0, y: 0 },
+      team: "friendly", // Opposite of worms!
+      sprite: "soldier", // Use soldier sprite for farmers
+      state: "idle",
+      hp: 25, // Tough farmers for epic battles
       mass: 1,
       stepCount: 0,
       tags

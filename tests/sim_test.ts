@@ -37,11 +37,11 @@ describe('Simulation basics', () => {
     expect(next.units[0].pos.y).toBe(2);
   });
   
-  it('should mark unit as dead if hp <= 0', () => {
+  it('should cull unit if hp <= 0', () => {
     const sim = new Simulator()
       .addUnit({ id: 'd', pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'walk', hp: 0, mass: 1 });
     const next = sim.step();
-    expect(next.units[0].state).toBe('dead');
+    expect(next.units.length).toBe(0); // Dead unit should be culled
   });
   
   it('should accept input to change velocity', () => {

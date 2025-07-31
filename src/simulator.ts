@@ -48,6 +48,16 @@ class Simulator {
       rule.execute();
     }
 
+    // Cull dead units from battlefield
+    const beforeCount = this.units.length;
+    this.units = this.units.filter(unit => unit.state !== 'dead');
+    const afterCount = this.units.length;
+    
+    if (beforeCount !== afterCount) {
+      const culled = beforeCount - afterCount;
+      console.log(`🧹 Culled ${culled} dead unit${culled > 1 ? 's' : ''} from battlefield`);
+    }
+
     return this;
   }
 

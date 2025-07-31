@@ -30,10 +30,17 @@ describe('End-to-end combat', () => {
       }
     }
 
-    // Expect giant to survive, minions to be dead
+    // Expect giant to survive, minions to be culled (dead units removed)
     expect(sim.roster.giant.state).not.toBe('dead');
+    expect(sim.roster.giant.hp).toBeGreaterThan(0);
+    
+    // Minions should be dead and culled from battlefield
     for (let i = 0; i < 5; i++) {
-      expect(sim.roster[`minion${i}`].state).toBe('dead');
+      expect(sim.roster[`minion${i}`]).toBeUndefined(); // Dead units are culled
     }
+    
+    // Should only have the giant left
+    expect(sim.units.length).toBe(1);
+    expect(sim.units[0].id).toBe('giant');
   });
 });

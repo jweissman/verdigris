@@ -11,10 +11,10 @@ describe('Freehold Scenario Layer', () => {
     expect(worm).toBeTruthy();
     expect(worm?.pos.x).toBe(3);
     expect(worm?.pos.y).toBe(5);
-    expect(worm?.tags).toContain('wanderer');
+    expect(worm?.tags).toContain('swarm');
   });
 
-  it.only('getInputHandler adds a worm at a random grid position on w key', () => {
+  it('getInputHandler adds a worm at a random grid position on w key', () => {
 
     const canvas = {
       width: 800, height: 600,
