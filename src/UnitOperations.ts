@@ -3,7 +3,7 @@ import { Unit } from "./sim/types";
 
 export class UnitOperations {
   static move(unit: Unit, deltaTime: number = 1, sim?: any): Unit {
-    // console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
+    console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
     let x = unit.pos.x + unit.intendedMove.x * deltaTime;
     let y = unit.pos.y + unit.intendedMove.y * deltaTime;
 
@@ -15,7 +15,6 @@ export class UnitOperations {
 
     // console.log(`Unit ${unit.id} moved to (${x}, ${y})`);
 
-    // console.log(`Moving unit ${unit.id} from (${unit.pos.x}, ${unit.pos.y}) to (${x}, ${y}) with velocity (${unit.vel.x}, ${unit.vel.y})`);
     return {
       ...unit,
       intendedMove: { x: 0, y: 0 }, // Reset intended move after applying
@@ -27,6 +26,10 @@ export class UnitOperations {
   }
 
   static wander(unit: Unit): Unit {
+    // if (Math.random() > 0.15) {
+    //   return unit;
+    // }
+
     const dirs = [
       { x: 1, y: 0 },
       { x: -1, y: 0 },
@@ -49,7 +52,7 @@ export class UnitOperations {
     if (hostiles.length === 0) {
       // console.log(`🕵️ ${unit.sprite} found no hostiles to hunt`);
       // No hostiles, just wander
-      return UnitOperations.wander(unit);
+      return unit;  //UnitOperations.wander(unit);
     }
     // Find closest hostile
     let closest = hostiles[0];

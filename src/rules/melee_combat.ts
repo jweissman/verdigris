@@ -10,17 +10,20 @@ export class MeleeCombat extends Rule {
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < 1.1) {
         // Combat! Set both units to attack state
-        // a.state = 'attack';
+        a.state = 'attack';
         // a.posture = 'fight';
         a.intendedTarget = b.id;
+        a.intendedMove = { x: 0, y: 0 }; // Stop moving
 
         // b.posture = 'fight';
+        b.state = 'attack';
         b.intendedTarget = a.id;
+        b.intendedMove = { x: 0, y: 0 }; // Stop moving
         
         // console.log(`⚔️  Combat: ${a.sprite} vs ${b.sprite} at (${a.pos.x},${a.pos.y})`);
         
-        const oldHpA = a.hp;
-        const oldHpB = b.hp;
+        // const oldHpA = a.hp;
+        // const oldHpB = b.hp;
         
         a.hp -= 1;
         b.hp -= 1;
@@ -32,12 +35,16 @@ export class MeleeCombat extends Rule {
         // Check for deaths
         if (a.hp <= 0) { //} && a.state !== 'dead') {
           a.state = 'dead';
+          // b.state = 'idle';
           // console.log(`💀 ${a.sprite} died at (${a.pos.x},${a.pos.y})!`);
         }
         if (b.hp <= 0) { //} && b.state !== 'dead') {
+          // a.state = 'idle';
           b.state = 'dead';
           // console.log(`💀 ${b.sprite} died at (${b.pos.x},${b.pos.y})!`);
         }
+
+        
       }
     }
   });

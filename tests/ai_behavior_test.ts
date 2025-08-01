@@ -17,7 +17,7 @@ describe('AI Behavior System', () => {
     fh.addFarmer(1, 1); // Has 'hunt' tag
     fh.addWorm(5, 1);   // Enemy target
     
-    const farmer = fh.sim.units.find(u => u.sprite === 'soldier');
+    const farmer = fh.sim.units.find(u => u.sprite === 'farmer');
     const worm = fh.sim.units.find(u => u.sprite === 'worm');
     
     expect(farmer).toBeTruthy();
@@ -34,7 +34,7 @@ describe('AI Behavior System', () => {
     }
     
     // Get fresh reference to farmer after simulation
-    const updatedFarmer = fh.sim.units.find(u => u.sprite === 'soldier');
+    const updatedFarmer = fh.sim.units.find(u => u.sprite === 'farmer');
     expect(updatedFarmer).toBeTruthy();
     
     // Farmer should have moved closer to worm (rightward)
@@ -51,8 +51,8 @@ describe('AI Behavior System', () => {
     UnitMovement.wanderRate = 1;
     
     // Add worms with some distance between them
-    fh.addWorm(1, 1); // Will try to move toward ally
-    fh.addWorm(5, 1); // Target ally
+    fh.addWorm(1, 1, ["swarm"]); // Will try to move toward ally
+    fh.addWorm(5, 1, ["swarm"]); // Target ally
     
     const worms = fh.sim.units.filter(u => u.sprite === 'worm');
     
@@ -87,7 +87,7 @@ describe('AI Behavior System', () => {
     fh.addFarmer(0, 0);
     fh.addWorm(5, 5);
     
-    const farmer = fh.sim.units.find(u => u.sprite === 'soldier');
+    const farmer = fh.sim.units.find(u => u.sprite === 'farmer');
     
     if (!farmer) throw new Error('Farmer not found');
     

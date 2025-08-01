@@ -2,9 +2,9 @@ import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../src/simulator.ts';
 
 describe('End-to-end combat', () => {
-  it.only('giant defeats swarm of small creatures', () => {
+  it('giant defeats swarm of small creatures', () => {
     const sim = new Simulator();
-    let giant = sim.create({ id: 'giant', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'giant', state: 'idle', hp: 100, mass: 10 });
+    let giant = sim.create({ id: 'giant', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'giant', state: 'idle', hp: 100, mass: 10, maxHp: 100 });
 
     // Add 5 small friendlies
     for (let i = 0; i < 5; i++) {

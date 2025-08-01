@@ -33,8 +33,19 @@ class Simulator {
     ];
   }
 
-  addUnit(unit: Unit) {
-    this.units.push({ ...unit, maxHp: unit.hp || 100 });
+  addUnit(unit: Partial<Unit>) {
+    this.units.push({
+      ...unit,
+      id: unit.id || `unit_${Date.now()}`,
+      hp: unit.hp === undefined ? 100 : unit.hp,
+      team: unit.team || 'friendly',
+      pos: unit.pos || { x: 0, y: 0 },
+      intendedMove: unit.intendedMove || { x: 0, y: 0 },
+      maxHp: unit.maxHp || unit.hp || 100,
+      sprite: unit.sprite || 'default',
+      state: unit.state || 'idle',
+      mass: unit.mass || 1,
+    });
 
     return this;
   }
@@ -49,25 +60,15 @@ class Simulator {
     return Object.fromEntries(this.units.map(unit => [unit.id, unit]));
   }
 
-  // get rules() {
-  //   return this.rulebook;
-  // }
-
   ticks = 0;
   step() {
     this.ticks++;
-    // console.log("# Step", this.ticks);
     let lastUnits = [...this.units];
-
     for (const rule of this.rulebook) {
-      // console.log(`## ${rule.constructor.name}`);
       rule.execute();
       this._debugUnits(lastUnits, rule.constructor.name);
-      // lastUnits = [...this.units]; // Update lastUnits after each rule execution
       lastUnits = this.units.map(u => ({ ...u }));
     }
-
-
     return this;
   }
 
@@ -90,31 +91,7 @@ class Simulator {
     if (newX < 0 || newX >= this.fieldWidth || newY < 0 || newY >= this.fieldHeight) return false;
     const blocker = this.units.find(u => u !== unit && u.pos.x === newX && u.pos.y === newY);
     if (!blocker) return true;
-    // Try to push the blocker in the same direction ONLY if the next cell is empty
-    const pushX = blocker.pos.x + dx;
-    const pushY = blocker.pos.y + dy;
-    if (pushX < 0 || pushX >= this.fieldWidth || pushY < 0 || pushY >= this.fieldHeight) return false;
-    const nextCellOccupied = this.units.some(u => u !== blocker && u.pos.x === pushX && u.pos.y === pushY);
-    if (nextCellOccupied) return false;
-    return true;
-  }
-
-  tryMove(unit, dx, dy) {
-    if (!this.validMove(unit, dx, dy)) return false;
-    const newX = unit.pos.x + dx;
-    const newY = unit.pos.y + dy;
-    const blocker = this.units.find(u => u !== unit && u.pos.x === newX && u.pos.y === newY);
-    if (!blocker) {
-      unit.pos.x = newX;
-      unit.pos.y = newY;
-      return true;
-    }
-    // Push the blocker
-    blocker.pos.x += dx;
-    blocker.pos.y += dy;
-    unit.pos.x = newX;
-    unit.pos.y = newY;
-    return true;
+    return false;
   }
 
   creatureById(id) {
@@ -140,16 +117,15 @@ class Simulator {
     for (const key of Object.keys(before)) {
       if (!this.objEq(
         before[key], after[key]
-      )) { //before[key] !== after[key]) {
-        // console.log(`Delta: ${before.id} ${key} changed from ${before[key]} to ${after[key]}`);
+      )) {
         changes[key] = after[key];
       }
     }
-    return changes;  //{ ...changes };
+    return changes;
   }
 
   prettyPrint(val: any) {
-    return JSON.stringify(val, null, 2).replace(/\n/g, '').replace(/ /g, '');
+    return (JSON.stringify(val, null, 2)||"").replace(/\n/g, '').replace(/ /g, '');
   }
 
   attrEmoji: { [key: string]: string } = {
@@ -162,7 +138,6 @@ class Simulator {
   }
 
   _debugUnits(unitsBefore: Unit[], phase: string) {
-    // console.log('[sim.debugUnits] unit positions');
     let printedPhase = false;
     for (const u of this.units) {
       if (unitsBefore) {
@@ -170,11 +145,10 @@ class Simulator {
         if (before) {
           let delta = this.delta(before, u);
           if (Object.keys(delta).length === 0) {
-            // console.log(`  ${u.id}: (${u.pos.x},${u.pos.y})`, 'state:', u.state);
             continue; // No changes, skip detailed logging
           }
           if (!printedPhase) {
-            console.log(`## ${phase}`);
+            // console.debug(`## ${phase}`);
             printedPhase = true;
           }
           let str = (`  ${u.id}`);
@@ -182,17 +156,13 @@ class Simulator {
             let icon = this.attrEmoji[key] || '|';
             str += (` | ${icon} ${key}: ${this.prettyPrint(before[key])} → ${this.prettyPrint(u[key])}`);
           })
-          console.log(str);
+          // console.debug(str);
 
         }
       } else {
-        console.log(`  ${u.id}: (${u.pos.x},${u.pos.y})`, JSON.stringify(u));
+        console.debug(`  ${u.id}: (${u.pos.x},${u.pos.y})`, JSON.stringify(u));
 
       }
-        // `| posture: ${u.posture || '--'}`,
-        // `| state: ${u.state}`,
-        // `| intendedMove: (${u.intendedMove?.x ?? '--'},${u.intendedMove?.y ?? '--'})`,
-        // u.intendedTarget ? `→ ${u.intendedTarget}` : '');
     }
   }
 

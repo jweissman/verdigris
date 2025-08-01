@@ -1,24 +1,11 @@
 import { Rule } from "./rule";
-import { UnitOperations } from "../UnitOperations";
 
 // This rule interprets posture/tags and sets intendedMove for each unit
 export class UnitBehavior extends Rule {
   apply = () => {
     this.sim.units = this.sim.units.map(unit => {
       if (unit.state === 'dead' || unit.hp == 0) return unit;
-      // if (unit.posture === null || unit.posture === undefined) {
-      //   // If posture is not set, default to 'idle'
-      //   return { ...unit, posture: 'idle', intendedMove: { x: 0, y: 0 } };
-      // }
-      // Only set intendedMove if not already set (i.e., is zero)
-      // if ((unit.intendedMove?.x ?? 0) !== 0 || (unit.intendedMove?.y ?? 0) !== 0) {
-      //   console.log(`[UnitBehavior] Skipping ${unit.id}: intendedMove already set to (${unit.intendedMove.x},${unit.intendedMove.y})`);
-      //   return unit;
-      // }
-      // if (unit.posture === 'fight' && unit.intendedTarget) {
-      //   // Movement toward target is handled by UnitMovement
-      //   return unit;
-      // }
+
       const find_new_target = () => {
         // find closest hostile
         const hostiles = this.sim.units.filter(u => u.team !== unit.team && u.state !== 'dead');
@@ -30,8 +17,13 @@ export class UnitBehavior extends Rule {
         });
         return closest.id;
       }
-      let target = this.sim.creatureById(unit.intendedTarget || find_new_target());
-      // console.log(`[UnitBehavior] Processing ${unit.id} with posture=${unit.posture} (target=${target?.id}) at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove?.x ?? 0}, ${unit.intendedMove?.y ?? 0})`);
+      let targetId = unit.intendedTarget || find_new_target();
+      if (!targetId) {
+        unit.posture = 'idle';
+        return unit;
+      }
+      let target = this.sim.creatureById(targetId);
+      unit.intendedTarget = targetId;
       switch (unit.posture) {
         case 'idle': return { ...unit, intendedMove: { x: 0, y: 0 }, target: undefined };
         case 'bully': // try to occupy _same space_ as target

@@ -15,11 +15,15 @@ class Freehold extends Game {
       if (e.key === "w") {
         const { x, y } = this.randomGridPosition();
         console.log(`Spawning worm at (${x}, ${y})`);
-        this.addWorm(x, y);
+        this.addWorm(x, y, ["swarm"]);
       } else if (e.key === "f") {
         const { x, y } = this.randomGridPosition();
         console.log(`Spawning farmer at (${x}, ${y})`);
         this.addFarmer(x, y);
+      } else if (e.key === "s") {
+        const { x, y } = this.randomGridPosition();
+        console.log(`Spawning soldier at (${x}, ${y})`);
+        this.addSoldier(x, y);
       }
     };
   }
@@ -32,7 +36,7 @@ class Freehold extends Game {
     };
   }
 
-  addWorm(x: number, y: number, tags: string[] = ["swarm"]): string {
+  addWorm(x: number, y: number, tags: string[] = []): string {
     console.log(`Adding worm at (${x}, ${y}) with tags: ${tags.join(", ")}`);
     // Prevent duplicate placement
     if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) {
@@ -49,7 +53,7 @@ class Freehold extends Game {
       sprite: "worm",
       state: "idle",
       hp: 20, // Tougher worms for longer battles
-      maxHp: 20,
+      // maxHp: 20,
       mass: 1,
       tags
     });
@@ -78,69 +82,35 @@ class Freehold extends Game {
       pos: { x, y },
       intendedMove: { x: 0, y: 0 },
       team: "friendly", // Opposite of worms!
-      sprite: "soldier", // Use soldier sprite for farmers
+      sprite: "farmer", // Use soldier sprite for farmers
       state: "idle",
       hp: 25, // Tough farmers for epic battles
-      maxHp: 25,
       mass: 1,
       tags
     });
     return id;
   }
 
-  // Try to move a unit by (dx, dy). Returns true if moved, false if blocked.
-  tryMove(unit, dx, dy) {
-    if (!unit) {
-      console.log('[tryMove] No unit provided');
-      return false;
+  addSoldier(x: number, y: number, tags: string[] = ["hunt"]): string {
+    console.log(`Adding soldier at (${x}, ${y}) with tags: ${tags.join(", ")}`);
+    // Prevent duplicate placement
+    if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) {
+      throw new Error(`Cannot place soldier at (${x}, ${y}): position already occupied`);
+      // return '';
     }
-    const newX = unit.pos.x + dx;
-    const newY = unit.pos.y + dy;
-    console.log(`[tryMove] Attempt: ${unit.id} from (${unit.pos.x},${unit.pos.y}) to (${newX},${newY})`);
-    // Field bounds
-    if (newX < 0 || newX >= this.fieldWidth || newY < 0 || newY >= this.fieldHeight) {
-      console.log(`[tryMove] Out of bounds: (${newX},${newY})`);
-      return false;
-    }
-    // Check for unit at destination
-    const blocker = this.sim.units.find(u => u !== unit && u.pos.x === newX && u.pos.y === newY);
-    if (!blocker) {
-      console.log(`[tryMove] Move allowed: (${unit.pos.x},${unit.pos.y}) -> (${newX},${newY})`);
-      unit.pos.x = newX;
-      unit.pos.y = newY;
-      this._debugUnits();
-      return true;
-    }
-    console.log(`[tryMove] Blocked by unit at (${newX},${newY}) [${blocker.id}]`);
-    // Try to push the blocker in the same direction ONLY if the next cell is empty
-    const pushX = blocker.pos.x + dx;
-    const pushY = blocker.pos.y + dy;
-    if (pushX < 0 || pushX >= this.fieldWidth || pushY < 0 || pushY >= this.fieldHeight) {
-      console.log(`[tryMove] Cannot push: push target out of bounds (${pushX},${pushY})`);
-      return false;
-    }
-    const nextCellOccupied = this.sim.units.some(u => u !== blocker && u.pos.x === pushX && u.pos.y === pushY);
-    if (nextCellOccupied) {
-      console.log(`[tryMove] Cannot push: cell (${pushX},${pushY}) is occupied`);
-      this._debugUnits();
-      return false;
-    }
-    // Push the blocker
-    console.log(`[tryMove] Pushing unit ${blocker.id} from (${blocker.pos.x},${blocker.pos.y}) to (${pushX},${pushY})`);
-    blocker.pos.x = pushX;
-    blocker.pos.y = pushY;
-    // Now move the original unit
-    unit.pos.x = newX;
-    unit.pos.y = newY;
-    this._debugUnits();
-    return true;
-  }
-
-  _debugUnits() {
-    console.log('[debugUnits] Current unit positions:');
-    for (const u of this.sim.units) {
-      console.log(`  ${u.id}: (${u.pos.x},${u.pos.y})`);
-    }
+    let id = "soldier" + this.id("soldier"); //Date.now() + Math.random();
+    this.sim.addUnit({
+      id,
+      pos: { x, y },
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "soldier",
+      state: "idle",
+      hp: 30, // Tougher soldiers for epic battles
+      mass: 1,
+      tags
+    });
+    return id;
   }
 }
 

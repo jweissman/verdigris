@@ -23,3 +23,5 @@ gem "debug", "~> 1.11"
 gem "rouge", "~> 4.6"
 
 gem "ostruct", "~> 0.6.3"
+
+gem "rubocop", "~> 1.79"

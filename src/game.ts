@@ -3,36 +3,22 @@ import { Simulator } from "./simulator";
 import worm from "./assets/sprites/worm.png";
 // @ts-ignore
 import soldier from "./assets/sprites/soldier.png";
+// @ts-ignore
+import farmer from "./assets/sprites/farmer.png";
 import Renderer from "./renderer";
 
 class Game {
-  sim: Simulator;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-  addInputListener: (cb: (e: { key: string }) => void) => void;
-  animationFrame: (cb: () => void) => void;
-  
-  // Sprite support
-  private sprites: Map<string, HTMLImageElement> = new Map();
-  
-  // Animation state
-  // private animationTime: number = 0;
-  
-  // // Movement interpolation - track units that are moving smoothly
-  // private unitInterpolations: Map<string, {
-  //   startX: number;
-  //   startY: number;
-  //   targetX: number;
-  //   targetY: number;
-  //   progress: number; // 0 to 1
-  //   duration: number; // total time in ms
-  // }> = new Map();
-  private renderer: Renderer;
-  
-  
-  // Decouple simulation from rendering
+  public sim: Simulator;
   private lastSimTime: number = 0;
   private simTickRate: number = 8; // Simulation runs at 8fps for strategic gameplay
+
+  private canvas: HTMLCanvasElement;
+  private ctx: CanvasRenderingContext2D;
+  private renderer: Renderer;
+  private sprites: Map<string, HTMLImageElement> = new Map();
+
+  private addInputListener: (cb: (e: { key: string }) => void) => void;
+  private animationFrame: (cb: () => void) => void;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -77,6 +63,7 @@ class Game {
     const spriteList = [
       { name: 'worm', src: worm }, //'/worm.png' },
       { name: 'soldier', src: soldier }, //'/soldier.png' }
+      { name: 'farmer', src: farmer },
     ];
 
     spriteList.forEach(({ name, src }) => {
@@ -126,19 +113,10 @@ class Game {
   
   drawFrame() {
     if (!this.canvas || !this.ctx) return;
-    this.renderer.draw() //this.ctx, this.sim, this.sprites);
+    this.renderer.draw()
   }
-
-  // get renderer() {
-  //   return new Renderer();
-  // }
-  
 }
 
 export { Game };
 
 console.log('Game module loaded.');
-if (typeof window !== 'undefined') {
-  // @ts-ignore
-  window.Game = Game; // Expose for browser use
-}

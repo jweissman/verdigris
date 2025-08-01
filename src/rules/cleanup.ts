@@ -9,7 +9,7 @@ export default class Cleanup extends Rule {
 
     if (beforeCount !== afterCount) {
       const culled = beforeCount - afterCount;
-      console.log(`🧹 Culled ${culled} dead unit${culled > 1 ? 's' : ''} from battlefield`);
+      // console.log(`🧹 Culled ${culled} dead unit${culled > 1 ? 's' : ''} from battlefield`);
     }
 
   }
