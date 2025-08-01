@@ -5,7 +5,7 @@ import worm from "./assets/sprites/worm.png";
 import soldier from "./assets/sprites/soldier.png";
 // @ts-ignore
 import farmer from "./assets/sprites/farmer.png";
-import Renderer from "./renderer";
+import Renderer, { createScaledRenderer } from "./renderer";
 
 class Game {
   public sim: Simulator;
@@ -13,8 +13,9 @@ class Game {
   private simTickRate: number = 8; // Simulation runs at 8fps for strategic gameplay
 
   private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-  private renderer: Renderer;
+  renderer: Renderer;
+  private _handleResize: () => void;
+  private draw: () => void;
   private sprites: Map<string, HTMLImageElement> = new Map();
 
   private addInputListener: (cb: (e: { key: string }) => void) => void;
@@ -28,29 +29,41 @@ class Game {
     }
   ) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext("2d")!;
     this.addInputListener = opts?.addInputListener || (typeof window !== 'undefined' ? (cb) => window.addEventListener("keydown", cb as any) : () => {});
     this.animationFrame = opts?.animationFrame || (typeof window !== 'undefined' ? (cb) => requestAnimationFrame(cb) : () => {});
     this.setupInput();
     this.loop = this.loop.bind(this);
     this.animationFrame(this.loop);
 
-    // console.log('Game constructor called with canvas:', canvas);
-    let width = 128;
-    if (this.canvas) {
-      width = this.canvas.width / 8; // 8 pixels per grid cell
-    }
-    let height = 128;
-    if (this.canvas) {
-      height = this.canvas.height / 8; // 8 pixels per grid cell
-    }
-    // console.log(`Initializing game with field size: ${width}x${height}`);
-    this.sim = new Simulator(width, height);
+    this.sim = new Simulator(40, 25); // 40×25 grid = 320×200 pixels at 8px per cell
     
     // Load sprites
     this.loadSprites();
 
-    this.renderer = new Renderer(width, height, this.canvas, this.ctx, this.sim, this.sprites);
+    // Create scaled renderer for browser environments
+    if (typeof window !== 'undefined' && canvas instanceof HTMLCanvasElement) {
+      const scaledRenderer = createScaledRenderer(320, 200, canvas, this.sim, this.sprites);
+      this.renderer = scaledRenderer.renderer;
+      this._handleResize = scaledRenderer.handleResize;
+      this.draw = scaledRenderer.draw;
+    } else {
+      // Fallback for testing - create basic renderer with mock canvas
+      const mockCanvas = { 
+        width: 320, 
+        height: 200, 
+        getContext: () => ({
+          clearRect: () => {},
+          fillRect: () => {},
+          drawImage: () => {},
+          save: () => {},
+          restore: () => {},
+          imageSmoothingEnabled: false
+        } as any)
+      };
+      this.renderer = new Renderer(320, 200, mockCanvas, this.sim, this.sprites);
+      this._handleResize = () => {};
+      this.draw = () => this.renderer.draw();
+    }
   }
 
   private loadSprites(): void {
@@ -107,13 +120,23 @@ class Game {
     // Animation and rendering run at 60fps
     // this.animationTime += 16; // ~16ms per frame at 60fps
     // this.updateMovementInterpolations();
+    // console.log('Draw frame!');
     this.drawFrame();
   }
 
   
   drawFrame() {
-    if (!this.canvas || !this.ctx) return;
-    this.renderer.draw()
+    // console.log('Drawing frame...');
+    // let t0 = performance.now();
+    this.draw();
+    // let t1 = performance.now();
+    // let elapsed = t1 - t0;
+    // console.log('Frame drawn in ', elapsed, 'ms');
+  }
+
+  // Expose resize handling to external code
+  handleResize() {
+    this._handleResize();
   }
 }
 

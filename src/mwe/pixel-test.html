@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Pixel Perfect Test</title>
+    <style>
+      body { margin: 0; padding: 20px; background: #222; }
+      canvas { border: 1px solid #fff; image-rendering: pixelated; image-rendering: crisp-edges; }
+      .info { color: white; font-family: monospace; margin: 10px 0; }
+    </style>
+  </head>
+  <body>
+    <div class="info">Testing pixel-perfect scaling</div>
+    <canvas id="test" width="320" height="200"></canvas>
+    <div class="info" id="info"></div>
+    
+    <script>
+      const canvas = document.getElementById('test');
+      const ctx = canvas.getContext('2d');
+      const info = document.getElementById('info');
+      
+      // Disable image smoothing
+      ctx.imageSmoothingEnabled = false;
+      
+      function drawTestPattern() {
+        // Clear with black
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 320, 200);
+        
+        // Draw 8x8 pixel grid squares in different colors
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+        
+        for (let x = 0; x < 320; x += 8) {
+          for (let y = 0; y < 200; y += 8) {
+            const colorIndex = ((x/8) + (y/8)) % colors.length;
+            ctx.fillStyle = colors[colorIndex];
+            ctx.fillRect(x, y, 8, 8);
+            
+            // Add a 1px border to see individual pixels clearly
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x, y, 8, 1); // top
+            ctx.fillRect(x, y, 1, 8); // left
+          }
+        }
+        
+        // Draw some single pixels to test sharpness
+        ctx.fillStyle = '#fff';
+        for (let i = 0; i < 50; i++) {
+          ctx.fillRect(i, 10, 1, 1);
+        }
+      }
+      
+      function updateInfo() {
+        const rect = canvas.getBoundingClientRect();
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        
+        info.innerHTML = `
+          Canvas internal: ${canvas.width}x${canvas.height}<br>
+          Canvas CSS: ${rect.width}x${rect.height}<br>
+          Device pixel ratio: ${devicePixelRatio}<br>
+          Image smoothing: ${ctx.imageSmoothingEnabled}
+        `;
+      }
+      
+      drawTestPattern();
+      updateInfo();
+      
+      window.addEventListener('resize', updateInfo);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Sprite Sharpness Test</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <style>
+      body { background: #222; padding: 20px; }
+      canvas { border: 1px solid #666; }
+      .info { color: white; font-family: monospace; margin: 10px 0; }
+    </style>
+  </head>
+  <body>
+    <div class="info">Testing sprite sharpness during movement</div>
+    <canvas id="test" width="320" height="200"></canvas>
+    <div class="info" id="info"></div>
+    
+    <script>
+      const canvas = document.getElementById('test');
+      const ctx = canvas.getContext('2d');
+      const info = document.getElementById('info');
+      
+      ctx.imageSmoothingEnabled = false;
+      
+      // Create a simple test sprite
+      const spriteCanvas = document.createElement('canvas');
+      spriteCanvas.width = 8;
+      spriteCanvas.height = 8;
+      const spriteCtx = spriteCanvas.getContext('2d');
+      spriteCtx.imageSmoothingEnabled = false;
+      
+      // Draw a detailed 8x8 sprite pattern
+      spriteCtx.fillStyle = '#ff0000';
+      spriteCtx.fillRect(0, 0, 8, 8);
+      spriteCtx.fillStyle = '#ffffff';
+      spriteCtx.fillRect(1, 1, 6, 6);
+      spriteCtx.fillStyle = '#000000';
+      spriteCtx.fillRect(2, 2, 4, 4);
+      spriteCtx.fillStyle = '#00ff00';
+      spriteCtx.fillRect(3, 3, 2, 2);
+      
+      let time = 0;
+      let animationPos = 0;
+      
+      function render() {
+        time += 16;
+        
+        // Clear canvas
+        ctx.fillStyle = '#001122';
+        ctx.fillRect(0, 0, 320, 200);
+        
+        // Draw grid
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < 320; x += 8) {
+          ctx.beginPath();
+          ctx.moveTo(x + 0.5, 0);
+          ctx.lineTo(x + 0.5, 200);
+          ctx.stroke();
+        }
+        for (let y = 0; y < 200; y += 8) {
+          ctx.beginPath();
+          ctx.moveTo(0, y + 0.5);
+          ctx.lineTo(320, y + 0.5);
+          ctx.stroke();
+        }
+        
+        // Animate sprite position
+        const progress = (time / 2000) % 1; // 2 second cycle
+        const startX = 1;
+        const endX = 35; // Move across ~35 grid cells
+        
+        // Test both fractional and rounded positions
+        const fractionalX = startX + (endX - startX) * progress;
+        const roundedX = Math.round(fractionalX);
+        
+        const pixelXFractional = fractionalX * 8;
+        const pixelXRounded = roundedX * 8;
+        
+        // Draw sprite at fractional position (should be blurry)
+        ctx.drawImage(spriteCanvas, pixelXFractional, 50, 8, 8);
+        
+        // Draw sprite at rounded position (should be sharp)
+        ctx.drawImage(spriteCanvas, pixelXRounded, 100, 8, 8);
+        
+        // Draw labels
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px monospace';
+        ctx.fillText('Fractional position (blurry)', 10, 40);
+        ctx.fillText('Rounded position (sharp)', 10, 90);
+        
+        // Update info
+        info.innerHTML = `
+          Progress: ${progress.toFixed(3)}<br>
+          Fractional X: ${fractionalX.toFixed(3)} → ${pixelXFractional.toFixed(1)}px<br>
+          Rounded X: ${roundedX} → ${pixelXRounded}px
+        `;
+        
+        requestAnimationFrame(render);
+      }
+      
+      render();
+    </script>
+  </body>
+</html>

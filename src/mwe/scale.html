@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../renderer.ts" type="module"></script>
+  </head>
+  <body style="margin: 0; padding: 0; background: black; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+    <canvas id="game"></canvas>
+  </body>
+  <script type="module">
+    let scaledDisplay = null;
+    const canvas = document.getElementById('game');
+    console.log('Canvas element:', canvas);
+    if (canvas) {
+      // Create simple display without simulation for MWE
+      scaledDisplay = new ScaledDisplay(320, 200, canvas);
+      
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        if (scaledDisplay) {
+          scaledDisplay.handleResize();
+        }
+      });
+      
+      // Initial size calculation
+      scaledDisplay.handleResize();
+    } else {
+      console.error('Canvas element not found!');
+    }
+    console.log('ScaledDisplay initialized:', scaledDisplay);
+    
+    function gameLoop() {
+      if (scaledDisplay) { 
+        scaledDisplay.draw(); 
+      }
+      requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
+  </script>
+</html>

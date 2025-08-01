@@ -61,16 +61,33 @@ class Simulator {
   }
 
   ticks = 0;
+  lastCall: number = 0;
   step() {
+    let t0 = performance.now();
     this.ticks++;
     let lastUnits = [...this.units];
     for (const rule of this.rulebook) {
+      let tr0 = performance.now();
       rule.execute();
+      let tr1 = performance.now();
+      let elapsed = tr1 - tr0;
+      if (elapsed > 10) {
+        console.log(`- Rule ${rule.constructor.name} executed in ${tr1 - tr0}ms`);
+      }
+
+      // Debugging: print unit changes
       this._debugUnits(lastUnits, rule.constructor.name);
       lastUnits = this.units.map(u => ({ ...u }));
     }
+    let t1 = performance.now();
+    let elapsed = t1 - t0;
+    console.log(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
+    // console.log(`Total ticks: ${this.ticks}`);
+    // console.log(`Time since last call: ${t0 - this.lastCall}ms`);
+    this.lastCall = t0;
     return this;
   }
+
 
   accept(input) {
     this.step();

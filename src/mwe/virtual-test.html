@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Virtual Canvas Scaling Test</title>
+    <style>
+      body { margin: 0; padding: 20px; background: #222; color: white; font-family: monospace; }
+      canvas { border: 1px solid #fff; image-rendering: pixelated; image-rendering: crisp-edges; }
+      .canvas-container { margin: 20px 0; }
+    </style>
+  </head>
+  <body>
+    <h3>Virtual Canvas Scaling Test</h3>
+    
+    <div class="canvas-container">
+      <div>Direct Canvas (320x200):</div>
+      <canvas id="direct" width="320" height="200"></canvas>
+    </div>
+    
+    <div class="canvas-container">
+      <div>Virtual → Physical Canvas (320x200 → scaled):</div>
+      <canvas id="physical"></canvas>
+    </div>
+    
+    <div id="info"></div>
+    
+    <script>
+      const directCanvas = document.getElementById('direct');
+      const physicalCanvas = document.getElementById('physical');
+      const info = document.getElementById('info');
+      
+      // Create virtual canvas
+      const virtualCanvas = document.createElement('canvas');
+      virtualCanvas.width = 320;
+      virtualCanvas.height = 200;
+      
+      function drawTestPattern(ctx, label) {
+        // Clear with dark blue
+        ctx.fillStyle = '#003366';
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        
+        // Draw 8x8 grid pattern
+        ctx.fillStyle = '#ff0000';
+        for (let x = 0; x < 320; x += 16) {
+          for (let y = 0; y < 200; y += 16) {
+            ctx.fillRect(x, y, 8, 8);
+          }
+        }
+        
+        // Draw single pixel line to test sharpness
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 320; i++) {
+          ctx.fillRect(i, 50, 1, 1);
+        }
+        
+        // Draw text
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '12px monospace';
+        ctx.fillText(label, 10, 30);
+      }
+      
+      function setupCanvases() {
+        // Setup direct canvas
+        const directCtx = directCanvas.getContext('2d');
+        directCtx.imageSmoothingEnabled = false;
+        drawTestPattern(directCtx, 'DIRECT');
+        
+        // Setup virtual canvas
+        const virtualCtx = virtualCanvas.getContext('2d');
+        virtualCtx.imageSmoothingEnabled = false;
+        drawTestPattern(virtualCtx, 'VIRTUAL');
+        
+        // Calculate scale (integer only)
+        const maxWidth = window.innerWidth - 100;
+        const maxHeight = window.innerHeight - 300;
+        const scaleX = Math.floor(maxWidth / 320);
+        const scaleY = Math.floor(maxHeight / 200);
+        const scale = Math.max(1, Math.min(scaleX, scaleY, 4)); // Cap at 4x for testing
+        
+        // Setup physical canvas
+        physicalCanvas.width = 320 * scale;
+        physicalCanvas.height = 200 * scale;
+        physicalCanvas.style.width = `${320 * scale}px`;
+        physicalCanvas.style.height = `${200 * scale}px`;
+        
+        const physicalCtx = physicalCanvas.getContext('2d');
+        physicalCtx.imageSmoothingEnabled = false;
+        
+        // Blit virtual to physical
+        physicalCtx.clearRect(0, 0, physicalCanvas.width, physicalCanvas.height);
+        physicalCtx.drawImage(
+          virtualCanvas,
+          0, 0, 320, 200,                    // Source
+          0, 0, 320 * scale, 200 * scale     // Destination
+        );
+        
+        // Update info
+        info.innerHTML = `
+          Scale: ${scale}x<br>
+          Virtual: ${virtualCanvas.width}x${virtualCanvas.height}<br>
+          Physical internal: ${physicalCanvas.width}x${physicalCanvas.height}<br>
+          Physical CSS: ${physicalCanvas.style.width} x ${physicalCanvas.style.height}<br>
+          Device pixel ratio: ${window.devicePixelRatio || 1}
+        `;
+      }
+      
+      setupCanvases();
+      window.addEventListener('resize', setupCanvases);
+    </script>
+  </body>
+</html>

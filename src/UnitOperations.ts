@@ -3,7 +3,7 @@ import { Unit } from "./sim/types";
 
 export class UnitOperations {
   static move(unit: Unit, deltaTime: number = 1, sim?: any): Unit {
-    console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
+    // console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
     let x = unit.pos.x + unit.intendedMove.x * deltaTime;
     let y = unit.pos.y + unit.intendedMove.y * deltaTime;
 
@@ -110,10 +110,10 @@ export class UnitOperations {
     }
     // Fallback: if (0,0), wander
     if (dx === 0 && dy === 0) {
-      console.log(`🐛 ${unit.sprite} swarming: at centroid, fallback to wander`);
+      // console.log(`🐛 ${unit.sprite} swarming: at centroid, fallback to wander`);
       return UnitOperations.wander(unit);
     }
-    console.log(`🐛 ${unit.sprite} swarming: moving (${dx},${dy}) towards centroid of ${allies.length} allies`);
+    // console.log(`🐛 ${unit.sprite} swarming: moving (${dx},${dy}) towards centroid of ${allies.length} allies`);
     return {
       ...unit,
       intendedMove: { x: dx, y: dy }

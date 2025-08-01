@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Exact Scaling Test</title>
+    <script src="../renderer.ts" type="module"></script>
+    <style>
+      body { 
+        margin: 0; 
+        padding: 0; 
+        background: black; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        min-height: 100vh; 
+      }
+      canvas { 
+        image-rendering: pixelated; 
+        image-rendering: crisp-edges; 
+        border: 1px solid #333; 
+      }
+      .info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        font-family: monospace;
+        font-size: 12px;
+        background: rgba(0,0,0,0.8);
+        padding: 10px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div class="info" id="info"></div>
+    
+    <script type="module">
+      class TestDisplay extends Display {
+        render() {
+          // Clear with dark background
+          this.ctx.fillStyle = '#001122';
+          this.ctx.fillRect(0, 0, this.width, this.height);
+          
+          // Draw 8x8 grid to test pixel alignment
+          for (let x = 0; x < this.width; x += 8) {
+            for (let y = 0; y < this.height; y += 8) {
+              // Checkerboard pattern
+              if ((Math.floor(x/8) + Math.floor(y/8)) % 2 === 0) {
+                this.ctx.fillStyle = '#ff3333';
+              } else {
+                this.ctx.fillStyle = '#3333ff';
+              }
+              this.ctx.fillRect(x, y, 8, 8);
+            }
+          }
+          
+          // Draw single-pixel lines to test sharpness
+          this.ctx.fillStyle = '#ffffff';
+          for (let i = 0; i < this.width; i++) {
+            this.ctx.fillRect(i, 100, 1, 1);
+          }
+          for (let i = 0; i < this.height; i++) {
+            this.ctx.fillRect(160, i, 1, 1);
+          }
+          
+          // Draw text
+          this.ctx.fillStyle = '#00ff00';
+          this.ctx.font = '8px monospace';
+          this.ctx.fillText('320x200 Virtual Canvas', 10, 20);
+        }
+      }
+      
+      let scaledDisplay = null;
+      const canvas = document.getElementById('game');
+      const info = document.getElementById('info');
+      
+      if (canvas) {
+        // Create virtual canvas manually to test
+        const virtualCanvas = document.createElement('canvas');
+        virtualCanvas.width = 320;
+        virtualCanvas.height = 200;
+        
+        const testDisplay = new TestDisplay(320, 200, virtualCanvas);
+        
+        let scale = 1;
+        
+        const handleResize = () => {
+          const scaleX = Math.floor(window.innerWidth / 320);
+          const scaleY = Math.floor(window.innerHeight / 200);
+          scale = Math.max(1, Math.min(scaleX, scaleY));
+          
+          canvas.width = 320 * scale;
+          canvas.height = 200 * scale;
+          
+          // CRITICAL: Set CSS size to match canvas size
+          canvas.style.width = `${320 * scale}px`;
+          canvas.style.height = `${200 * scale}px`;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          
+          updateInfo();
+        };
+        
+        const draw = () => {
+          testDisplay.draw();
+          
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(
+            virtualCanvas,
+            0, 0, 320, 200,
+            0, 0, 320 * scale, 200 * scale
+          );
+        };
+        
+        const updateInfo = () => {
+          const rect = canvas.getBoundingClientRect();
+          info.innerHTML = `
+            Scale: ${scale}x<br>
+            Canvas internal: ${canvas.width}x${canvas.height}<br>
+            Canvas CSS: ${canvas.style.width} x ${canvas.style.height}<br>
+            Canvas computed: ${rect.width.toFixed(1)}x${rect.height.toFixed(1)}<br>
+            Virtual: 320x200<br>
+            DPR: ${window.devicePixelRatio || 1}
+          `;
+        };
+        
+        window.addEventListener('resize', handleResize);
+        handleResize();
+        
+        function gameLoop() {
+          draw();
+          requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+      }
+    </script>
+  </body>
+</html>

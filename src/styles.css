@@ -1,0 +1,19 @@
+/* Pixel-perfect rendering for game canvas */
+canvas {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: optimize-contrast;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* Ensure no unwanted margins or padding on game elements */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Center the game canvas */
+#battlefield, #game {
+  display: block;
+}
