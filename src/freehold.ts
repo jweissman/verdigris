@@ -37,25 +37,39 @@ class Freehold extends Game {
   }
 
   addWorm(x: number, y: number, tags: string[] = []): string {
-    console.log(`Adding worm at (${x}, ${y}) with tags: ${tags.join(", ")}`);
-    // Prevent duplicate placement
-    if (this.sim.units.some(u => u.pos.x === x && u.pos.y === y)) {
+    // console.log(`Adding worm at (${x}, ${y}) with tags: ${tags.join(", ")}`);
+    if (this.sim.unitAt(x, y)) {
       // throw new Error(`Cannot place worm at (${x}, ${y}): position already occupied`);
-      return '';
+      return "";
     }
     let id = "worm" + this.id("worm");
     this.sim.addUnit({
-      // id: "worm" + this.id("worm"), //Date.now() + Math.random(),
-      id,
+      id, //: "worm" + this.id("worm"), //Date.now() + Math.random(),
       pos: { x, y },
       intendedMove: { x: 0, y: 0 },
       team: "hostile",
       sprite: "worm",
       state: "idle",
       hp: 20, // Tougher worms for longer battles
-      // maxHp: 20,
+      maxHp: 20,
       mass: 1,
-      tags
+      tags: tags,
+      abilities: { jump: {
+        name: "jump",
+        cooldown: 10,
+        trigger: "true",
+        // jumpHeight: 5,
+        // jumpSpeed: 1,
+        config: {
+          jumpHeight: 5,
+          jumpSpeed: 1
+        },
+        effect: (unit) => {
+          console.log(`Worm ${unit.id} jumping`);
+          unit.meta.jumping = true;
+          unit.meta.jumpProgress = 0;
+        }
+      }},
     });
     return id;
   }

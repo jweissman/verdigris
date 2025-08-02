@@ -16,6 +16,18 @@ export type UnitPosture = 'idle' // wander or wait
 
 type UnitID = string;
 
+export interface Ability {
+  name: string;
+  cooldown: number; // in ticks
+  trigger?: string; // condition for the ability to fire, e.g., 'true', 'hp < 0.5'
+  range?: number; // optional range for abilities
+  target?: string; // e.g. 'enemies.nearest()' or 'self'
+  config?: {
+    [key: string]: any; // Additional configuration options for the ability
+  }
+  effect: (unit: Unit, target?: Unit) => void; // Effect function
+}
+
 export interface Unit {
   id: UnitID;
   pos: Vec2;
@@ -29,7 +41,26 @@ export interface Unit {
   maxHp: number;
   mass: number;
   tags?: string[];
+  abilities: { [name: string]: Ability };
+  lastAbilityTick?: { [name: string]: number };
+  meta: {
+    jumping?: boolean; // Whether the unit is currently jumping
+    jumpProgress?: number; // Progress of the jump animation
+    z?: number; // For 3D positioning, e.g., jumping
+    [key: string]: any; // Additional metadata
+  }
 }
+
+// export const unit = (id: UnitID, pos: Vec2 = { x: 0, y: 0 }, team: 'friendly' | 'hostile', sprite: string, state: UnitState = 'idle', hp: number = 10, maxHp: number = 10, mass: number = 1): Unit => ({
+//   id, pos, intendedMove: { x: 0, y: 0 }, team, sprite, state,
+//   hp, maxHp, mass,
+//   abilities: {},
+//   meta: {
+//     jumping: false,
+//     jumpProgress: 0,
+//     z: 0,
+//   }
+// });
 
 export interface Projectile {
   id: string;

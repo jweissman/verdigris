@@ -55,7 +55,7 @@ class Display {
       this.ctx.imageSmoothingEnabled = false;
     }
     
-    console.log(`Display initialized: ${width}x${height}`);
+    // console.log(`Display initialized: ${width}x${height}`);
   }
 
   draw() {
@@ -128,7 +128,7 @@ class ScaledDisplay {
     const ctx = this.physicalCanvas.getContext('2d')!;
     ctx.imageSmoothingEnabled = false;
     
-    console.log(`Scaled to ${this.scale}x (${this.physicalCanvas.width}x${this.physicalCanvas.height})`);
+    // console.log(`Scaled to ${this.scale}x (${this.physicalCanvas.width}x${this.physicalCanvas.height})`);
   }
 
   draw() {
@@ -335,7 +335,7 @@ export function createScaledRenderer(targetWidth: number, targetHeight: number, 
     const ctx = physicalCanvas.getContext('2d')!;
     ctx.imageSmoothingEnabled = false;
     
-    console.log(`Scaled to ${scale}x: virtual(${targetWidth}x${targetHeight}) → physical(${exactWidth}x${exactHeight}), DPR: ${dpr}`);
+    // console.log(`Scaled to ${scale}x: virtual(${targetWidth}x${targetHeight}) → physical(${exactWidth}x${exactHeight}), DPR: ${dpr}`);
   };
   
   const draw = () => {
@@ -357,7 +357,7 @@ export function createScaledRenderer(targetWidth: number, targetHeight: number, 
   return { renderer, handleResize, draw };
 }
 
-console.log('Renderer module loaded.');
+// console.log('Renderer module loaded.');
 if (typeof window !== 'undefined') {
   // @ts-ignore
   window.Display = Display;

@@ -158,6 +158,7 @@ describe('AI Behavior System', () => {
     // fh.sim.roster
     
     // if (!farmer || !worm) throw new Error('Units not found');
+    console.log("Roster after adding units:", fh.sim.roster);
     
     const initialFarmerHp = fh.sim.roster.farmer.hp;
     const initialWormHp = fh.sim.roster.worm.hp;

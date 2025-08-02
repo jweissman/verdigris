@@ -7,6 +7,8 @@ import { AreaOfEffect } from "./rules/area_of_effect";
 import { Rule } from "./rules/rule";
 import { UnitBehavior } from "./rules/unit_behavior";
 import Cleanup from "./rules/cleanup";
+import { Jumping } from "./rules/jumping";
+import { Abilities } from "./rules/abilities";
 
 class Simulator {
   fieldWidth: number;
@@ -17,7 +19,7 @@ class Simulator {
   rulebook: Rule[];
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
-    console.log(`Initializing simulator with field size: ${fieldWidth}x${fieldHeight}`);
+    // console.log(`Initializing simulator with field size: ${fieldWidth}x${fieldHeight}`);
     this.fieldWidth = fieldWidth;
     this.fieldHeight = fieldHeight;
     this.units = [];
@@ -29,6 +31,8 @@ class Simulator {
       new ProjectileMotion(this),
       new AreaOfEffect(this),
       new Knockback(this),
+      new Abilities(this),
+      new Jumping(this),
       new Cleanup(this)
     ];
   }
@@ -45,6 +49,8 @@ class Simulator {
       sprite: unit.sprite || 'default',
       state: unit.state || 'idle',
       mass: unit.mass || 1,
+      abilities: unit.abilities || {},
+      meta: {}
     });
 
     return this;
@@ -59,6 +65,8 @@ class Simulator {
   get roster() {
     return Object.fromEntries(this.units.map(unit => [unit.id, unit]));
   }
+
+  tick() { this.step(); }
 
   ticks = 0;
   lastCall: number = 0;
@@ -81,7 +89,9 @@ class Simulator {
     }
     let t1 = performance.now();
     let elapsed = t1 - t0;
-    console.log(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
+    if (elapsed > 10) {
+      console.log(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
+    }
     // console.log(`Total ticks: ${this.ticks}`);
     // console.log(`Time since last call: ${t0 - this.lastCall}ms`);
     this.lastCall = t0;
@@ -215,6 +225,10 @@ class Simulator {
       }
     }
     return this;
+  }
+
+  unitAt(x: number, y: number): Unit | undefined {
+    return this.units.find(u => u.pos.x === x && u.pos.y === y);
   }
 }
 

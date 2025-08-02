@@ -81,7 +81,7 @@ export class UnitMovement extends Rule {
             return a.hp - b.hp ? 1 : -1;
           }
           if (a.id !== b.id) {
-            return a.id.localeCompare(b.id);
+            return String(a.id).localeCompare(String(b.id));
           }
           return 0;
         });
