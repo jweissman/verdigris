@@ -64,12 +64,12 @@ class Simulator {
   }
 
   addUnit(unit: Partial<Unit>) {
-    this.units.push({
+    let u = {
       ...unit,
       id: unit.id || `unit_${Date.now()}`,
       hp: unit.hp === undefined ? 100 : unit.hp,
       team: unit.team || 'friendly',
-      pos: unit.pos || { x: 0, y: 0 },
+      pos: unit.pos || { x: 1, y: 1 },
       intendedMove: unit.intendedMove || { x: 0, y: 0 },
       maxHp: unit.maxHp || unit.hp || 100,
       sprite: unit.sprite || 'default',
@@ -77,8 +77,9 @@ class Simulator {
       mass: unit.mass || 1,
       abilities: unit.abilities || {},
       meta: {}
-    });
-
+    };
+    this.units.push(u);
+    console.log(`Added unit ${u.id} at (${u.pos.x}, ${u.pos.y}) with hp: ${u.hp}, team: ${u.team}`);
     return this;
   }
 
@@ -97,6 +98,7 @@ class Simulator {
   ticks = 0;
   lastCall: number = 0;
   step(force = false) {
+    // console.log(`Simulator step called at tick ${this.ticks}, paused: ${this.paused}`);
     if (this.paused) {
       if (!force) {
         console.log(`Simulation is paused, skipping step.`);
@@ -109,6 +111,7 @@ class Simulator {
     let t0 = performance.now();
     this.ticks++;
     let lastUnits = [...this.units];
+    // console.log(`Executing rules (${this.rulebook.length} rules) at tick ${this.ticks}`);
     for (const rule of this.rulebook) {
       let tr0 = performance.now();
       rule.execute();
@@ -281,3 +284,8 @@ class Simulator {
 }
 
 export { Simulator };
+console.log('Simulator module loaded.');
+if (typeof window !== 'undefined') {
+  // @ts-ignore
+  window.Simulator = Simulator; // Expose for browser use
+}

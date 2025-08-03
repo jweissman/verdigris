@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import { Freehold } from '../src/freehold';
 import { UnitMovement } from '../src/rules/unit_movement';
 
 describe('AI Behavior System', () => {
+  beforeEach(() => {
+    Freehold.counts = {};
+  });
   it('farmers hunt enemies by moving toward them', () => {
     const canvas = { 
       width: 320, height: 200,
@@ -14,8 +17,8 @@ describe('AI Behavior System', () => {
     UnitMovement.wanderRate = 1;
     
     // Add farmer at (1,1) and worm at (5,1) - same row
-    fh.addFarmer(1, 1); // Has 'hunt' tag
-    fh.addWorm(5, 1);   // Enemy target
+    fh.add('farmer', 1, 1); // Has 'hunt' tag
+    fh.add('worm', 5, 1);   // Enemy target
     
     const farmer = fh.sim.units.find(u => u.sprite === 'farmer');
     const worm = fh.sim.units.find(u => u.sprite === 'worm');
@@ -51,8 +54,8 @@ describe('AI Behavior System', () => {
     UnitMovement.wanderRate = 1;
     
     // Add worms with some distance between them
-    fh.addWorm(1, 1, ["swarm"]); // Will try to move toward ally
-    fh.addWorm(5, 1, ["swarm"]); // Target ally
+    fh.add('worm', 1, 1); //, ["swarm"]); // Will try to move toward ally
+    fh.add('worm', 5, 1); //, ["swarm"]); // Target ally
     
     const worms = fh.sim.units.filter(u => u.sprite === 'worm');
     
@@ -84,8 +87,8 @@ describe('AI Behavior System', () => {
     UnitMovement.wanderRate = 1;
     
     // Add farmer at edge (0,0) and enemy far away
-    fh.addFarmer(0, 0);
-    fh.addWorm(5, 5);
+    fh.add('farmer', 0, 0);
+    fh.add('worm', 5, 5);
     
     const farmer = fh.sim.units.find(u => u.sprite === 'farmer');
     
@@ -113,9 +116,9 @@ describe('AI Behavior System', () => {
     UnitMovement.wanderRate = 1;
     
     // Create a line of worms where middle one can't move
-    fh.addWorm(1, 1); // Will try to move right toward ally
-    fh.addWorm(2, 1); // Blocks movement  
-    fh.addWorm(3, 1); // Target ally
+    fh.add('worm', 1, 1); // Will try to move right toward ally
+    fh.add('worm', 2, 1); // Blocks movement  
+    fh.add('worm', 3, 1); // Target ally
     
     const worms = fh.sim.units.filter(u => u.sprite === 'worm');
     expect(worms.length).toBe(3);
@@ -150,15 +153,15 @@ describe('AI Behavior System', () => {
     UnitMovement.wanderRate = 1;
     
     // Place farmer and worm adjacent to each other
-    let _farmerId = fh.addFarmer(1, 1);
-    let _wormId = fh.addWorm(2, 1);
+    let _farmerId = fh.add('farmer', 1, 1);
+    let _wormId = fh.add('worm', 2, 1);
     
     // const farmer = fh.sim.units.find(u => u.id === farmerId);
     // const worm = fh.sim.units.find(u => u.id === wormId);
     // fh.sim.roster
     
     // if (!farmer || !worm) throw new Error('Units not found');
-    // console.log("Roster after adding units:", fh.sim.roster);
+    console.log("Roster after adding units:", fh.sim.roster);
     
     const initialFarmerHp = fh.sim.roster.farmer.hp;
     const initialWormHp = fh.sim.roster.worm.hp;

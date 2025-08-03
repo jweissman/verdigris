@@ -198,6 +198,11 @@ export default class Renderer extends Display {
     for (const unit of this.sim.units) {
       this.renderUnit(unit);
     }
+    
+    // Draw projectiles
+    for (const projectile of this.sim.projectiles) {
+      this.renderProjectile(projectile);
+    }
   }
 
   private renderCinematicView() {
@@ -210,6 +215,11 @@ export default class Renderer extends Display {
     // Draw units with cinematic positioning
     for (const unit of sortedUnits) {
       this.renderUnitCinematic(unit);
+    }
+    
+    // Draw projectiles in cinematic view
+    for (const projectile of this.sim.projectiles) {
+      this.renderProjectileCinematic(projectile);
     }
   }
 
@@ -723,6 +733,60 @@ export default class Renderer extends Display {
         this.drawBar("jump progress", Math.round(cinematicX - pixelSize/2), Math.round(finalY - pixelSize/2) - 6, pixelSize, 2, progressRatio, '#ace');
       }
     }
+  }
+
+  private renderProjectile(projectile: any) {
+    // Simple projectile rendering for grid view
+    const pixelX = Math.round(projectile.pos.x * 8);
+    const pixelY = Math.round(projectile.pos.y * 8);
+    
+    this.ctx.save();
+    this.ctx.fillStyle = projectile.team === 'friendly' ? '#44ff44' : '#ff4444';
+    this.ctx.beginPath();
+    this.ctx.arc(pixelX + 4, pixelY + 4, projectile.radius || 2, 0, 2 * Math.PI);
+    this.ctx.fill();
+    
+    // Add a trail effect
+    this.ctx.strokeStyle = projectile.team === 'friendly' ? '#44ff44' : '#ff4444';
+    this.ctx.lineWidth = 1;
+    this.ctx.globalAlpha = 0.5;
+    this.ctx.beginPath();
+    const trailX = pixelX + 4 - (projectile.vel?.x || 0) * 8;
+    const trailY = pixelY + 4 - (projectile.vel?.y || 0) * 8;
+    this.ctx.moveTo(trailX, trailY);
+    this.ctx.lineTo(pixelX + 4, pixelY + 4);
+    this.ctx.stroke();
+    
+    this.ctx.restore();
+  }
+
+  private renderProjectileCinematic(projectile: any) {
+    // Cinematic projectile rendering
+    const battleStripY = this.height * 0.8;
+    const stackingFactor = 0.24;
+    
+    const cinematicX = projectile.pos.x * 8;
+    const cinematicY = battleStripY - (projectile.pos.y * 8 * stackingFactor);
+    
+    this.ctx.save();
+    this.ctx.fillStyle = projectile.team === 'friendly' ? '#44ff44' : '#ff4444';
+    this.ctx.globalAlpha = 0.9;
+    this.ctx.beginPath();
+    this.ctx.arc(cinematicX, cinematicY, (projectile.radius || 2) * 1.5, 0, 2 * Math.PI);
+    this.ctx.fill();
+    
+    // Enhanced trail for cinematic view
+    this.ctx.strokeStyle = projectile.team === 'friendly' ? '#44ff44' : '#ff4444';
+    this.ctx.lineWidth = 2;
+    this.ctx.globalAlpha = 0.6;
+    this.ctx.beginPath();
+    const trailX = cinematicX - (projectile.vel?.x || 0) * 12;
+    const trailY = cinematicY - (projectile.vel?.y || 0) * 12;
+    this.ctx.moveTo(trailX, trailY);
+    this.ctx.lineTo(cinematicX, cinematicY);
+    this.ctx.stroke();
+    
+    this.ctx.restore();
   }
 }
 

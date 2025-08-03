@@ -59,7 +59,7 @@ export default class DSL {
       return null;
     }
 
-    console.debug(`"${expression}" [for subject ${subject.id}] =>`, ret);
+    // console.debug(`"${expression}" [for subject ${subject.id}] =>`, ret);
     return ret;
   }
 }

@@ -5,6 +5,11 @@ import worm from "./assets/sprites/worm.png";
 import soldier from "./assets/sprites/soldier.png";
 // @ts-ignore
 import farmer from "./assets/sprites/farmer.png";
+// @ts-ignore
+import slinger from "./assets/sprites/slinger.png";
+// @ts-ignore
+import priest from "./assets/sprites/priest.png";
+
 import Renderer, { createScaledRenderer } from "./renderer";
 
 class Game {
@@ -12,11 +17,11 @@ class Game {
   private lastSimTime: number = 0;
   private simTickRate: number = 8; // Simulation runs at 8fps for strategic gameplay
 
-  private canvas: HTMLCanvasElement;
+  // private canvas: HTMLCanvasElement
   renderer: Renderer;
   private _handleResize: () => void;
   private draw: () => void;
-  private sprites: Map<string, HTMLImageElement> = new Map();
+  // private sprites: Map<string, HTMLImageElement> = new Map();
 
   private addInputListener: (cb: (e: { key: string }) => void) => void;
   private animationFrame: (cb: () => void) => void;
@@ -28,7 +33,7 @@ class Game {
       animationFrame?: (cb: () => void) => void
     }
   ) {
-    this.canvas = canvas;
+    // this.canvas = canvas;
     this.addInputListener = opts?.addInputListener || (typeof window !== 'undefined' ? (cb) => window.addEventListener("keydown", cb as any) : () => {});
     this.animationFrame = opts?.animationFrame || (typeof window !== 'undefined' ? (cb) => requestAnimationFrame(cb) : () => {});
     this.setupInput();
@@ -38,11 +43,11 @@ class Game {
     this.sim = new Simulator(40, 25); // 40×25 grid = 320×200 pixels at 8px per cell
     
     // Load sprites
-    this.loadSprites();
+    // this.sprites = Game.loadSprites();
 
     // Create scaled renderer for browser environments
     if (typeof window !== 'undefined' && canvas instanceof HTMLCanvasElement) {
-      const scaledRenderer = createScaledRenderer(320, 200, canvas, this.sim, this.sprites);
+      const scaledRenderer = createScaledRenderer(320, 200, canvas, this.sim, Game.loadSprites());
       this.renderer = scaledRenderer.renderer;
       this._handleResize = scaledRenderer.handleResize;
       this.draw = scaledRenderer.draw;
@@ -60,36 +65,40 @@ class Game {
           imageSmoothingEnabled: false
         } as any)
       };
-      this.renderer = new Renderer(320, 200, mockCanvas, this.sim, this.sprites);
+      this.renderer = new Renderer(320, 200, mockCanvas, this.sim, new Map<string, HTMLImageElement>());
       this._handleResize = () => {};
       this.draw = () => this.renderer.draw();
     }
   }
 
-  private loadSprites(): void {
+  static loadSprites(): Map<string, HTMLImageElement> {
     // Only load sprites in browser environment
     if (typeof Image === 'undefined') {
       console.debug('Skipping sprite loading in headless environment');
-      return;
+      return new Map();
     }
 
     const spriteList = [
       { name: 'worm', src: worm }, //'/worm.png' },
       { name: 'soldier', src: soldier }, //'/soldier.png' }
       { name: 'farmer', src: farmer },
+      { name: 'slinger', src: slinger },
+      { name: 'priest', src: priest },
     ];
 
+    let sprites = new Map<string, HTMLImageElement>();
     spriteList.forEach(({ name, src }) => {
       const img = new Image();
       img.onload = () => {
         console.debug(`Loaded sprite: ${name}`);
-        this.sprites.set(name, img);
+        sprites.set(name, img);
       };
       img.onerror = () => {
         console.error(`Failed to load sprite: ${src}`);
       };
       img.src = src;
     });
+    return sprites;
   }
 
   setupInput() {
@@ -143,5 +152,10 @@ class Game {
 }
 
 export { Game };
+
+if (typeof window !== 'undefined') {
+  // If running in browser, export Game globally
+  (window as any).Game = Game;
+}
 
 console.log('Game module loaded.');

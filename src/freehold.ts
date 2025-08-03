@@ -32,18 +32,20 @@ class Freehold extends Game {
       team: "hostile",
       sprite: "worm",
       state: "idle",
-      hp: 20, // Tougher worms for longer battles
-      maxHp: 20,
+      hp: 10, // Tougher worms for longer battles
+      maxHp: 10,
       mass: 4,
+      // tags:
     },
     farmer: {
       intendedMove: { x: 0, y: 0 },
       team: "friendly",
       sprite: "farmer",
       state: "idle",
-      hp: 20,
-      maxHp: 20,
+      hp: 25,
+      maxHp: 25,
       mass: 1,
+      tags: ['hunt'],
     },
     soldier: {
       intendedMove: { x: 0, y: 0 },
@@ -53,7 +55,28 @@ class Freehold extends Game {
       hp: 30,
       maxHp: 30,
       mass: 1,
-    }
+      tags: ['hunt'],
+    },
+    ranger: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "slinger",
+      state: "idle",
+      hp: 20,
+      maxHp: 20,
+      mass: 1,
+      abilities: {}
+    },
+    priest: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "priest",
+      state: "idle",
+      hp: 20,
+      maxHp: 20,
+      mass: 1,
+      abilities: {}
+    },
   }
 
   
@@ -108,24 +131,39 @@ class Freehold extends Game {
       this.renderer.setViewMode('cinematic');
     }
 
-    if (e.key === "w") {
+    let beasts = ["worm", "farmer", "soldier", "ranger", "priest"];
+    if (beasts.some(b => b.startsWith(e.key))) {
       const { x, y } = this.randomGridPosition();
-      console.log(`Spawning worm at (${x}, ${y})`);
-      this.addWorm(x, y, ["swarm"]);
-      return true;
-    } else if (e.key === "f") {
-      const { x, y } = this.randomGridPosition();
-      console.log(`Spawning farmer at (${x}, ${y})`);
-      this.addFarmer(x, y);
-      return true;
-    } else if (e.key === "s") {
-      const { x, y } = this.randomGridPosition();
-      console.log(`Spawning soldier at (${x}, ${y})`);
-      this.addSoldier(x, y);
-      return true;
-    } 
+      let beast = beasts.find(b => b.startsWith(e.key));
+      if (beast) {
+        this.add(beast, x, y);
+      }
+    }
+  }
 
-    return false;
+  add(beast: string, x: number, y: number) {
+    console.log(`Spawning ${beast} at (${x}, ${y})`);
+    this.sim.addUnit({ ...Freehold.unit(beast), pos: { x, y } });
+  }
+
+  static unit(beast: string): Partial<Unit> {
+    return {
+        id: beast + this.id(beast),
+        // pos: { x, y },
+        intendedMove: { x: 0, y: 0 },
+        state: "idle",
+        ...Freehold.bestiary[beast],
+        abilities: {
+          ...(beast === "worm" ? { jumps: Freehold.abilities.jumps } : {})
+        },
+        tags: [
+          ...(beast === "worm" ? ["swarm"] : []),
+          ...(beast === "farmer" ? ["hunt"] : []),
+          ...(beast === "soldier" ? ["hunt"] : []),
+          // ...(beast === "ranger" ? ["ranged"] : []),
+          // ...(beast === "priest" ? ["heal"] : [])
+        ]
+      };
   }
 
   randomGridPosition(): { x: number, y: number } {
@@ -135,88 +173,54 @@ class Freehold extends Game {
     };
   }
 
-  addWorm(x: number, y: number, tags: string[] = []): string {
-    let id = "worm" + this.id("worm");
-    this.sim.addUnit({
-      id,
-      pos: { x, y },
-      tags,
-      ...Freehold.bestiary.worm,
-      // intendedMove: { x: 0, y: 0 },
-      // team: "hostile",
-      // sprite: "worm",
-      // state: "idle",
-      // hp: 20, // Tougher worms for longer battles
-      // maxHp: 20,
-      // mass: 1,
-      abilities: {
-        jumps: Freehold.abilities.jumps,
-        // {
-        //   name: 'Hurl Self',
-        //   cooldown: 100,
-        //   config: {
-        //     height: 5, speed: 2, impact: { radius: 3, damage: 5 }, duration: 10,
-        //   },
-        //   target: 'closest.enemy()?.pos',
-        //   trigger: 'distance(closest.enemy()?.pos) > 10',
-        //   effect: (u, t) => {
-        //     if (!t) {
-        //       console.warn(`${u.id} has no valid target to jump to`);
-        //       return;
-        //     }
-        //     console.log(`${u.id} jumping to target at (${t.x}, ${t.y})`);
-        //     u.meta.jumping = true;
-        //     u.meta.jumpProgress = 0;
-        //     u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
-        //     u.meta.jumpTarget = t;
-        //   },
-        // },
-      },
-    });
-    return id;
-  }
-
-
-  addFarmer(x: number, y: number, tags: string[] = ["hunt"]): string {
-    console.log(`Adding farmer at (${x}, ${y}) with tags: ${tags.join(", ")}`);
-    let id = "farmer" + this.id("farmer");
-    this.sim.addUnit({
-      id,
-      pos: { x, y },
-      intendedMove: { x: 0, y: 0 },
-      team: "friendly", // Opposite of worms!
-      sprite: "farmer", // Use soldier sprite for farmers
-      state: "idle",
-      hp: 25, // Tough farmers for epic battles
-      mass: 1,
-      tags
-    });
-    return id;
-  }
-
-  addSoldier(x: number, y: number, tags: string[] = ["hunt"]): string {
-    console.log(`Adding soldier at (${x}, ${y}) with tags: ${tags.join(", ")}`);
-    let id = "soldier" + this.id("soldier");
-    this.sim.addUnit({
-      id,
-      pos: { x, y },
-      intendedMove: { x: 0, y: 0 },
-      team: "friendly",
-      sprite: "soldier",
-      state: "idle",
-      hp: 30, // Tougher soldiers for epic battles
-      mass: 1,
-      tags
-    });
-    return id;
-  }
-
-  private counts: { [seriesName: string]: number } = {}
-  protected id(seriesName: string): number | string {
+  static counts: { [seriesName: string]: number } = {}
+  static id(seriesName: string): number | string {
     this.counts = this.counts || {};
     let count = (this.counts[seriesName] || 0);
     this.counts[seriesName] = count + 1;
     return count || "";
+  }
+
+  static boot(
+    canvasId: string | HTMLCanvasElement = 'battlefield'
+  ) {
+    let game: Freehold | null = null;
+    const canvas = canvasId instanceof HTMLCanvasElement
+      ? canvasId
+      : document.getElementById(canvasId) as HTMLCanvasElement;
+    console.log('Canvas element:', canvas);
+    if (canvas) {
+      let addInputListener = (cb: (e: { key: string }) => void) => {
+        document.addEventListener('keydown', (e) => {
+          cb({ key: e.key });
+        });
+      };
+
+      game = new Freehold(canvas, {
+        addInputListener,
+        animationFrame: (cb) => requestAnimationFrame(cb)
+      });
+            
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        if (game && game.handleResize) {
+          game.handleResize();
+        }
+      });
+      
+      // Initial size calculation
+      if (game && game.handleResize) {
+        game.handleResize();
+      }
+    } else {
+      console.error(`Canvas element ${canvasId} not found!`);
+    }
+    console.log('Game initialized:', game);
+    function gameLoop() {
+      if (game) { game.update(); }
+      requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
   }
 }
 

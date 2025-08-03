@@ -39,6 +39,6 @@ export class Toss extends Command {
 
     console.log(`🤾 Tossing ${unitId} from (${unit.pos.x},${unit.pos.y}) to (${clampedTargetX},${clampedTargetY}) with force ${force}`);
 
-    console.log("Handled toss", unit.meta);
+    // console.log("Handled toss", unit.meta);
   }
 }

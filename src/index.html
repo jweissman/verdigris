@@ -5,44 +5,9 @@
     <script src="./freehold.ts" type="module"></script>
   </head>
   <body style="margin: 0; padding: 0; background: white; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-    <!-- <img src="./logo.png" width="200" alt="Freehold Game Logo" /> -->
     <canvas id="battlefield"></canvas>
   </body>
   <script type="module">
-    let game = null;
-    const canvas = document.getElementById('battlefield');
-    console.log('Canvas element:', canvas);
-    if (canvas) {
-      game = new Freehold(canvas, {
-        addInputListener: (cb) => {
-          document.addEventListener('keydown', (e) => {
-            cb({ key: e.key });
-          });
-        },
-        animationFrame: (cb) => {
-          requestAnimationFrame(cb);
-        }
-      });
-            
-      // Handle window resize
-      window.addEventListener('resize', () => {
-        if (game && game.handleResize) {
-          game.handleResize();
-        }
-      });
-      
-      // Initial size calculation
-      if (game && game.handleResize) {
-        game.handleResize();
-      }
-    } else {
-      console.error('Canvas element not found!');
-    }
-    console.log('Game initialized:', game);
-    function gameLoop() {
-      if (game) { game.update(); }
-      requestAnimationFrame(gameLoop);
-    }
-    requestAnimationFrame(gameLoop);
+    Freehold.boot();
   </script>
 </html>

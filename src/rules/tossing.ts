@@ -30,7 +30,7 @@ export class Tossing extends Rule {
 
       // Optional: Apply small AoE damage on landing (like jump)
       if (unit.meta.tossForce && unit.meta.tossForce > 3) {
-        console.log(`🤾 Tossed unit ${unit.id} landing with force - applying minor AoE`);
+        // console.log(`🤾 Tossed unit ${unit.id} landing with force - applying minor AoE`);
         this.sim.queuedEvents.push({
           kind: 'aoe',
           source: unit.id,
