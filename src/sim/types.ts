@@ -100,7 +100,7 @@ export type Action = {
   target: string | Vec2;
   tick?: number; // When this event was processed
   meta: {
-    aspect?: 'force' | 'life' | 'heat' | 'shock' | 'impact';
+    aspect?: 'force' | 'life' | 'heat' | 'shock' | 'impact' | 'radiant';
     amount?: number; // Amount of damage or healing
     radius?: number; // Radius for AoE effects
     distance?: number; // Distance for knockback

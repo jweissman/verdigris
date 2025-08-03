@@ -1,0 +1,1 @@
+// TODO: move battlestrip/field view logic out of renderer.ts

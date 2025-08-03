@@ -148,8 +148,18 @@ export class EventHandler extends Rule {
     // }
   }
 
-  private handleHeal(event: any) {
-    // Implement healing logic here
+  private handleHeal(event: Action) {
+    let targetUnit = this.sim.units.find(unit => unit.id === event.target);
+    if (!targetUnit) {
+      console.warn(`Target unit ${event.target} not found for heal event from ${event.source}`);
+      return;
+    }
+
+    const healAmount = event.meta.amount || 5;
+    const oldHp = targetUnit.hp;
+    targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
+    
+    console.log(`✨ ${event.source} healed ${targetUnit.id} for ${healAmount} (${oldHp} → ${targetUnit.hp} hp)`);
   }
 
   private handleKnockback(event: any) {

@@ -101,6 +101,12 @@ class Freehold extends Game {
       }
       return;
     }
+    
+    if (e.key === "r") {
+      this.renderer.setViewMode('grid');
+    } else if (e.key === "c") {
+      this.renderer.setViewMode('cinematic');
+    }
 
     if (e.key === "w") {
       const { x, y } = this.randomGridPosition();

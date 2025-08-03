@@ -153,9 +153,14 @@ export default class Renderer extends Display {
   private unitInterpolations: Map<string, { startX: number, startY: number, startZ: number, targetX: number, targetY: number, targetZ: number, progress: number, duration: number }> = new Map();
   private animationTime: number = 0;
   private previousPositions: Map<string, {x: number, y: number, z: number}> = new Map();
+  private viewMode: 'grid' | 'cinematic' = 'cinematic';
 
   constructor(width: number, height: number, canvas: CanvasLike, private sim: Simulator, private sprites: Map<string, HTMLImageElement>) {
     super(width, height, canvas);
+  }
+
+  setViewMode(mode: 'grid' | 'cinematic') {
+    this.viewMode = mode;
   }
   
   grid() {
@@ -173,19 +178,39 @@ export default class Renderer extends Display {
 
   render() {
     this.updateMovementInterpolations();
+    
+    if (this.viewMode === 'cinematic') {
+      this.renderCinematicView();
+    } else {
+      this.renderGridView();
+      this.renderOverlays();
+    }
+  }
+
+  private renderGridView() {
     // Draw grid dots
     this.ctx.save();
     this.ctx.globalAlpha = 0.2;
     this.grid();
     this.ctx.restore();
     
-    // Draw units
+    // Draw units normally
     for (const unit of this.sim.units) {
       this.renderUnit(unit);
     }
+  }
+
+  private renderCinematicView() {
+    // Draw procedural background
+    this.renderBackground();
     
-    // Draw overlays on top of everything else
-    this.renderOverlays();
+    // Sort units by y position for proper layering (back to front)
+    const sortedUnits = [...this.sim.units].sort((a, b) => b.pos.y - a.pos.y > 0 ? 1 : -1);
+
+    // Draw units with cinematic positioning
+    for (const unit of sortedUnits) {
+      this.renderUnitCinematic(unit);
+    }
   }
 
   private renderUnit(unit: Unit) {
@@ -370,7 +395,7 @@ export default class Renderer extends Display {
       this.renderTossTarget(unit);
       
       // Combat target highlights
-      this.renderCombatTarget(unit);
+      // this.renderCombatTarget(unit);
     }
     
     // AoE effect visualizations
@@ -545,6 +570,158 @@ export default class Renderer extends Display {
       this.ctx.arc(centerPixelX, centerPixelY, pixelRadius, 0, 2 * Math.PI);
       this.ctx.stroke();
       this.ctx.restore();
+    }
+  }
+
+  private renderBackground() {
+    // Simple procedural background for cinematic view
+    this.ctx.save();
+    
+    // Sky gradient (dithered)
+    // this.ctx.fillStyle = '#000';
+    // this.ctx.fillRect(0, 0, this.width, this.height * 0.3);
+    
+    // Mountains (triangular peaks)
+    this.ctx.fillStyle = '#ccc';
+    const mountainY = this.height * 0.5;
+    const numPeaks = 45;
+    for (let i = 0; i < numPeaks; i++) {
+      const peakX = ((this.width*2) / numPeaks) * i + Math.sin(i * 0.7) * 20;
+      const peakHeight = 40 + Math.sin(i * 1.2) * 20;
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(peakX - 30, mountainY);
+      this.ctx.lineTo(peakX, mountainY - peakHeight);
+      this.ctx.lineTo(peakX + 30, mountainY);
+      this.ctx.closePath();
+      this.ctx.fill();
+    }
+
+    // fill bottom area with a solid color
+    this.ctx.fillStyle = '#eee';
+    this.ctx.fillRect(0, mountainY, this.width, this.height - mountainY);
+
+    // isolate battle strip
+    // this.ctx.globalAlpha = 0.8; // Semi-transparent battle strip
+    // this.ctx.fillStyle = '#eee';
+    // this.ctx.fillRect(0, this.height * 0.6, this.width, this.height * 0.7);
+    // this.ctx.globalAlpha = 1.0; // Reset alpha for other elements
+    
+    // Rolling hills (sine waves)
+    // this.ctx.fillStyle = '#fff';
+    // const hillY = this.height * 0.6;
+    // this.ctx.beginPath();
+    // this.ctx.moveTo(0, hillY);
+    // for (let x = 0; x <= this.width; x += 4) {
+    //   const y = hillY + Math.sin(x * 0.02) * 15 + Math.sin(x * 0.05) * 8;
+    //   this.ctx.lineTo(x, y);
+    // }
+    // this.ctx.lineTo(this.width, this.height);
+    // this.ctx.lineTo(0, this.height);
+    // this.ctx.closePath();
+    // this.ctx.fill();
+    
+    // Forest (circles for trees)
+    // for (let i = 0; i < 80; i++) {
+    //   const treeX = Math.sin(i * 1.3) * 120 + this.width * 0.5;
+    //   const treeY = mountainY * 1.2 + Math.sin(treeX * 0.01) * 15 - 10;
+    //   const treeSize = 8 + Math.sin(i * 0.8) * 4;
+      
+    //   this.ctx.beginPath();
+    //   this.ctx.arc(treeX, treeY, treeSize, 0, 2 * Math.PI);
+    //   this.ctx.fill();
+    // }
+    
+    this.ctx.restore();
+  }
+
+  private renderUnitCinematic(unit: Unit) {
+    // Check if unit was recently damaged and should blink
+    const recentDamage = this.sim.processedEvents.find(event => 
+      event.kind === 'damage' && 
+      event.target === unit.id && 
+      event.tick && 
+      (this.sim.ticks - event.tick) < 2
+    );
+    
+    if (recentDamage && Math.floor(this.animationTime / 100) % 2 === 0) {
+      return; // Don't render this frame (creates blink effect)
+    }
+
+    // Calculate render position with cinematic adjustments
+    let renderX = unit.pos.x;
+    let renderY = unit.pos.y;
+    let renderZ = unit.meta?.z || 0;
+      
+    const interp = this.unitInterpolations.get(unit.id);
+    if (interp) {
+      const easeProgress = this.easeInOutQuad(interp.progress);
+      renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
+      renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
+      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
+    }
+    
+    // Cinematic positioning: more compressed vertically, slight perspective scaling
+    const battleStripY = this.height * 0.8; // Position battle at bottom
+    const yRatio = 1 - (renderY / this.sim.fieldHeight); // Scale Y to fit cinematic strip
+    const depthScale = 1  + (yRatio * 4); // Front units slightly larger
+    const stackingFactor = 0.24; // Compress Y spacing
+    
+    const cinematicX = renderX * 8;
+    const cinematicY = battleStripY - (renderY * 8 * stackingFactor);
+    const pixelSize = Math.round(16 * depthScale);
+    
+    // Adjust for z height
+    let finalY = cinematicY;
+    if (renderZ > 0) {
+      finalY -= renderZ * 4.8;
+    }
+    
+    const sprite = this.sprites.get(unit.sprite);
+    if (sprite) {
+      // Choose frame based on unit state
+      let frameIndex = 0;
+      if (unit.state === 'dead') {
+        frameIndex = 3;
+      } else if (unit.state === 'attack') {
+        frameIndex = 2;
+      } else {
+        frameIndex = Math.floor((this.animationTime / 400) % 2);
+      }
+      
+      const frameX = frameIndex * 16;
+      const pixelX = cinematicX - pixelSize / 2;
+      const pixelY = Math.round(finalY - pixelSize / 2);
+      
+      this.ctx.drawImage(
+        sprite,
+        frameX, 0, 16, 16,
+        pixelX, pixelY, pixelSize, pixelSize
+      );
+    } else {
+      // Fallback rectangle
+      this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
+      this.ctx.fillRect(Math.round(cinematicX - pixelSize/2), Math.round(finalY - pixelSize/2), pixelSize, pixelSize);
+    }
+    
+    // Draw HP bar (adjusted for cinematic scale)
+    if (typeof unit.hp === 'number') {
+      const maxHp = unit.maxHp || 100;
+      const hpRatio = Math.max(0, Math.min(1, unit.hp / maxHp));
+      if (hpRatio < 0.8) {
+        this.drawBar("hit points", Math.round(cinematicX - pixelSize / 2), Math.round(finalY - pixelSize / 2) - 4, pixelSize, 2, hpRatio);
+      }
+    }
+
+    // Draw ability progress bars
+    if (unit.abilities && unit.abilities.jumps) {
+      const ability = unit.abilities.jumps;
+      const duration = ability.config?.jumpDuration || 10;
+      const progress = unit.meta.jumpProgress || 0;
+      const progressRatio = (progress / duration) || 0;
+      if (progressRatio > 0 && progressRatio < 1) {
+        this.drawBar("jump progress", Math.round(cinematicX - pixelSize/2), Math.round(finalY - pixelSize/2) - 6, pixelSize, 2, progressRatio, '#ace');
+      }
     }
   }
 }
