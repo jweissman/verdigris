@@ -8,8 +8,10 @@ import { Rule } from "./rules/rule";
 import { UnitBehavior } from "./rules/unit_behavior";
 import Cleanup from "./rules/cleanup";
 import { Jumping } from "./rules/jumping";
+import { Tossing } from "./rules/tossing";
 import { Abilities } from "./rules/abilities";
 import { EventHandler } from "./rules/event_handler";
+import { CommandHandler, QueuedCommand } from "./rules/command_handler";
 
 
 class Simulator {
@@ -21,6 +23,7 @@ class Simulator {
   rulebook: Rule[];
   queuedEvents: Action[] = [];
   processedEvents: Action[] = [];
+  queuedCommands: QueuedCommand[] = [];
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
@@ -39,7 +42,9 @@ class Simulator {
     this.units = [];
     this.projectiles = [];
     this.processedEvents = [];
+    this.queuedCommands = [];
     this.rulebook = [
+      new CommandHandler(this), // Process commands first
       new Abilities(this),
       new UnitBehavior(this),
       new UnitMovement(this),
@@ -52,7 +57,8 @@ class Simulator {
       new ProjectileMotion(this),
 
       new Jumping(this),
-      new EventHandler(this),
+      new Tossing(this), // Handle tossed units
+      new EventHandler(this), // Process events last
       new Cleanup(this)
     ];
   }

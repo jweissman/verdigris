@@ -5,6 +5,7 @@ export class EventHandler extends Rule {
   glossary = (event: Action) => {
     let targetUnit = this.sim.units.find(unit => unit.id === event.target); // || this.sim.unitAt(event.target);
     let tx = ({
+      aoe: e => `Impact from ${e.source} at (${e.target.x}, ${e.target.y}) with radius ${e.meta.radius}`,
       damage: e => `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage (now at ${targetUnit?.hp} hp)`,
     })
     if (!tx.hasOwnProperty(event.kind)) {
@@ -81,6 +82,13 @@ export class EventHandler extends Rule {
 
     for (const unit of affectedUnits) {
       console.log(`* ${unit.id} is affected by AoE from ${event.source} at (${target.x}, ${target.y})`);
+      
+      const distance = Math.sqrt(
+        Math.pow(unit.pos.x - target.x, 2) +
+        Math.pow(unit.pos.y - target.y, 2)
+      );
+      
+      // Queue damage event
       this.sim.queuedEvents.push({
         kind: 'damage',
         source: event.source,
@@ -89,12 +97,33 @@ export class EventHandler extends Rule {
           amount: event.meta.amount || 10,
           aspect: 'impact',
           origin: { x: target.x, y: target.y }, 
-          distance: Math.sqrt(
-            Math.pow(unit.pos.x - target.x, 2) +
-            Math.pow(unit.pos.y - target.y, 2)
-          )
+          distance: distance
         }
       });
+
+      // Check if source is much more massive and should toss the target
+      if (sourceUnit && unit.mass < sourceUnit.mass) {
+        const massRatio = sourceUnit.mass / unit.mass;
+        if (massRatio >= 2) { // Source is at least 2x more massive
+        // if (sourceUnit.mass > unit.mass) {
+          // Calculate toss direction (away from source)
+          const dx = unit.pos.x - target.x;
+          const dy = unit.pos.y - target.y;
+          const magnitude = Math.sqrt(dx * dx + dy * dy) || 1;
+          const direction = { x: dx / magnitude, y: dy / magnitude };
+          
+          const tossForce = Math.min(8, Math.floor(massRatio * 2)); // Cap force at 8
+          const tossDistance = Math.min(5, Math.floor(massRatio)); // Cap distance at 5
+          
+          console.log(`🤾 Queueing toss command: ${unit.id} (mass ${unit.mass}) tossed by ${sourceUnit.id} (mass ${sourceUnit.mass}), ratio ${massRatio.toFixed(1)}`);
+          
+          this.sim.queuedCommands.push({
+            commandType: 'toss',
+            unitId: unit.id,
+            args: [direction, tossForce, tossDistance]
+          });
+        }
+      }
     }
   }
 

@@ -34,7 +34,7 @@ class Freehold extends Game {
       state: "idle",
       hp: 20, // Tougher worms for longer battles
       maxHp: 20,
-      mass: 1,
+      mass: 4,
     },
     farmer: {
       intendedMove: { x: 0, y: 0 },

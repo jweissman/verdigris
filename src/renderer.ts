@@ -366,6 +366,9 @@ export default class Renderer extends Display {
       // Jump target highlights
       this.renderJumpTarget(unit);
       
+      // Toss target highlights
+      this.renderTossTarget(unit);
+      
       // Combat target highlights
       this.renderCombatTarget(unit);
     }
@@ -434,6 +437,29 @@ export default class Renderer extends Display {
     this.ctx.fillStyle = '#4444ff';
     this.ctx.globalAlpha = 0.4;
     this.ctx.fillRect(targetX, targetY, 8, 8);
+    this.ctx.restore();
+  }
+
+  private renderTossTarget(unit: Unit) {
+    // Only show if unit is being tossed and has a target
+    if (!unit.meta?.tossing || !unit.meta?.tossTarget) {
+      return;
+    }
+
+    const targetX = Math.round(unit.meta.tossTarget.x * 8);
+    const targetY = Math.round(unit.meta.tossTarget.y * 8);
+    
+    // Highlight target cell with purple overlay (involuntary movement)
+    this.ctx.save();
+    this.ctx.fillStyle = '#8844ff';
+    this.ctx.globalAlpha = 0.5;
+    this.ctx.fillRect(targetX, targetY, 8, 8);
+    
+    // Add a pulsing border to indicate involuntary movement
+    this.ctx.strokeStyle = '#ff44aa';
+    this.ctx.lineWidth = 2;
+    this.ctx.globalAlpha = 0.7;
+    this.ctx.strokeRect(targetX, targetY, 8, 8);
     this.ctx.restore();
   }
 
