@@ -150,9 +150,9 @@ class ScaledDisplay {
 
 // Game-specific renderer - clean separation of concerns
 export default class Renderer extends Display {
-  private unitInterpolations: Map<string, { startX: number, startY: number, targetX: number, targetY: number, progress: number, duration: number }> = new Map();
+  private unitInterpolations: Map<string, { startX: number, startY: number, startZ: number, targetX: number, targetY: number, targetZ: number, progress: number, duration: number }> = new Map();
   private animationTime: number = 0;
-  private previousPositions: Map<string, {x: number, y: number}> = new Map();
+  private previousPositions: Map<string, {x: number, y: number, z: number}> = new Map();
 
   constructor(width: number, height: number, canvas: CanvasLike, private sim: Simulator, private sprites: Map<string, HTMLImageElement>) {
     super(width, height, canvas);
@@ -183,12 +183,29 @@ export default class Renderer extends Display {
     for (const unit of this.sim.units) {
       this.renderUnit(unit);
     }
+    
+    // Draw overlays on top of everything else
+    this.renderOverlays();
   }
 
   private renderUnit(unit: Unit) {
+    // Check if unit was recently damaged and should blink
+    const recentDamage = this.sim.processedEvents.find(event => 
+      event.kind === 'damage' && 
+      event.target === unit.id && 
+      event.tick && 
+      (this.sim.ticks - event.tick) < 2 // Blink for 8 ticks
+    );
+    
+    // Skip rendering on alternating ticks if recently damaged
+    if (recentDamage && Math.floor(this.animationTime / 100) % 2 === 0) {
+      return; // Don't render this frame (creates blink effect)
+    }
+
     // Calculate render position (interpolated if moving)
     let renderX = unit.pos.x;
     let renderY = unit.pos.y;
+    let renderZ = unit.meta?.z || 0;
       
     const interp = this.unitInterpolations.get(unit.id);
     if (interp) {
@@ -196,6 +213,7 @@ export default class Renderer extends Display {
       const easeProgress = this.easeInOutQuad(interp.progress);
       renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
       renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
+      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
     }
       
     // CRITICAL: Round to integer pixels to prevent blurring
@@ -224,12 +242,10 @@ export default class Renderer extends Display {
       // Assuming 4 frames of 16x16 arranged horizontally in sprite sheet
       const frameX = frameIndex * 16;
 
-      // Offset for z height
-      // let realPixelY = pixelY;
-      if (unit.meta?.z) {
+      // Offset for z height (using interpolated z value)
+      if (renderZ > 0) {
         // Apply z offset for jumping or elevation
-        // Note: would be nice to track z in interpolations so it can be larger + smoother?
-        realPixelY -= unit.meta.z * 2.4; // Adjust Y position based on z height
+        realPixelY -= renderZ * 2.4; // Adjust Y position based on z height
       }
 
       realPixelY = Math.round(realPixelY); // Ensure pixelY is an integer
@@ -297,26 +313,29 @@ export default class Renderer extends Display {
     // Check for new movements
     for (const unit of this.sim.units) {
       const prevPos = this.previousPositions.get(unit.id);
+      const currentZ = unit.meta?.z || 0;
       if (!prevPos) {
         // First time seeing this unit, just record position
-        this.previousPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y });
+        this.previousPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y, z: currentZ });
         continue;
       }
       
-      // Check if unit moved
-      if (prevPos.x !== unit.pos.x || prevPos.y !== unit.pos.y) {
-        // Unit moved! Start interpolation
+      // Check if unit moved or z changed
+      if (prevPos.x !== unit.pos.x || prevPos.y !== unit.pos.y || prevPos.z !== currentZ) {
+        // Unit moved or jumped! Start interpolation
         this.unitInterpolations.set(unit.id, {
           startX: prevPos.x,
           startY: prevPos.y,
+          startZ: prevPos.z,
           targetX: unit.pos.x,
           targetY: unit.pos.y,
+          targetZ: currentZ,
           progress: 0,
           duration: 400 // 400ms movement (slower)
         });
         
         // Update previous position
-        this.previousPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y });
+        this.previousPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y, z: currentZ });
       }
     }
     
@@ -335,6 +354,172 @@ export default class Renderer extends Display {
     // Less smooth, more chunky movement
     // Sharp acceleration at start, then linear
     return t < 0.3 ? 4 * t * t : 0.36 + 0.64 * (t - 0.3) / 0.7;
+  }
+
+  private renderOverlays() {
+    for (const unit of this.sim.units) {
+      if (unit.state === 'dead') continue;
+      
+      // Movement intention arrows
+      this.renderMovementIntention(unit);
+      
+      // Jump target highlights
+      this.renderJumpTarget(unit);
+      
+      // Combat target highlights
+      this.renderCombatTarget(unit);
+    }
+    
+    // AoE effect visualizations
+    this.renderAoEEffects();
+  }
+
+  private renderMovementIntention(unit: Unit) {
+    // Only show if unit has movement intention
+    if (!unit.intendedMove || (unit.intendedMove.x === 0 && unit.intendedMove.y === 0)) {
+      return;
+    }
+
+    // Calculate current unit pixel position (center of sprite)
+    const unitCenterX = Math.round(unit.pos.x * 8) + 4;
+    const unitCenterY = Math.round(unit.pos.y * 8) + 4;
+    
+    // Calculate intended target position
+    const targetX = unitCenterX + unit.intendedMove.x * 8;
+    const targetY = unitCenterY + unit.intendedMove.y * 8;
+    
+    // Draw arrow
+    this.ctx.save();
+    this.ctx.strokeStyle = unit.team === 'friendly' ? '#00ff00' : '#ff4444';
+    this.ctx.lineWidth = 1;
+    this.ctx.globalAlpha = 0.8;
+    
+    // Arrow line
+    this.ctx.beginPath();
+    this.ctx.moveTo(unitCenterX, unitCenterY);
+    this.ctx.lineTo(targetX, targetY);
+    this.ctx.stroke();
+    
+    // Arrow head
+    const angle = Math.atan2(targetY - unitCenterY, targetX - unitCenterX);
+    const headLength = 4;
+    
+    this.ctx.beginPath();
+    this.ctx.moveTo(targetX, targetY);
+    this.ctx.lineTo(
+      targetX - headLength * Math.cos(angle - Math.PI / 6),
+      targetY - headLength * Math.sin(angle - Math.PI / 6)
+    );
+    this.ctx.moveTo(targetX, targetY);
+    this.ctx.lineTo(
+      targetX - headLength * Math.cos(angle + Math.PI / 6),
+      targetY - headLength * Math.sin(angle + Math.PI / 6)
+    );
+    this.ctx.stroke();
+    
+    this.ctx.restore();
+  }
+
+  private renderJumpTarget(unit: Unit) {
+    // Only show if unit is jumping and has a target
+    if (!unit.meta?.jumping || !unit.meta?.jumpTarget) {
+      return;
+    }
+
+    const targetX = Math.round(unit.meta.jumpTarget.x * 8);
+    const targetY = Math.round(unit.meta.jumpTarget.y * 8);
+    
+    // Highlight target cell with blue overlay
+    this.ctx.save();
+    this.ctx.fillStyle = '#4444ff';
+    this.ctx.globalAlpha = 0.4;
+    this.ctx.fillRect(targetX, targetY, 8, 8);
+    this.ctx.restore();
+  }
+
+  private renderCombatTarget(unit: Unit) {
+    // Only show if unit has a combat target
+    if (!unit.intendedTarget || typeof unit.intendedTarget !== 'string') {
+      return;
+    }
+
+    const target = this.sim.creatureById(unit.intendedTarget);
+    if (!target) return;
+
+    const targetX = Math.round(target.pos.x * 8);
+    const targetY = Math.round(target.pos.y * 8);
+    
+    // Highlight target cell with red overlay
+    this.ctx.save();
+    this.ctx.fillStyle = '#ff4444';
+    this.ctx.globalAlpha = 0.4;
+    this.ctx.fillRect(targetX, targetY, 8, 8);
+    this.ctx.restore();
+  }
+
+  private renderAoEEffects() {
+    // Query simulator for recent AoE events
+    const recentAoEEvents = this.sim.processedEvents.filter(event => 
+      event.kind === 'aoe' && 
+      event.tick && 
+      (this.sim.ticks - event.tick) < 10 // Show for 10 ticks
+    );
+
+    for (const event of recentAoEEvents) {
+      if (typeof event.target !== 'object' || !('x' in event.target)) continue;
+      
+      const pos = event.target as {x: number, y: number};
+      const radius = event.meta.radius || 3;
+      const age = event.tick ? (this.sim.ticks - event.tick) : 0;
+      const maxAge = 10;
+      
+      // Fade out over time
+      const alpha = Math.max(0, 1 - (age / maxAge));
+      
+      // Calculate affected grid cells
+      const affectedCells: {x: number, y: number}[] = [];
+      const centerGridX = Math.round(pos.x);
+      const centerGridY = Math.round(pos.y);
+      
+      // Check each cell in a square around the center
+      const checkRadius = Math.ceil(radius);
+      for (let dx = -checkRadius; dx <= checkRadius; dx++) {
+        for (let dy = -checkRadius; dy <= checkRadius; dy++) {
+          const cellX = centerGridX + dx;
+          const cellY = centerGridY + dy;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance <= radius) {
+            affectedCells.push({x: cellX, y: cellY});
+          }
+        }
+      }
+      
+      // Highlight each affected cell
+      this.ctx.save();
+      this.ctx.globalAlpha = alpha * 0.4;
+      this.ctx.fillStyle = '#ffaa00'; // Orange for explosion
+      
+      for (const cell of affectedCells) {
+        const pixelX = cell.x * 8;
+        const pixelY = cell.y * 8;
+        this.ctx.fillRect(pixelX, pixelY, 8, 8);
+      }
+      this.ctx.restore();
+      
+      // Draw impact ring around the center for visual emphasis
+      this.ctx.save();
+      this.ctx.globalAlpha = alpha * 0.6;
+      this.ctx.strokeStyle = '#ff4400';
+      this.ctx.lineWidth = 1;
+      const centerPixelX = Math.round(pos.x * 8) + 4;
+      const centerPixelY = Math.round(pos.y * 8) + 4;
+      const pixelRadius = radius * 8;
+      this.ctx.beginPath();
+      this.ctx.arc(centerPixelX, centerPixelY, pixelRadius, 0, 2 * Math.PI);
+      this.ctx.stroke();
+      this.ctx.restore();
+    }
   }
 }
 

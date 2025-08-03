@@ -2,15 +2,32 @@ import { Action, Vec2 } from "../sim/types";
 import { Rule } from "./rule";
 
 export class EventHandler extends Rule {
+  glossary = (event: Action) => {
+    let targetUnit = this.sim.units.find(unit => unit.id === event.target); // || this.sim.unitAt(event.target);
+    let tx = ({
+      damage: e => `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage (now at ${targetUnit?.hp} hp)`,
+    })
+    if (!tx.hasOwnProperty(event.kind)) {
+      console.warn(`No translation for event kind: ${event.kind}`);
+      return `Event: ${event.kind} from ${event.source} to ${event.target}`;
+    }
+
+    let translated = tx[event.kind];
+    return translated(event);
+  }
+
   apply = () => {
     if (this.sim.queuedEvents.length === 0) {
       return;
     }
 
-    console.log("EventHandler: Applying ", this.sim.queuedEvents.length, " queued events");
+    // console.log("Handle ", this.sim.queuedEvents.length, " queued events");
     // Process events and apply effects
     for (const event of this.sim.queuedEvents) {
       console.log(`Processing event: ${event.kind} from ${event.source} to ${event.target}`);
+      // Mark event with current tick
+      event.tick = this.sim.ticks;
+      
       switch (event.kind) {
         case 'aoe':
           this.handleAreaOfEffect(event);
@@ -27,13 +44,25 @@ export class EventHandler extends Rule {
         default:
           console.warn(`Unknown event kind: ${event.kind}`);
       }
+      
+      // Store processed event
+      this.sim.processedEvents.push(event);
+
+      // Display translation
+      console.log(`- ${this.glossary(event)}`);
     }
+    
+    // Keep only recent processed events (last 60 ticks for example)
+    const maxHistoryTicks = 60;
+    this.sim.processedEvents = this.sim.processedEvents.filter(e => 
+      e.tick && (this.sim.ticks - e.tick) < maxHistoryTicks
+    );
+    
     // Clear events after processing
     this.sim.queuedEvents = [];
   }
 
   private handleAreaOfEffect(event: Action) {
-    // console.log("Handling AoE event:", event);
     if (!event.target || typeof event.target !== 'object' || !('x' in event.target && 'y' in event.target)) {
       console.warn(`Invalid target for AoE event: ${event.target}`);
       return;
@@ -41,22 +70,14 @@ export class EventHandler extends Rule {
     let target = event.target as Vec2;
     target.x = Math.round(target.x);
     target.y = Math.round(target.y);
-    // Implement AoE logic here
-    // console.log(`Handling AoE event from ${event.source} to ${target.x}, ${target.y} with radius ${event.meta.radius}`);
 
     let sourceUnit = this.sim.units.find(unit => unit.id === event.source); // || this.sim.unitAt(event.source);
-
-    // console.log(`Source unit: ${sourceUnit ? sourceUnit.id : 'not found'}`);
-
-    // console.log("Possible targets:", this.sim.units.map(u => `${u.id} (${u.pos.x}, ${u.pos.y})`).join(', '));
 
     const affectedUnits = this.sim.units.filter(unit => {
       const dx = unit.pos.x - target.x;
       const dy = unit.pos.y - target.y;
       return Math.sqrt(dx * dx + dy * dy) <= (event.meta.radius || 5) && unit.team !== sourceUnit?.team;
     });
-
-    // console.log(`Affected units: ${affectedUnits.map(u => u.id).join(', ')} (${affectedUnits.length})`);
 
     for (const unit of affectedUnits) {
       console.log(`* ${unit.id} is affected by AoE from ${event.source} at (${target.x}, ${target.y})`);
@@ -84,12 +105,18 @@ export class EventHandler extends Rule {
       return;
     }
 
-    console.log(`* ${event.source} took ${event.meta.amount} ${event.meta.aspect} damage (from target ${targetUnit.id})`);
+    // console.log(`* ${event.source} hit ${targetUnit.id} for ${event.meta.amount} ${event.meta.aspect} damage (now at ${targetUnit.hp} hp)`);
     targetUnit.hp -= event.meta.amount || 10;
     if (targetUnit.hp <= 0) {
       console.log(`Unit ${targetUnit.id} has died`);
       targetUnit.state = 'dead';
     }
+
+    // console.log("Reloading unit state after damage event");
+    // let targetAgain = this.sim.units.find(unit => unit.id === event.target);
+    // if (targetAgain) {
+    //   console.log(`  ${targetAgain.id}: (${targetAgain.pos.x},${targetAgain.pos.y})`, JSON.stringify(targetAgain));
+    // }
   }
 
   private handleHeal(event: any) {

@@ -20,6 +20,7 @@ class Simulator {
   projectiles: Projectile[];
   rulebook: Rule[];
   queuedEvents: Action[] = [];
+  processedEvents: Action[] = [];
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
@@ -37,6 +38,7 @@ class Simulator {
     // console.log(`Initializing simulator with field size: ${fieldWidth}x${fieldHeight}`);
     this.units = [];
     this.projectiles = [];
+    this.processedEvents = [];
     this.rulebook = [
       new Abilities(this),
       new UnitBehavior(this),

@@ -98,11 +98,13 @@ export type Action = {
   // source: string | Unit | Projectile | Vec2;
   source: string | Vec2;
   target: string | Vec2;
+  tick?: number; // When this event was processed
   meta: {
-    aspect?: 'force' | 'life' | 'heat' | 'shock';
+    aspect?: 'force' | 'life' | 'heat' | 'shock' | 'impact';
     amount?: number; // Amount of damage or healing
     radius?: number; // Radius for AoE effects
     distance?: number; // Distance for knockback
     force?: number; // Force for knockback/aoe (if > mass then send flying)
+    origin?: Vec2; // Origin point for distance calculations
   }
 }
