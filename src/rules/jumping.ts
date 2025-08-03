@@ -13,18 +13,40 @@ export class Jumping extends Rule {
   }
 
   private updateJump(unit: Unit): void {
-    // console.log(`Updating jump for unit ${unit.id}`);
-    const jumpDuration = 10; // ticks
-    unit.meta.jumpProgress = unit.meta.jumpProgress || 0;
-    unit.meta.jumpProgress += 1;
-    unit.meta.z = unit.meta.z || 0;
+    // console.log(`[Jumping] Updating jump for ${unit.id} at tick ${this.sim.ticks}. Progress: ${unit.meta.jumpProgress}`);
+    const jumpDuration = unit.abilities?.jumps?.config?.duration || 10; // ticks
+    unit.meta.jumpProgress = (unit.meta.jumpProgress || 0) + 1;
+
+    // console.log(`[Jumping] Jump progress for ${unit.id}: ${unit.meta.jumpProgress}/${jumpDuration}`);
 
     if (unit.meta.jumpProgress >= jumpDuration) {
+      // console.log(`[Jumping] Jump completed for ${unit.id}. Resetting jump state.`);
       unit.meta.jumping = false;
       unit.meta.z = 0;
+
+      // Apply AoE damage on landing
+      console.log(`[Jumping] Applying AoE damage for ${unit.id} on landing.`);
+      // if (unit.abilities.jump?.config?.impact) {
+        console.log(`[Jumping] Queuing AoE event for ${unit.id}`);
+        this.sim.queuedEvents.push({
+          kind: 'aoe',
+          source: unit.id,
+          target: unit.pos,
+          meta: {
+            radius: unit.abilities.jump?.config?.impact.radius || 3,
+            amount: unit.abilities.jump?.config?.impact.damage || 5,
+          }
+        });
+        // this.sim.areaDamage({
+        //   pos: unit.pos,
+        //   radius: unit.abilities.jump.config.impact.radius,
+        //   damage: unit.abilities.jump.config.impact.damage,
+        //   team: unit.team,
+        // });
+      // }
     } else {
       const progress = unit.meta.jumpProgress / jumpDuration;
-      const maxHeight = unit.abilities.jumps?.config?.height || 5; // Default height if not specified
+      const maxHeight = unit.abilities.jump?.config?.height || 5; // Default height if not specified
       unit.meta.z = (maxHeight * Math.sin(progress * Math.PI) || 0) * 2; // Adjust height based on progress
 
       // we _do_ need some way to track the unit's planar movement during the jump

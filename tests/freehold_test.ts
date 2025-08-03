@@ -110,6 +110,7 @@ describe('Freehold Scenario Layer', () => {
     const fh = new Freehold(canvas);
     fh.addWorm(2, 2);
     fh.addWorm(2, 2);
+    fh.sim.step(); // Process the simulation step (push worms around)
     // Only one worm at (2,2)
     const wormsAt22 = fh.sim.units.filter(u => u.pos.x === 2 && u.pos.y === 2);
     expect(wormsAt22.length).toBe(1);

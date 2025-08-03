@@ -1,4 +1,4 @@
-import { Projectile, Unit } from "./sim/types";
+import { Action, Projectile, Unit, Vec2 } from "./sim/types";
 import { MeleeCombat } from "./rules/melee_combat";
 import { Knockback } from "./rules/knockback";
 import { ProjectileMotion } from "./rules/projectile_motion";
@@ -9,6 +9,8 @@ import { UnitBehavior } from "./rules/unit_behavior";
 import Cleanup from "./rules/cleanup";
 import { Jumping } from "./rules/jumping";
 import { Abilities } from "./rules/abilities";
+import { EventHandler } from "./rules/event_handler";
+
 
 class Simulator {
   fieldWidth: number;
@@ -17,22 +19,38 @@ class Simulator {
   units: Unit[];
   projectiles: Projectile[];
   rulebook: Rule[];
+  queuedEvents: Action[] = [];
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
-    // console.log(`Initializing simulator with field size: ${fieldWidth}x${fieldHeight}`);
     this.fieldWidth = fieldWidth;
     this.fieldHeight = fieldHeight;
+    this.reset();
+  }
+
+  paused: boolean = false;
+  pause() {
+    console.log(`!!! Simulation paused at tick ${this.ticks}`);
+    this.paused = true;
+  }
+
+  reset() {
+    // console.log(`Initializing simulator with field size: ${fieldWidth}x${fieldHeight}`);
     this.units = [];
     this.projectiles = [];
     this.rulebook = [
+      new Abilities(this),
       new UnitBehavior(this),
       new UnitMovement(this),
       new MeleeCombat(this),
-      new ProjectileMotion(this),
+
+      // not sure i trust either of these yet
       new AreaOfEffect(this),
       new Knockback(this),
-      new Abilities(this),
+      // or this honestly
+      new ProjectileMotion(this),
+
       new Jumping(this),
+      new EventHandler(this),
       new Cleanup(this)
     ];
   }
@@ -66,11 +84,20 @@ class Simulator {
     return Object.fromEntries(this.units.map(unit => [unit.id, unit]));
   }
 
-  tick() { this.step(); }
+  tick() { this.step(true); }
 
   ticks = 0;
   lastCall: number = 0;
-  step() {
+  step(force = false) {
+    if (this.paused) {
+      if (!force) {
+        console.log(`Simulation is paused, skipping step.`);
+        return this;
+      } else {
+        console.log(`Forcing simulation step while paused.`);
+      }
+    }
+
     let t0 = performance.now();
     this.ticks++;
     let lastUnits = [...this.units];
@@ -229,6 +256,19 @@ class Simulator {
 
   unitAt(x: number, y: number): Unit | undefined {
     return this.units.find(u => u.pos.x === x && u.pos.y === y);
+  }
+
+  areaDamage(config: { pos: { x: number; y: number; }; radius: number; damage: number; team: string; }) {
+    for (const unit of this.units) {
+      if (unit.team !== config.team) {
+        const dx = unit.pos.x - config.pos.x;
+        const dy = unit.pos.y - config.pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= config.radius) {
+          unit.hp -= config.damage;
+        }
+      }
+    }
   }
 }
 

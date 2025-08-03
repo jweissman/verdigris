@@ -1,7 +1,10 @@
 import { Rule } from "./rule";
 
 export class AreaOfEffect extends Rule {
+
   apply = () => {
+    // note: not sure this is really a great strategy at all? it doesn't seem to reflect projectile logic very well
+
     const effects: Record<string, { hp: number; x: number; y: number }> = {};
     for (const proj of this.sim.projectiles) {
       // console.log(`AreaOfEffect: Processing projectile ${proj.id} at position (${proj.pos.x}, ${proj.pos.y}) with radius ${proj.radius}`);

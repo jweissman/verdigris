@@ -90,3 +90,19 @@ export type Input = {
 };
 
 export type Step = (state: Battlefield, input?: Input) => Battlefield;
+
+
+// for queued actions for engine to process at end of tick
+export type Action = {
+  kind: 'aoe' | 'damage' | 'heal' | 'knockback';
+  // source: string | Unit | Projectile | Vec2;
+  source: string | Vec2;
+  target: string | Vec2;
+  meta: {
+    aspect?: 'force' | 'life' | 'heat' | 'shock';
+    amount?: number; // Amount of damage or healing
+    radius?: number; // Radius for AoE effects
+    distance?: number; // Distance for knockback
+    force?: number; // Force for knockback/aoe (if > mass then send flying)
+  }
+}

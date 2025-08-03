@@ -1,3 +1,4 @@
+import { Unit } from "./sim/types";
 import { Simulator } from "./simulator";
 
 // Abstraction for canvas operations that works in both browser and Node
@@ -180,72 +181,111 @@ export default class Renderer extends Display {
     
     // Draw units
     for (const unit of this.sim.units) {
-      // Calculate render position (interpolated if moving)
-      let renderX = unit.pos.x;
-      let renderY = unit.pos.y;
+      this.renderUnit(unit);
+    }
+  }
+
+  private renderUnit(unit: Unit) {
+    // Calculate render position (interpolated if moving)
+    let renderX = unit.pos.x;
+    let renderY = unit.pos.y;
       
-      const interp = this.unitInterpolations.get(unit.id);
-      if (interp) {
-        // Use smooth interpolation with easing
-        const easeProgress = this.easeInOutQuad(interp.progress);
-        renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
-        renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
-      }
+    const interp = this.unitInterpolations.get(unit.id);
+    if (interp) {
+      // Use smooth interpolation with easing
+      const easeProgress = this.easeInOutQuad(interp.progress);
+      renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
+      renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
+    }
       
-      // CRITICAL: Round to integer pixels to prevent blurring
-      // Position sprites so they're centered on 8x8 grid cells but drawn at 16x16
-      const gridCenterX = Math.round(renderX * 8) + 4; // Center of grid cell
-      const gridCenterY = Math.round(renderY * 8) + 4; // Center of grid cell
-      const pixelX = gridCenterX - 8; // Offset to center 16x16 sprite
-      const pixelY = gridCenterY - 8; // Offset to center 16x16 sprite
+    // CRITICAL: Round to integer pixels to prevent blurring
+    // Position sprites so they're centered on 8x8 grid cells but drawn at 16x16
+    const gridCenterX = Math.round(renderX * 8) + 4; // Center of grid cell
+    const gridCenterY = Math.round(renderY * 8) + 4; // Center of grid cell
+    const pixelX = gridCenterX - 8; // Offset to center 16x16 sprite
+    const pixelY = gridCenterY - 8; // Offset to center 16x16 sprite
+
+    let realPixelY = pixelY; // Default to pixelY unless adjusted for z height
       
-      const sprite = this.sprites.get(unit.sprite);
-      if (sprite) {
-        // Choose frame based on unit state and animation
-        let frameIndex = 0;
+    const sprite = this.sprites.get(unit.sprite);
+    if (sprite) {
+      // Choose frame based on unit state and animation
+      let frameIndex = 0;
         
-        if (unit.state === 'dead') {
-          frameIndex = 3; // Frame 4 (index 3) for death
-        } else if (unit.state === 'attack') {
-          frameIndex = 2; // Frame 3 (index 2) for attack
-        } else {
-          // Idle animation - cycle between frames 0 and 1 every 400ms (slower)
-          frameIndex = Math.floor((this.animationTime / 400) % 2);
-        }
-        
-        // Assuming 4 frames of 16x16 arranged horizontally in sprite sheet
-        const frameX = frameIndex * 16;
-        
-        // Draw at native 16x16 size for maximum sharpness
-        this.ctx.drawImage(
-          sprite,
-          frameX, 0, 16, 16,  // Source: current frame at native size
-          pixelX, pixelY, 16, 16  // Dest: native 16x16 size, centered on grid
-        );
+      if (unit.state === 'dead') {
+        frameIndex = 3; // Frame 4 (index 3) for death
+      } else if (unit.state === 'attack') {
+        frameIndex = 2; // Frame 3 (index 2) for attack
       } else {
-        // Fallback to colored rectangle - keep at 8x8 for grid alignment
-        const fallbackX = Math.round(renderX * 8);
-        const fallbackY = Math.round(renderY * 8);
-        this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
-        this.ctx.fillRect(fallbackX, fallbackY, 8, 8);
+        // Idle animation - cycle between frames 0 and 1 every 400ms (slower)
+        frameIndex = Math.floor((this.animationTime / 400) % 2);
       }
+        
+      // Assuming 4 frames of 16x16 arranged horizontally in sprite sheet
+      const frameX = frameIndex * 16;
+
+      // Offset for z height
+      // let realPixelY = pixelY;
+      if (unit.meta?.z) {
+        // Apply z offset for jumping or elevation
+        // Note: would be nice to track z in interpolations so it can be larger + smoother?
+        realPixelY -= unit.meta.z * 2.4; // Adjust Y position based on z height
+      }
+
+      realPixelY = Math.round(realPixelY); // Ensure pixelY is an integer
+        
+      // Draw at native 16x16 size for maximum sharpness
+      this.ctx.drawImage(
+        sprite,
+        frameX, 0, 16, 16,  // Source: current frame at native size
+        pixelX, realPixelY, 16, 16  // Dest: native 16x16 size, centered on grid
+      );
+    } else {
+      // Fallback to colored rectangle - keep at 8x8 for grid alignment
+      const fallbackX = Math.round(renderX * 8);
+      const fallbackY = Math.round(renderY * 8);
+      this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
+      this.ctx.fillRect(fallbackX, fallbackY, 8, 8);
+    }
       
-      // Draw HP bar above unit - position relative to sprite center
-      if (typeof unit.hp === 'number') {
-        const maxHp = unit.maxHp || 100; // fallback if not present
-        const hpRatio = Math.max(0, Math.min(1, unit.hp / maxHp));
-        const barWidth = 16; // Match sprite width
-        const barHeight = 2;
+    // Draw HP bar above unit - position relative to sprite center
+    if (typeof unit.hp === 'number') {
+      const maxHp = unit.maxHp || 100; // fallback if not present
+      const hpRatio = Math.max(0, Math.min(1, unit.hp / maxHp));
+      this.drawBar("hit points", pixelX, realPixelY - 4, 16, 2, hpRatio);
+    }
+
+    // Draw ability progress bar if applicable
+    if (unit.abilities && unit.abilities.jumps) {
+      const ability = unit.abilities.jumps;
+      // jump progress 
+      const duration = ability.config?.jumpDuration || 10; // Default duration if not specified
+      const progress = unit.meta.jumpProgress || 0;
+      // const jumpDuration = ability.config?.speed || 10; // Default duration if not specified
+      const progressRatio = (progress / duration) || 0;
+      if (progressRatio > 0 && progressRatio < 1) {
+        this.drawBar("jump progress", pixelX, realPixelY - 6, 16, 2, progressRatio, '#ace');
+      }
+    }
+  }
+
+  private drawBar(_label: string, pixelX: number, pixelY: number, width: number, height: number, ratio: number, colorOverride?: string) {
+
+        const barWidth = width; // Match sprite width
+        const barHeight = height;
         const barX = pixelX;
         const barY = pixelY - 4; // Above the 16x16 sprite
         // Background
         this.ctx.fillStyle = '#333';
         this.ctx.fillRect(barX, barY, barWidth, barHeight);
         // HP amount
-        this.ctx.fillStyle = hpRatio > 0.5 ? '#0f0' : hpRatio > 0.2 ? '#ff0' : '#f00';
-        this.ctx.fillRect(barX, barY, Math.round(barWidth * hpRatio), barHeight);
-      }
-    }
+        this.ctx.fillStyle = ratio > 0.5 ? '#0f0' : ratio > 0.2 ? '#ff0' : '#f00';
+        if (colorOverride) {
+          this.ctx.fillStyle = colorOverride; // Use custom color if provided
+        }
+        this.ctx.fillRect(barX, barY, Math.round(barWidth * ratio), barHeight);
+      // }
+    // }
   }
 
   private updateMovementInterpolations() {

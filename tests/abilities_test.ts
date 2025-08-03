@@ -12,7 +12,6 @@ describe('Abilities Rule', () => {
       cooldown: 5, // ticks
       trigger: 'true',
       effect: (unit: Unit) => {
-        console.log("!!!! Ability effect triggered for unit:", unit.id);
         unit.hp -= 1;
       },
     };

@@ -69,7 +69,7 @@ class Game {
   private loadSprites(): void {
     // Only load sprites in browser environment
     if (typeof Image === 'undefined') {
-      console.log('Skipping sprite loading in headless environment');
+      console.debug('Skipping sprite loading in headless environment');
       return;
     }
 
@@ -82,7 +82,7 @@ class Game {
     spriteList.forEach(({ name, src }) => {
       const img = new Image();
       img.onload = () => {
-        console.log(`Loaded sprite: ${name}`);
+        console.debug(`Loaded sprite: ${name}`);
         this.sprites.set(name, img);
       };
       img.onerror = () => {
@@ -127,11 +127,13 @@ class Game {
   
   drawFrame() {
     // console.log('Drawing frame...');
-    // let t0 = performance.now();
+    let t0 = performance.now();
     this.draw();
-    // let t1 = performance.now();
-    // let elapsed = t1 - t0;
-    // console.log('Frame drawn in ', elapsed, 'ms');
+    let t1 = performance.now();
+    let elapsed = t1 - t0;
+    if (elapsed > 10) {
+      console.log(`Frame drawn in ${elapsed.toFixed(2)}ms`);
+    }
   }
 
   // Expose resize handling to external code

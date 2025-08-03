@@ -3,7 +3,7 @@ import type { Unit, UnitState } from "../sim/types";
 
 export class MeleeCombat extends Rule {
   apply = () => this.pairwise((a: Unit, b: Unit) => {
-    if (a.jumping || b.jumping) return;
+    if (a.meta?.jumping || b.meta?.jumping) return;
     // console.log(`[MeleeCombat] Checking combat between ${a.id} (${a.sprite}) and ${b.id} (${b.sprite}) at (${a.pos.x},${a.pos.y}) and (${b.pos.x},${b.pos.y})`);
     if (a.team !== b.team && a.hp > 0 && b.hp > 0) { //} && a.state !== 'dead' && b.state !== 'dead') {
       const dx = a.pos.x - b.pos.x;

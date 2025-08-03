@@ -75,9 +75,10 @@ export class UnitOperations {
     } else if (Math.abs(dxRaw) > 0) {
       dx = dxRaw > 0 ? 1 : -1;
     }
-    console.log(`🎯 ${unit.sprite} hunting ${closest.sprite}: moving (${dx},${dy})`);
+    // console.log(`🎯 ${unit.sprite} hunting ${closest.sprite}: moving (${dx},${dy})`);
     return {
       ...unit,
+      posture: 'pursue',
       intendedMove: { x: dx, y: dy }
     };
   }
