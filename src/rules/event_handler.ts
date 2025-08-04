@@ -13,7 +13,7 @@ export class EventHandler extends Rule {
       heal: e => `${e.source} healed ${e.target} for ${e.meta.amount} (now at ${targetUnit?.hp} hp)`,
     })
     if (!tx.hasOwnProperty(event.kind)) {
-      console.warn(`No translation for event kind: ${event.kind}`);
+      // console.warn(`No translation for event kind: ${event.kind}`);
       return `Event: ${event.kind} from ${event.source} to ${event.target}`;
     }
 
@@ -29,7 +29,7 @@ export class EventHandler extends Rule {
     // console.log("Handle ", this.sim.queuedEvents.length, " queued events");
     // Process events and apply effects
     for (const event of this.sim.queuedEvents) {
-      console.log(`Processing event: ${event.kind} from ${event.source} to ${event.target}`);
+      // console.log(`Processing event: ${event.kind} from ${event.source} to ${event.target}`);
       // Mark event with current tick
       event.tick = this.sim.ticks;
       
@@ -57,7 +57,7 @@ export class EventHandler extends Rule {
       this.sim.processedEvents.push(event);
 
       // Display translation
-      console.log(`- ${this.glossary(event)}`);
+      console.debug(`- ${this.glossary(event)}`);
     }
     
     // Keep only recent processed events (last 60 ticks for example)
@@ -112,7 +112,7 @@ export class EventHandler extends Rule {
     // Determine if this is healing or damage based on aspect
     const isHealing = event.meta.aspect === 'heal';
     
-    const affectedUnits = this.sim.units.filter(unit => {
+    const affectedUnits = this.sim.getRealUnits().filter(unit => {
       const dx = unit.pos.x - target.x;
       const dy = unit.pos.y - target.y;
       const inRange = Math.sqrt(dx * dx + dy * dy) <= (event.meta.radius || 5);
@@ -128,7 +128,7 @@ export class EventHandler extends Rule {
 
     for (const unit of affectedUnits) {
       const effectType = isHealing ? 'healing' : 'damage';
-      console.log(`* ${unit.id} is affected by ${effectType} AoE from ${event.source} at (${target.x}, ${target.y})`);
+      // console.log(`* ${unit.id} is affected by ${effectType} AoE from ${event.source} at (${target.x}, ${target.y})`);
       
       const distance = Math.sqrt(
         Math.pow(unit.pos.x - target.x, 2) +
@@ -162,7 +162,7 @@ export class EventHandler extends Rule {
           const tossForce = Math.min(8, Math.floor(massRatio * 2)); // Cap force at 8
           const tossDistance = Math.min(5, Math.floor(massRatio)); // Cap distance at 5
           
-          console.log(`🤾 Queueing toss command: ${unit.id} (mass ${unit.mass}) tossed by ${sourceUnit.id} (mass ${sourceUnit.mass}), ratio ${massRatio.toFixed(1)}`);
+          // console.log(`🤾 Queueing toss command: ${unit.id} (mass ${unit.mass}) tossed by ${sourceUnit.id} (mass ${sourceUnit.mass}), ratio ${massRatio.toFixed(1)}`);
           
           this.sim.queuedCommands.push({
             commandType: 'toss',
@@ -184,7 +184,7 @@ export class EventHandler extends Rule {
     // console.log(`* ${event.source} hit ${targetUnit.id} for ${event.meta.amount} ${event.meta.aspect} damage (now at ${targetUnit.hp} hp)`);
     targetUnit.hp -= event.meta.amount || 10;
     if (targetUnit.hp <= 0) {
-      console.log(`Unit ${targetUnit.id} has died`);
+      // console.log(`Unit ${targetUnit.id} has died`);
       targetUnit.state = 'dead';
     }
 

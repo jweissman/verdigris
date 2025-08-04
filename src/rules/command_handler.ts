@@ -28,7 +28,7 @@ export class CommandHandler extends Rule {
     for (const queuedCommand of this.sim.queuedCommands) {
       const command = this.commands.get(queuedCommand.commandType);
       if (command) {
-        console.log(`Executing command: ${queuedCommand.commandType} on ${queuedCommand.unitId}`);
+        // console.log(`Executing command: ${queuedCommand.commandType} on ${queuedCommand.unitId}`);
         queuedCommand.tick = this.sim.ticks;
         command.execute(queuedCommand.unitId, ...queuedCommand.args);
       } else {

@@ -15,6 +15,7 @@
         <option value="complex">Complex Formation</option>
         <option value="healing">Healing</option>
         <option value="projectile">Projectile Test</option>
+        <option value="squirrel" selected>Squirrel vs. Worm</option>
         <!-- <option value="scenes/healing.battle">Healing Test</option> -->
         <!-- <option value="scenes/projectile.battle">Projectile Test</option> -->
       </select>
@@ -134,5 +135,12 @@
     // if (initialScene) {
     //   document.getElementById('scene-selector').dispatchEvent(new Event('change'));
     // }
+    window.onload = () => {
+      const initialScene = document.getElementById('scene-selector').value;
+      console.log('Initial scene:', initialScene);
+      if (initialScene) {
+        document.getElementById('scene-selector').dispatchEvent(new Event('change'));
+      }
+    };
   </script>
 </html>

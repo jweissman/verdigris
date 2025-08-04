@@ -8,7 +8,7 @@ export class AreaOfEffect extends Rule {
     const effects: Record<string, { hp: number; x: number; y: number }> = {};
     for (const proj of this.sim.projectiles) {
       // console.log(`AreaOfEffect: Processing projectile ${proj.id} at position (${proj.pos.x}, ${proj.pos.y}) with radius ${proj.radius}`);
-      for (const unit of this.sim.units) {
+      for (const unit of this.sim.getRealUnits()) {
         if (unit.team !== proj.team && unit.state !== 'dead') {
           const dx = unit.pos.x - proj.pos.x;
           const dy = unit.pos.y - proj.pos.y;

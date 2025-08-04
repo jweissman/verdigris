@@ -43,7 +43,7 @@ export class UnitOperations {
 
   static hunt(unit: Unit, sim: any): Unit {
     // Find nearest hostile unit
-    const hostiles = sim.units.filter((u: Unit) => 
+    const hostiles = sim.getRealUnits().filter((u: Unit) => 
       u.team !== unit.team && u.state !== 'dead'
     );
     if (hostiles.length === 0) {
@@ -86,7 +86,7 @@ export class UnitOperations {
     }
 
     // Find all living allies (except self)
-    const allies = sim.units.filter((u: Unit) => 
+    const allies = sim.getRealUnits().filter((u: Unit) => 
       u.team === unit.team && u.id !== unit.id && u.state !== 'dead'
     );
     if (allies.length === 0) {

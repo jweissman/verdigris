@@ -28,6 +28,8 @@ export class MeleeCombat extends Rule {
     if (this.engagements.has(a.id)) return; // Already engaged
     if (this.lastAttacks.has(a.id) && this.sim.ticks - this.lastAttacks.get(a.id)! < (a.abilities?.melee?.cooldown || 10)) return; // Still on cooldown
     if (a.meta?.jumping || b.meta?.jumping) return;
+    // Skip combat for noncombatant units
+    if (a.tags?.includes('noncombatant') || b.tags?.includes('noncombatant')) return;
     if (a.team !== b.team && a.hp > 0 && b.hp > 0) {
       const dx = a.pos.x - b.pos.x;
       const dy = a.pos.y - b.pos.y;

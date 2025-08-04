@@ -46,6 +46,11 @@ export default class Battle extends View {
   }
 
   private showUnit(unit: Unit) {
+    // Skip rendering phantom units (they're invisible)
+    if (unit.meta.phantom) {
+      return;
+    }
+
     // Check if unit was recently damaged and should blink
     const recentDamage = this.sim.processedEvents.find(event => 
       event.kind === 'damage' && 
@@ -73,12 +78,18 @@ export default class Battle extends View {
       renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
     }
       
+    // Handle huge units (32x64) vs normal units (16x16)
+    const isHuge = unit.meta.huge;
+    const spriteWidth = isHuge ? 64 : 16;
+    const spriteHeight = isHuge ? 32 : 16;
+    
     // CRITICAL: Round to integer pixels to prevent blurring
-    // Position sprites so they're centered on 8x8 grid cells but drawn at 16x16
     const gridCenterX = Math.round(renderX * 8) + 4; // Center of grid cell
     const gridCenterY = Math.round(renderY * 8) + 4; // Center of grid cell
-    const pixelX = gridCenterX - 8; // Offset to center 16x16 sprite
-    const pixelY = gridCenterY - 8; // Offset to center 16x16 sprite
+    
+    // Position sprites appropriately for their size
+    const pixelX = isHuge ? gridCenterX - 16 : gridCenterX - 8; // Huge units need more offset
+    const pixelY = isHuge ? gridCenterY - 32 : gridCenterY - 8; // Huge units are much taller
 
     let realPixelY = pixelY; // Default to pixelY unless adjusted for z height
       
@@ -96,8 +107,8 @@ export default class Battle extends View {
         frameIndex = Math.floor((this.animationTime / 400) % 2);
       }
         
-      // Assuming 4 frames of 16x16 arranged horizontally in sprite sheet
-      const frameX = frameIndex * 16;
+      // Frame layout: normal units have 4 frames of 16x16, huge units have 4 frames of 32x64
+      const frameX = frameIndex * spriteWidth;
 
       // Offset for z height (using interpolated z value)
       if (renderZ > 0) {
@@ -107,19 +118,23 @@ export default class Battle extends View {
 
       realPixelY = Math.round(realPixelY); // Ensure pixelY is an integer
       
-      // Draw ground shadow for all units
+      // Draw ground shadow (larger for huge units)
       this.ctx.save();
       this.ctx.fillStyle = '#00000050';
       this.ctx.beginPath();
-      this.ctx.ellipse(gridCenterX - 2, gridCenterY + 6, 6, 3, 0, 0, 2 * Math.PI);
+      const shadowWidth = isHuge ? 24 : 6;
+      const shadowHeight = isHuge ? 6 : 3;
+      const shadowOffsetY = isHuge ? -4 : 6; // More offset for huge units
+      const shadowOffsetX = isHuge ? 8 : -2; // More offset for huge units
+      this.ctx.ellipse(gridCenterX + shadowOffsetX, gridCenterY + shadowOffsetY, shadowWidth, shadowHeight, 0, 0, 2 * Math.PI);
       this.ctx.fill();
       this.ctx.restore();
 
-      // Draw at native 16x16 size for maximum sharpness
+      // Draw sprite at appropriate size
       this.ctx.drawImage(
         sprite,
-        frameX, 0, 16, 16,  // Source: current frame at native size
-        pixelX, realPixelY, 16, 16  // Dest: native 16x16 size, centered on grid
+        frameX, 0, spriteWidth, spriteHeight,  // Source: current frame at native size
+        pixelX, realPixelY, spriteWidth, spriteHeight  // Dest: native size, positioned appropriately
       );
     } else {
       // Fallback to colored rectangle - keep at 8x8 for grid alignment

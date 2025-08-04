@@ -5,7 +5,7 @@ export class Toss extends Command {
   execute(unitId: string, direction: {x: number, y: number}, force: number = 5, distance: number = 3): void {
     const unit = this.sim.units.find(u => u.id === unitId);
     if (!unit) {
-      console.warn(`Unit ${unitId} not found for toss command`);
+      // console.warn(`Unit ${unitId} not found for toss command`);
       return;
     }
 

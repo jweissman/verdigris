@@ -25,7 +25,7 @@ export interface Ability {
   config?: {
     [key: string]: any; // Additional configuration options for the ability
   }
-  effect: (unit: Unit, target?: Unit, sim?: any) => void; // Effect function
+  effect: (unit: Unit, target?: Unit | Vec2, sim?: any) => void; // Effect function
 }
 
 export interface Unit {
@@ -48,6 +48,9 @@ export interface Unit {
     jumping?: boolean; // Whether the unit is currently jumping
     jumpProgress?: number; // Progress of the jump animation
     z?: number; // For 3D positioning, e.g., jumping
+    huge?: boolean; // Large multi-cell unit (32x64 sprite)
+    phantom?: boolean; // Invisible blocking unit for huge creatures
+    parentId?: string; // ID of parent unit for phantoms
     [key: string]: any; // Additional metadata
   }
 }
@@ -110,7 +113,7 @@ export type Action = {
   target: string | Vec2;
   tick?: number; // When this event was processed
   meta: {
-    aspect?: 'force' | 'life' | 'heat' | 'shock' | 'impact' | 'radiant';
+    aspect?: 'force' | 'life' | 'heat' | 'shock' | 'impact' | 'radiant' | 'heal';
     amount?: number; // Amount of damage or healing
     radius?: number; // Radius for AoE effects
     distance?: number; // Distance for knockback

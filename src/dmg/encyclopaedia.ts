@@ -1,9 +1,8 @@
-import { Game } from "./game";
-import { Ability, Unit, UnitState } from "./sim/types";
-import { Simulator } from "./simulator";
+import { Freehold } from "../freehold";
+import { Ability, Unit, UnitState } from "../sim/types";
+import { Simulator } from "../simulator";
 
-// Scenario/DSL layer for test-driven and scenario-driven setup
-class Freehold extends Game {
+class Encyclopaedia {
   static abilities: { [key: string]: Ability } = {
     squirrel: {
       name: 'Summon Squirrel',
@@ -177,7 +176,7 @@ class Freehold extends Game {
     },
   }
 
-  static bestiary: { [key: string]: Partial<Unit> } = {
+static bestiary: { [key: string]: Partial<Unit> } = {
     worm: {
       intendedMove: { x: 0, y: 0 },
       team: "hostile",
@@ -283,90 +282,13 @@ class Freehold extends Game {
     }
   }
 
-  
-  // Override input: spawn a worm at a random grid position on 'w'
-  numBuffer: string = "";
-  getInputHandler(): (e: { key: string }) => void {
-    return (e) => {
-      if (e.key.match(/[0-9]/)) {
-        this.numBuffer += e.key;
-        console.log(`Buffering number: ${this.numBuffer}`);
-        return;
-      }
-      let repetitions = parseInt(this.numBuffer, 10) || 1; // Default to 1 if no number
-      this.numBuffer = ""; // Reset buffer after using it
-
-      for (let i = 0; i < repetitions; i++) {
-        this.handleKeyPress(e);
-      }
-    };
+  static counts: { [seriesName: string]: number } = {}
+  static id(seriesName: string): number | string {
+    this.counts = this.counts || {};
+    let count = (this.counts[seriesName] || 0);
+    this.counts[seriesName] = count + 1;
+    return count || "";
   }
-
-  handleKeyPress(e: { key: string }) {
-    if (e.key === "Escape") {
-      this.sim.reset();
-      return;
-    } else if (e.key === ".") {
-      console.log("STEPPING MANUALLY");
-      this.sim.step(true);
-      return;
-    } else if (e.key === ",") {
-      if (this.sim.paused) {
-        console.log(`Simulation is already paused (Enter to unpause).`);
-      }
-      this.sim.pause();
-      return
-    } else if (e.key === "Enter") {
-      if (this.sim.paused) {
-        console.log(`Unpausing simulation (press , to pause again).`);
-        this.sim.paused = false;
-      } else {
-        console.log(`Simulation is running (press , to pause).`);
-      }
-      return;
-    }
-    
-    // if (e.key === "r") {
-    //   this.renderer.setViewMode('grid');
-  // } else
-    if(e.key === "c") {
-      this.renderer.setViewMode(
-        this.renderer.cinematicView ? 'grid' : 'cinematic'
-      );
-    }
-
-    let beasts = //["worm", "farmer", "soldier", "ranger", "priest", "bombardier", "tamer", "megasquirrel"];
-    {
-      w: "worm",
-      f: "farmer",
-      s: "soldier",
-      r: "ranger",
-      p: "priest",
-      b: "bombardier",
-      t: "tamer",
-      q: "squirrel",
-      Q: "megasquirrel"
-    }
-    // let beasts = Object.keys(Freehold.bestiary);
-    console.log(`Available beasts: ${Object.values(beasts).join(", ")}`);
-    // if (beasts.some(b => b.startsWith(e.key))) {
-    if (Object.keys(beasts).some(b => b === e.key)) {
-      const { x, y } = this.randomGridPosition();
-
-      // let beast = beasts.find(b => b.startsWith(e.key));
-      let beast = beasts[e.key];
-      console.log(`Spawning ${beast} at (${x}, ${y})`);
-      if (beast) {
-        this.add(beast, x, y);
-      }
-    }
-  }
-
-  add(beast: string, x: number, y: number) {
-    console.log(`Spawning ${beast} at (${x}, ${y})`);
-    this.sim.addUnit({ ...Freehold.unit(beast), pos: { x, y } });
-  }
-
   static unit(beast: string): Partial<Unit> {
     let u = {
         id: beast + this.id(beast),
@@ -384,6 +306,7 @@ class Freehold extends Game {
         },
         tags: [
           ...(beast === "worm" ? ["swarm"] : []),
+          ...(beast === "megasquirrel" ? ["hunt"] : []),
           ...(beast === "squirrel" ? ["hunt"] : []),
           ...(beast === "farmer" ? ["hunt"] : []),
           ...(beast === "soldier" ? ["hunt"] : []),
@@ -395,70 +318,4 @@ class Freehold extends Game {
     console.log(`Creating unit ${u.id} of type ${beast} at (${u.pos?.x || 0}, ${u.pos?.y || 0})`);
     return u;
   }
-
-  randomGridPosition(): { x: number, y: number } {
-    return {
-      x: Math.floor(Math.random() * this.sim.fieldWidth),
-      y: Math.floor(Math.random() * this.sim.fieldHeight)
-    };
-  }
-
-  static counts: { [seriesName: string]: number } = {}
-  static id(seriesName: string): number | string {
-    this.counts = this.counts || {};
-    let count = (this.counts[seriesName] || 0);
-    this.counts[seriesName] = count + 1;
-    return count || "";
-  }
-
-  static boot(
-    canvasId: string | HTMLCanvasElement = 'battlefield'
-  ) {
-    let game: Freehold | null = null;
-    const canvas = canvasId instanceof HTMLCanvasElement
-      ? canvasId
-      : document.getElementById(canvasId) as HTMLCanvasElement;
-    console.log('Canvas element:', canvas);
-    if (canvas) {
-      let addInputListener = (cb: (e: { key: string }) => void) => {
-        document.addEventListener('keydown', (e) => {
-          cb({ key: e.key });
-        });
-      };
-
-      game = new Freehold(canvas, {
-        addInputListener,
-        animationFrame: (cb) => requestAnimationFrame(cb)
-      });
-            
-      // Handle window resize
-      window.addEventListener('resize', () => {
-        if (game && game.handleResize) {
-          game.handleResize();
-        }
-      });
-      
-      // Initial size calculation
-      if (game && game.handleResize) {
-        game.handleResize();
-      }
-    } else {
-      console.error(`Canvas element ${canvasId} not found!`);
-    }
-    console.log('Game initialized:', game);
-    function gameLoop() {
-      if (game) { game.update(); }
-      requestAnimationFrame(gameLoop);
-    }
-    requestAnimationFrame(gameLoop);
-  }
-}
-
-export { Freehold };
-
-
-console.log('Freehold module loaded.');
-if (typeof window !== 'undefined') {
-  // @ts-ignore
-  window.Freehold = Freehold; // Expose for browser use
 }

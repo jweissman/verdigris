@@ -8,7 +8,7 @@ export class UnitBehavior extends Rule {
 
       const find_new_target = () => {
         // find closest hostile
-        const hostiles = this.sim.units.filter(u => u.team !== unit.team && u.state !== 'dead');
+        const hostiles = this.sim.getRealUnits().filter(u => u.team !== unit.team && u.state !== 'dead');
         if (hostiles.length === 0) return undefined;
         let closest = hostiles.reduce((prev, curr) => {
           const prevDist = Math.hypot(prev.pos.x - unit.pos.x, prev.pos.y - unit.pos.y);
@@ -20,7 +20,7 @@ export class UnitBehavior extends Rule {
 
       const find_new_protectee = () => {
         // find closest friendly
-        const friends = this.sim.units.filter(u => u.team === unit.team && u.state !== 'dead');
+        const friends = this.sim.getRealUnits().filter(u => u.team === unit.team && u.state !== 'dead');
         if (friends.length === 0) return undefined;
         let closest = friends.reduce((prev, curr) => {
           const prevDist = Math.hypot(prev.pos.x - unit.pos.x, prev.pos.y - unit.pos.y);

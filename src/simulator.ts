@@ -12,6 +12,7 @@ import { Tossing } from "./rules/tossing";
 import { Abilities } from "./rules/abilities";
 import { EventHandler } from "./rules/event_handler";
 import { CommandHandler, QueuedCommand } from "./rules/command_handler";
+import { HugeUnits } from "./rules/huge_units";
 
 
 class Simulator {
@@ -48,6 +49,7 @@ class Simulator {
       new Abilities(this),
       new UnitBehavior(this),
       new UnitMovement(this),
+      new HugeUnits(this), // Handle huge unit phantoms after movement
       new MeleeCombat(this),
 
       // not sure i trust either of these yet
@@ -76,10 +78,10 @@ class Simulator {
       state: unit.state || 'idle',
       mass: unit.mass || 1,
       abilities: unit.abilities || {},
-      meta: {}
+      meta: unit.meta || {}
     };
     this.units.push(u);
-    console.log(`Added unit ${u.id} at (${u.pos.x}, ${u.pos.y}) with hp: ${u.hp}, team: ${u.team}`, u);
+    // console.log(`Added unit ${u.id} at (${u.pos.x}, ${u.pos.y}) with hp: ${u.hp}, team: ${u.team}`, u);
     return this;
   }
 
@@ -151,12 +153,86 @@ class Simulator {
 
   validMove(unit, dx, dy) {
     if (!unit) return false;
+    
+    // For huge units, validate all body positions
+    if (unit.meta.huge) {
+      const bodyPositions = this.getHugeUnitBodyPositions(unit);
+      
+      for (const pos of bodyPositions) {
+        const newX = pos.x + dx;
+        const newY = pos.y + dy;
+        
+        // Check boundaries
+        if (newX < 0 || newX >= this.fieldWidth || newY < 0 || newY >= this.fieldHeight) {
+          return false;
+        }
+        
+        // Check if new position would be blocked
+        if (this.isApparentlyOccupied(newX, newY, unit)) {
+          return false;
+        }
+      }
+      
+      return true;
+    }
+    
+    // For normal units, simple validation
     const newX = unit.pos.x + dx;
     const newY = unit.pos.y + dy;
+    
+    // Check boundaries
     if (newX < 0 || newX >= this.fieldWidth || newY < 0 || newY >= this.fieldHeight) return false;
-    const blocker = this.units.find(u => u !== unit && u.pos.x === newX && u.pos.y === newY);
-    if (!blocker) return true;
+    
+    // Check against apparent field
+    return !this.isApparentlyOccupied(newX, newY, unit);
+  }
+
+  private getHugeUnitBodyPositions(unit) {
+    // Return all positions occupied by a huge unit (head + body)
+    if (!unit.meta.huge) return [unit.pos];
+    
+    return [
+      unit.pos, // Head
+      { x: unit.pos.x, y: unit.pos.y + 1 }, // Body segment 1
+      { x: unit.pos.x, y: unit.pos.y + 2 }, // Body segment 2
+      { x: unit.pos.x, y: unit.pos.y + 3 }  // Body segment 3
+    ];
+  }
+
+  // Field abstraction methods
+  getRealUnits() {
+    // Only non-phantom units
+    return this.units.filter(unit => !unit.meta.phantom);
+  }
+
+  getApparentUnits() {
+    // All units including phantoms (what queries see)
+    return this.units;
+  }
+
+  isApparentlyOccupied(x, y, excludeUnit = null) {
+    // Check if position is occupied in the apparent field
+    // This includes both actual units and virtual occupancy from huge units
+    
+    for (const unit of this.units) {
+      if (unit === excludeUnit) continue;
+      if (this.isOwnPhantom(unit, excludeUnit)) continue;
+      
+      // Check if this unit occupies the position (works for both normal and huge units)
+      const occupiedPositions = this.getHugeUnitBodyPositions(unit);
+      for (const pos of occupiedPositions) {
+        if (pos.x === x && pos.y === y) {
+          return true;
+        }
+      }
+    }
+    
     return false;
+  }
+
+  private isOwnPhantom(unit, owner) {
+    // Check if unit is a phantom belonging to the owner, OR if unit is the owner itself
+    return (unit.meta.phantom && unit.meta.parentId === owner?.id) || unit === owner;
   }
 
   creatureById(id) {

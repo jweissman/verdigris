@@ -4,6 +4,7 @@ import simple from './scenes/simple.battle.txt';
 import complex from './scenes/complex.battle.txt';
 import healing from './scenes/healing.battle.txt';
 import projectile from './scenes/projectile.battle.txt';
+import squirrel from './scenes/squirrel.battle.txt';
 import { Freehold } from "./freehold";
 
 export interface SceneDefinition {
@@ -32,7 +33,7 @@ export interface SceneryTemplate {
 // const { farmer, soldier, worm, priest, ranger } = Freehold.bestiary;
 
 export class SceneLoader {
-  scenarios = { simple, complex, healing, projectile };
+  scenarios = { simple, complex, healing, projectile, squirrel };
   constructor(private sim: Simulator) {}
 
   loadScenario(scenario: string): void {
@@ -55,6 +56,7 @@ export class SceneLoader {
 
   defaultLegend: { [key: string]: string } = {
     f: 'farmer', s: 'soldier', w: 'worm', p: 'priest', r: 'ranger', b: 'bombardier',
+    q: 'squirrel', t: 'tamer', Q: 'megasquirrel', W: 'bigworm'
   }
 
   loadSimpleFormat(sceneText: string): void {
@@ -87,6 +89,7 @@ export class SceneLoader {
     // y += Math.floor(this.sim.fieldHeight / 2) - 10; // Centering
     this.sim.addUnit({ ...Freehold.unit(unitName), pos: { x, y } });
   }
+
 }
 
 console.log('SceneLoader module loaded.');

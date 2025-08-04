@@ -15,6 +15,8 @@ import bombardier from "./assets/sprites/bombardier.png";
 import tamer from "./assets/sprites/squirrel-tamer.png";
 // @ts-ignore
 import squirrel from "./assets/sprites/squirrel.png";
+// @ts-ignore
+import megasquirrel from "./assets/sprites/megasquirrel.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -76,15 +78,7 @@ class Game {
       this.draw = () => this.renderer.draw();
     }
   }
-
-  static loadSprites(): Map<string, HTMLImageElement> {
-    // Only load sprites in browser environment
-    if (typeof Image === 'undefined') {
-      console.debug('Skipping sprite loading in headless environment');
-      return new Map();
-    }
-
-    const spriteList = [
+  static spriteList = [
       { name: 'worm', src: worm },
       { name: 'soldier', src: soldier },
       { name: 'farmer', src: farmer },
@@ -93,10 +87,18 @@ class Game {
       { name: 'bombardier', src: bombardier },
       { name: 'tamer', src: tamer },
       { name: 'squirrel', src: squirrel },
+      { name: 'megasquirrel', src: megasquirrel }
     ];
 
+  static loadSprites(): Map<string, HTMLImageElement> {
+    // Only load sprites in browser environment
+    if (typeof Image === 'undefined') {
+      console.debug('Skipping sprite loading in headless environment');
+      return new Map();
+    }
+
     let sprites = new Map<string, HTMLImageElement>();
-    spriteList.forEach(({ name, src }) => {
+    Game.spriteList.forEach(({ name, src }) => {
       const img = new Image();
       img.onload = () => {
         console.debug(`Loaded sprite: ${name}`);

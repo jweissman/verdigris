@@ -52,7 +52,7 @@ export class UnitMovement extends Rule {
 
           else if (unit.tags.includes('follower')) {
             // Follow the nearest friendly unit
-            const friends = this.sim.units.filter(u => u.team === unit.team && u.state !== 'dead');
+            const friends = this.sim.getRealUnits().filter(u => u.team === unit.team && u.state !== 'dead');
             if (friends.length > 0) {
               let closest = friends[0];
               let closestDist = Math.hypot(closest.pos.x - unit.pos.x, closest.pos.y - unit.pos.y);
@@ -76,11 +76,55 @@ export class UnitMovement extends Rule {
         }
       }
 
-      unit = UnitOperations.move(unit, 1, this.sim);
+      // For huge units, validate the entire movement before applying
+      if (unit.meta.huge && (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0)) {
+        if (this.canHugeUnitMove(unit, unit.intendedMove.x, unit.intendedMove.y)) {
+          unit = UnitOperations.move(unit, 1, this.sim);
+        } else {
+          // Can't move, clear intended move
+          unit.intendedMove = { x: 0, y: 0 };
+        }
+      } else {
+        unit = UnitOperations.move(unit, 1, this.sim);
+      }
       return unit;
     });
 
     UnitMovement.resolveCollisions(this.sim);
+  }
+
+  private canHugeUnitMove(unit: Unit, dx: number, dy: number): boolean {
+    // Check if all body cells of a huge unit can move to their new positions
+    const bodyPositions = this.getHugeUnitBodyPositions(unit);
+    
+    for (const pos of bodyPositions) {
+      const newX = pos.x + dx;
+      const newY = pos.y + dy;
+      
+      // Check boundaries
+      if (newX < 0 || newX >= this.sim.fieldWidth || newY < 0 || newY >= this.sim.fieldHeight) {
+        return false;
+      }
+      
+      // Check if new position would be blocked (excluding our own body cells)
+      if (this.sim.isApparentlyOccupied(newX, newY, unit)) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  private getHugeUnitBodyPositions(unit: Unit) {
+    // Return all positions occupied by a huge unit (head + body)
+    if (!unit.meta.huge) return [unit.pos];
+    
+    return [
+      unit.pos, // Head
+      { x: unit.pos.x, y: unit.pos.y + 1 }, // Body segment 1
+      { x: unit.pos.x, y: unit.pos.y + 2 }, // Body segment 2
+      { x: unit.pos.x, y: unit.pos.y + 3 }  // Body segment 3
+    ];
   }
   static resolveCollisions(sim: Simulator) {
     // console.log(`[UnitMovement] Resolving collisions...`);

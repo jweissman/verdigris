@@ -2,44 +2,79 @@ import { Unit, Vec2 } from "../sim/types";
 import { Simulator } from "../simulator";
 
 export default class DSL {
+  static noun = (
+    unit: Unit,
+    sim: Simulator,
+    sort: {(a: Unit, b: Unit): number} | null = null,
+    filter: (unit: Unit) => boolean = (u) => true,
+  ) => {
+    return {
+      ally: () => {
+        let allies = sim.getRealUnits().filter(u => u.team === unit.team && u.state !== 'dead' && u.id !== unit.id)
+          .filter(filter);
+        if (allies.length === 0) return null;
+        if (sort) {
+          allies.sort(sort);
+        }
+        return allies[0];
+      },
+      enemy: () => {
+        let enemies = sim.getRealUnits().filter(u => u.team !== unit.team && u.state !== 'dead')
+          .filter(filter);
+        if (enemies.length === 0) return null;
+        if (sort) {
+          enemies.sort(sort);
+        }
+        return enemies[0];
+      }
+    }
+  };
+
   static evaluate(expression: string, subject: Unit, sim: Simulator): any {
     let random = {
       position: () => ({
         x: Math.round(Math.random() * sim.fieldWidth),
         y: Math.round(Math.random() * sim.fieldHeight)
       }),
+      ally: () => {
+        const allies = sim.getRealUnits().filter(u => u.team === subject.team && u.state !== 'dead' && u.id !== subject.id);
+        if (allies.length === 0) return null;
+        return allies[Math.floor(Math.random() * allies.length)];
+      },
       enemy: () => {
-        const enemies = sim.units.filter(u => u.team !== subject.team && u.state !== 'dead');
+        const enemies = sim.getRealUnits().filter(u => u.team !== subject.team && u.state !== 'dead');
         if (enemies.length === 0) return null;
         return enemies[Math.floor(Math.random() * enemies.length)];
       }
     };
 
-    let closest = {
-      enemy: () => {
-        const enemies = sim.units.filter(u => u.team !== subject.team && u.state !== 'dead');
-        if (enemies.length === 0) return null;
-        enemies.sort((a, b) => {
-          const distA = Math.abs(a.pos.x - subject.pos.x) + Math.abs(a.pos.y - subject.pos.y);
-          const distB = Math.abs(b.pos.x - subject.pos.x) + Math.abs(b.pos.y - subject.pos.y);
-          return distA - distB;
-        });
-        return enemies[0];
-      }
-    }
+    let _group = (comparator) => this.noun(subject, sim, comparator);
 
-    let furthest = {
-      enemy: () => {
-        const enemies = sim.units.filter(u => u.team !== subject.team && u.state !== 'dead');
-        if (enemies.length === 0) return null;
-        enemies.sort((a, b) => {
-          const distA = Math.abs(a.pos.x - subject.pos.x) + Math.abs(a.pos.y - subject.pos.y);
-          const distB = Math.abs(b.pos.x - subject.pos.x) + Math.abs(b.pos.y - subject.pos.y);
-          return distB - distA;
-        });
-        return enemies[0];
-      }
-    }
+    let weakest = _group((a, b) => a.hp - b.hp);
+    let strongest = _group((a, b) => b.hp - a.hp);
+    let healthiest = _group((a, b) => (b.hp / b.maxHp) - (a.hp / a.maxHp));
+    let mostInjured = _group((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+
+    let dist2 = (a: Vec2, b: Vec2) => {
+      return Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2);
+    };
+
+    let nearest = _group((a, b) => {
+      const distA = dist2(a.pos, subject.pos);
+      const distB = dist2(b.pos, subject.pos);
+      return distA - distB;
+    });
+    let closest = nearest;
+
+    let furthest = _group((a, b) => {
+      const distA = dist2(a.pos, subject.pos);
+      const distB = dist2(b.pos, subject.pos);
+      return distB - distA;
+    });
+    let farthest = furthest;
+
+    // let mostMassive = _group((a, b) => b.mass - a.mass);
+    // let leastMassive = _group((a, b) => a.mass - b.mass);
 
     let distance = (target: Vec2) => {
       if (!target) return Infinity;

@@ -54,6 +54,11 @@ export default class CinematicView extends View {
   }
 
   private showUnitCinematic(unit: Unit) {
+    // Skip rendering phantom units (they're invisible)
+    if (unit.meta.phantom) {
+      return;
+    }
+
     // Check if unit was recently damaged and should blink
     const recentDamage = this.sim.processedEvents.find(event => 
       event.kind === 'damage' && 
@@ -79,15 +84,21 @@ export default class CinematicView extends View {
       renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
     }
     
+    // Handle huge units vs normal units in cinematic view
+    const isHuge = unit.meta.huge;
+    const baseWidth = isHuge ? 64 : 16;
+    const baseHeight = isHuge ? 32 : 16;
+    
     // Cinematic positioning: more compressed vertically, slight perspective scaling
     const battleStripY = this.height * 0.8; // Position battle at bottom
     const yRatio = 1 - (renderY / this.sim.fieldHeight); // Scale Y to fit cinematic strip
-    const depthScale = 1  + (yRatio * 4); // Front units slightly larger
+    const depthScale = 1  + (yRatio * 1.4); // Front units slightly larger
     const stackingFactor = 0.24; // Compress Y spacing
     
     const cinematicX = renderX * 8;
     const cinematicY = battleStripY - (renderY * 8 * stackingFactor);
-    const pixelSize = Math.round(16 * depthScale);
+    const pixelWidth = Math.round(baseWidth * depthScale);
+    const pixelHeight = Math.round(baseHeight * depthScale);
     
     // Adjust for z height
     let finalY = cinematicY;
@@ -97,13 +108,14 @@ export default class CinematicView extends View {
     
     const sprite = this.sprites.get(unit.sprite);
     if (sprite) {
-      // Draw ground shadow for all units in cinematic view
+      // Draw ground shadow for all units in cinematic view (larger for huge units)
       this.ctx.save();
       this.ctx.fillStyle = '#00000040';
       this.ctx.beginPath();
-      // Scale shadow with unit size
-      this.ctx.ellipse(cinematicX, battleStripY - (renderY * 8 * stackingFactor) + pixelSize/3, 
-                       pixelSize/3, pixelSize/6, 0, 0, 2 * Math.PI);
+      const shadowWidth = isHuge ? pixelWidth/2.5 : pixelWidth/3;
+      const shadowHeight = isHuge ? pixelHeight/8 : pixelHeight/6;
+      this.ctx.ellipse(cinematicX, battleStripY - (renderY * 8 * stackingFactor) + pixelHeight/3, 
+                       shadowWidth, shadowHeight, 0, 0, 2 * Math.PI);
       this.ctx.fill();
       this.ctx.restore();
 
@@ -117,19 +129,19 @@ export default class CinematicView extends View {
         frameIndex = Math.floor((this.animationTime / 400) % 2);
       }
       
-      const frameX = frameIndex * 16;
-      const pixelX = cinematicX - pixelSize / 2;
-      const pixelY = Math.round(finalY - pixelSize / 2);
+      const frameX = frameIndex * baseWidth;
+      const pixelX = cinematicX - pixelWidth / 2;
+      const pixelY = Math.round(finalY - pixelHeight / 2);
       
       this.ctx.drawImage(
         sprite,
-        frameX, 0, 16, 16,
-        pixelX, pixelY, pixelSize, pixelSize
+        frameX, 0, baseWidth, baseHeight,
+        pixelX, pixelY, pixelWidth, pixelHeight
       );
     } else {
-      // Fallback rectangle
+      // Fallback rectangle (scaled for huge units)
       this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
-      this.ctx.fillRect(Math.round(cinematicX - pixelSize/2), Math.round(finalY - pixelSize/2), pixelSize, pixelSize);
+      this.ctx.fillRect(Math.round(cinematicX - pixelWidth/2), Math.round(finalY - pixelHeight/2), pixelWidth, pixelHeight);
     }
     
     // Draw HP bar (adjusted for cinematic scale)
@@ -137,7 +149,7 @@ export default class CinematicView extends View {
       const maxHp = unit.maxHp || 100;
       const hpRatio = Math.max(0, Math.min(1, unit.hp / maxHp));
       if (hpRatio < 0.8) {
-        this.drawBar("hit points", Math.round(cinematicX - pixelSize / 2), Math.round(finalY - pixelSize / 2) - 4, pixelSize, 2, hpRatio);
+        this.drawBar("hit points", Math.round(cinematicX - pixelWidth / 2), Math.round(finalY - pixelHeight / 2) - 4, pixelWidth, 2, hpRatio);
       }
     }
 
@@ -148,7 +160,7 @@ export default class CinematicView extends View {
       const progress = unit.meta.jumpProgress || 0;
       const progressRatio = (progress / duration) || 0;
       if (progressRatio > 0 && progressRatio < 1) {
-        this.drawBar("jump progress", Math.round(cinematicX - pixelSize/2), Math.round(finalY - pixelSize/2) - 6, pixelSize, 2, progressRatio, '#ace');
+        this.drawBar("jump progress", Math.round(cinematicX - pixelWidth/2), Math.round(finalY - pixelHeight/2) - 6, pixelWidth, 2, progressRatio, '#ace');
       }
     }
   }
