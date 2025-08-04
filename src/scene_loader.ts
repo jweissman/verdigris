@@ -54,7 +54,7 @@ export class SceneLoader {
   }
 
   defaultLegend: { [key: string]: string } = {
-    f: 'farmer', s: 'soldier', w: 'worm', p: 'priest', r: 'ranger',
+    f: 'farmer', s: 'soldier', w: 'worm', p: 'priest', r: 'ranger', b: 'bombardier',
   }
 
   loadSimpleFormat(sceneText: string): void {

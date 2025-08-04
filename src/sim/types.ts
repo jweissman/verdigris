@@ -25,7 +25,7 @@ export interface Ability {
   config?: {
     [key: string]: any; // Additional configuration options for the ability
   }
-  effect: (unit: Unit, target?: Unit) => void; // Effect function
+  effect: (unit: Unit, target?: Unit, sim?: any) => void; // Effect function
 }
 
 export interface Unit {
@@ -69,6 +69,15 @@ export interface Projectile {
   radius: number;
   damage: number;
   team: 'friendly' | 'hostile';
+  type: 'bullet' | 'bomb';
+  // For bomb projectiles with arc motion
+  target?: Vec2;
+  progress?: number;
+  duration?: number;
+  origin?: Vec2;
+  z?: number;
+  // For AoE on impact
+  aoeRadius?: number;
 }
 
 export interface Battlefield {

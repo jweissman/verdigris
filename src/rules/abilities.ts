@@ -26,7 +26,7 @@ export class Abilities extends Rule {
         }
 
         if (!shouldTrigger) {
-          break; // Skip to next ability if cooldown is not met
+          break; // Skip to next ability if condition is not met
         }
 
         let target = unit; // Default to self-targeting
@@ -51,7 +51,7 @@ export class Abilities extends Rule {
         // if (shouldTrigger) {
         // console.log(`[Abilities] Triggering ${abilityName} for ${unit.id} at tick ${this.sim.ticks}`);
         // console.log(`Triggering ability ${abilityName} for unit ${unit.id}`);
-          ability.effect(unit, target);
+          ability.effect(unit, target, this.sim);
           if (!unit.lastAbilityTick) {
             unit.lastAbilityTick = {};
           }

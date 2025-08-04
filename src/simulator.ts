@@ -79,7 +79,7 @@ class Simulator {
       meta: {}
     };
     this.units.push(u);
-    console.log(`Added unit ${u.id} at (${u.pos.x}, ${u.pos.y}) with hp: ${u.hp}, team: ${u.team}`);
+    console.log(`Added unit ${u.id} at (${u.pos.x}, ${u.pos.y}) with hp: ${u.hp}, team: ${u.team}`, u);
     return this;
   }
 

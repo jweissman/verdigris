@@ -9,6 +9,8 @@ import farmer from "./assets/sprites/farmer.png";
 import slinger from "./assets/sprites/slinger.png";
 // @ts-ignore
 import priest from "./assets/sprites/priest.png";
+// @ts-ignore
+import bombardier from "./assets/sprites/bombardier.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -79,11 +81,12 @@ class Game {
     }
 
     const spriteList = [
-      { name: 'worm', src: worm }, //'/worm.png' },
-      { name: 'soldier', src: soldier }, //'/soldier.png' }
+      { name: 'worm', src: worm },
+      { name: 'soldier', src: soldier },
       { name: 'farmer', src: farmer },
       { name: 'slinger', src: slinger },
       { name: 'priest', src: priest },
+      { name: 'bombardier', src: bombardier }
     ];
 
     let sprites = new Map<string, HTMLImageElement>();

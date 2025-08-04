@@ -162,7 +162,11 @@ export default class Renderer extends Display {
   setViewMode(mode: 'grid' | 'cinematic') {
     this.viewMode = mode;
   }
-  
+
+  get cinematicView() {
+    return this.viewMode === 'cinematic';
+  }
+
   grid() {
     // Draw grid dots at exact integer positions
     for (let x = 0; x < this.width; x += 8) {

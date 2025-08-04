@@ -12,7 +12,7 @@ class Freehold extends Game {
       },
       target: 'closest.enemy()?.pos',
       trigger: 'distance(closest.enemy()?.pos) > 10',
-      effect: (u, t) => {
+      effect: (u, t, sim) => {
         if (!t) {
           // console.warn(`${u.id} has no valid target to jump to`);
           return;
@@ -22,6 +22,77 @@ class Freehold extends Game {
         u.meta.jumpProgress = 0;
         u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
         u.meta.jumpTarget = t;
+      },
+    },
+    ranged: {
+      name: 'Sling Shot',
+      cooldown: 6,
+      config: {
+        range: 10, damage: 4, speed: 2
+      },
+      target: 'closest.enemy()',
+      trigger: 'distance(closest.enemy()?.pos) <= 10 && distance(closest.enemy()?.pos) > 2',
+      effect: (u, target, sim) => {
+        if (!target) {
+          console.warn(`${u.id} has no valid target to shoot`);
+          return;
+        }
+        console.log(`${u.id} firing bullet at ${target.id} at (${target.pos.x}, ${target.pos.y})`);
+        
+        // Compute direction vector (normalized)
+        const dx = target.pos.x - u.pos.x;
+        const dy = target.pos.y - u.pos.y;
+        const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+        const speed = 2;
+        const vel = { x: (dx / mag) * speed, y: (dy / mag) * speed };
+        
+        // Add bullet projectile to simulator
+        if (sim && sim.projectiles) {
+          sim.projectiles.push({
+            id: `bullet_${u.id}_${Date.now()}`,
+            pos: { x: u.pos.x, y: u.pos.y },
+            vel,
+            radius: 1.5,
+            damage: 4,
+            team: u.team,
+            type: 'bullet'
+          });
+        }
+      },
+    },
+    bombardier: {
+      name: 'Bomb Toss',
+      cooldown: 20,
+      config: {
+        range: 14, damage: 6, aoeRadius: 4, duration: 12
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) <= 14 && distance(closest.enemy()?.pos) > 5',
+      effect: (u, targetPos, sim) => {
+        if (!targetPos) {
+          console.warn(`${u.id} has no valid target to bomb`);
+          return;
+        }
+        console.log(`${u.id} tossing bomb to (${targetPos.x}, ${targetPos.y})`);
+        
+        // Add bomb projectile to simulator with arc motion
+        if (sim && sim.projectiles) {
+          sim.projectiles.push({
+            id: `bomb_${u.id}_${Date.now()}`,
+            pos: { x: u.pos.x, y: u.pos.y },
+            vel: { x: 0, y: 0 }, // Not used for bombs, using target instead
+            radius: 2,
+            damage: 6,
+            team: u.team,
+            type: 'bomb',
+            target: { x: targetPos.x, y: targetPos.y },
+            origin: { x: u.pos.x, y: u.pos.y },
+            progress: 0,
+            duration: 4,
+            z: 0,
+            aoeRadius: 3
+          });
+        }
       },
     },
   }
@@ -64,6 +135,16 @@ class Freehold extends Game {
       state: "idle",
       hp: 20,
       maxHp: 20,
+      mass: 1,
+      abilities: {}
+    },
+    bombardier: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "bombardier",
+      state: "idle",
+      hp: 18,
+      maxHp: 18,
       mass: 1,
       abilities: {}
     },
@@ -125,13 +206,18 @@ class Freehold extends Game {
       return;
     }
     
-    if (e.key === "r") {
-      this.renderer.setViewMode('grid');
-    } else if (e.key === "c") {
-      this.renderer.setViewMode('cinematic');
+    // if (e.key === "r") {
+    //   this.renderer.setViewMode('grid');
+  // } else
+    if(e.key === "c") {
+      this.renderer.setViewMode(
+        this.renderer.cinematicView ? 'grid' : 'cinematic'
+      );
     }
 
-    let beasts = ["worm", "farmer", "soldier", "ranger", "priest"];
+    let beasts = ["worm", "farmer", "soldier", "ranger", "priest", "bombardier"];
+    // let beasts = Object.keys(Freehold.bestiary);
+    console.log(`Available beasts: ${beasts.join(', ')}`);
     if (beasts.some(b => b.startsWith(e.key))) {
       const { x, y } = this.randomGridPosition();
       let beast = beasts.find(b => b.startsWith(e.key));
@@ -147,14 +233,16 @@ class Freehold extends Game {
   }
 
   static unit(beast: string): Partial<Unit> {
-    return {
+    let u = {
         id: beast + this.id(beast),
         // pos: { x, y },
         intendedMove: { x: 0, y: 0 },
         state: "idle",
         ...Freehold.bestiary[beast],
         abilities: {
-          ...(beast === "worm" ? { jumps: Freehold.abilities.jumps } : {})
+          ...(beast === "worm" ? { jumps: Freehold.abilities.jumps } : {}),
+          ...(beast === "ranger" ? { ranged: Freehold.abilities.ranged } : {}),
+          ...(beast === "bombardier" ? { bombardier: Freehold.abilities.bombardier } : {})
         },
         tags: [
           ...(beast === "worm" ? ["swarm"] : []),
@@ -164,6 +252,9 @@ class Freehold extends Game {
           // ...(beast === "priest" ? ["heal"] : [])
         ]
       };
+
+    console.log(`Creating unit ${u.id} of type ${beast} at (${u.pos?.x || 0}, ${u.pos?.y || 0})`);
+    return u;
   }
 
   randomGridPosition(): { x: number, y: number } {

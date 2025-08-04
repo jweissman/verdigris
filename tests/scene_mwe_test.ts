@@ -121,4 +121,40 @@ w..w`;
     expect(lightWormPos).toEqual({ x: 0, y: 2 });
     expect(lastWormPos).toEqual({ x: 3, y: 2 });
   });
+
+  it('should fire projectiles from ranger when enemy is in range', () => {
+    const sim = new Simulator(40, 25);
+    const sceneLoader = new SceneLoader(sim);
+    
+    // Create a scenario with ranger and nearby worm
+    const rangerTest = `r....
+.....
+.....
+.....
+..w..`;
+    
+    sceneLoader.loadFromText(rangerTest);
+    
+    const ranger = sim.units.find(u => u.sprite === 'slinger');
+    const worm = sim.units.find(u => u.sprite === 'worm');
+    
+    expect(ranger).toBeDefined();
+    expect(worm).toBeDefined();
+    expect(ranger?.abilities.ranged).toBeDefined();
+    
+    // Step the simulation a few times to allow abilities to trigger
+    expect(sim.projectiles.length).toBe(0); // No projectiles initially
+    
+    // Step multiple times to let abilities trigger (cooldown is 60 ticks)
+    for (let i = 0; i < 7; i++) {
+      sim.step();
+    }
+    
+    // Should have created at least one projectile
+    expect(sim.projectiles.length).toBeGreaterThan(0);
+    
+    const projectile = sim.projectiles[0];
+    expect(projectile.team).toBe('friendly');
+    expect(projectile.damage).toBe(4);
+  });
 });
