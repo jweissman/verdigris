@@ -75,7 +75,7 @@ export default class View {
     }
   }
 
-  private updateProjectileInterpolations() {
+  protected updateProjectileInterpolations() {
     const deltaTime = 16; // ~16ms per frame at 60fps
     
     // Check for new or moved projectiles
@@ -138,4 +138,6 @@ export default class View {
       }
     }
   }
+
+
 }

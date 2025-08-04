@@ -106,7 +106,15 @@ export default class Battle extends View {
       }
 
       realPixelY = Math.round(realPixelY); // Ensure pixelY is an integer
-        
+      
+      // Draw ground shadow for all units
+      this.ctx.save();
+      this.ctx.fillStyle = '#00000050';
+      this.ctx.beginPath();
+      this.ctx.ellipse(gridCenterX - 2, gridCenterY + 6, 6, 3, 0, 0, 2 * Math.PI);
+      this.ctx.fill();
+      this.ctx.restore();
+
       // Draw at native 16x16 size for maximum sharpness
       this.ctx.drawImage(
         sprite,
@@ -217,7 +225,7 @@ export default class Battle extends View {
       // Bullets are small dots
       this.ctx.fillStyle = '#000';
       this.ctx.beginPath();
-      this.ctx.arc(pixelX + 4, adjustedPixelY + 4, projectile.radius || 1.5, 0, 2 * Math.PI);
+      this.ctx.arc(pixelX + 4, adjustedPixelY + 4, projectile.radius || 0.5, 0, 2 * Math.PI);
       this.ctx.fill();
       
       // Simple trail for bullets in grid view only

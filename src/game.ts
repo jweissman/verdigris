@@ -11,6 +11,10 @@ import slinger from "./assets/sprites/slinger.png";
 import priest from "./assets/sprites/priest.png";
 // @ts-ignore
 import bombardier from "./assets/sprites/bombardier.png";
+// @ts-ignore
+import tamer from "./assets/sprites/squirrel-tamer.png";
+// @ts-ignore
+import squirrel from "./assets/sprites/squirrel.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -86,7 +90,9 @@ class Game {
       { name: 'farmer', src: farmer },
       { name: 'slinger', src: slinger },
       { name: 'priest', src: priest },
-      { name: 'bombardier', src: bombardier }
+      { name: 'bombardier', src: bombardier },
+      { name: 'tamer', src: tamer },
+      { name: 'squirrel', src: squirrel },
     ];
 
     let sprites = new Map<string, HTMLImageElement>();
@@ -127,6 +133,11 @@ class Game {
     if (now - this.lastSimTime >= simTickInterval) {
       this.sim.step();
       this.lastSimTime = now;
+
+      console.log(
+        "List of units after step:",
+        this.sim.units.map(u => u.id).join(', ')
+      )
     }
     
     // Animation and rendering run at 60fps

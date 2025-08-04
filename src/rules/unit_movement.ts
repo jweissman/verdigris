@@ -49,6 +49,30 @@ export class UnitMovement extends Rule {
           else if (unit.tags.includes('wander')) {
             unit = UnitOperations.wander(unit);
           }
+
+          else if (unit.tags.includes('follower')) {
+            // Follow the nearest friendly unit
+            const friends = this.sim.units.filter(u => u.team === unit.team && u.state !== 'dead');
+            if (friends.length > 0) {
+              let closest = friends[0];
+              let closestDist = Math.hypot(closest.pos.x - unit.pos.x, closest.pos.y - unit.pos.y);
+              for (const friend of friends) {
+                const dist = Math.hypot(friend.pos.x - unit.pos.x, friend.pos.y - unit.pos.y);
+                if (dist < closestDist) {
+                  closest = friend;
+                  closestDist = dist;
+                }
+              }
+              // Move towards the closest friendly unit
+              const dx = closest.pos.x - unit.pos.x;
+              const dy = closest.pos.y - unit.pos.y;
+              const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+              unit.intendedMove = { x: (dx / mag), y: (dy / mag) };
+            } else {
+              // No friends, just wander
+              unit = UnitOperations.wander(unit);
+            }
+          }
         }
       }
 

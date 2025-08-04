@@ -5,7 +5,7 @@ export interface Vec2 {
 
 export type UnitState = 'idle' | 'walk' | 'attack' | 'dead';
 
-export type UnitPosture = 'idle' // wander or wait
+export type UnitPosture = 'wait' // wander or wait
   | 'alert' // Suspicious, not yet targeting
   | 'pursue' // Actively chasing a target
   | 'fight' // In melee range, ready to strike
@@ -37,6 +37,7 @@ export interface Unit {
   state: UnitState;
   posture?: UnitPosture;
   intendedTarget?: Vec2 | UnitID; // Target for attacks or abilities
+  intendedProtectee?: Vec2 | UnitID; // Protecting/guarding a specific target or position
   hp: number;
   maxHp: number;
   mass: number;
@@ -103,7 +104,7 @@ export type Step = (state: Battlefield, input?: Input) => Battlefield;
 
 // for queued actions for engine to process at end of tick
 export type Action = {
-  kind: 'aoe' | 'damage' | 'heal' | 'knockback';
+  kind: 'aoe' | 'damage' | 'heal' | 'knockback' | 'spawn';
   // source: string | Unit | Projectile | Vec2;
   source: string | Vec2;
   target: string | Vec2;
@@ -115,5 +116,6 @@ export type Action = {
     distance?: number; // Distance for knockback
     force?: number; // Force for knockback/aoe (if > mass then send flying)
     origin?: Vec2; // Origin point for distance calculations
+    unit?: Partial<Unit>; // Unit involved in the action
   }
 }

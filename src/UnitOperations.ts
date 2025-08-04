@@ -1,4 +1,5 @@
 import { Unit } from "./sim/types";
+import { Simulator } from "./simulator";
 
 
 export class UnitOperations {
@@ -26,10 +27,6 @@ export class UnitOperations {
   }
 
   static wander(unit: Unit): Unit {
-    // if (Math.random() > 0.15) {
-    //   return unit;
-    // }
-
     const dirs = [
       { x: 1, y: 0 },
       { x: -1, y: 0 },
@@ -83,7 +80,11 @@ export class UnitOperations {
     };
   }
 
-  static swarm(unit: Unit, sim: any, proximity: number = 128): Unit {
+  static swarm(unit: Unit, sim: Simulator): Unit {
+    if (Math.random() < 0.15) {
+      return unit;
+    }
+
     // Find all living allies (except self)
     const allies = sim.units.filter((u: Unit) => 
       u.team === unit.team && u.id !== unit.id && u.state !== 'dead'
