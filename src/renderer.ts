@@ -1,5 +1,6 @@
 import { Unit } from "./sim/types";
 import { Simulator } from "./simulator";
+import Battle from "./views/battle";
 
 // Abstraction for canvas operations that works in both browser and Node
 interface CanvasLike {
@@ -151,12 +152,18 @@ class ScaledDisplay {
 // Game-specific renderer - clean separation of concerns
 export default class Renderer extends Display {
   private unitInterpolations: Map<string, { startX: number, startY: number, startZ: number, targetX: number, targetY: number, targetZ: number, progress: number, duration: number }> = new Map();
+  private projectileInterpolations: Map<string, { startX: number, startY: number, startZ: number, targetX: number, targetY: number, targetZ: number, progress: number, duration: number }> = new Map();
   private animationTime: number = 0;
   private previousPositions: Map<string, {x: number, y: number, z: number}> = new Map();
+  private previousProjectilePositions: Map<string, {x: number, y: number, z: number}> = new Map();
   private viewMode: 'grid' | 'cinematic' = 'cinematic';
+
+  private battle: Battle | null = null;
 
   constructor(width: number, height: number, canvas: CanvasLike, private sim: Simulator, private sprites: Map<string, HTMLImageElement>) {
     super(width, height, canvas);
+
+    this.battle = new Battle(this.ctx, this.sim, this.width, this.height, this.sprites);
   }
 
   setViewMode(mode: 'grid' | 'cinematic') {
@@ -182,12 +189,16 @@ export default class Renderer extends Display {
 
   render() {
     this.updateMovementInterpolations();
-    
+    this.updateProjectileInterpolations();
     if (this.viewMode === 'cinematic') {
       this.renderCinematicView();
     } else {
-      this.renderGridView();
-      this.renderOverlays();
+      // this.renderGridView();
+      // this.renderOverlays();
+      if (this.battle) {
+        this.battle.sim = this.sim; // Ensure battle view uses current sim state
+        this.battle?.show();
+      }
     }
   }
 
@@ -389,6 +400,70 @@ export default class Renderer extends Display {
     }
   }
 
+  private updateProjectileInterpolations() {
+    const deltaTime = 16; // ~16ms per frame at 60fps
+    
+    // Check for new or moved projectiles
+    for (const projectile of this.sim.projectiles) {
+      const prevPos = this.previousProjectilePositions.get(projectile.id);
+      const currentZ = projectile.z || 0;
+      
+      if (!prevPos) {
+        // First time seeing this projectile, just record position
+        this.previousProjectilePositions.set(projectile.id, { 
+          x: projectile.pos.x, 
+          y: projectile.pos.y, 
+          z: currentZ 
+        });
+        continue;
+      }
+      
+      // Check if projectile moved or z changed
+      if (prevPos.x !== projectile.pos.x || prevPos.y !== projectile.pos.y || prevPos.z !== currentZ) {
+        // Projectile moved! Start interpolation
+        // Use longer duration for more visible smoothing
+        const duration = projectile.type === 'bomb' ? 400 : 200; // Much longer durations
+        
+        this.projectileInterpolations.set(projectile.id, {
+          startX: prevPos.x,
+          startY: prevPos.y,
+          startZ: prevPos.z,
+          targetX: projectile.pos.x,
+          targetY: projectile.pos.y,
+          targetZ: currentZ,
+          progress: 0,
+          duration
+        });
+        
+        // Update previous position
+        this.previousProjectilePositions.set(projectile.id, { 
+          x: projectile.pos.x, 
+          y: projectile.pos.y, 
+          z: currentZ 
+        });
+      }
+    }
+    
+    // Clean up interpolations for removed projectiles
+    const activeProjectileIds = new Set(this.sim.projectiles.map(p => p.id));
+    for (const projectileId of this.projectileInterpolations.keys()) {
+      if (!activeProjectileIds.has(projectileId)) {
+        this.projectileInterpolations.delete(projectileId);
+        this.previousProjectilePositions.delete(projectileId);
+      }
+    }
+    
+    // Update existing interpolations
+    for (const [projectileId, interp] of this.projectileInterpolations.entries()) {
+      interp.progress += deltaTime / interp.duration;
+      
+      if (interp.progress >= 1) {
+        // Interpolation complete, remove it
+        this.projectileInterpolations.delete(projectileId);
+      }
+    }
+  }
+
   private easeInOutQuad(t: number): number {
     // Less smooth, more chunky movement
     // Sharp acceleration at start, then linear
@@ -502,25 +577,25 @@ export default class Renderer extends Display {
     this.ctx.restore();
   }
 
-  private renderCombatTarget(unit: Unit) {
-    // Only show if unit has a combat target
-    if (!unit.intendedTarget || typeof unit.intendedTarget !== 'string') {
-      return;
-    }
+  // private renderCombatTarget(unit: Unit) {
+  //   // Only show if unit has a combat target
+  //   if (!unit.intendedTarget || typeof unit.intendedTarget !== 'string') {
+  //     return;
+  //   }
 
-    const target = this.sim.creatureById(unit.intendedTarget);
-    if (!target) return;
+  //   const target = this.sim.creatureById(unit.intendedTarget);
+  //   if (!target) return;
 
-    const targetX = Math.round(target.pos.x * 8);
-    const targetY = Math.round(target.pos.y * 8);
+  //   const targetX = Math.round(target.pos.x * 8);
+  //   const targetY = Math.round(target.pos.y * 8);
     
-    // Highlight target cell with red overlay
-    this.ctx.save();
-    this.ctx.fillStyle = '#ff4444';
-    this.ctx.globalAlpha = 0.4;
-    this.ctx.fillRect(targetX, targetY, 8, 8);
-    this.ctx.restore();
-  }
+  //   // Highlight target cell with red overlay
+  //   this.ctx.save();
+  //   this.ctx.fillStyle = '#ff4444';
+  //   this.ctx.globalAlpha = 0.4;
+  //   this.ctx.fillRect(targetX, targetY, 8, 8);
+  //   this.ctx.restore();
+  // }
 
   private renderAoEEffects() {
     // Query simulator for recent AoE events
@@ -615,36 +690,6 @@ export default class Renderer extends Display {
     this.ctx.fillStyle = '#eee';
     this.ctx.fillRect(0, mountainY, this.width, this.height - mountainY);
 
-    // isolate battle strip
-    // this.ctx.globalAlpha = 0.8; // Semi-transparent battle strip
-    // this.ctx.fillStyle = '#eee';
-    // this.ctx.fillRect(0, this.height * 0.6, this.width, this.height * 0.7);
-    // this.ctx.globalAlpha = 1.0; // Reset alpha for other elements
-    
-    // Rolling hills (sine waves)
-    // this.ctx.fillStyle = '#fff';
-    // const hillY = this.height * 0.6;
-    // this.ctx.beginPath();
-    // this.ctx.moveTo(0, hillY);
-    // for (let x = 0; x <= this.width; x += 4) {
-    //   const y = hillY + Math.sin(x * 0.02) * 15 + Math.sin(x * 0.05) * 8;
-    //   this.ctx.lineTo(x, y);
-    // }
-    // this.ctx.lineTo(this.width, this.height);
-    // this.ctx.lineTo(0, this.height);
-    // this.ctx.closePath();
-    // this.ctx.fill();
-    
-    // Forest (circles for trees)
-    // for (let i = 0; i < 80; i++) {
-    //   const treeX = Math.sin(i * 1.3) * 120 + this.width * 0.5;
-    //   const treeY = mountainY * 1.2 + Math.sin(treeX * 0.01) * 15 - 10;
-    //   const treeSize = 8 + Math.sin(i * 0.8) * 4;
-      
-    //   this.ctx.beginPath();
-    //   this.ctx.arc(treeX, treeY, treeSize, 0, 2 * Math.PI);
-    //   this.ctx.fill();
-    // }
     
     this.ctx.restore();
   }
@@ -740,55 +785,180 @@ export default class Renderer extends Display {
   }
 
   private renderProjectile(projectile: any) {
-    // Simple projectile rendering for grid view
-    const pixelX = Math.round(projectile.pos.x * 8);
-    const pixelY = Math.round(projectile.pos.y * 8);
+    // Calculate interpolated render position for smooth movement
+    let renderX = projectile.pos.x;
+    let renderY = projectile.pos.y;
+    let renderZ = projectile.z || 0;
+    
+    const interp = this.projectileInterpolations.get(projectile.id);
+    if (interp) {
+      // Use smooth interpolation with easing
+      const easeProgress = projectile.type === 'bomb' ? 
+        this.easeInOutQuad(interp.progress) : // Smooth for bombs
+        interp.progress; // Linear for bullets
+      
+      renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
+      renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
+      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
+    }
+    
+    const pixelX = Math.round(renderX * 8);
+    const pixelY = Math.round(renderY * 8);
+    let adjustedPixelY = pixelY;
+    
+    // Apply z-axis offset for bombs
+    if (renderZ > 0) {
+      adjustedPixelY -= renderZ * 2.4; // Same scale as units
+    }
     
     this.ctx.save();
-    this.ctx.fillStyle = projectile.team === 'friendly' ? '#44ff44' : '#ff4444';
-    this.ctx.beginPath();
-    this.ctx.arc(pixelX + 4, pixelY + 4, projectile.radius || 2, 0, 2 * Math.PI);
-    this.ctx.fill();
     
-    // Add a trail effect
-    this.ctx.strokeStyle = projectile.team === 'friendly' ? '#44ff44' : '#ff4444';
-    this.ctx.lineWidth = 1;
-    this.ctx.globalAlpha = 0.5;
-    this.ctx.beginPath();
-    const trailX = pixelX + 4 - (projectile.vel?.x || 0) * 8;
-    const trailY = pixelY + 4 - (projectile.vel?.y || 0) * 8;
-    this.ctx.moveTo(trailX, trailY);
-    this.ctx.lineTo(pixelX + 4, pixelY + 4);
-    this.ctx.stroke();
+    // Monochrome projectile rendering
+    if (projectile.type === 'bomb') {
+      // Draw parabolic arc trail if bomb is in flight
+      if (projectile.origin && projectile.target && projectile.progress && projectile.duration) {
+        this.drawBombArcTrail(projectile);
+      }
+      
+      // Bombs are larger circles, dark fill with white border
+      this.ctx.fillStyle = '#000';
+      this.ctx.strokeStyle = '#fff';
+      this.ctx.lineWidth = 1;
+      this.ctx.beginPath();
+      this.ctx.arc(pixelX + 4, adjustedPixelY + 4, (projectile.radius || 2) * 1.2, 0, 2 * Math.PI);
+      this.ctx.fill();
+      this.ctx.stroke();
+      
+      // Add a shadow if elevated
+      if (renderZ > 0) {
+        this.ctx.fillStyle = '#00000040';
+        this.ctx.beginPath();
+        this.ctx.arc(pixelX + 4, pixelY + 4, (projectile.radius || 2) * 0.8, 0, 2 * Math.PI);
+        this.ctx.fill();
+      }
+    } else {
+      // Bullets are small dots
+      this.ctx.fillStyle = '#000';
+      this.ctx.beginPath();
+      this.ctx.arc(pixelX + 4, adjustedPixelY + 4, projectile.radius || 1.5, 0, 2 * Math.PI);
+      this.ctx.fill();
+      
+      // Simple trail for bullets in grid view only
+      if (projectile.vel) {
+        this.ctx.strokeStyle = '#000';
+        this.ctx.lineWidth = 1;
+        this.ctx.globalAlpha = 0.3;
+        this.ctx.beginPath();
+        const trailX = pixelX + 4 - (projectile.vel.x || 0) * 4;
+        const trailY = adjustedPixelY + 4 - (projectile.vel.y || 0) * 4;
+        this.ctx.moveTo(trailX, trailY);
+        this.ctx.lineTo(pixelX + 4, adjustedPixelY + 4);
+        this.ctx.stroke();
+      }
+    }
     
     this.ctx.restore();
   }
 
   private renderProjectileCinematic(projectile: any) {
-    // Cinematic projectile rendering
+    // Calculate interpolated render position for smooth cinematic movement
+    let renderX = projectile.pos.x;
+    let renderY = projectile.pos.y;
+    let renderZ = projectile.z || 0;
+    
+    const interp = this.projectileInterpolations.get(projectile.id);
+    if (interp) {
+      const easeProgress = projectile.type === 'bomb' ? 
+        this.easeInOutQuad(interp.progress) : // Smooth for bombs
+        interp.progress; // Linear for bullets
+      
+      renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
+      renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
+      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
+    }
+    
+    // Cinematic positioning
     const battleStripY = this.height * 0.8;
     const stackingFactor = 0.24;
     
-    const cinematicX = projectile.pos.x * 8;
-    const cinematicY = battleStripY - (projectile.pos.y * 8 * stackingFactor);
+    const cinematicX = renderX * 8;
+    const cinematicY = battleStripY - (renderY * 8 * stackingFactor);
+    let adjustedCinematicY = cinematicY;
+    
+    // Apply z-axis offset for elevation
+    if (renderZ > 0) {
+      adjustedCinematicY -= renderZ * 4.8; // Same scale as cinematic units
+    }
     
     this.ctx.save();
-    this.ctx.fillStyle = projectile.team === 'friendly' ? '#44ff44' : '#ff4444';
-    this.ctx.globalAlpha = 0.9;
-    this.ctx.beginPath();
-    this.ctx.arc(cinematicX, cinematicY, (projectile.radius || 2) * 1.5, 0, 2 * Math.PI);
-    this.ctx.fill();
     
-    // Enhanced trail for cinematic view
-    this.ctx.strokeStyle = projectile.team === 'friendly' ? '#44ff44' : '#ff4444';
-    this.ctx.lineWidth = 2;
-    this.ctx.globalAlpha = 0.6;
-    this.ctx.beginPath();
-    const trailX = cinematicX - (projectile.vel?.x || 0) * 12;
-    const trailY = cinematicY - (projectile.vel?.y || 0) * 12;
-    this.ctx.moveTo(trailX, trailY);
-    this.ctx.lineTo(cinematicX, cinematicY);
-    this.ctx.stroke();
+    if (projectile.type === 'bomb') {
+      // Bombs in cinematic view - larger black circles with white border
+      this.ctx.fillStyle = '#000';
+      this.ctx.strokeStyle = '#fff';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.arc(cinematicX, adjustedCinematicY, (projectile.radius || 2) * 2, 0, 2 * Math.PI);
+      this.ctx.fill();
+      this.ctx.stroke();
+      
+      // Add a ground shadow if elevated
+      if (renderZ > 0) {
+        this.ctx.fillStyle = '#00000030';
+        this.ctx.beginPath();
+        this.ctx.arc(cinematicX, cinematicY, (projectile.radius || 2) * 1.5, 0, 2 * Math.PI);
+        this.ctx.fill();
+      }
+      
+      // NO trails - they look confusing
+    } else {
+      // Bullets are simple white dots in cinematic view
+      this.ctx.fillStyle = '#000';
+      this.ctx.strokeStyle = '#fff';
+      this.ctx.beginPath();
+      this.ctx.arc(cinematicX, adjustedCinematicY, (projectile.radius || 2) * 1.2, 0, 2 * Math.PI);
+      this.ctx.fill();
+      
+      // NO trails in cinematic view - they look wrong
+    }
+    
+    this.ctx.restore();
+  }
+
+  private drawBombArcTrail(projectile: any) {
+    // Calculate the parabolic arc from origin to target
+    const originX = projectile.origin.x * 8 + 4;
+    const originY = projectile.origin.y * 8 + 4;
+    const targetX = projectile.target.x * 8 + 4;
+    const targetY = projectile.target.y * 8 + 4;
+    
+    // Calculate distance for height scaling (same as projectile motion)
+    const dx = projectile.target.x - projectile.origin.x;
+    const dy = projectile.target.y - projectile.origin.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const baseHeight = 12;
+    const distanceMultiplier = Math.min(2, distance / 5);
+    const height = baseHeight * distanceMultiplier;
+    
+    // Draw arc with dots showing parabolic path
+    this.ctx.save();
+    this.ctx.fillStyle = '#666';
+    this.ctx.globalAlpha = 0.4;
+    
+    // Sample points along the arc
+    const numPoints = Math.max(8, Math.floor(distance * 2));
+    for (let i = 0; i <= numPoints; i++) {
+      const t = i / numPoints;
+      const x = originX + (targetX - originX) * t;
+      const y = originY + (targetY - originY) * t;
+      const z = height * Math.sin(Math.PI * t);
+      const arcY = y - z * 2.4; // Same z scaling as units
+      
+      // Draw small dots for the arc trail
+      this.ctx.beginPath();
+      this.ctx.arc(x, arcY, 1, 0, 2 * Math.PI);
+      this.ctx.fill();
+    }
     
     this.ctx.restore();
   }

@@ -88,7 +88,7 @@ class Freehold extends Game {
             target: { x: targetPos.x, y: targetPos.y },
             origin: { x: u.pos.x, y: u.pos.y },
             progress: 0,
-            duration: 4,
+            duration: 6,
             z: 0,
             aoeRadius: 3
           });
@@ -103,10 +103,9 @@ class Freehold extends Game {
       team: "hostile",
       sprite: "worm",
       state: "idle",
-      hp: 10, // Tougher worms for longer battles
+      hp: 10,
       maxHp: 10,
       mass: 4,
-      // tags:
     },
     farmer: {
       intendedMove: { x: 0, y: 0 },
@@ -169,9 +168,6 @@ class Freehold extends Game {
         this.numBuffer += e.key;
         console.log(`Buffering number: ${this.numBuffer}`);
         return;
-      // } else if (e.key === "Enter") {
-      //   this.numBuffer = ""; // Reset buffer on Enter
-      //   return;
       }
       let repetitions = parseInt(this.numBuffer, 10) || 1; // Default to 1 if no number
       this.numBuffer = ""; // Reset buffer after using it

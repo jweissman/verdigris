@@ -23,9 +23,9 @@ export class ProjectileMotion extends Rule {
         return proj.pos.x >= 0 && proj.pos.x < this.sim.fieldWidth && 
                proj.pos.y >= 0 && proj.pos.y < this.sim.fieldHeight;
       } else if (proj.type === 'bomb') {
-        return (proj.progress || 0) < (proj.duration || 12);
+        return (proj.progress || 0) <= (proj.duration || 12);
       }
-      return true; // Keep legacy projectiles
+      return false; // Keep legacy projectiles
     });
   }
 
@@ -50,14 +50,18 @@ export class ProjectileMotion extends Rule {
     const duration = proj.duration;
     const t = progress / duration; // 0 to 1
 
-    if (progress >= duration) {
+    if (progress > duration) {
+    // if (t >= 1) {
       // Bomb has landed - trigger AoE explosion
       console.log(`💥 Bomb ${proj.id} exploding at (${proj.target.x}, ${proj.target.y})`);
       
       if (proj.aoeRadius && proj.aoeRadius > 0) {
+        // Extract the unit ID from the projectile ID (e.g., "bomb_bombardier1_123" -> "bombardier1")
+        const sourceUnitId = proj.id.split('_')[1] || 'unknown';
+        
         this.sim.queuedEvents.push({
           kind: 'aoe',
-          source: proj.target,
+          source: sourceUnitId,
           target: proj.target,
           meta: {
             aspect: 'impact',
@@ -66,12 +70,13 @@ export class ProjectileMotion extends Rule {
             origin: proj.target
           }
         });
+
       }
 
       return {
         ...proj,
         pos: { ...proj.target },
-        progress: duration,
+        progress: duration + 1,
         z: 0
       };
     }
@@ -84,7 +89,10 @@ export class ProjectileMotion extends Rule {
     const y = proj.origin.y + dy * t;
     
     // Parabolic arc for z-axis (height peaks at middle of flight)
-    const height = 6; // Max height of arc
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const baseHeight = 12; // Increased base height for more dramatic arcs
+    const distanceMultiplier = Math.min(2, distance / 5); // Scale with distance
+    const height = baseHeight * distanceMultiplier;
     const z = height * Math.sin(Math.PI * t);
 
     return {

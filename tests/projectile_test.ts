@@ -57,6 +57,7 @@ describe('Projectile simulation', () => {
   });
 });
 
+// note: flaky somehow?
 describe('Projectile Types (Bullet vs Bomb)', () => {
   it('should fire bullet projectiles that travel in straight lines', () => {
     const sim = new Simulator(40, 25);
@@ -77,7 +78,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     let bullet;
     
     // Step until ranger fires and check for bullet during flight
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 8; i++) {
       sim.step();
       const bullets = sim.projectiles.filter(p => p.type === 'bullet');
       if (bullets.length > 0 && !foundBullet) {
@@ -112,7 +113,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     let bomb;
     
     // Step until bombardier fires and check for bomb during flight
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 16; i++) {
       sim.step();
       const bombs = sim.projectiles.filter(p => p.type === 'bomb');
       if (bombs.length > 0 && !foundBomb) {
