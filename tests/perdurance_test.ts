@@ -1,0 +1,206 @@
+import { describe, expect, it } from "bun:test";
+import { Simulator } from "../src/simulator";
+import Encyclopaedia from "../src/dmg/encyclopaedia";
+
+describe("Perdurance System", () => {
+  it("should allow ghosts to resist physical damage", () => {
+    const sim = new Simulator(10, 10);
+    
+    // Create ghost and soldier
+    const ghost = Encyclopaedia.unit('ghost');
+    ghost.pos = { x: 5, y: 5 };
+    sim.addUnit(ghost);
+    
+    const soldier = Encyclopaedia.unit('soldier');
+    soldier.pos = { x: 6, y: 5 };
+    sim.addUnit(soldier);
+    
+    const initialGhostHp = ghost.hp;
+    
+    // Queue physical damage against ghost
+    sim.queuedEvents.push({
+      kind: 'damage',
+      source: soldier.id,
+      target: ghost.id,
+      meta: {
+        aspect: 'physical', // Should be blocked by spectral perdurance
+        amount: 10,
+        origin: soldier.pos
+      }
+    });
+    
+    // Process damage
+    sim.step();
+    
+    // Get fresh ghost reference since sim.units gets replaced
+    const freshGhost = sim.units.find(u => u.id === ghost.id);
+    
+    // Ghost should resist physical damage
+    expect(freshGhost && freshGhost.hp).toBe(initialGhostHp);
+  });
+
+  it("should allow radiant damage to affect ghosts", () => {
+    const sim = new Simulator(10, 10);
+    
+    // Create ghost and priest adjacent to each other
+    const ghost = Encyclopaedia.unit('ghost');
+    ghost.pos = { x: 5, y: 5 };
+    sim.addUnit(ghost);
+    
+    const priest = Encyclopaedia.unit('priest');
+    priest.pos = { x: 6, y: 5 }; // Adjacent for radiant ability
+    sim.addUnit(priest);
+    
+    const initialGhostHp = ghost.hp;
+    
+    // Let the simulation run so priest can use radiant ability
+    for (let i = 0; i < 35; i++) { // More steps for ability cooldown
+      sim.step();
+      
+      // Get fresh ghost reference
+      const freshGhost = sim.units.find(u => u.id === ghost.id);
+      if (freshGhost && freshGhost.hp < initialGhostHp) break; // Stop when damage is dealt
+    }
+    
+    // Get final fresh ghost reference
+    const finalGhost = sim.units.find(u => u.id === ghost.id);
+    
+    // Ghost should eventually take radiant damage from priest
+    expect(finalGhost && finalGhost.hp < initialGhostHp).toBe(true);
+  });
+
+  it("should allow demons to use fire attacks", () => {
+    const sim = new Simulator(10, 10);
+    
+    // Create demon and target
+    const demon = Encyclopaedia.unit('demon');
+    demon.pos = { x: 5, y: 5 };
+    sim.addUnit(demon);
+    
+    const soldier = Encyclopaedia.unit('soldier');
+    soldier.pos = { x: 6, y: 5 }; // Adjacent to demon
+    sim.addUnit(soldier);
+    
+    // Verify demon has fire blast ability and correct perdurance
+    expect(demon.abilities.fireBlast).toBeDefined();
+    expect(demon.meta.perdurance).toBe('fiendish');
+    
+    const initialSoldierHp = soldier.hp;
+    
+    // Let simulation run so demon can use fire blast ability
+    for (let i = 0; i < 45; i++) { // More steps for ability cooldown
+      sim.step();
+      
+      // Get fresh soldier reference
+      const freshSoldier = sim.units.find(u => u.id === soldier.id);
+      if (freshSoldier && (freshSoldier.hp < initialSoldierHp || freshSoldier.meta?.onFire)) break;
+    }
+    
+    // Get final fresh soldier reference
+    const finalSoldier = sim.units.find(u => u.id === soldier.id);
+    
+    // Soldier should eventually take fire damage or be set on fire
+    expect(finalSoldier && (finalSoldier.hp < initialSoldierHp || finalSoldier.meta?.onFire)).toBe(true);
+  });
+
+  it("should allow demons to resist some physical damage", () => {
+    const sim = new Simulator(10, 10);
+    
+    // Create demon
+    const demon = Encyclopaedia.unit('demon');
+    demon.pos = { x: 5, y: 5 };
+    sim.addUnit(demon);
+    
+    const soldier = Encyclopaedia.unit('soldier');
+    soldier.pos = { x: 6, y: 5 };
+    sim.addUnit(soldier);
+    
+    let damageBlocked = 0;
+    let damageAllowed = 0;
+    
+    // Try multiple physical attacks to test 50% resistance
+    for (let i = 0; i < 20; i++) {
+      const initialHp = demon.hp;
+      
+      // Queue physical damage
+      sim.queuedEvents.push({
+        kind: 'damage',
+        source: soldier.id,
+        target: demon.id,
+        meta: {
+          aspect: 'physical',
+          amount: 5,
+          origin: soldier.pos
+        }
+      });
+      
+      sim.step();
+      
+      // Get fresh demon reference
+      const freshDemon = sim.units.find(u => u.id === demon.id);
+      
+      if (freshDemon && freshDemon.hp === initialHp) {
+        damageBlocked++;
+      } else {
+        damageAllowed++;
+      }
+      
+      // Reset HP for next test using fresh reference
+      if (freshDemon) {
+        freshDemon.hp = initialHp;
+      }
+    }
+    
+    // Should have blocked roughly half the attacks (fiendish resistance)
+    expect(damageBlocked).toBeGreaterThan(5); // At least some resistance
+    expect(damageAllowed).toBeGreaterThan(5);  // But not complete immunity
+  });
+
+  it("should allow skeletons to have undead perdurance", () => {
+    const sim = new Simulator(10, 10);
+    
+    const skeleton = Encyclopaedia.unit('skeleton');
+    skeleton.pos = { x: 5, y: 5 };
+    sim.addUnit(skeleton);
+    
+    expect(skeleton.meta.perdurance).toBe('undead');
+    expect(skeleton.tags).toContain('undead');
+    expect(skeleton.tags).toContain('black');
+    expect(skeleton.team).toBe('hostile');
+  });
+
+  it("should verify all new units can be created", () => {
+    const sim = new Simulator(15, 15);
+    
+    // Create all new units
+    const rainmaker = sim.createRainmaker({ x: 1, y: 1 });
+    const bigWorm = sim.createBigWorm({ x: 3, y: 1 }, 4);
+    const skeleton = Encyclopaedia.unit('skeleton');
+    skeleton.pos = { x: 5, y: 1 };
+    sim.addUnit(skeleton);
+    
+    const ghost = Encyclopaedia.unit('ghost');
+    ghost.pos = { x: 7, y: 1 };
+    sim.addUnit(ghost);
+    
+    const demon = Encyclopaedia.unit('demon');
+    demon.pos = { x: 9, y: 1 };
+    sim.addUnit(demon);
+    
+    const mimicWorm = Encyclopaedia.unit('mimic-worm');
+    mimicWorm.pos = { x: 11, y: 1 };
+    sim.addUnit(mimicWorm);
+    
+    // Verify all units were created successfully
+    expect(sim.units.length).toBeGreaterThanOrEqual(6);
+    expect(rainmaker.abilities.makeRain).toBeDefined();
+    expect(bigWorm.abilities.breatheFire).toBeDefined();
+    expect(bigWorm.meta.segmented).toBe(true);
+    expect(skeleton.meta.perdurance).toBe('undead');
+    expect(ghost.meta.perdurance).toBe('spectral');
+    expect(demon.meta.perdurance).toBe('fiendish');
+    expect(demon.abilities.fireBlast).toBeDefined();
+    expect(mimicWorm.meta.segmented).toBe(true);
+    expect(mimicWorm.abilities.jumps).toBeDefined();
+  });
+});

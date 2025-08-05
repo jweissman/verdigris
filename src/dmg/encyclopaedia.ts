@@ -1,5 +1,5 @@
 import { Freehold } from "../freehold";
-import { Ability, Unit, UnitState } from "../sim/types";
+import { Ability, Unit, UnitState, Vec2 } from "../sim/types";
 import { Simulator } from "../simulator";
 
 export default class Encyclopaedia {
@@ -21,8 +21,8 @@ export default class Encyclopaedia {
 
         // toss a 'pointless' nut projectile
         if (sim && sim.projectiles) {
-          let dx = Math.random() * 2 - 1; // Random x offset
-          let dy = Math.random() * 2 - 1; // Random y offset
+          let dx = Math.random() > 0.5 ? 2 : -2;
+          let dy = Math.random() > 0.5 ? 2 : -2;
           sim.projectiles.push({
             id: `nut_${unit.id}_${Date.now()}`,
             pos: { x: unit.pos.x, y: unit.pos.y },
@@ -34,7 +34,7 @@ export default class Encyclopaedia {
             target: { x: unit.pos.x + dx, y: unit.pos.y + dy }, // Just a random target
             origin: { x: unit.pos.x, y: unit.pos.y },
             progress: 0,
-            duration: 1,
+            duration: 3,
             z: 0,
             aoeRadius: 0
           });
@@ -49,16 +49,31 @@ export default class Encyclopaedia {
       },
       target: 'closest.enemy()?.pos',
       trigger: 'distance(closest.enemy()?.pos) > 10',
-      effect: (u, t, sim) => {
+      effect: (u, t: Unit | Vec2 | undefined) => {
         if (!t) {
           // console.warn(`${u.id} has no valid target to jump to`);
           return;
         }
-        console.debug(`${u.id} jumping to target at (${t.x}, ${t.y})`);
-        u.meta.jumping = true;
-        u.meta.jumpProgress = 0;
-        u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
-        u.meta.jumpTarget = t;
+        if (typeof t === 'object' && 'x' in t && 'y' in t) {
+          // If target is a position, use it directly
+          console.debug(`${u.id} jumping to target at (${t.x}, ${t.y})`);
+          u.meta.jumping = true;
+          u.meta.jumpProgress = 0;
+          u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
+          u.meta.jumpTarget = { x: t.x, y: t.y };
+        } else {
+          // If target is a unit, use its position
+          console.debug(`${u.id} jumping to target unit ${t.id} at (${t.pos.x}, ${t.pos.y})`);
+          u.meta.jumping = true;
+          u.meta.jumpProgress = 0;
+          u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
+          u.meta.jumpTarget = { x: t.pos.x, y: t.pos.y };
+        }
+        // console.debug(`${u.id} jumping to target at (${t.x}, ${t.y})`);
+        // u.meta.jumping = true;
+        // u.meta.jumpProgress = 0;
+        // u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
+        // u.meta.jumpTarget = t;
       },
     },
     ranged: {
@@ -173,6 +188,208 @@ export default class Encyclopaedia {
         }
       },
     },
+
+    radiant: {
+      name: 'Radiant Strike',
+      cooldown: 30, // 3.75 seconds at 8fps
+      config: {
+        range: 2, damage: 8, bonusDamage: 20
+      },
+      target: 'closest.enemy()',
+      trigger: 'distance(closest.enemy()?.pos) <= 2',
+      effect: (u, targetPos, sim) => {
+        const enemies = sim.getRealUnits().filter(unit => 
+          unit.team !== u.team && 
+          Math.abs(unit.pos.x - u.pos.x) <= 2 && 
+          Math.abs(unit.pos.y - u.pos.y) <= 2
+        );
+        
+        if (enemies.length > 0) {
+          const target = enemies[0];
+          let damage = 8; // Base radiant damage
+          
+          // Extra damage to undead and spectral units
+          if (target.tags?.includes('undead') || target.tags?.includes('spectral')) {
+            damage = 20; // Radiant energy is very effective
+            console.log(`${u.id} deals radiant damage to ${target.id} (extra effective vs undead/spectral)!`);
+          } else {
+            console.log(`${u.id} deals radiant damage to ${target.id}!`);
+          }
+          
+          // Queue damage event
+          sim.queuedEvents.push({
+            kind: 'damage',
+            source: u.id,
+            target: target.id,
+            meta: {
+              aspect: 'radiant',
+              amount: damage,
+              origin: u.pos
+            }
+          });
+          
+          // Add light effect to temperature field
+          if (sim.addHeat) {
+            sim.addHeat(target.pos.x, target.pos.y, 5, 1);
+          }
+        }
+      },
+    },
+
+    fireBlast: {
+      name: 'Fire Blast',
+      cooldown: 40, // 5 seconds at 8fps
+      config: {
+        range: 3, damage: 12, radius: 2
+      },
+      target: 'closest.enemy()',
+      trigger: 'distance(closest.enemy()?.pos) <= 3',
+      effect: (u, targetPos, sim) => {
+        const enemies = sim.getRealUnits().filter(unit => 
+          unit.team !== u.team && 
+          Math.abs(unit.pos.x - u.pos.x) <= 3 && 
+          Math.abs(unit.pos.y - u.pos.y) <= 3
+        );
+        
+        if (enemies.length > 0) {
+          const target = enemies[0];
+          console.log(`${u.id} blasts ${target.id} with fire!`);
+          
+          // Queue fire damage
+          sim.queuedEvents.push({
+            kind: 'damage',
+            source: u.id,
+            target: target.id,
+            meta: {
+              aspect: 'heat',
+              amount: 12,
+              origin: u.pos
+            }
+          });
+          
+          // Add heat to temperature field and set target on fire
+          if (sim.addHeat) {
+            sim.addHeat(target.pos.x, target.pos.y, 20, 2);
+            sim.setUnitOnFire(target);
+          }
+          
+          // Spawn fire particles
+          for (let i = 0; i < 5; i++) {
+            const offsetX = (Math.random() - 0.5) * 3;
+            const offsetY = (Math.random() - 0.5) * 3;
+            sim.spawnFireParticle(target.pos.x + offsetX, target.pos.y + offsetY);
+          }
+        }
+      },
+    },
+    makeRain: {
+      name: 'Make Rain',
+      // target: 'self',
+      cooldown: 2, // 25 seconds at 8fps
+      config: {
+        duration: 80, // 10 seconds of rain at 8fps
+        intensity: 0.8,
+        radius: 5
+      },
+      effect: (unit, target, sim) => {
+        if (sim && sim.setWeather) {
+          console.log(`${unit.id} is making it rain!`);
+          sim.setWeather('rain', 80, 0.8);
+          
+          // Add moisture and coolness around the rainmaker
+          if (sim.addMoisture && sim.addHeat) {
+            sim.addMoisture(unit.pos.x, unit.pos.y, 1.0, 5);
+            sim.addHeat(unit.pos.x, unit.pos.y, -10, 5); // Cool the area
+          }
+        }
+      }
+    },
+    breatheFire: {
+      name: 'Breathe Fire',
+      cooldown: 60, // 7.5 seconds at 8fps
+      config: {
+        range: 4,
+        coneAngle: Math.PI / 3, // 60 degree cone
+        fireIntensity: 15,
+        sparkCount: 8
+      },
+      effect: (unit, target, sim) => {
+        if (sim && sim.addHeat) {
+          console.log(`${unit.id} is breathing fire!`);
+          
+          // Add heat in a cone in front of the unit
+          const facing = unit.meta.facing || 'right';
+          const dirX = facing === 'right' ? 1 : -1;
+          
+          // Create fire in cone pattern
+          for (let i = 1; i <= 4; i++) {
+            for (let j = -1; j <= 1; j++) {
+              const targetX = unit.pos.x + (dirX * i);
+              const targetY = unit.pos.y + j;
+              
+              if (sim.addHeat) {
+                sim.addHeat(targetX, targetY, 20, 2);
+              }
+              
+              // Spawn fire particles
+              sim.spawnFireParticle(targetX, targetY);
+              
+              // Set units on fire in the cone
+              const unitsInRange = sim.getRealUnits().filter(u => 
+                u.team !== unit.team &&
+                Math.abs(u.pos.x - targetX) < 1 &&
+                Math.abs(u.pos.y - targetY) < 1
+              );
+              
+              unitsInRange.forEach(u => {
+                if (sim.setUnitOnFire) {
+                  sim.setUnitOnFire(u);
+                }
+                
+                // Queue fire damage
+                sim.queuedEvents.push({
+                  kind: 'damage',
+                  source: unit.id,
+                  target: u.id,
+                  meta: {
+                    aspect: 'heat',
+                    amount: 15,
+                    origin: unit.pos
+                  }
+                });
+              });
+            }
+          }
+        }
+      }
+    },
+    radiant: {
+      name: 'Radiant Light',
+      cooldown: 30, // 3.75 seconds at 8fps
+      target: 'closest.enemy()',
+      trigger: 'distance(closest.enemy()?.pos) <= 2',
+      config: {
+        range: 2,
+        damage: 8
+      },
+      effect: (unit, target, sim) => {
+        if (target && typeof target === 'object' && 'id' in target) {
+          console.log(`${unit.id} uses radiant light on ${target.id}!`);
+          
+          // Queue radiant damage (effective against spectral/undead)
+          sim.queuedEvents.push({
+            kind: 'damage',
+            source: unit.id,
+            target: target.id,
+            meta: {
+              aspect: 'radiant',
+              amount: 8,
+              origin: unit.pos
+            }
+          });
+        }
+      }
+    },
   }
 
 static bestiary: { [key: string]: Partial<Unit> } = {
@@ -204,6 +421,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       maxHp: 30,
       mass: 1,
       tags: ['hunt'],
+      abilities: {}
     },
     ranger: {
       intendedMove: { x: 0, y: 0 },
@@ -276,7 +494,130 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         // Could add special megasquirrel abilities here
       },
       meta: {
-        huge: true // Mark as multi-cell unit
+        huge: true, // Mark as multi-cell unit
+        facing: 'right' as 'left' | 'right' // Megasquirrels face right by default
+      }
+    },
+
+    // Black faction units
+    rainmaker: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "rainmaker",
+      state: "idle" as UnitState,
+      hp: 80,
+      maxHp: 80,
+      mass: 1,
+      tags: ['weather', 'mythic'],
+      abilities: {
+        makeRain: this.abilities.makeRain
+      },
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    skeleton: {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "skeleton",
+      state: "idle" as UnitState,
+      hp: 25,
+      maxHp: 25,
+      mass: 0.8, // Lighter than living units
+      tags: ['undead', 'black', 'hunt'],
+      abilities: {},
+      meta: {
+        perdurance: 'undead', // Different healing rules
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    'skeleton-mage': {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "skeleton-mage",
+      state: "idle" as UnitState,
+      hp: 20,
+      maxHp: 20,
+      mass: 0.7, // Lighter than regular skeletons
+      tags: ['undead', 'black', 'caster'],
+      abilities: {
+        // Could add lightning or magic missile abilities here
+      },
+      meta: {
+        perdurance: 'undead', // Same as regular skeleton
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    ghost: {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile", 
+      sprite: "ghost",
+      state: "idle" as UnitState,
+      hp: 30,
+      maxHp: 30,
+      mass: 0.1, // Nearly weightless
+      tags: ['undead', 'spectral', 'black'],
+      abilities: {},
+      meta: {
+        perdurance: 'spectral', // Only damaged by magic/environmental
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    demon: {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "demon", 
+      state: "idle" as UnitState,
+      hp: 60,
+      maxHp: 60,
+      mass: 2, // Heavy and strong
+      tags: ['fiend', 'black', 'hunt'],
+      abilities: {
+        fireBlast: this.abilities.fireBlast
+      },
+      meta: {
+        perdurance: 'fiendish', // Resistant to physical damage
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    'mimic-worm': {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "mimic-worm",
+      state: "idle" as UnitState, 
+      hp: 35,
+      maxHp: 35,
+      mass: 1.5,
+      tags: ['shapeshifter', 'black'],
+      abilities: {
+        jumps: this.abilities.jumps, // Can jump like worms
+      },
+      meta: {
+        segmented: true, // Could be segmented like big worm
+        segmentCount: 3, // Smaller than big worm
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+    'big-worm': {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "big-worm",
+      state: "idle" as UnitState,
+      hp: 120,
+      maxHp: 120,
+      mass: 2,
+      tags: ['beast', 'black', 'hunt'],
+      abilities: {},
+      meta: {
+        huge: true, // Mark as multi-cell unit
+        segmented: true,
+        segmentCount: 5, // Larger than mimic-worm
+        facing: 'right' as 'left' | 'right'
       }
     }
   }
@@ -299,11 +640,16 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           ...(beast === "worm" ? { jumps: this.abilities.jumps } : {}),
           ...(beast === "ranger" ? { ranged: this.abilities.ranged } : {}),
           ...(beast === "bombardier" ? { bombardier: this.abilities.bombardier } : {}),
-          ...(beast === "priest" ? { heal: this.abilities.heal } : {}),
+          ...(beast === "priest" ? { heal: this.abilities.heal, radiant: this.abilities.radiant } : {}),
           ...(beast === "tamer" ? { heal: this.abilities.squirrel } : {}),
-          ...(beast === "megasquirrel" ? { jumps: this.abilities.jumps } : {})
+          ...(beast === "megasquirrel" ? { jumps: this.abilities.jumps } : {}),
+          ...(beast === "mimic-worm" ? { jumps: this.abilities.jumps } : {}),
+          ...(beast === "demon" ? { fireBlast: this.abilities.fireBlast } : {}),
+          ...(beast === "big-worm" ? { breatheFire: this.abilities.breatheFire } : {}),
+          ...(beast === "rainmaker" ? { makeRain: this.abilities.makeRain } : {})
         },
         tags: [
+          ...(this.bestiary[beast]?.tags || []), // Include tags from bestiary
           ...(beast === "worm" ? ["swarm"] : []),
           ...(beast === "megasquirrel" ? ["hunt"] : []),
           ...(beast === "squirrel" ? ["hunt"] : []),
@@ -314,7 +660,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         ]
       };
 
-    console.log(`Creating unit ${u.id} of type ${beast} at (${u.pos?.x || 0}, ${u.pos?.y || 0})`);
+    // console.log(`Creating unit ${u.id} of type ${beast} at (${u.pos?.x || 0}, ${u.pos?.y || 0})`);
     return u;
   }
 }

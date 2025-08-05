@@ -4,13 +4,15 @@ import { Rule } from './rule';
 export class Abilities extends Rule {
   apply = (): void => {
     this.sim.units = this.sim.units.map(unit => {
+      // console.debug(`[Abilities] Processing unit ${unit.id} at tick ${this.sim.ticks}`);
       for (const abilityName in unit.abilities) {
         const ability = unit.abilities[abilityName];
         let lastTick = unit.lastAbilityTick ? unit.lastAbilityTick[abilityName] : undefined;
         let currentTick = this.sim.ticks;
         let ready = !lastTick || (currentTick - lastTick >= ability.cooldown);
+        // console.log(`[Abilities] ${unit.id}.${abilityName}: ready=${ready}, lastTick=${lastTick}, cooldown=${ability.cooldown}`);
         if (!ready) {
-          break; // Skip to next ability if cooldown is not met
+          continue; // Skip to next ability if cooldown is not met
         }
 
         let shouldTrigger = true; // Default to true, will be evaluated by DSL if needed
@@ -26,7 +28,7 @@ export class Abilities extends Rule {
         }
 
         if (!shouldTrigger) {
-          break; // Skip to next ability if condition is not met
+          continue; // Skip to next ability if condition is not met
         }
 
         let target = unit; // Default to self-targeting
@@ -36,15 +38,16 @@ export class Abilities extends Rule {
           try {
             target = DSL.evaluate(ability.target, unit, this.sim);
           } catch (error) {
-            console.error('Error evaluating ability target:', error);
-            return unit; // Skip this ability if evaluation fails
+            console.error(`[Abilities] ${unit.id}.${abilityName}: Error evaluating target:`, error);
+            continue; // Skip this ability if evaluation fails
           }
 
           if (target === null || target === undefined) {
-            return unit; // Skip this ability if target is invalid
+            // console.log(`[Abilities] ${unit.id}.${abilityName}: no valid target, skipping`);
+            continue; // Skip this ability if target is invalid
           }
 
-          console.log(`${unit.id} - ability ${abilityName} targets:`, target);
+          // console.log(`${unit.id} - ability ${abilityName} targets:`, target);
         }
 
 

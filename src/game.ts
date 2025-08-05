@@ -17,6 +17,32 @@ import tamer from "./assets/sprites/squirrel-tamer.png";
 import squirrel from "./assets/sprites/squirrel.png";
 // @ts-ignore
 import megasquirrel from "./assets/sprites/megasquirrel.png";
+// @ts-ignore
+import leaf from "./assets/sprites/leaf.png";
+// @ts-ignore
+import rainmaker from "./assets/sprites/rainmaker.png";
+// @ts-ignore
+import demon from "./assets/sprites/demon.png";
+// @ts-ignore
+import ghost from "./assets/sprites/ghost.png";
+// @ts-ignore
+import mimicWorm from "./assets/sprites/mimic-worm.png";
+// @ts-ignore
+import skeleton from "./assets/sprites/skeleton.png";
+// @ts-ignore
+import bigWorm from "./assets/sprites/big-worm.png";
+// @ts-ignore  
+import skeletonMage from "./assets/sprites/skeleton-mage.png";
+
+// Background imports
+// @ts-ignore
+import lakeBg from "./assets/bg/lake.png";
+// @ts-ignore
+import mountainBg from "./assets/bg/mountain.png";
+// @ts-ignore
+import monasteryBg from "./assets/bg/monastery.png";
+// @ts-ignore
+import burningCityBg from "./assets/bg/burning-city.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -55,7 +81,7 @@ class Game {
 
     // Create scaled renderer for browser environments
     if (typeof window !== 'undefined' && canvas instanceof HTMLCanvasElement) {
-      const scaledRenderer = createScaledRenderer(320, 200, canvas, this.sim, Game.loadSprites());
+      const scaledRenderer = createScaledRenderer(320, 200, canvas, this.sim, Game.loadSprites(), Game.loadBackgrounds());
       this.renderer = scaledRenderer.renderer;
       this._handleResize = scaledRenderer.handleResize;
       this.draw = scaledRenderer.draw;
@@ -87,8 +113,45 @@ class Game {
       { name: 'bombardier', src: bombardier },
       { name: 'tamer', src: tamer },
       { name: 'squirrel', src: squirrel },
-      { name: 'megasquirrel', src: megasquirrel }
+      { name: 'megasquirrel', src: megasquirrel },
+      { name: 'leaf', src: leaf },
+      { name: 'rainmaker', src: rainmaker },
+      { name: 'demon', src: demon },
+      { name: 'ghost', src: ghost },
+      { name: 'mimic-worm', src: mimicWorm },
+      { name: 'skeleton', src: skeleton },
+      { name: 'big-worm', src: bigWorm },
+      { name: 'skeleton-mage', src: skeletonMage }
     ];
+
+  static backgroundList = [
+    { name: 'lake', src: lakeBg },
+    { name: 'mountain', src: mountainBg },
+    { name: 'monastery', src: monasteryBg },
+    { name: 'burning-city', src: burningCityBg }
+  ];
+
+  static loadBackgrounds(): Map<string, HTMLImageElement> {
+    // Only load backgrounds in browser environment
+    if (typeof Image === 'undefined') {
+      console.debug('Skipping background loading in headless environment');
+      return new Map();
+    }
+
+    let backgrounds = new Map<string, HTMLImageElement>();
+    Game.backgroundList.forEach(({ name, src }) => {
+      const img = new Image();
+      img.onload = () => {
+        console.debug(`Loaded background: ${name}`);
+        backgrounds.set(name, img);
+      };
+      img.onerror = () => {
+        console.error(`Failed to load background: ${src}`);
+      };
+      img.src = src;
+    });
+    return backgrounds;
+  }
 
   static loadSprites(): Map<string, HTMLImageElement> {
     // Only load sprites in browser environment

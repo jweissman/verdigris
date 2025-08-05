@@ -11,30 +11,8 @@ export class UnitMovement extends Rule {
         return { ...unit, state: 'dead' };
       }
 
-      if (unit.state === 'attack') {
-        // check if the target is still valid
-        if (unit.intendedTarget) {
-          const target = this.sim.creatureById(unit.intendedTarget);
-          if (!target || target.state === 'dead') {
-            unit.intendedTarget = undefined;
-            unit.state = 'idle';
-            unit.intendedMove = { x: 0, y: 0 };
-          } else {
-            // if within melee range, continue attacking
-            const dx = target.pos.x - unit.pos.x;
-            const dy = target.pos.y - unit.pos.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 1.1) {
-              unit.intendedMove = { x: 0, y: 0 }; // Stop moving
-            } else {
-              // we need to close?
-              unit.state = 'idle';
-            }
-          }
-        }
-      }
 
-      if (unit.state !== 'dead' && unit.state !== 'attack') {
+      if (unit.state !== 'dead') {
         // AI behaviors based on tags
         if (unit.tags) {
           // Hunt behavior

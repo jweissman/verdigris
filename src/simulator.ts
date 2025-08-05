@@ -13,7 +13,105 @@ import { Abilities } from "./rules/abilities";
 import { EventHandler } from "./rules/event_handler";
 import { CommandHandler, QueuedCommand } from "./rules/command_handler";
 import { HugeUnits } from "./rules/huge_units";
+import { SegmentedCreatures } from "./rules/segmented_creatures";
+import { Perdurance } from "./rules/perdurance";
 
+interface Particle {
+  pos: Vec2;
+  vel: Vec2;
+  radius: number;
+  lifetime: number; // in ticks
+  color: string; // CSS color string
+  z?: number; // Height above ground for 3D effect
+  type?: 'leaf' | 'rain' | 'debris'; // Different particle types
+  landed?: boolean; // Has the particle landed on the ground
+}
+
+class ScalarField {
+  private grid: number[][];
+  public readonly width: number;
+  public readonly height: number;
+  
+  constructor(width: number, height: number, initialValue: number = 0) {
+    this.width = width;
+    this.height = height;
+    this.grid = Array(height).fill(null).map(() => Array(width).fill(initialValue));
+  }
+  
+  get(x: number, y: number): number {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return 0;
+    return this.grid[Math.floor(y)][Math.floor(x)];
+  }
+  
+  set(x: number, y: number, value: number): void {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
+    this.grid[Math.floor(y)][Math.floor(x)] = value;
+  }
+  
+  add(x: number, y: number, delta: number): void {
+    this.set(x, y, this.get(x, y) + delta);
+  }
+  
+  // Smoothly blend a value over an area with falloff
+  addGradient(centerX: number, centerY: number, radius: number, intensity: number): void {
+    const minX = Math.max(0, Math.floor(centerX - radius));
+    const maxX = Math.min(this.width - 1, Math.ceil(centerX + radius));
+    const minY = Math.max(0, Math.floor(centerY - radius));
+    const maxY = Math.min(this.height - 1, Math.ceil(centerY + radius));
+    
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance <= radius) {
+          const falloff = 1 - (distance / radius);
+          const contribution = intensity * falloff * falloff; // Quadratic falloff
+          this.add(x, y, contribution);
+        }
+      }
+    }
+  }
+  
+  // Apply diffusion to smooth out the field
+  diffuse(rate: number = 0.1): void {
+    const newGrid = this.grid.map(row => [...row]);
+    
+    for (let y = 1; y < this.height - 1; y++) {
+      for (let x = 1; x < this.width - 1; x++) {
+        const neighbors = [
+          this.grid[y-1][x], this.grid[y+1][x], // vertical
+          this.grid[y][x-1], this.grid[y][x+1]  // horizontal
+        ];
+        const avgChange = neighbors.reduce((sum, val) => sum + val, 0) / 4 - this.grid[y][x];
+        newGrid[y][x] += avgChange * rate;
+      }
+    }
+    
+    this.grid = newGrid;
+  }
+  
+  // Decay all values toward zero
+  decay(rate: number = 0.01): void {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        this.grid[y][x] *= (1 - rate);
+      }
+    }
+  }
+  
+  // Get the maximum value in the field
+  getMaxValue(): number {
+    let max = 0;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        max = Math.max(max, Math.abs(this.grid[y][x]));
+      }
+    }
+    return max;
+  }
+}
 
 class Simulator {
   fieldWidth: number;
@@ -25,10 +123,36 @@ class Simulator {
   queuedEvents: Action[] = [];
   processedEvents: Action[] = [];
   queuedCommands: QueuedCommand[] = [];
+  particles: Particle[] = [];
+  
+  // Scalar fields for environmental effects
+  temperatureField: ScalarField;
+  humidityField: ScalarField;
+  pressureField: ScalarField;
+  
+  // Weather system
+  weather: {
+    current: 'clear' | 'rain' | 'storm';
+    duration: number; // ticks remaining for current weather
+    intensity: number; // 0-1 scale
+  };
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
     this.fieldHeight = fieldHeight;
+    
+    // Initialize scalar fields
+    this.temperatureField = new ScalarField(fieldWidth, fieldHeight, 20); // Base temperature ~20°C
+    this.humidityField = new ScalarField(fieldWidth, fieldHeight, 0.3); // Base humidity 30%
+    this.pressureField = new ScalarField(fieldWidth, fieldHeight, 1.0); // Base pressure 1 atm
+    
+    // Initialize weather system
+    this.weather = {
+      current: 'clear',
+      duration: 0,
+      intensity: 0
+    };
+    
     this.reset();
   }
 
@@ -50,6 +174,7 @@ class Simulator {
       new UnitBehavior(this),
       new UnitMovement(this),
       new HugeUnits(this), // Handle huge unit phantoms after movement
+      new SegmentedCreatures(this), // Handle segmented creatures after movement
       new MeleeCombat(this),
 
       // not sure i trust either of these yet
@@ -60,6 +185,7 @@ class Simulator {
 
       new Jumping(this),
       new Tossing(this), // Handle tossed units
+      new Perdurance(this), // Process damage resistance before events are handled
       new EventHandler(this), // Process events last
       new Cleanup(this)
     ];
@@ -132,12 +258,555 @@ class Simulator {
     if (elapsed > 30) {
       console.log(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
     }
+    
+    // Update particles
+    this.updateParticles();
+    
+    // Update scalar fields
+    this.updateScalarFields();
+    
+    // Update weather system
+    this.updateWeather();
+    
+    // Process fire effects
+    this.processFireEffects();
+    this.extinguishFires();
+    
+    // Spawn environmental particles occasionally
+    if (Math.random() < 0.2) { // 2% chance per tick - gentler for testing
+      this.spawnLeafParticle();
+    }
+    
     // console.log(`Total ticks: ${this.ticks}`);
     // console.log(`Time since last call: ${t0 - this.lastCall}ms`);
     this.lastCall = t0;
     return this;
   }
 
+
+  updateParticles() {
+    this.particles = this.particles.filter(particle => {
+      // Age the particle
+      particle.lifetime--;
+      if (particle.lifetime <= 0) return false;
+      
+      // Apply physics based on particle type
+      if (particle.type === 'leaf') {
+        this.updateLeafParticle(particle);
+      } else if (particle.type === 'rain') {
+        this.updateRainParticle(particle);
+      }
+      
+      return true;
+    });
+  }
+  
+  updateLeafParticle(particle: Particle) {
+    if (particle.landed) {
+      // Landed leaves just sit there and fade - NO movement at all
+      particle.vel.x = 0;
+      particle.vel.y = 0;
+      return;
+    }
+    
+    // Falling with air resistance and drift
+    const gravity = 0.02;
+    const airResistance = 0.98;
+    const wind = 0.000;
+    
+    // Add some gentle swaying motion
+    const sway = Math.sin(this.ticks * 0.05 + particle.pos.x * 0.1) * 0.01;
+    
+    // Update velocity
+    particle.vel.y += gravity; // Gravity pulls down
+    particle.vel.x += wind + sway; // Wind and swaying
+    particle.vel.x *= airResistance;
+    particle.vel.y *= airResistance;
+    
+    // Update position
+    particle.pos.x += particle.vel.x;
+    particle.pos.y += particle.vel.y;
+    if (particle.z !== undefined) {
+      particle.z = Math.max(0, particle.z - particle.vel.y * 0.5); // Descend in 3D
+    }
+    
+    // Wrap around field horizontally
+    if (particle.pos.x < 0) particle.pos.x = this.fieldWidth;
+    if (particle.pos.x > this.fieldWidth) particle.pos.x = 0;
+    
+    // Land when reaching ground level
+    if (particle.z !== undefined && particle.z <= 0) {
+      particle.landed = true;
+      particle.z = 0;
+      particle.vel.x = 0; // Stop all horizontal movement too
+      particle.vel.y = 0;
+      particle.lifetime = Math.max(particle.lifetime, 200); // Stay visible longer when landed
+    }
+  }
+  
+  updateRainParticle(particle: Particle) {
+    if (particle.landed) {
+      // Landed rain just sits and fades quickly
+      particle.vel.x = 0;
+      particle.vel.y = 0;
+      return;
+    }
+    
+    // Rain falls fast and straight with slight diagonal movement
+    const gravity = 0.1; // Stronger gravity than leaves
+    const airResistance = 0.99; // Less air resistance
+    const wind = 0.05; // Slight diagonal drift
+    
+    // Update velocity
+    particle.vel.y += gravity;
+    particle.vel.x += wind;
+    particle.vel.x *= airResistance;
+    particle.vel.y *= airResistance;
+    
+    // Update position
+    particle.pos.x += particle.vel.x;
+    particle.pos.y += particle.vel.y;
+    if (particle.z !== undefined) {
+      particle.z = Math.max(0, particle.z - particle.vel.y * 2); // Descend faster than leaves
+    }
+    
+    // Wrap around field horizontally
+    if (particle.pos.x < 0) particle.pos.x = this.fieldWidth;
+    if (particle.pos.x > this.fieldWidth) particle.pos.x = 0;
+    
+    // Land when reaching ground level
+    if (particle.z !== undefined && particle.z <= 0) {
+      particle.landed = true;
+      particle.z = 0;
+      particle.vel.x = 0;
+      particle.vel.y = 0;
+      particle.lifetime = Math.min(particle.lifetime, 30); // Fade quickly when landed
+      
+      // Add moisture to the field where rain lands
+      this.humidityField.addGradient(particle.pos.x, particle.pos.y, 1, 0.05);
+    }
+  }
+  
+  spawnLeafParticle() {
+    const leafColors = ['#228B22', '#32CD32', '#90EE90', '#9ACD32', '#8FBC8F'];
+    
+    const particle: Particle = {
+      pos: {
+        x: Math.random() * this.fieldWidth,
+        y: -2 // Start above the visible area
+      },
+      vel: {
+        x: (Math.random() - 0.5) * 0.1, // Small initial horizontal velocity
+        y: Math.random() * 0.05 + 0.02  // Small downward velocity
+      },
+      radius: Math.random() * 1.5 + 0.5, // Small leaf size
+      lifetime: 1000 + Math.random() * 500, // Long lifetime for drifting
+      color: leafColors[Math.floor(Math.random() * leafColors.length)],
+      z: 10 + Math.random() * 20, // Start at various heights
+      type: 'leaf',
+      landed: false
+    };
+    
+    this.particles.push(particle);
+  }
+
+  updateScalarFields() {
+    // Apply natural diffusion and decay to all fields
+    this.temperatureField.diffuse(0.05); // Temperature spreads slowly  
+    this.temperatureField.decay(0.002);  // Temperature normalizes slowly toward baseline
+    
+    this.humidityField.diffuse(0.08);    // Humidity spreads faster than temperature
+    this.humidityField.decay(0.005);     // Humidity changes more quickly
+    
+    this.pressureField.diffuse(0.12);    // Pressure spreads fastest (gas dynamics)
+    this.pressureField.decay(0.01);      // Pressure normalizes quickly toward 1 atm
+    
+    // Apply field interactions and unit effects
+    this.applyFieldInteractions();
+  }
+  
+  applyFieldInteractions() {
+    // Temperature-humidity interactions
+    for (let y = 0; y < this.fieldHeight; y++) {
+      for (let x = 0; x < this.fieldWidth; x++) {
+        const temp = this.temperatureField.get(x, y);
+        const humidity = this.humidityField.get(x, y);
+        
+        // Hot areas evaporate moisture (reduce humidity)
+        if (temp > 30) {
+          const evaporation = (temp - 30) * 0.001;
+          this.humidityField.add(x, y, -evaporation);
+        }
+        
+        // Very humid areas can condense into puddles (rain effect)
+        if (humidity > 0.8) {
+          const condensation = (humidity - 0.8) * 0.01;
+          this.humidityField.add(x, y, -condensation);
+          // TODO: Create puddle/water particles when this happens
+        }
+      }
+    }
+    
+    // Unit effects on fields
+    for (const unit of this.units) {
+      if (unit.meta.phantom) continue; // Phantom units don't affect fields
+      
+      // All living units generate slight heat
+      if (unit.state !== 'dead') {
+        this.temperatureField.addGradient(unit.pos.x, unit.pos.y, 2, 0.5);
+      }
+      
+      // Breathing/movement generates slight humidity
+      if (unit.state === 'move' || unit.state === 'attack') {
+        this.humidityField.addGradient(unit.pos.x, unit.pos.y, 1.5, 0.02);
+      }
+    }
+  }
+  
+  // Utility methods for field access
+  getTemperature(x: number, y: number): number {
+    return this.temperatureField.get(x, y);
+  }
+  
+  getHumidity(x: number, y: number): number {
+    return this.humidityField.get(x, y);
+  }
+  
+  getPressure(x: number, y: number): number {
+    return this.pressureField.get(x, y);
+  }
+  
+  addHeat(x: number, y: number, intensity: number, radius: number = 2): void {
+    this.temperatureField.addGradient(x, y, radius, intensity);
+  }
+  
+  addMoisture(x: number, y: number, intensity: number, radius: number = 3): void {
+    this.humidityField.addGradient(x, y, radius, intensity);
+  }
+  
+  adjustPressure(x: number, y: number, intensity: number, radius: number = 4): void {
+    this.pressureField.addGradient(x, y, radius, intensity);
+  }
+  
+  // Weather system methods
+  updateWeather() {
+    // Decrease weather duration
+    if (this.weather.duration > 0) {
+      this.weather.duration--;
+      
+      // Apply weather effects while active
+      this.applyWeatherEffects();
+      
+      // Weather ends
+      if (this.weather.duration <= 0) {
+        console.log(`Weather ended: ${this.weather.current}`);
+        this.weather.current = 'clear';
+        this.weather.intensity = 0;
+      }
+    }
+  }
+  
+  applyWeatherEffects() {
+    switch (this.weather.current) {
+      case 'rain':
+        this.applyRainEffects();
+        break;
+      case 'storm':
+        this.applyStormEffects();
+        break;
+    }
+  }
+  
+  applyRainEffects() {
+    const intensity = this.weather.intensity;
+    
+    // Rain increases humidity across the field
+    for (let i = 0; i < Math.ceil(intensity * 5); i++) {
+      const x = Math.random() * this.fieldWidth;
+      const y = Math.random() * this.fieldHeight;
+      this.humidityField.addGradient(x, y, 2, intensity * 0.1);
+    }
+    
+    // Rain cools the field slightly
+    for (let i = 0; i < Math.ceil(intensity * 3); i++) {
+      const x = Math.random() * this.fieldWidth;
+      const y = Math.random() * this.fieldHeight;
+      this.temperatureField.addGradient(x, y, 3, -intensity * 2);
+    }
+    
+    // Spawn rain particles
+    if (Math.random() < intensity * 0.5) {
+      this.spawnRainParticle();
+    }
+  }
+  
+  applyStormEffects() {
+    // Storms are like intense rain + pressure changes
+    this.applyRainEffects();
+    
+    const intensity = this.weather.intensity;
+    
+    // Pressure fluctuations during storms
+    for (let i = 0; i < Math.ceil(intensity * 3); i++) {
+      const x = Math.random() * this.fieldWidth;
+      const y = Math.random() * this.fieldHeight;
+      const pressureChange = (Math.random() - 0.5) * intensity * 0.2;
+      this.pressureField.addGradient(x, y, 4, pressureChange);
+    }
+  }
+  
+  // Weather control methods
+  setWeather(type: 'clear' | 'rain' | 'storm', duration: number = 80, intensity: number = 0.7): void {
+    console.log(`Setting weather to ${type} for ${duration} ticks at ${intensity} intensity`);
+    this.weather.current = type;
+    this.weather.duration = duration;
+    this.weather.intensity = intensity;
+  }
+  
+  spawnRainParticle() {
+    const particle: Particle = {
+      pos: {
+        x: Math.random() * this.fieldWidth,
+        y: -1 // Start above visible area
+      },
+      vel: {
+        x: 0.2 + Math.random() * 0.3, // Diagonal movement (right)
+        y: 0.8 + Math.random() * 0.4  // Fast downward
+      },
+      radius: 0.5 + Math.random() * 0.5, // Small drops
+      lifetime: 50 + Math.random() * 30, // Short lifetime
+      color: '#4A90E2', // Blue rain color
+      z: 5 + Math.random() * 10, // Start at moderate height
+      type: 'rain',
+      landed: false
+    };
+    
+    this.particles.push(particle);
+  }
+
+  spawnFireParticle(x: number, y: number) {
+    const fireColors = ['#FF4500', '#FF6347', '#FFD700', '#FF8C00', '#DC143C'];
+    
+    const particle: Particle = {
+      pos: { x, y },
+      vel: {
+        x: (Math.random() - 0.5) * 0.4, // Random horizontal spread
+        y: -0.2 - Math.random() * 0.3   // Upward movement (fire rises)
+      },
+      radius: 0.8 + Math.random() * 0.7, // Variable spark size
+      lifetime: 30 + Math.random() * 40, // Medium lifetime
+      color: fireColors[Math.floor(Math.random() * fireColors.length)],
+      z: Math.random() * 3, // Start at ground level to low height
+      type: 'debris', // Reuse debris type for now
+      landed: false
+    };
+    
+    this.particles.push(particle);
+  }
+
+  setUnitOnFire(unit: Unit) {
+    if (!unit.meta) unit.meta = {}; // Ensure meta exists
+    if (unit.meta.onFire) return; // Already on fire
+    
+    console.log(`${unit.id} is set on fire!`);
+    unit.meta.onFire = true;
+    unit.meta.fireDuration = 40; // Burn for 5 seconds at 8fps
+    unit.meta.fireTickDamage = 2; // Damage per tick while burning
+  }
+
+  // Process fire effects on burning units
+  processFireEffects() {
+    for (const unit of this.units) {
+      if (unit.meta && unit.meta.onFire && unit.meta.fireDuration > 0) {
+        // Apply fire damage
+        unit.hp -= unit.meta.fireTickDamage || 2;
+        unit.meta.fireDuration--;
+        
+        // Spawn fire particles around burning unit
+        if (Math.random() < 0.3) {
+          const offsetX = (Math.random() - 0.5) * 2;
+          const offsetY = (Math.random() - 0.5) * 2;
+          this.spawnFireParticle(unit.pos.x + offsetX, unit.pos.y + offsetY);
+        }
+        
+        // Add heat to surrounding area
+        this.addHeat(unit.pos.x, unit.pos.y, 3, 1.5);
+        
+        // Extinguish if duration expires
+        if (unit.meta.fireDuration <= 0) {
+          console.log(`${unit.id} fire extinguished`);
+          unit.meta.onFire = false;
+          delete unit.meta.fireDuration;
+          delete unit.meta.fireTickDamage;
+        }
+      }
+    }
+  }
+
+  // Rain can extinguish fires
+  extinguishFires() {
+    if (this.weather.current === 'rain' || this.weather.current === 'storm') {
+      for (const unit of this.units) {
+        if (unit.meta.onFire) {
+          const humidity = this.getHumidity(unit.pos.x, unit.pos.y);
+          const temperature = this.getTemperature(unit.pos.x, unit.pos.y);
+          
+          // High humidity and lower temperature can extinguish fires
+          if (humidity > 0.6 && temperature < 30) {
+            console.log(`Rain extinguished fire on ${unit.id}`);
+            unit.meta.onFire = false;
+            delete unit.meta.fireDuration;
+            delete unit.meta.fireTickDamage;
+          }
+        }
+      }
+    }
+  }
+
+  // Helper method to create a rainmaker unit
+  createRainmaker(pos: Vec2, team: 'friendly' | 'hostile' = 'friendly'): Unit {
+    const rainmaker: Unit = {
+      id: `rainmaker_${Date.now()}`,
+      pos,
+      intendedMove: { x: 0, y: 0 },
+      team,
+      sprite: 'rainmaker', // Use dedicated rainmaker sprite
+      state: 'idle',
+      hp: 80,
+      maxHp: 80,
+      mass: 1,
+      abilities: {
+        makeRain: {
+          name: 'Make Rain',
+          cooldown: 200, // 25 seconds at 8fps
+          range: 10,
+          target: 'area',
+          config: {
+            duration: 80, // 10 seconds of rain at 8fps
+            intensity: 0.8,
+            radius: 5
+          },
+          effect: (unit: Unit, target?: Unit | Vec2, sim?: any) => {
+            if (sim && sim.setWeather) {
+              console.log(`${unit.id} is making it rain!`);
+              sim.setWeather('rain', 80, 0.8);
+              
+              // Add visual effect at unit's position
+              sim.addMoisture(unit.pos.x, unit.pos.y, 0.5, 3);
+              sim.adjustPressure(unit.pos.x, unit.pos.y, -0.1, 4);
+            }
+          }
+        }
+      },
+      lastAbilityTick: {},
+      meta: {
+        facing: 'right'
+      }
+    };
+    
+    this.units.push(rainmaker);
+    return rainmaker;
+  }
+
+  // Helper method to create a Big Worm segmented creature
+  createBigWorm(pos: Vec2, segmentCount: number = 5, team: 'friendly' | 'hostile' = 'hostile'): Unit {
+    const bigWorm: Unit = {
+      id: `bigworm_${Date.now()}`,
+      pos,
+      intendedMove: { x: 0, y: 0 },
+      team,
+      sprite: 'big-worm',
+      state: 'idle',
+      hp: 120,
+      maxHp: 120,
+      mass: 2, // Heavier than normal units
+      abilities: {
+        breatheFire: {
+          name: 'Breathe Fire',
+          cooldown: 60, // 7.5 seconds at 8fps
+          range: 4,
+          target: 'closest.enemy()',
+          config: {
+            coneAngle: Math.PI / 3, // 60 degree cone
+            fireIntensity: 15,
+            sparkCount: 8
+          },
+          effect: (unit: Unit, target?: Unit | Vec2, sim?: any) => {
+            if (sim && sim.addHeat) {
+              console.log(`${unit.id} is breathing fire!`);
+              
+              // Determine fire direction based on facing
+              const facing = unit.meta.facing || 'right';
+              const direction = facing === 'right' ? 1 : -1;
+              
+              // Create fire cone in front of worm
+              for (let i = 1; i <= 4; i++) { // Fire reaches 4 cells ahead
+                for (let j = -1; j <= 1; j++) { // Fire spreads 1 cell to each side
+                  const fireX = unit.pos.x + (i * direction);
+                  const fireY = unit.pos.y + j;
+                  
+                  // Add heat to temperature field
+                  const intensity = 15 - (i * 3); // Heat decreases with distance
+                  sim.addHeat(fireX, fireY, intensity, 1);
+                  
+                  // Spawn fire/spark particles
+                  if (Math.random() < 0.7) {
+                    sim.spawnFireParticle(fireX, fireY);
+                  }
+                }
+              }
+              
+              // Set units on fire if they're in the heat
+              for (const targetUnit of sim.units) {
+                if (targetUnit.team !== unit.team) {
+                  const dx = targetUnit.pos.x - unit.pos.x;
+                  const dy = targetUnit.pos.y - unit.pos.y;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+                  
+                  if (distance <= 4) {
+                    const temperature = sim.getTemperature(targetUnit.pos.x, targetUnit.pos.y);
+                    if (temperature > 35) { // Hot enough to catch fire
+                      sim.setUnitOnFire(targetUnit);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      lastAbilityTick: {},
+      meta: {
+        segmented: true,
+        segmentCount,
+        facing: 'right'
+      }
+    };
+    
+    this.units.push(bigWorm);
+    return bigWorm;
+  }
+
+  // Helper method to add weather command handling
+  processWeatherCommand(command: string, ...args: any[]): void {
+    switch (command) {
+      case 'rain':
+        const duration = parseInt(args[0]) || 80;
+        const intensity = parseFloat(args[1]) || 0.7;
+        this.setWeather('rain', duration, intensity);
+        break;
+      case 'storm':
+        const stormDuration = parseInt(args[0]) || 120;
+        const stormIntensity = parseFloat(args[1]) || 0.9;
+        this.setWeather('storm', stormDuration, stormIntensity);
+        break;
+      case 'clear':
+        this.setWeather('clear', 0, 0);
+        break;
+      default:
+        console.warn(`Unknown weather command: ${command}`);
+    }
+  }
 
   accept(input) {
     this.step();
@@ -187,7 +856,7 @@ class Simulator {
     return !this.isApparentlyOccupied(newX, newY, unit);
   }
 
-  private getHugeUnitBodyPositions(unit) {
+  getHugeUnitBodyPositions(unit) {
     // Return all positions occupied by a huge unit (head + body)
     if (!unit.meta.huge) return [unit.pos];
     
@@ -210,7 +879,7 @@ class Simulator {
     return this.units;
   }
 
-  isApparentlyOccupied(x, y, excludeUnit = null) {
+  isApparentlyOccupied(x: number, y: number, excludeUnit: Unit | null = null): boolean {
     // Check if position is occupied in the apparent field
     // This includes both actual units and virtual occupancy from huge units
     

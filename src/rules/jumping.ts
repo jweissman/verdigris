@@ -25,9 +25,9 @@ export class Jumping extends Rule {
       unit.meta.z = 0;
 
       // Apply AoE damage on landing
-      console.log(`[Jumping] Applying AoE damage for ${unit.id} on landing.`);
+      // console.log(`[Jumping] Applying AoE damage for ${unit.id} on landing.`);
       // if (unit.abilities.jump?.config?.impact) {
-        console.log(`[Jumping] Queuing AoE event for ${unit.id}`);
+        // console.log(`[Jumping] Queuing AoE event for ${unit.id}`);
         this.sim.queuedEvents.push({
           kind: 'aoe',
           source: unit.id,

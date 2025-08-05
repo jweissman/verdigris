@@ -9,6 +9,9 @@ export default class CinematicView extends View {
     // Draw procedural background
     this.renderBackground();
     
+    // Draw landed particles (z=0) on the ground BEFORE units
+    this.renderLandedParticles();
+    
     // Sort units by y position for proper layering (back to front)
     const sortedUnits = [...this.sim.units].sort((a, b) => b.pos.y - a.pos.y > 0 ? 1 : -1);
 
@@ -21,13 +24,122 @@ export default class CinematicView extends View {
     for (const projectile of this.sim.projectiles) {
       this.showProjectileCinematic(projectile);
     }
+    
+    // Draw flying particles (z>0) in the air AFTER units
+    this.renderFlyingParticles();
 
     // Add AoE effects in cinematic view
     this.renderAoEEffectsCinematic();
   }
 
   private renderBackground() {
-    // Simple procedural background for cinematic view
+    // Check if scene has a specific background set
+    const sceneBackground = (this.sim as any).sceneBackground;
+    
+    if (sceneBackground) {
+      this.renderSceneBackground(sceneBackground);
+    } else {
+      this.renderProceduralBackground();
+    }
+  }
+  
+  private renderSceneBackground(backgroundType: string) {
+    this.ctx.save();
+    
+    // Try to load custom background image first
+    const backgroundImage = this.backgrounds.get(backgroundType);
+    if (backgroundImage) {
+      // Scale and center the background image
+      const scaleX = this.ctx.canvas.width / backgroundImage.width;
+      const scaleY = this.ctx.canvas.height / backgroundImage.height;
+      const scale = Math.max(scaleX, scaleY); // Cover the entire canvas
+      
+      const scaledWidth = backgroundImage.width * scale;
+      const scaledHeight = backgroundImage.height * scale;
+      const offsetX = (this.ctx.canvas.width - scaledWidth) / 2;
+      const offsetY = (this.ctx.canvas.height - scaledHeight) / 2;
+      
+      this.ctx.drawImage(backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    } else {
+      // Fallback to procedural backgrounds
+      switch (backgroundType) {
+        case 'lake':
+          this.renderLakeBackground();
+          break;
+        case 'mountain':
+          this.renderMountainBackground();
+          break;
+        case 'monastery':
+          // Add monastery procedural fallback if needed
+          this.renderProceduralBackground();
+          break;
+        default:
+          console.warn(`Unknown background type: ${backgroundType}`);
+          this.renderProceduralBackground();
+          break;
+      }
+    }
+    
+    this.ctx.restore();
+  }
+  
+  private renderLakeBackground() {
+    // Lake background - blues and reflections
+    const gradient = this.ctx.createLinearGradient(0, 0, 0, this.ctx.canvas.height);
+    gradient.addColorStop(0, '#87CEEB'); // Sky blue
+    gradient.addColorStop(0.3, '#E0F6FF'); // Light blue
+    gradient.addColorStop(0.7, '#4682B4'); // Steel blue (water)
+    gradient.addColorStop(1, '#2F4F4F'); // Dark slate gray (deep water)
+    
+    this.ctx.fillStyle = gradient;
+    this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    
+    // Add some gentle ripples/texture
+    this.ctx.globalAlpha = 0.1;
+    for (let i = 0; i < 5; i++) {
+      const y = this.ctx.canvas.height * (0.6 + i * 0.05);
+      this.ctx.strokeStyle = '#FFFFFF';
+      this.ctx.lineWidth = 1;
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(this.ctx.canvas.width, y);
+      this.ctx.stroke();
+    }
+    this.ctx.globalAlpha = 1;
+  }
+  
+  private renderMountainBackground() {
+    // Mountain background - earth tones and peaks
+    const gradient = this.ctx.createLinearGradient(0, 0, 0, this.ctx.canvas.height);
+    gradient.addColorStop(0, '#87CEEB'); // Sky blue
+    gradient.addColorStop(0.4, '#DDA0DD'); // Plum (distant mountains)
+    gradient.addColorStop(0.7, '#8FBC8F'); // Dark sea green (hills)
+    gradient.addColorStop(1, '#556B2F'); // Dark olive green (foreground)
+    
+    this.ctx.fillStyle = gradient;
+    this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    
+    // Add mountain silhouettes
+    this.ctx.globalAlpha = 0.3;
+    this.ctx.fillStyle = '#696969';
+    const peaks = [0.2, 0.35, 0.6, 0.8];
+    peaks.forEach(peak => {
+      const x = this.ctx.canvas.width * peak;
+      const baseY = this.ctx.canvas.height * 0.6;
+      const peakY = this.ctx.canvas.height * 0.3;
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(x - 50, baseY);
+      this.ctx.lineTo(x, peakY);
+      this.ctx.lineTo(x + 50, baseY);
+      this.ctx.closePath();
+      this.ctx.fill();
+    });
+    this.ctx.globalAlpha = 1;
+  }
+  
+  private renderProceduralBackground() {
+    // Original procedural background for fallback
     this.ctx.save();
     
     // Mountains (triangular peaks)
@@ -132,12 +244,22 @@ export default class CinematicView extends View {
       const frameX = frameIndex * baseWidth;
       const pixelX = cinematicX - pixelWidth / 2;
       const pixelY = Math.round(finalY - pixelHeight / 2);
+      // Handle sprite flipping based on facing direction
+      this.ctx.save();
+      const facing = unit.meta.facing || 'right';
+      const shouldFlip = facing === 'left';
       
+      if (!shouldFlip) {
+        // Flip horizontally by scaling x by -1 and translating
+        this.ctx.scale(-1, 1);
+        this.ctx.translate(-pixelX * 2 - baseWidth, 0);
+      }
       this.ctx.drawImage(
         sprite,
         frameX, 0, baseWidth, baseHeight,
         pixelX, pixelY, pixelWidth, pixelHeight
       );
+      this.ctx.restore();
     } else {
       // Fallback rectangle (scaled for huge units)
       this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
@@ -234,6 +356,211 @@ export default class CinematicView extends View {
     }
     
     this.ctx.restore();
+  }
+
+  private renderLandedParticles() {
+    if (!this.sim.particles || this.sim.particles.length === 0) return;
+    
+    this.ctx.save();
+    
+    // Only render particles that are on the ground (z=0 or landed=true)
+    const landedParticles = this.sim.particles.filter(p => (p.z || 0) <= 0 || p.landed);
+    
+    for (const particle of landedParticles) {
+      this.renderParticleCinematic(particle);
+    }
+    
+    this.ctx.restore();
+  }
+  
+  private renderFlyingParticles() {
+    if (!this.sim.particles || this.sim.particles.length === 0) return;
+    
+    this.ctx.save();
+    
+    // Only render particles that are in the air (z>0 and not landed)
+    const flyingParticles = this.sim.particles
+      .filter(p => (p.z || 0) > 0 && !p.landed)
+      .sort((a, b) => (b.z || 0) - (a.z || 0)); // Sort by depth for proper layering
+    
+    for (const particle of flyingParticles) {
+      this.renderParticleCinematic(particle);
+    }
+    
+    this.ctx.restore();
+  }
+  
+  private renderParticleCinematic(particle: any) {
+    // Convert grid position to cinematic coordinates
+    const scale = Math.min(this.ctx.canvas.width / this.sim.fieldWidth, this.ctx.canvas.height / this.sim.fieldHeight) * 0.8;
+    const offsetX = (this.ctx.canvas.width - this.sim.fieldWidth * scale) / 2;
+    const offsetY = (this.ctx.canvas.height - this.sim.fieldHeight * scale) / 2;
+    
+    const cinematicX = particle.pos.x * scale + offsetX;
+    const cinematicY = particle.pos.y * scale + offsetY;
+    
+    // Apply 3D height effect - higher particles appear lighter and slightly offset
+    const height = particle.z || 0;
+    // const heightEffect = Math.min(height / 20, 1); // Normalize height to 0-1
+    let adjustedY = cinematicY - height * 0.8; // Higher particles appear higher on screen
+    
+    this.ctx.save();
+    
+    // Apply transparency based on height and age
+    const ageEffect = particle.lifetime > 100 ? 1 : particle.lifetime / 100;
+    const alpha = Math.min(ageEffect); // * (0.6 + heightEffect * 0.4), 1);
+    
+    // Type-specific rendering
+    if (particle.type === 'leaf') {
+      this.renderLeafParticle(particle, cinematicX, adjustedY, alpha);
+    } else if (particle.type === 'rain') {
+      this.renderRainParticle(particle, cinematicX, adjustedY, alpha);
+    } else if (particle.type === 'debris') { // Fire/spark particles use debris type
+      this.renderFireParticle(particle, cinematicX, adjustedY, alpha);
+    } else {
+      // Generic particle rendering
+      this.ctx.globalAlpha = alpha;
+      this.ctx.fillStyle = particle.color;
+      this.ctx.beginPath();
+      this.ctx.arc(cinematicX, adjustedY, particle.radius * scale, 0, 2 * Math.PI);
+      this.ctx.fill();
+    }
+    
+    this.ctx.restore();
+  }
+  
+  private renderLeafParticle(_particle: any, x: number, y: number, alpha: number) {
+    this.ctx.globalAlpha = alpha;
+    
+    // TODO: Replace with actual leaf sprite (8x8 with 8 frames for animation)
+    const leafSprite = this.sprites.get('leaf');
+    const frameIndex = Math.floor((this.sim.ticks * 0.1) % 8);
+    if (leafSprite) {
+      this.ctx.save();
+      this.ctx.translate(x, y);
+      // this.ctx.rotate((particle.pos.x * 0.1 + this.sim.ticks * 0.02) % (Math.PI * 2));
+
+      // scale
+      // this.ctx.scale(scale, scale);
+
+      // Draw at native 8x8 size, centered on the position
+      this.ctx.drawImage(leafSprite, frameIndex * 8, 0, 8, 8, -4, -4, 8, 8);
+      this.ctx.restore();
+    }
+    
+    // Fallback: Simple leaf shape
+    // const rotation = (particle.pos.x * 0.1 + this.sim.ticks * 0.02) % (Math.PI * 2);
+    
+    // this.ctx.save();
+    // this.ctx.translate(x, y);
+    // this.ctx.rotate(rotation);
+    
+    // // Draw leaf as an elongated ellipse with a slight curve
+    // this.ctx.fillStyle = particle.color;
+    // this.ctx.beginPath();
+    // this.ctx.ellipse(0, 0, size * 1.5, size * 0.8, 0, 0, 2 * Math.PI);
+    // this.ctx.fill();
+    
+    // // Add a darker center line for leaf detail
+    // if (size > 1) {
+    //   this.ctx.strokeStyle = this.adjustColorBrightness(particle.color, -40);
+    //   this.ctx.lineWidth = Math.max(0.5, size * 0.1);
+    //   this.ctx.beginPath();
+    //   this.ctx.moveTo(-size * 1.2, 0);
+    //   this.ctx.lineTo(size * 1.2, 0);
+    //   this.ctx.stroke();
+    // }
+    
+    // this.ctx.restore();
+  }
+  
+  private renderRainParticle(particle: any, x: number, y: number, alpha: number) {
+    this.ctx.globalAlpha = alpha;
+    
+    // Rain drops are tiny dots with diagonal trailing lines
+    const dropSize = particle.radius || 1;
+    
+    // Draw the main rain drop as a small circle
+    this.ctx.fillStyle = particle.color;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, dropSize * 0.5, 0, 2 * Math.PI);
+    this.ctx.fill();
+    
+    // Draw diagonal trailing line based on velocity
+    if (particle.vel && !particle.landed) {
+      this.ctx.strokeStyle = particle.color;
+      this.ctx.lineWidth = Math.max(0.5, dropSize * 0.3);
+      this.ctx.globalAlpha = alpha * 0.6; // Make trail slightly transparent
+      
+      // Calculate trail length based on speed
+      const speed = Math.sqrt(particle.vel.x * particle.vel.x + particle.vel.y * particle.vel.y);
+      const trailLength = Math.min(speed * 8, 12); // Limit max trail length
+      
+      // Trail direction is opposite to velocity
+      const trailEndX = x - particle.vel.x * trailLength;
+      const trailEndY = y - particle.vel.y * trailLength;
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, y);
+      this.ctx.lineTo(trailEndX, trailEndY);
+      this.ctx.stroke();
+    }
+  }
+  
+  private renderFireParticle(particle: any, x: number, y: number, alpha: number) {
+    this.ctx.globalAlpha = alpha;
+    
+    // Fire particles are glowing sparks with ember-like appearance
+    const sparkSize = particle.radius || 1;
+    
+    // Create glowing effect with multiple layers
+    const glowRadius = sparkSize * 2;
+    
+    // Outer glow (soft orange/red)
+    this.ctx.globalAlpha = alpha * 0.2;
+    this.ctx.fillStyle = '#FF4500';
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, glowRadius, 0, 2 * Math.PI);
+    this.ctx.fill();
+    
+    // Middle glow (brighter)
+    this.ctx.globalAlpha = alpha * 0.5;
+    this.ctx.fillStyle = '#FF6347';
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, sparkSize * 1.2, 0, 2 * Math.PI);
+    this.ctx.fill();
+    
+    // Core spark (brightest)
+    this.ctx.globalAlpha = alpha;
+    this.ctx.fillStyle = particle.color;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, sparkSize * 0.6, 0, 2 * Math.PI);
+    this.ctx.fill();
+    
+    // Add flickering white-hot center for larger sparks
+    if (sparkSize > 1 && Math.random() < 0.7) {
+      this.ctx.globalAlpha = alpha * 0.8;
+      this.ctx.fillStyle = '#FFFFFF';
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, sparkSize * 0.3, 0, 2 * Math.PI);
+      this.ctx.fill();
+    }
+    
+    // Add upward-trailing sparks if moving upward (fire rises)
+    if (particle.vel && particle.vel.y < 0 && !particle.landed) {
+      this.ctx.globalAlpha = alpha * 0.4;
+      this.ctx.strokeStyle = particle.color;
+      this.ctx.lineWidth = Math.max(0.5, sparkSize * 0.2);
+      
+      // Short upward trail
+      const trailLength = Math.min(Math.abs(particle.vel.y) * 4, 6);
+      const trailEndY = y + trailLength; // Trail goes down (opposite to upward movement)
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(x, y);
+      this.ctx.lineTo(x + particle.vel.x * 2, trailEndY);
+      this.ctx.stroke();
+    }
   }
 
   private renderAoEEffectsCinematic() {

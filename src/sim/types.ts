@@ -51,6 +51,7 @@ export interface Unit {
     huge?: boolean; // Large multi-cell unit (32x64 sprite)
     phantom?: boolean; // Invisible blocking unit for huge creatures
     parentId?: string; // ID of parent unit for phantoms
+    facing?: 'left' | 'right'; // Direction the unit is facing for sprite flipping
     [key: string]: any; // Additional metadata
   }
 }

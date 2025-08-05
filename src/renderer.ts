@@ -152,11 +152,11 @@ export default class Renderer extends Display {
   private battle: Battle | null = null;
   private cinematic: CinematicView | null = null;
 
-  constructor(width: number, height: number, canvas: CanvasLike, private sim: Simulator, private sprites: Map<string, HTMLImageElement>) {
+  constructor(width: number, height: number, canvas: CanvasLike, private sim: Simulator, private sprites: Map<string, HTMLImageElement>, private backgrounds: Map<string, HTMLImageElement> = new Map()) {
     super(width, height, canvas);
 
-    this.battle = new Battle(this.ctx, this.sim, this.width, this.height, this.sprites);
-    this.cinematic = new CinematicView(this.ctx, this.sim, this.width, this.height, this.sprites);
+    this.battle = new Battle(this.ctx, this.sim, this.width, this.height, this.sprites, this.backgrounds);
+    this.cinematic = new CinematicView(this.ctx, this.sim, this.width, this.height, this.sprites, this.backgrounds);
   }
 
   setViewMode(mode: 'grid' | 'cinematic') {
@@ -183,9 +183,9 @@ export default class Renderer extends Display {
 }
 
 // Factory function to create a properly scaled renderer for the browser
-export function createScaledRenderer(targetWidth: number, targetHeight: number, physicalCanvas: HTMLCanvasElement, sim: Simulator, sprites: Map<string, HTMLImageElement>) {
+export function createScaledRenderer(targetWidth: number, targetHeight: number, physicalCanvas: HTMLCanvasElement, sim: Simulator, sprites: Map<string, HTMLImageElement>, backgrounds: Map<string, HTMLImageElement> = new Map()) {
   const virtualCanvas = createCanvas(targetWidth, targetHeight);
-  const renderer = new Renderer(targetWidth, targetHeight, virtualCanvas, sim, sprites);
+  const renderer = new Renderer(targetWidth, targetHeight, virtualCanvas, sim, sprites, backgrounds);
   
   let scale = 1;
   

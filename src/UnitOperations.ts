@@ -4,6 +4,15 @@ import { Simulator } from "./simulator";
 
 export class UnitOperations {
   static move(unit: Unit, deltaTime: number = 1, sim?: any): Unit {
+    // Update facing direction based on intended movement
+    let facing = unit.meta.facing || 'right'; // Default to right
+    if (unit.intendedMove.x > 0) {
+      facing = 'right';
+    } else if (unit.intendedMove.x < 0) {
+      facing = 'left';
+    }
+    // Don't change facing for purely vertical movement
+    
     // console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
     let x = unit.pos.x + unit.intendedMove.x * deltaTime;
     let y = unit.pos.y + unit.intendedMove.y * deltaTime;
@@ -22,6 +31,10 @@ export class UnitOperations {
       pos: {
         x,
         y
+      },
+      meta: {
+        ...unit.meta,
+        facing
       }
     }; //, null];
   }

@@ -16,7 +16,8 @@ export default class View {
     protected ctx: CanvasRenderingContext2D,
     public sim: Simulator,
     public width: number, public height: number,
-    public sprites: Map<string, HTMLImageElement>
+    public sprites: Map<string, HTMLImageElement>,
+    public backgrounds: Map<string, HTMLImageElement> = new Map()
   ) { }
 
   show(): void {

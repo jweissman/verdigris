@@ -13,13 +13,17 @@ export class MeleeCombat extends Rule {
     if (attacker.hp <= 0 || target.hp <= 0) return; //
     this.engagements.set(attacker.id, target.id);
     this.lastAttacks.set(attacker.id, this.sim.ticks);
+    
+    // Track last attack time for rendering
+    attacker.meta.lastAttacked = this.sim.ticks;
+    
     this.sim.queuedEvents.push({
       kind: 'damage',
       source: attacker.id,
       target: target.id,
       meta: {
         amount: attacker.abilities?.melee?.config?.damage || 1,
-        aspect: 'force'
+        aspect: 'physical'
       }
     });
   }
@@ -36,9 +40,7 @@ export class MeleeCombat extends Rule {
       const dist = Math.sqrt(dx * dx + dy * dy);
       const range = a.abilities?.melee?.config?.range || 1.5; // Default melee range
       if (dist < range) {
-        a.state = 'attack';
-        a.intendedTarget = b.id;
-        a.intendedMove = { x: 0, y: 0 };
+        a.intendedMove = { x: 0, y: 0 }; // Stop to fight
         this.hit(a, b);
       }
     }

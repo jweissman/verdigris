@@ -47,7 +47,7 @@ export class HugeUnits extends Rule {
           state: "idle",
           hp: 9999, // High HP to prevent accidental death
           maxHp: 9999,
-          mass: 1,
+          mass: hugeUnit.mass, // Same mass as parent to push things effectively
           abilities: {},
           tags: ['phantom', 'noncombatant'], // Mark as non-combatant
           meta: {

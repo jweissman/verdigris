@@ -59,14 +59,20 @@ class Freehold extends Game {
       b: "bombardier",
       t: "tamer",
       q: "squirrel",
-      Q: "megasquirrel"
+      Q: "megasquirrel",
+      z: "rainmaker",
+      d: "demon",
+      g: "ghost",
+      m: "mimic-worm",
+      k: "skeleton",
+      W: "big-worm", 
+
     }
     console.log(`Available beasts: ${Object.values(beasts).join(", ")}`);
     if (Object.keys(beasts).some(b => b === e.key)) {
       const { x, y } = this.randomGridPosition();
 
       let beast = beasts[e.key];
-      console.log(`Spawning ${beast} at (${x}, ${y})`);
       if (beast) {
         this.add(beast, x, y);
       }
@@ -74,7 +80,6 @@ class Freehold extends Game {
   }
 
   add(beast: string, x: number, y: number) {
-    console.log(`Spawning ${beast} at (${x}, ${y})`);
     this.sim.addUnit({ ...Encyclopaedia.unit(beast), pos: { x, y } });
   }
 

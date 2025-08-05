@@ -130,12 +130,25 @@ export default class Battle extends View {
       this.ctx.fill();
       this.ctx.restore();
 
+      // Handle sprite flipping based on facing direction
+      this.ctx.save();
+      const facing = unit.meta.facing || 'right';
+      const shouldFlip = facing === 'left';
+      
+      if (!shouldFlip) {
+        // Flip horizontally by scaling x by -1 and translating
+        this.ctx.scale(-1, 1);
+        this.ctx.translate(-pixelX * 2 - spriteWidth, 0);
+      }
+      
       // Draw sprite at appropriate size
       this.ctx.drawImage(
         sprite,
         frameX, 0, spriteWidth, spriteHeight,  // Source: current frame at native size
         pixelX, realPixelY, spriteWidth, spriteHeight  // Dest: native size, positioned appropriately
       );
+      
+      this.ctx.restore();
     } else {
       // Fallback to colored rectangle - keep at 8x8 for grid alignment
       const fallbackX = Math.round(renderX * 8);

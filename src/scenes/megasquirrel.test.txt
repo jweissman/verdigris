@@ -4,6 +4,7 @@ Q.....w.w.w
 ..........
 ..........
 ---
+bg: mountain
 # Megasquirrel (Q) vs worms test scene
-# The megasquirrel should occupy a 1x4 footprint with phantom units
+# The megasquirrel should occupy a 1x4 footprint with phantom units  
 # Press 'm' to spawn more megasquirrels for testing

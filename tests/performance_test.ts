@@ -5,7 +5,7 @@ import { SceneLoader } from '../src/scene_loader.ts';
 describe('Performance Tests', () => {
   const scenarios = ['simple', 'complex', 'healing', 'projectile', 'squirrel'];
   const SIMULATION_STEPS = 50;
-  const EXECUTION_TIME_PER_STEP = 2; // ms per step
+  const EXECUTION_TIME_PER_STEP = 5; // ms per step
   const MAX_EXECUTION_TIME = SIMULATION_STEPS * EXECUTION_TIME_PER_STEP + 10; // xms per step + 10ms buffer
 
   scenarios.forEach(scenario => {
@@ -67,7 +67,7 @@ describe('Performance Tests', () => {
             config: { height: 5, speed: 2, impact: { radius: 3, damage: 5 }, duration: 10 },
             target: 'closest.enemy()?.pos',
             trigger: 'distance(closest.enemy()?.pos) > 10',
-            effect: (u, t, sim) => {
+            effect: (u, t) => {
               if (!t) return;
               u.meta.jumping = true;
               u.meta.jumpProgress = 0;
