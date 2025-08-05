@@ -6,6 +6,7 @@ import healing from './scenes/healing.battle.txt';
 import projectile from './scenes/projectile.battle.txt';
 import squirrel from './scenes/squirrel.battle.txt';
 import { Freehold } from "./freehold";
+import Encyclopaedia from "./dmg/encyclopaedia";
 
 export interface SceneDefinition {
   layout: string[];
@@ -85,9 +86,7 @@ export class SceneLoader {
 
   private createUnit(unitName: string, x: number, y: number): void {
     console.log(`Creating unit ${unitName} at (${x}, ${y})`);
-    // x += Math.floor(this.sim.fieldWidth / 2) - 10; // Centering offset
-    // y += Math.floor(this.sim.fieldHeight / 2) - 10; // Centering
-    this.sim.addUnit({ ...Freehold.unit(unitName), pos: { x, y } });
+    this.sim.addUnit({ ...Encyclopaedia.unit(unitName), pos: { x, y } });
   }
 
 }

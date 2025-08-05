@@ -2,7 +2,7 @@ import { Freehold } from "../freehold";
 import { Ability, Unit, UnitState } from "../sim/types";
 import { Simulator } from "../simulator";
 
-class Encyclopaedia {
+export default class Encyclopaedia {
   static abilities: { [key: string]: Ability } = {
     squirrel: {
       name: 'Summon Squirrel',
@@ -15,10 +15,9 @@ class Encyclopaedia {
           source: unit.id,
           target: { x: 0, y: unit.pos.y },
           meta: {
-            unit: { ...Freehold.unit('squirrel'), intendedProtectee: unit.id, posture: 'guard' }
+            unit: { ...this.unit('squirrel'), intendedProtectee: unit.id, posture: 'guard' }
           }
         });
-        
 
         // toss a 'pointless' nut projectile
         if (sim && sim.projectiles) {
@@ -235,7 +234,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       maxHp: 20,
       mass: 1,
       abilities: {
-        heal: Freehold.abilities.heal
+        heal: this.abilities.heal
       }
     },
     tamer: {
@@ -260,7 +259,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       mass: 1,
       tags: ['follower'],
       abilities: {
-        jumps: Freehold.abilities.jumps // Mini-squirrels can jump too
+        jumps: this.abilities.jumps // Mini-squirrels can jump too
       }
     },
     megasquirrel: {
@@ -273,7 +272,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       mass: 8, // Much heavier than regular units
       tags: ['mythic'],
       abilities: {
-        jumps: Freehold.abilities.jumps,
+        jumps: this.abilities.jumps,
         // Could add special megasquirrel abilities here
       },
       meta: {
@@ -295,14 +294,14 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         // pos: { x, y },
         intendedMove: { x: 0, y: 0 },
         state: "idle" as UnitState,
-        ...Freehold.bestiary[beast],
+        ...this.bestiary[beast],
         abilities: {
-          ...(beast === "worm" ? { jumps: Freehold.abilities.jumps } : {}),
-          ...(beast === "ranger" ? { ranged: Freehold.abilities.ranged } : {}),
-          ...(beast === "bombardier" ? { bombardier: Freehold.abilities.bombardier } : {}),
-          ...(beast === "priest" ? { heal: Freehold.abilities.heal } : {}),
-          ...(beast === "tamer" ? { heal: Freehold.abilities.squirrel } : {}),
-          ...(beast === "megasquirrel" ? { jumps: Freehold.abilities.jumps } : {})
+          ...(beast === "worm" ? { jumps: this.abilities.jumps } : {}),
+          ...(beast === "ranger" ? { ranged: this.abilities.ranged } : {}),
+          ...(beast === "bombardier" ? { bombardier: this.abilities.bombardier } : {}),
+          ...(beast === "priest" ? { heal: this.abilities.heal } : {}),
+          ...(beast === "tamer" ? { heal: this.abilities.squirrel } : {}),
+          ...(beast === "megasquirrel" ? { jumps: this.abilities.jumps } : {})
         },
         tags: [
           ...(beast === "worm" ? ["swarm"] : []),

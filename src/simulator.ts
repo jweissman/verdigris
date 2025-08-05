@@ -129,7 +129,7 @@ class Simulator {
     }
     let t1 = performance.now();
     let elapsed = t1 - t0;
-    if (elapsed > 10) {
+    if (elapsed > 30) {
       console.log(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
     }
     // console.log(`Total ticks: ${this.ticks}`);

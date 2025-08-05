@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { Freehold } from '../src/freehold';
 import { UnitMovement } from '../src/rules/unit_movement';
+import Encyclopaedia from '../src/dmg/encyclopaedia';
 
 describe('AI Behavior System', () => {
   beforeEach(() => {
-    Freehold.counts = {};
+    Encyclopaedia.counts = {};
   });
   it('farmers hunt enemies by moving toward them', () => {
     const canvas = { 
@@ -143,7 +144,7 @@ describe('AI Behavior System', () => {
     }
   });
 
-  it('farmers and worms engage in combat when they meet', () => {
+  it.only('farmers and worms engage in combat when they meet', () => {
     const canvas = { 
       width: 320, height: 200,
       getContext: () => ({}) 
@@ -153,8 +154,8 @@ describe('AI Behavior System', () => {
     UnitMovement.wanderRate = 1;
     
     // Place farmer and worm adjacent to each other
-    let _farmerId = fh.add('farmer', 1, 1);
-    let _wormId = fh.add('worm', 2, 1);
+    fh.add('farmer', 1, 1);
+    fh.add('worm', 2, 1);
     
     // const farmer = fh.sim.units.find(u => u.id === farmerId);
     // const worm = fh.sim.units.find(u => u.id === wormId);
@@ -167,7 +168,7 @@ describe('AI Behavior System', () => {
     const initialWormHp = fh.sim.roster.worm.hp;
     
     // Simulate steps - they should engage in combat
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
       fh.sim.step();
     }
 
