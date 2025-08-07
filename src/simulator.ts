@@ -25,7 +25,7 @@ interface Particle {
   lifetime: number; // in ticks
   color: string; // CSS color string
   z?: number; // Height above ground for 3D effect
-  type?: 'leaf' | 'rain' | 'debris' | 'snow'; // Different particle types
+  type?: 'leaf' | 'rain' | 'debris' | 'snow' | 'lightning' | 'lightning_branch' | 'electric_spark' | 'thunder_ring' | 'ozone' | 'storm_cloud' | 'power_surge' | 'energy'; // Different particle types
   landed?: boolean; // Has the particle landed on the ground
   targetCell?: Vec2; // Target cell for precise positioning
 }
@@ -139,10 +139,14 @@ class Simulator {
   
   // Weather system
   weather: {
-    current: 'clear' | 'rain' | 'storm' | 'snow';
+    current: 'clear' | 'rain' | 'storm' | 'snow' | 'lightning';
     duration: number; // ticks remaining for current weather
     intensity: number; // 0-1 scale
   };
+  
+  // Environmental states
+  winterActive?: boolean;
+  lightningActive?: boolean;
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;

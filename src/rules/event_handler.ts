@@ -109,8 +109,9 @@ export class EventHandler extends Rule {
 
     let sourceUnit = this.sim.units.find(unit => unit.id === event.source); // || this.sim.unitAt(event.source);
 
-    // Determine if this is healing or damage based on aspect
+    // Determine if this is healing, damage, or EMP based on aspect
     const isHealing = event.meta.aspect === 'heal';
+    const isEmp = event.meta.aspect === 'emp';
     
     const affectedUnits = this.sim.getRealUnits().filter(unit => {
       const dx = unit.pos.x - target.x;
@@ -120,6 +121,10 @@ export class EventHandler extends Rule {
       if (isHealing) {
         // Healing affects same team members only
         return inRange && unit.team === sourceUnit?.team && unit.hp < unit.maxHp;
+      } else if (isEmp) {
+        // EMP affects all units, but mechanical units are immune if mechanicalImmune is true
+        const mechanicalImmune = event.meta.mechanicalImmune && unit.tags?.includes('mechanical');
+        return inRange && !mechanicalImmune;
       } else {
         // Damage affects enemy team members only
         return inRange && unit.team !== sourceUnit?.team;
@@ -127,7 +132,7 @@ export class EventHandler extends Rule {
     });
 
     for (const unit of affectedUnits) {
-      const effectType = isHealing ? 'healing' : 'damage';
+      const effectType = isHealing ? 'healing' : (isEmp ? 'emp' : 'damage');
       // console.log(`* ${unit.id} is affected by ${effectType} AoE from ${event.source} at (${target.x}, ${target.y})`);
       
       const distance = Math.sqrt(
@@ -135,18 +140,35 @@ export class EventHandler extends Rule {
         Math.pow(unit.pos.y - target.y, 2)
       );
       
-      // Queue appropriate event (heal or damage)
-      this.sim.queuedEvents.push({
-        kind: isHealing ? 'heal' : 'damage',
-        source: event.source,
-        target: unit.id,
-        meta: {
-          amount: event.meta.amount || (isHealing ? 5 : 10),
-          aspect: event.meta.aspect || (isHealing ? 'heal' : 'impact'),
-          origin: { x: target.x, y: target.y }, 
-          distance: distance
-        }
-      });
+      if (isEmp) {
+        // Apply EMP stun effect directly
+        unit.meta.stunned = true;
+        unit.meta.stunDuration = event.meta.stunDuration || 20;
+        console.log(`⚡ ${unit.id} is stunned by EMP for ${unit.meta.stunDuration} ticks`);
+        
+        // Create EMP visual effect on stunned unit
+        this.sim.particles.push({
+          pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+          vel: { x: 0, y: -0.3 },
+          radius: 2,
+          color: '#FFFF88',
+          lifetime: 25,
+          type: 'electric_spark'
+        });
+      } else {
+        // Queue appropriate event (heal or damage)
+        this.sim.queuedEvents.push({
+          kind: isHealing ? 'heal' : 'damage',
+          source: event.source,
+          target: unit.id,
+          meta: {
+            amount: event.meta.amount || (isHealing ? 5 : 10),
+            aspect: event.meta.aspect || (isHealing ? 'heal' : 'impact'),
+            origin: { x: target.x, y: target.y }, 
+            distance: distance
+          }
+        });
+      }
 
       // Check if source is much more massive and should toss the target (only for damage, not healing)
       if (!isHealing && sourceUnit && unit.mass < sourceUnit.mass) {

@@ -567,6 +567,80 @@ export default class Encyclopaedia {
       }
     },
 
+    // Mechatronist abilities
+    callAirdrop: {
+      name: 'Call Mechatron Airdrop',
+      cooldown: 120, // 15 seconds - powerful ability
+      config: {
+        range: 20,
+        minAllies: 2 // Need some support to justify calling in heavy artillery
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) > 8', // Strategic deployment when enemies are distant
+      effect: (unit, targetPos, sim) => {
+        if (!targetPos) return;
+        console.log(`${unit.id} calls in Mechatron airdrop!`);
+        
+        // Calculate tactical airdrop position - between mechatronist and enemies
+        const dropX = Math.floor((unit.pos.x + targetPos.x) / 2);
+        const dropY = Math.floor((unit.pos.y + targetPos.y) / 2);
+        
+        // Queue airdrop command
+        if (!sim.queuedCommands) {
+          sim.queuedCommands = [];
+        }
+        
+        sim.queuedCommands.push({
+          type: 'airdrop',
+          args: ['mechatron', dropX.toString(), dropY.toString()],
+          unitId: unit.id
+        });
+        
+        // Mark this mechatronist as the caller for potential riding mechanics
+        unit.meta.calledAirdrop = true;
+        unit.meta.airdropTick = sim.tick;
+      }
+    },
+
+    tacticalOverride: {
+      name: 'Tactical Override',
+      cooldown: 60, // 7.5 seconds
+      config: {
+        range: 6,
+        boostAmount: 0.5 // 50% cooldown reduction
+      },
+      target: 'self.pos',
+      trigger: 'closest.ally() != null', // Need at least one ally for synergy
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} activates tactical override!`);
+        
+        // Find all mechanist units in range
+        const mechanists = sim.units.filter(u => 
+          u.team === unit.team &&
+          u.tags?.includes('mechanical') &&
+          Math.abs(u.pos.x - unit.pos.x) <= 6 &&
+          Math.abs(u.pos.y - unit.pos.y) <= 6
+        );
+        
+        // Boost their abilities
+        mechanists.forEach(ally => {
+          ally.meta.tacticalBoost = true;
+          ally.meta.tacticalBoostDuration = 40; // 5 seconds of boost
+          console.log(`  - ${ally.id} receives tactical boost`);
+        });
+        
+        // Visual effect
+        sim.particles.push({
+          pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+          vel: { x: 0, y: -0.5 },
+          radius: 4,
+          color: '#00FFFF',
+          lifetime: 30,
+          type: 'energy'
+        });
+      }
+    },
+
     // Construct abilities
     freezeAura: {
       name: 'Chill Aura',
@@ -920,6 +994,24 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       }
     },
 
+    // Mechanist leader - calls in Mechatron support
+    mechatronist: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "mechatronist",
+      state: "idle" as UnitState,
+      hp: 30,
+      maxHp: 30,
+      mass: 1,
+      tags: ['mechanical', 'leader', 'engineer'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        calledAirdrop: false,
+        canRideMechatron: true // Enable riding mechanics
+      }
+    },
+
     // Massive war machine - airdropped from above
     mechatron: {
       intendedMove: { x: 0, y: 0 },
@@ -1087,6 +1179,10 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           ...(beast === "spiker" ? { whipChain: this.abilities.whipChain } : {}),
           ...(beast === "roller" ? { chargeAttack: this.abilities.chargeAttack } : {}),
           ...(beast === "zapper" ? { zapHighest: this.abilities.zapHighest } : {}),
+          ...(beast === "mechatronist" ? { 
+            callAirdrop: this.abilities.callAirdrop,
+            tacticalOverride: this.abilities.tacticalOverride
+          } : {}),
           ...(beast === "mechatron" ? { 
             missileBarrage: this.abilities.missileBarrage,
             laserSweep: this.abilities.laserSweep,

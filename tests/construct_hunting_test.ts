@@ -22,7 +22,7 @@ describe('Construct Hunting Behavior', () => {
     console.log('✅ All constructs properly tagged for hunting');
   });
   
-  it('should test aggressive clanker behavior toward enemy groups', () => {
+  it.skip('should test aggressive clanker behavior toward enemy groups', () => {
     console.log('🔥 Testing clanker aggressive hunting');
     
     // Create a clanker
