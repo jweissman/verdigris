@@ -20,7 +20,7 @@ describe('Sprite Integration', () => {
     expect(roller.sprite).toBe('jumpbot'); // Using jumpbot sprite for roller
     
     const zapper = Encyclopaedia.unit('zapper');
-    expect(zapper.sprite).toBe('priest'); // Still using priest sprite (no zapper.png yet)
+    expect(zapper.sprite).toBe('zapper'); // Now has dedicated zapper sprite
     
     console.log('✅ All construct sprites properly assigned to match PNG files:');
     console.log(`  Freezebot: ${freezebot.sprite}.png`);

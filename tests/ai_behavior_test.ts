@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { Freehold } from '../src/freehold';
+import { Simulator } from '../src/simulator';
 import { UnitMovement } from '../src/rules/unit_movement';
 import Encyclopaedia from '../src/dmg/encyclopaedia';
 
@@ -8,37 +8,30 @@ describe('AI Behavior System', () => {
     Encyclopaedia.counts = {};
   });
   it('farmers hunt enemies by moving toward them', () => {
-    const canvas = { 
-      width: 320, height: 200,
-      getContext: () => ({}) 
-    } as any;
-    const fh = new Freehold(canvas);
+    const sim = new Simulator();
     
     // Set wander rate to 1 for deterministic testing
     UnitMovement.wanderRate = 1;
     
     // Add farmer at (1,1) and worm at (5,1) - same row
-    fh.add('farmer', 1, 1); // Has 'hunt' tag
-    fh.add('worm', 5, 1);   // Enemy target
-    
-    const farmer = fh.sim.units.find(u => u.sprite === 'farmer');
-    const worm = fh.sim.units.find(u => u.sprite === 'worm');
+    const farmer = { ...Encyclopaedia.unit('farmer'), pos: { x: 1, y: 1 } }; // Has 'hunt' tag
+    const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 5, y: 1 }, team: 'hostile' as const }; // Enemy target
+    sim.addUnit(farmer);
+    sim.addUnit(worm);
     
     expect(farmer).toBeTruthy();
     expect(worm).toBeTruthy();
     expect(farmer?.tags).toContain('hunt');
     
-    if (!farmer || !worm) throw new Error('Units not found');
-    
     const startX = farmer.pos.x;
     
     // Simulate steps - farmer should move toward worm
     for (let i = 0; i < 3; i++) {
-      fh.sim.step();
+      sim.step();
     }
     
     // Get fresh reference to farmer after simulation
-    const updatedFarmer = fh.sim.units.find(u => u.sprite === 'farmer');
+    const updatedFarmer = sim.units.find(u => u.sprite === 'farmer');
     expect(updatedFarmer).toBeTruthy();
     
     // Farmer should have moved closer to worm (rightward)
@@ -46,19 +39,17 @@ describe('AI Behavior System', () => {
   });
 
   it('worms swarm together by moving toward allies', () => {
-    const canvas = { 
-      width: 320, height: 200,
-      getContext: () => ({}) 
-    } as any;
-    const fh = new Freehold(canvas);
+    const sim = new Simulator();
     
     UnitMovement.wanderRate = 1;
     
     // Add worms with some distance between them
-    fh.add('worm', 1, 1); //, ["swarm"]); // Will try to move toward ally
-    fh.add('worm', 5, 1); //, ["swarm"]); // Target ally
+    const worm1 = { ...Encyclopaedia.unit('worm'), pos: { x: 1, y: 1 } }; // Will try to move toward ally
+    const worm2 = { ...Encyclopaedia.unit('worm'), pos: { x: 5, y: 1 } }; // Target ally
+    sim.addUnit(worm1);
+    sim.addUnit(worm2);
     
-    const worms = fh.sim.units.filter(u => u.sprite === 'worm');
+    const worms = sim.units.filter(u => u.sprite === 'worm');
     
     expect(worms.length).toBe(2);
     expect(worms[0].tags).toContain('swarm');
@@ -66,11 +57,11 @@ describe('AI Behavior System', () => {
     
     // Simulate steps - first worm should move toward second
     for (let i = 0; i < 3; i++) {
-      fh.sim.step();
+      sim.step();
     }
     
     // Get fresh references to worms after simulation
-    const updatedWorms = fh.sim.units.filter(u => u.sprite === 'worm');
+    const updatedWorms = sim.units.filter(u => u.sprite === 'worm');
     expect(updatedWorms.length).toBe(2);
     
     // One of the worms should have moved closer to the other
@@ -79,56 +70,53 @@ describe('AI Behavior System', () => {
   });
 
   it('hunting behavior respects field boundaries', () => {
-    const canvas = { 
-      width: 320, height: 200,
-      getContext: () => ({}) 
-    } as any;
-    const fh = new Freehold(canvas);
+    const sim = new Simulator();
     
     UnitMovement.wanderRate = 1;
     
     // Add farmer at edge (0,0) and enemy far away
-    fh.add('farmer', 0, 0);
-    fh.add('worm', 5, 5);
+    const farmer = { ...Encyclopaedia.unit('farmer'), pos: { x: 0, y: 0 } };
+    const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 5, y: 5 }, team: 'hostile' as const };
+    sim.addUnit(farmer);
+    sim.addUnit(worm);
     
-    const farmer = fh.sim.units.find(u => u.sprite === 'farmer');
+    const addedFarmer = sim.units.find(u => u.sprite === 'farmer');
     
-    if (!farmer) throw new Error('Farmer not found');
+    if (!addedFarmer) throw new Error('Farmer not found');
     
     // Simulate steps
     for (let i = 0; i < 10; i++) {
-      fh.sim.step();
+      sim.step();
       
       // Farmer should never go out of bounds
-      expect(farmer.pos.x).toBeGreaterThanOrEqual(0);
-      expect(farmer.pos.x).toBeLessThan(fh.sim.fieldWidth);
-      expect(farmer.pos.y).toBeGreaterThanOrEqual(0);
-      expect(farmer.pos.y).toBeLessThan(fh.sim.fieldHeight);
+      expect(addedFarmer.pos.x).toBeGreaterThanOrEqual(0);
+      expect(addedFarmer.pos.x).toBeLessThan(sim.fieldWidth);
+      expect(addedFarmer.pos.y).toBeGreaterThanOrEqual(0);
+      expect(addedFarmer.pos.y).toBeLessThan(sim.fieldHeight);
     }
   });
 
   it('swarm behavior handles blocked movement gracefully', () => {
-    const canvas = { 
-      width: 320, height: 200,
-      getContext: () => ({}) 
-    } as any;
-    const fh = new Freehold(canvas);
+    const sim = new Simulator();
     
     UnitMovement.wanderRate = 1;
     
     // Create a line of worms where middle one can't move
-    fh.add('worm', 1, 1); // Will try to move right toward ally
-    fh.add('worm', 2, 1); // Blocks movement  
-    fh.add('worm', 3, 1); // Target ally
+    const worm1 = { ...Encyclopaedia.unit('worm'), pos: { x: 1, y: 1 } }; // Will try to move right toward ally
+    const worm2 = { ...Encyclopaedia.unit('worm'), pos: { x: 2, y: 1 } }; // Blocks movement
+    const worm3 = { ...Encyclopaedia.unit('worm'), pos: { x: 3, y: 1 } }; // Target ally
+    sim.addUnit(worm1);
+    sim.addUnit(worm2);
+    sim.addUnit(worm3);
     
-    const worms = fh.sim.units.filter(u => u.sprite === 'worm');
+    const worms = sim.units.filter(u => u.sprite === 'worm');
     expect(worms.length).toBe(3);
     
     const positions = worms.map(w => ({ x: w.pos.x, y: w.pos.y }));
     
     // Simulate steps
     for (let i = 0; i < 5; i++) {
-      fh.sim.step();
+      sim.step();
     }
     
     // Units should still be in valid positions (not overlapping)
@@ -144,38 +132,33 @@ describe('AI Behavior System', () => {
     }
   });
 
-  it.only('farmers and worms engage in combat when they meet', () => {
-    const canvas = { 
-      width: 320, height: 200,
-      getContext: () => ({}) 
-    } as any;
-    const fh = new Freehold(canvas);
+  it('farmers and worms engage in combat when they meet', () => {
+    const sim = new Simulator();
     
-    UnitMovement.wanderRate = 1;
+    // UnitMovement.wanderRate = 1;
     
     // Place farmer and worm adjacent to each other
-    fh.add('farmer', 1, 1);
-    fh.add('worm', 2, 1);
+    const farmer = { ...Encyclopaedia.unit('farmer'), pos: { x: 1, y: 1 } };
+    const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 2, y: 1 }, team: 'hostile' as const };
+    sim.addUnit(farmer);
+    sim.addUnit(worm);
     
-    // const farmer = fh.sim.units.find(u => u.id === farmerId);
-    // const worm = fh.sim.units.find(u => u.id === wormId);
-    // fh.sim.roster
-    
-    // if (!farmer || !worm) throw new Error('Units not found');
-    console.log("Roster after adding units:", fh.sim.roster);
-    
-    const initialFarmerHp = fh.sim.roster.farmer.hp;
-    const initialWormHp = fh.sim.roster.worm.hp;
+    const initialFarmerHp = farmer.hp;
+    const initialWormHp = worm.hp;
     
     // Simulate steps - they should engage in combat
     for (let i = 0; i < 20; i++) {
-      fh.sim.step();
+      sim.step();
     }
 
-    // debugger;
+    // Find the units after simulation
+    const farmerAfter = sim.units.find(u => u.sprite === 'farmer');
+    const wormAfter = sim.units.find(u => u.sprite === 'worm');
     
-    // Both should have taken damage if they fought
-    const combatOccurred = fh.sim.roster.farmer.hp < initialFarmerHp || fh.sim.roster.worm.hp < initialWormHp;
+    // Both should have taken damage if they fought (or one should be dead)
+    const combatOccurred = !farmerAfter || !wormAfter || 
+                          farmerAfter.hp < initialFarmerHp || 
+                          wormAfter.hp < initialWormHp;
     expect(combatOccurred).toBe(true);
   });
 });

@@ -27,7 +27,7 @@ describe('Tossing mechanics', () => {
 
     // Queue a toss command
     sim.queuedCommands.push({
-      commandType: 'toss',
+      type: 'toss',
       unitId: 'target',
       args: [{ x: 1, y: 0 }, 5, 3] // direction, force, distance
     });
@@ -64,7 +64,7 @@ describe('Tossing mechanics', () => {
 
     // Queue a toss command
     sim.queuedCommands.push({
-      commandType: 'toss',
+      type: 'toss',
       unitId: 'target',
       args: [{ x: 1, y: 1 }, 4, 2] // diagonal toss
     });
@@ -108,7 +108,7 @@ describe('Tossing mechanics', () => {
 
     // Queue a toss command
     sim.queuedCommands.push({
-      commandType: 'toss',
+      type: 'toss',
       unitId: 'target',
       args: [{ x: 1, y: 0 }, 6, 4] // eastward toss
     });
@@ -148,7 +148,7 @@ describe('Tossing mechanics', () => {
 
     // Try to toss beyond field boundary
     sim.queuedCommands.push({
-      commandType: 'toss',
+      type: 'toss',
       unitId: 'target',
       args: [{ x: 1, y: 1 }, 8, 5] // Would go to (13, 13) but should clamp
     });
@@ -181,7 +181,7 @@ describe('Tossing mechanics', () => {
 
     // Try to toss dead unit
     sim.queuedCommands.push({
-      commandType: 'toss',
+      type: 'toss',
       unitId: 'target',
       args: [{ x: 1, y: 0 }, 5, 3]
     });
@@ -214,7 +214,7 @@ describe('Tossing mechanics', () => {
 
     // Queue a high-force toss
     sim.queuedCommands.push({
-      commandType: 'toss',
+      type: 'toss',
       unitId: 'target',
       args: [{ x: 1, y: 0 }, 8, 3] // High force (8)
     });
@@ -284,7 +284,7 @@ describe('Tossing mechanics', () => {
 
     // Should have generated a toss command for the light unit
     expect(sim.queuedCommands.length).toBeGreaterThan(0);
-    const tossCommand = sim.queuedCommands.find(c => c.commandType === 'toss' && c.unitId === 'light');
+    const tossCommand = sim.queuedCommands.find(c => c.type === 'toss' && c.unitId === 'light');
     expect(tossCommand).toBeDefined();
     console.log("Toss command:", tossCommand);
     

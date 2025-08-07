@@ -47,6 +47,8 @@ import jumpbot from "./assets/sprites/jumpbot.png";
 import zapper from "./assets/sprites/zapper.png";
 // @ts-ignore
 import toymaker from "./assets/sprites/toymaker.png";
+// @ts-ignore
+import mechatron from "./assets/sprites/mechatron.png";
 
 // Background imports
 // @ts-ignore
@@ -144,7 +146,8 @@ class Game {
       { name: 'swarmbot', src: swarmbot },
       { name: 'jumpbot', src: jumpbot },
       { name: 'toymaker', src: toymaker },
-      { name: 'zapper', src: zapper }
+      { name: 'zapper', src: zapper },
+      { name: 'mechatron', src: mechatron }
     ];
 
   static backgroundList = [

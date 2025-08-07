@@ -165,7 +165,7 @@ export class EventHandler extends Rule {
           // console.log(`🤾 Queueing toss command: ${unit.id} (mass ${unit.mass}) tossed by ${sourceUnit.id} (mass ${sourceUnit.mass}), ratio ${massRatio.toFixed(1)}`);
           
           this.sim.queuedCommands.push({
-            commandType: 'toss',
+            type: 'toss',
             unitId: unit.id,
             args: [direction, tossForce, tossDistance]
           });

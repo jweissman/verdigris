@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../src/simulator';
 import Encyclopaedia from '../src/dmg/encyclopaedia';
+import { CommandHandler } from '../src/rules/command_handler';
 import { Abilities } from '../src/rules/abilities';
 import { EventHandler } from '../src/rules/event_handler';
 import DSL from '../src/rules/dsl';
@@ -8,7 +9,7 @@ import DSL from '../src/rules/dsl';
 describe('Toymaker Debug', () => {
   it('should debug why toymaker is not summoning constructs', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Create toymaker and enemy manually
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };

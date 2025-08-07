@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../src/simulator';
 import Encyclopaedia from '../src/dmg/encyclopaedia';
+import { CommandHandler } from '../src/rules/command_handler';
 import { Abilities } from '../src/rules/abilities';
 import { EventHandler } from '../src/rules/event_handler';
 import { WinterEffects } from '../src/rules/winter_effects';
@@ -13,6 +14,7 @@ describe('Toysday Winter Integration', () => {
     
     // Full rulebook including winter effects
     sim.rulebook = [
+      new CommandHandler(sim),
       new Abilities(sim),
       new EventHandler(sim),
       new WinterEffects(sim),

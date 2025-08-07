@@ -196,10 +196,16 @@ export default class CinematicView extends View {
       renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
     }
     
-    // Handle huge units vs normal units in cinematic view
+    // Handle huge units vs normal units in cinematic view - support custom dimensions
     const isHuge = unit.meta.huge;
-    const baseWidth = isHuge ? 64 : 16;
-    const baseHeight = isHuge ? 32 : 16;
+    let baseWidth = 16;
+    let baseHeight = 16;
+    
+    if (isHuge) {
+      // Use custom dimensions if specified, otherwise default to megasquirrel size
+      baseWidth = unit.meta.width || 64;
+      baseHeight = unit.meta.height || 32;
+    }
     
     // Cinematic positioning: more compressed vertically, slight perspective scaling
     const battleStripY = this.height * 0.8; // Position battle at bottom

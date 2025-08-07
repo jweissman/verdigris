@@ -77,6 +77,11 @@ export class UnitOperations {
       // No hostiles, just wander
       return unit;  //UnitOperations.wander(unit);
     }
+    
+    // Aggressive units (like clanker) seek enemy groups, not just closest
+    if (unit.tags && unit.tags.includes('aggressive')) {
+      return UnitOperations.huntAggressively(unit, hostiles, sim);
+    }
     // Find closest hostile
     let closest = hostiles[0];
     let closestDist = Math.abs(closest.pos.x - unit.pos.x) + Math.abs(closest.pos.y - unit.pos.y);
@@ -102,6 +107,47 @@ export class UnitOperations {
     return {
       ...unit,
       posture: 'pursue',
+      intendedMove: { x: dx, y: dy }
+    };
+  }
+
+  static huntAggressively(unit: Unit, hostiles: Unit[], sim: any): Unit {
+    // Aggressive units seek the center of enemy groups for maximum explosion impact
+    if (hostiles.length === 0) return unit;
+    
+    // Calculate enemy centroid (center of mass)
+    let totalX = 0, totalY = 0;
+    for (const enemy of hostiles) {
+      totalX += enemy.pos.x;
+      totalY += enemy.pos.y;
+    }
+    const centerX = totalX / hostiles.length;
+    const centerY = totalY / hostiles.length;
+    
+    // Move toward enemy center with double speed for aggression
+    let dx = 0, dy = 0;
+    const dxRaw = centerX - unit.pos.x;
+    const dyRaw = centerY - unit.pos.y;
+    
+    // Prioritize the largest axis movement for aggressive rushing
+    if (Math.abs(dyRaw) > Math.abs(dxRaw)) {
+      dy = dyRaw > 0 ? 1 : -1;
+      // Sometimes also move diagonally for more aggressive pathing
+      if (Math.abs(dxRaw) > 0.5 && Math.random() < 0.7) {
+        dx = dxRaw > 0 ? 1 : -1;
+      }
+    } else if (Math.abs(dxRaw) > 0) {
+      dx = dxRaw > 0 ? 1 : -1;
+      if (Math.abs(dyRaw) > 0.5 && Math.random() < 0.7) {
+        dy = dyRaw > 0 ? 1 : -1;
+      }
+    }
+    
+    console.log(`🔥 ${unit.id} aggressively rushing toward enemy center at (${Math.floor(centerX)}, ${Math.floor(centerY)})`);
+    
+    return {
+      ...unit,
+      posture: 'berserk',
       intendedMove: { x: dx, y: dy }
     };
   }

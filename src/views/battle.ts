@@ -78,10 +78,16 @@ export default class Battle extends View {
       renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
     }
       
-    // Handle huge units (32x64) vs normal units (16x16)
+    // Handle huge units vs normal units - support custom dimensions
     const isHuge = unit.meta.huge;
-    const spriteWidth = isHuge ? 64 : 16;
-    const spriteHeight = isHuge ? 32 : 16;
+    let spriteWidth = 16;
+    let spriteHeight = 16;
+    
+    if (isHuge) {
+      // Use custom dimensions if specified, otherwise default to megasquirrel size
+      spriteWidth = unit.meta.width || 64;
+      spriteHeight = unit.meta.height || 32;
+    }
     
     // CRITICAL: Round to integer pixels to prevent blurring
     const gridCenterX = Math.round(renderX * 8) + 4; // Center of grid cell

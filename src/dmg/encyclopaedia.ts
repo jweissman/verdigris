@@ -403,12 +403,13 @@ export default class Encyclopaedia {
     deployBot: {
       name: 'Deploy Bot',
       cooldown: 50,
+      maxUses: 5, // Limit to prevent field overload
       config: {
-        range: 8,
+        range: 12, // Increased range to allow deployment without enemies nearby
         constructTypes: ['freezebot', 'clanker', 'spiker', 'swarmbot', 'roller', 'zapper']
       },
-      target: 'closest.enemy()?.pos',
-      trigger: 'distance(closest.enemy()?.pos) <= 8',
+      target: 'closest.enemy()?.pos || self.pos', // Deploy at self position if no enemies
+      trigger: 'distance(closest.enemy()?.pos) <= 12 || true', // Always allow deployment
       effect: (unit, targetPos, sim) => {
         if (!targetPos) return;
         console.log(`${unit.id} deploys a construct!`);
@@ -427,6 +428,142 @@ export default class Encyclopaedia {
           args: [constructType], // Let the deploy command handle tactical positioning
           unitId: unit.id
         });
+      }
+    },
+
+    // Mechatron abilities
+    missileBarrage: {
+      name: 'Missile Barrage',
+      cooldown: 80, // 10 seconds at 8fps
+      config: {
+        range: 15,
+        volleySize: 6
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) <= 15',
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        console.log(`${unit.id} launches missile barrage!`);
+        
+        // Launch multiple missiles in a spread pattern
+        for (let i = 0; i < 6; i++) {
+          const spreadX = target.x + (Math.random() - 0.5) * 8;
+          const spreadY = target.y + (Math.random() - 0.5) * 8;
+          const clampedX = Math.max(0, Math.min(sim.fieldWidth - 1, spreadX));
+          const clampedY = Math.max(0, Math.min(sim.fieldHeight - 1, spreadY));
+          
+          // Create bomb projectile for each missile
+          sim.projectiles.push({
+            id: `missile_${unit.id}_${i}_${Date.now()}`,
+            pos: { x: unit.pos.x, y: unit.pos.y - 2 }, // Launch from above unit
+            vel: { x: 0, y: 0 }, // Bombs use target-based movement
+            radius: 3,
+            damage: 12,
+            team: unit.team,
+            type: 'bomb',
+            target: { x: clampedX, y: clampedY },
+            origin: { x: unit.pos.x, y: unit.pos.y - 2 },
+            duration: 30 + i * 5, // Stagger arrival times
+            progress: 0,
+            z: 8 // Start high in the air
+          });
+        }
+      }
+    },
+
+    laserSweep: {
+      name: 'Laser Sweep',
+      cooldown: 60,
+      config: {
+        range: 20,
+        width: 3
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) <= 20',
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        console.log(`${unit.id} fires laser sweep!`);
+        
+        // Create a line of damage from unit to target
+        const dx = target.x - unit.pos.x;
+        const dy = target.y - unit.pos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const stepX = dx / distance;
+        const stepY = dy / distance;
+        
+        // Fire laser along the line
+        for (let step = 1; step < distance; step++) {
+          const hitX = Math.round(unit.pos.x + stepX * step);
+          const hitY = Math.round(unit.pos.y + stepY * step);
+          
+          // Damage in a 3-wide line
+          for (let offset = -1; offset <= 1; offset++) {
+            sim.queuedEvents.push({
+              kind: 'aoe',
+              source: unit.id,
+              target: { x: hitX, y: hitY + offset },
+              meta: {
+                aspect: 'laser',
+                radius: 1,
+                amount: 15,
+                piercing: true // Ignores armor
+              }
+            });
+          }
+        }
+      }
+    },
+
+    empPulse: {
+      name: 'EMP Pulse',
+      cooldown: 100,
+      config: {
+        radius: 8,
+        duration: 40
+      },
+      target: 'self.pos',
+      trigger: 'closest.enemy() && distance(closest.enemy()?.pos) <= 8',
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} releases EMP pulse!`);
+        
+        sim.queuedEvents.push({
+          kind: 'aoe',
+          source: unit.id,
+          target: unit.pos,
+          meta: {
+            aspect: 'emp',
+            radius: 8,
+            amount: 0, // No direct damage
+            stunDuration: 40, // 5 seconds of stun
+            disruptor: true // Disables abilities
+          }
+        });
+      }
+    },
+
+    shieldRecharge: {
+      name: 'Shield Recharge',
+      cooldown: 120,
+      target: 'self.pos',
+      trigger: 'self.hp < self.maxHp * 0.5', // When below 50% health
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} activating shield recharge!`);
+        
+        const healAmount = Math.floor(unit.maxHp * 0.3); // Heal 30% of max HP
+        sim.queuedEvents.push({
+          kind: 'heal',
+          source: unit.id,
+          target: unit.id,
+          meta: {
+            aspect: 'technological',
+            amount: healAmount
+          }
+        });
+        
+        // Add temporary damage resistance
+        unit.meta.shieldActive = true;
+        unit.meta.shieldDuration = 60; // 7.5 seconds of protection
+        unit.meta.damageReduction = 0.5; // 50% damage reduction
       }
     },
 
@@ -454,7 +591,7 @@ export default class Encyclopaedia {
     explode: {
       name: 'Self Destruct',
       cooldown: 1, // Only triggers once when near enemies
-      trigger: 'distance(closest.enemy()?.pos) <= 2',
+      trigger: 'distance(closest.enemy()?.pos) <= 3', // Slightly larger trigger radius for better tactical positioning
       effect: (unit, target, sim) => {
         console.log(`${unit.id} explodes!`);
         sim.queuedEvents.push({
@@ -783,6 +920,35 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       }
     },
 
+    // Massive war machine - airdropped from above
+    mechatron: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "mechatron",
+      state: "idle" as UnitState,
+      hp: 200,
+      maxHp: 200,
+      mass: 5, // Extremely heavy
+      tags: ['mechanical', 'huge', 'artillery', 'hunt'],
+      abilities: {
+        missileBarrage: this.abilities.missileBarrage,
+        laserSweep: this.abilities.laserSweep,
+        empPulse: this.abilities.empPulse,
+        shieldRecharge: this.abilities.shieldRecharge
+      },
+      meta: {
+        huge: true,
+        width: 32, // 32 pixels wide
+        height: 64, // 64 pixels tall 
+        cellsWide: 4, // 4 cells wide (32/8)
+        cellsHigh: 8, // 8 cells high (64/8)
+        armor: 5, // Heavy armor reduces incoming damage
+        facing: 'right' as 'left' | 'right',
+        shieldActive: false,
+        damageReduction: 0.2 // Base 20% damage reduction from armor
+      }
+    },
+
     // Toymaker and constructs
     toymaker: {
       intendedMove: { x: 0, y: 0 },
@@ -807,7 +973,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       hp: 8,
       maxHp: 8,
       mass: 0.5,
-      tags: ['construct', 'ice'],
+      tags: ['construct', 'ice', 'hunt'],
       meta: {
         perdurance: 'sturdiness', // Takes max 1 damage per hit
         facing: 'right' as 'left' | 'right'
@@ -822,7 +988,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       hp: 6,
       maxHp: 6,
       mass: 0.8,
-      tags: ['construct', 'explosive'],
+      tags: ['construct', 'explosive', 'hunt', 'aggressive'],
       meta: {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
@@ -837,7 +1003,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       hp: 10,
       maxHp: 10,
       mass: 0.6,
-      tags: ['construct', 'melee'],
+      tags: ['construct', 'melee', 'hunt'],
       meta: {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
@@ -852,7 +1018,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       hp: 12, // Population-based: each HP represents several small bots
       maxHp: 12,
       mass: 0.3,
-      tags: ['construct', 'swarm'],
+      tags: ['construct', 'swarm', 'hunt'],
       meta: {
         perdurance: 'swarm', // Population-based health
         facing: 'right' as 'left' | 'right'
@@ -867,7 +1033,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       hp: 15,
       maxHp: 15,
       mass: 1.2,
-      tags: ['construct', 'charger'],
+      tags: ['construct', 'charger', 'hunt'],
       meta: {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
@@ -882,7 +1048,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       hp: 8,
       maxHp: 8,
       mass: 0.4,
-      tags: ['construct', 'electrical'],
+      tags: ['construct', 'electrical', 'hunt'],
       meta: {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
@@ -920,7 +1086,13 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           ...(beast === "clanker" ? { explode: this.abilities.explode } : {}),
           ...(beast === "spiker" ? { whipChain: this.abilities.whipChain } : {}),
           ...(beast === "roller" ? { chargeAttack: this.abilities.chargeAttack } : {}),
-          ...(beast === "zapper" ? { zapHighest: this.abilities.zapHighest } : {})
+          ...(beast === "zapper" ? { zapHighest: this.abilities.zapHighest } : {}),
+          ...(beast === "mechatron" ? { 
+            missileBarrage: this.abilities.missileBarrage,
+            laserSweep: this.abilities.laserSweep,
+            empPulse: this.abilities.empPulse,
+            shieldRecharge: this.abilities.shieldRecharge
+          } : {})
         },
         tags: [
           ...(this.bestiary[beast]?.tags || []), // Include tags from bestiary

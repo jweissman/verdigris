@@ -66,7 +66,7 @@ describe('Toymaker Scene Integration', () => {
     // Check snowflake properties
     if (snowflakes.length > 0) {
       expect(snowflakes[0].radius).toBeLessThanOrEqual(0.5); // Single pixel
-      expect(snowflakes[0].color).toBe('white');
+      expect(snowflakes[0].color).toBe('#FFFFFF');
       expect(snowflakes[0].vel.y).toBeGreaterThan(0); // Falling down
       expect(Math.abs(snowflakes[0].vel.x)).toBeLessThan(0.1); // Gentle drift
     }
@@ -97,7 +97,7 @@ describe('Toymaker Scene Integration', () => {
     // Test snowflake properties for single-pixel rendering
     snowflakes.forEach((flake, index) => {
       expect(flake.radius).toBeLessThanOrEqual(0.5); // Single pixel max
-      expect(flake.color).toBe('white');
+      expect(flake.color).toBe('#FFFFFF');
       expect(flake.lifetime).toBeGreaterThan(50); // Reasonable lifetime
       expect(flake.vel.y).toBeGreaterThan(0); // Always falling
       expect(flake.vel.y).toBeLessThan(1); // Not too fast

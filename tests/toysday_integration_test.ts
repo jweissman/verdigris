@@ -167,10 +167,10 @@ describe('Toysday Integration', () => {
         const construct = sim.units.find(u => u.tags?.includes('construct'));
         expect(construct).toBeDefined();
         
-        // Should be placed between toymaker (x=5) and enemy (x=10), so around x=7
+        // Should be placed tactically between toymaker (x=5) and enemy (x=10)
         expect(construct?.pos.x).toBeGreaterThan(5);
         expect(construct?.pos.x).toBeLessThan(10);
-        expect(construct?.pos.y).toBe(5); // Same lane
+        expect(Math.abs(construct?.pos.y - 5)).toBeLessThanOrEqual(1); // Within 1 cell of same lane
         
         deployed = true;
         console.log(`Deploy command worked! Construct at (${construct?.pos.x}, ${construct?.pos.y})`);

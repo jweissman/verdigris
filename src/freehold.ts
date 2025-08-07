@@ -4,7 +4,6 @@ import Input from "./input";
 
 class Freehold extends Game {
   input: Input = new Input(this.sim, this.renderer);
-  // Override input: spawn a worm at a random grid position on 'w'
   numBuffer: string = "";
   getInputHandler(): (e: { key: string }) => void {
     return (e) => {
@@ -22,66 +21,6 @@ class Freehold extends Game {
       }
     };
   }
-
-  // handleKeyPress(e: { key: string }) {
-  //   if (e.key === "Escape") {
-  //     this.sim.reset();
-  //     return;
-  //   } else if (e.key === ".") {
-  //     console.log("STEPPING MANUALLY");
-  //     this.sim.step(true);
-  //     return;
-  //   } else if (e.key === ",") {
-  //     if (this.sim.paused) {
-  //       console.log(`Simulation is already paused (Enter to unpause).`);
-  //     }
-  //     this.sim.pause();
-  //     return
-  //   } else if (e.key === "Enter") {
-  //     if (this.sim.paused) {
-  //       console.log(`Unpausing simulation (press , to pause again).`);
-  //       this.sim.paused = false;
-  //     } else {
-  //       console.log(`Simulation is running (press , to pause).`);
-  //     }
-  //     return;
-  //   }
-    
-  //   if(e.key === "c" || e.key === "C") {
-  //     this.renderer.setViewMode(
-  //       this.renderer.cinematicView ? 'grid' : 'cinematic'
-  //     );
-  //   }
-
-  //   let beasts = {
-  //     a: "toymaker",
-  //     b: "bombardier",
-  //     d: "demon",
-  //     f: "farmer",
-  //     g: "ghost",
-  //     k: "skeleton",
-  //     m: "mimic-worm",
-  //     p: "priest",
-  //     Q: "megasquirrel",
-  //     q: "squirrel",
-  //     r: "ranger",
-  //     s: "soldier",
-  //     t: "tamer",
-  //     W: "big-worm", 
-  //     w: "worm",
-  //     z: "rainmaker",
-  //   }
-  //   console.log(`Available beasts: ${Object.values(beasts).join(", ")}`);
-  //   if (Object.keys(beasts).some(b => b === e.key)) {
-  //     const { x, y } = this.randomGridPosition();
-
-  //     let beast = beasts[e.key];
-  //     if (beast) {
-  //       this.add(beast, x, y);
-  //     }
-  //   }
-  // }
-
 
   static boot(
     canvasId: string | HTMLCanvasElement = 'battlefield'

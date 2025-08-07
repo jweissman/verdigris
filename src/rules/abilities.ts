@@ -7,9 +7,25 @@ export class Abilities extends Rule {
       // console.debug(`[Abilities] Processing unit ${unit.id} at tick ${this.sim.ticks}`);
       for (const abilityName in unit.abilities) {
         const ability = unit.abilities[abilityName];
+        
+        // Skip if ability is undefined
+        if (!ability) continue;
+        
         let lastTick = unit.lastAbilityTick ? unit.lastAbilityTick[abilityName] : undefined;
         let currentTick = this.sim.ticks;
         let ready = !lastTick || (currentTick - lastTick >= ability.cooldown);
+        
+        // Check usage limits if defined
+        if (ability.maxUses !== undefined) {
+          if (!unit.abilityUsageCount) {
+            unit.abilityUsageCount = {};
+          }
+          const usageCount = unit.abilityUsageCount[abilityName] || 0;
+          if (usageCount >= ability.maxUses) {
+            continue; // Skip if max uses exceeded
+          }
+        }
+        
         // console.log(`[Abilities] ${unit.id}.${abilityName}: ready=${ready}, lastTick=${lastTick}, cooldown=${ability.cooldown}`);
         if (!ready) {
           continue; // Skip to next ability if cooldown is not met
@@ -59,6 +75,15 @@ export class Abilities extends Rule {
             unit.lastAbilityTick = {};
           }
           unit.lastAbilityTick[abilityName] = this.sim.ticks;
+          
+          // Increment usage count if max uses is defined
+          if (ability.maxUses !== undefined) {
+            if (!unit.abilityUsageCount) {
+              unit.abilityUsageCount = {};
+            }
+            unit.abilityUsageCount[abilityName] = (unit.abilityUsageCount[abilityName] || 0) + 1;
+            console.log(`${unit.id} used ${abilityName} ${unit.abilityUsageCount[abilityName]}/${ability.maxUses} times`);
+          }
         // }
       }
       return unit;

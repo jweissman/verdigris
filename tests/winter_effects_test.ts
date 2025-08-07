@@ -22,7 +22,7 @@ describe('Winter Effects System', () => {
     // Check that snow particles have correct properties
     const snowParticles = sim.particles.filter(p => p.type === 'snow');
     expect(snowParticles.length).toBeGreaterThan(0);
-    expect(snowParticles[0].color).toBe('white');
+    expect(snowParticles[0].color).toBe('#FFFFFF');
     expect(snowParticles[0].vel.y).toBeGreaterThan(0); // Falling down
   });
 
