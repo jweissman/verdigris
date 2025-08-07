@@ -112,6 +112,9 @@ export default class Input {
       W: "big-worm", 
       w: "worm",
       z: "rainmaker",
+
+      e: "mechatronist",
+      T: "mechatron",
     }
     console.log(`Available beasts: ${Object.values(beasts).join(", ")}`);
     if (Object.keys(beasts).some(b => b === e.key)) {

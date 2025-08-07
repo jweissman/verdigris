@@ -1,4 +1,3 @@
-import { Freehold } from "../freehold";
 import { Ability, Unit, UnitState, Vec2 } from "../sim/types";
 import { Simulator } from "../simulator";
 
@@ -622,10 +621,18 @@ export default class Encyclopaedia {
           Math.abs(u.pos.y - unit.pos.y) <= 6
         );
         
-        // Boost their abilities
+        // Boost their abilities by resetting cooldowns
         mechanists.forEach(ally => {
           ally.meta.tacticalBoost = true;
           ally.meta.tacticalBoostDuration = 40; // 5 seconds of boost
+          
+          // Reset ability cooldowns
+          if (ally.lastAbilityTick) {
+            Object.keys(ally.lastAbilityTick).forEach(abilityName => {
+              ally.lastAbilityTick![abilityName] = 0; // Reset cooldown
+            });
+          }
+          
           console.log(`  - ${ally.id} receives tactical boost`);
         });
         
