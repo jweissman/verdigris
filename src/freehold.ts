@@ -1,7 +1,9 @@
 import Encyclopaedia from "./dmg/encyclopaedia";
 import { Game } from "./game";
+import Input from "./input";
 
 class Freehold extends Game {
+  input: Input = new Input(this.sim, this.renderer);
   // Override input: spawn a worm at a random grid position on 'w'
   numBuffer: string = "";
   getInputHandler(): (e: { key: string }) => void {
@@ -15,80 +17,71 @@ class Freehold extends Game {
       this.numBuffer = ""; // Reset buffer after using it
 
       for (let i = 0; i < repetitions; i++) {
-        this.handleKeyPress(e);
+        // this.handleKeyPress(e);
+        this.input.handle(e);
       }
     };
   }
 
-  handleKeyPress(e: { key: string }) {
-    if (e.key === "Escape") {
-      this.sim.reset();
-      return;
-    } else if (e.key === ".") {
-      console.log("STEPPING MANUALLY");
-      this.sim.step(true);
-      return;
-    } else if (e.key === ",") {
-      if (this.sim.paused) {
-        console.log(`Simulation is already paused (Enter to unpause).`);
-      }
-      this.sim.pause();
-      return
-    } else if (e.key === "Enter") {
-      if (this.sim.paused) {
-        console.log(`Unpausing simulation (press , to pause again).`);
-        this.sim.paused = false;
-      } else {
-        console.log(`Simulation is running (press , to pause).`);
-      }
-      return;
-    }
+  // handleKeyPress(e: { key: string }) {
+  //   if (e.key === "Escape") {
+  //     this.sim.reset();
+  //     return;
+  //   } else if (e.key === ".") {
+  //     console.log("STEPPING MANUALLY");
+  //     this.sim.step(true);
+  //     return;
+  //   } else if (e.key === ",") {
+  //     if (this.sim.paused) {
+  //       console.log(`Simulation is already paused (Enter to unpause).`);
+  //     }
+  //     this.sim.pause();
+  //     return
+  //   } else if (e.key === "Enter") {
+  //     if (this.sim.paused) {
+  //       console.log(`Unpausing simulation (press , to pause again).`);
+  //       this.sim.paused = false;
+  //     } else {
+  //       console.log(`Simulation is running (press , to pause).`);
+  //     }
+  //     return;
+  //   }
     
-    if(e.key === "c" || e.key === "C") {
-      this.renderer.setViewMode(
-        this.renderer.cinematicView ? 'grid' : 'cinematic'
-      );
-    }
+  //   if(e.key === "c" || e.key === "C") {
+  //     this.renderer.setViewMode(
+  //       this.renderer.cinematicView ? 'grid' : 'cinematic'
+  //     );
+  //   }
 
-    let beasts = {
-      w: "worm",
-      f: "farmer",
-      s: "soldier",
-      r: "ranger",
-      p: "priest",
-      b: "bombardier",
-      t: "tamer",
-      q: "squirrel",
-      Q: "megasquirrel",
-      z: "rainmaker",
-      d: "demon",
-      g: "ghost",
-      m: "mimic-worm",
-      k: "skeleton",
-      W: "big-worm", 
+  //   let beasts = {
+  //     a: "toymaker",
+  //     b: "bombardier",
+  //     d: "demon",
+  //     f: "farmer",
+  //     g: "ghost",
+  //     k: "skeleton",
+  //     m: "mimic-worm",
+  //     p: "priest",
+  //     Q: "megasquirrel",
+  //     q: "squirrel",
+  //     r: "ranger",
+  //     s: "soldier",
+  //     t: "tamer",
+  //     W: "big-worm", 
+  //     w: "worm",
+  //     z: "rainmaker",
+  //   }
+  //   console.log(`Available beasts: ${Object.values(beasts).join(", ")}`);
+  //   if (Object.keys(beasts).some(b => b === e.key)) {
+  //     const { x, y } = this.randomGridPosition();
 
-    }
-    console.log(`Available beasts: ${Object.values(beasts).join(", ")}`);
-    if (Object.keys(beasts).some(b => b === e.key)) {
-      const { x, y } = this.randomGridPosition();
+  //     let beast = beasts[e.key];
+  //     if (beast) {
+  //       this.add(beast, x, y);
+  //     }
+  //   }
+  // }
 
-      let beast = beasts[e.key];
-      if (beast) {
-        this.add(beast, x, y);
-      }
-    }
-  }
-
-  add(beast: string, x: number, y: number) {
-    this.sim.addUnit({ ...Encyclopaedia.unit(beast), pos: { x, y } });
-  }
-
-  randomGridPosition(): { x: number, y: number } {
-    return {
-      x: Math.floor(Math.random() * this.sim.fieldWidth),
-      y: Math.floor(Math.random() * this.sim.fieldHeight)
-    };
-  }
 
   static boot(
     canvasId: string | HTMLCanvasElement = 'battlefield'

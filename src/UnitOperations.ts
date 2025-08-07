@@ -13,9 +13,22 @@ export class UnitOperations {
     }
     // Don't change facing for purely vertical movement
     
+    // Apply chill effects - slow movement
+    let effectiveDeltaTime = deltaTime;
+    if (unit.meta.chilled) {
+      const slowFactor = 1 - (unit.meta.chillIntensity || 0.5);
+      effectiveDeltaTime *= slowFactor;
+      // console.log(`${unit.id} is chilled, moving at ${slowFactor * 100}% speed`);
+    }
+    
+    // Apply stun effects - completely prevent movement
+    if (unit.meta.stunned) {
+      effectiveDeltaTime = 0;
+    }
+    
     // console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
-    let x = unit.pos.x + unit.intendedMove.x * deltaTime;
-    let y = unit.pos.y + unit.intendedMove.y * deltaTime;
+    let x = unit.pos.x + unit.intendedMove.x * effectiveDeltaTime;
+    let y = unit.pos.y + unit.intendedMove.y * effectiveDeltaTime;
 
     // Clamp position within bounds if sim is provided
     if (sim && typeof sim.fieldWidth === 'number' && typeof sim.fieldHeight === 'number') {

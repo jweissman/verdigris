@@ -100,7 +100,7 @@ export default class Battle extends View {
         
       if (unit.state === 'dead') {
         frameIndex = 3; // Frame 4 (index 3) for death
-      } else if (unit.state === 'attack') {
+      } else if (unit.state === 'attack') { //} || this.wasRecentlyAttacking(unit)) {
         frameIndex = 2; // Frame 3 (index 2) for attack
       } else {
         // Idle animation - cycle between frames 0 and 1 every 400ms (slower)

@@ -292,15 +292,23 @@ export default class Encyclopaedia {
         radius: 5
       },
       effect: (unit, target, sim) => {
-        if (sim && sim.setWeather) {
-          console.log(`${unit.id} is making it rain!`);
-          sim.setWeather('rain', 80, 0.8);
-          
-          // Add moisture and coolness around the rainmaker
-          if (sim.addMoisture && sim.addHeat) {
-            sim.addMoisture(unit.pos.x, unit.pos.y, 1.0, 5);
-            sim.addHeat(unit.pos.x, unit.pos.y, -10, 5); // Cool the area
-          }
+        console.log(`${unit.id} is making it rain!`);
+        
+        // Use the command system for weather changes
+        if (!sim.queuedCommands) {
+          sim.queuedCommands = [];
+        }
+        
+        sim.queuedCommands.push({
+          type: 'weather',
+          args: ['rain', '80', '0.8'],
+          unitId: unit.id
+        });
+        
+        // Add moisture and coolness around the rainmaker
+        if (sim.addMoisture && sim.addHeat) {
+          sim.addMoisture(unit.pos.x, unit.pos.y, 1.0, 5);
+          sim.addHeat(unit.pos.x, unit.pos.y, -10, 5); // Cool the area
         }
       }
     },
@@ -388,6 +396,160 @@ export default class Encyclopaedia {
             }
           });
         }
+      }
+    },
+
+    // Toymaker abilities
+    deployBot: {
+      name: 'Deploy Bot',
+      cooldown: 50,
+      config: {
+        range: 8,
+        constructTypes: ['freezebot', 'clanker', 'spiker', 'swarmbot', 'roller', 'zapper']
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) <= 8',
+      effect: (unit, targetPos, sim) => {
+        if (!targetPos) return;
+        console.log(`${unit.id} deploys a construct!`);
+        
+        // Select random construct type
+        const constructTypes = ['freezebot', 'clanker', 'spiker', 'swarmbot', 'roller', 'zapper'];
+        const constructType = constructTypes[Math.floor(Math.random() * constructTypes.length)];
+        
+        // Use the command system for deployment
+        if (!sim.queuedCommands) {
+          sim.queuedCommands = [];
+        }
+        
+        sim.queuedCommands.push({
+          type: 'deploy',
+          args: [constructType], // Let the deploy command handle tactical positioning
+          unitId: unit.id
+        });
+      }
+    },
+
+    // Construct abilities
+    freezeAura: {
+      name: 'Chill Aura',
+      cooldown: 15,
+      config: { radius: 2 },
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} emits chilling aura`);
+        sim.queuedEvents.push({
+          kind: 'aoe',
+          source: unit.id,
+          target: unit.pos,
+          meta: {
+            aspect: 'chill',
+            radius: 2,
+            amount: 0, // No damage, just applies slow effect
+            origin: unit.pos
+          }
+        });
+      }
+    },
+
+    explode: {
+      name: 'Self Destruct',
+      cooldown: 1, // Only triggers once when near enemies
+      trigger: 'distance(closest.enemy()?.pos) <= 2',
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} explodes!`);
+        sim.queuedEvents.push({
+          kind: 'aoe',
+          source: unit.id,
+          target: unit.pos,
+          meta: {
+            aspect: 'impact',
+            radius: 3,
+            amount: 8,
+            force: 5,
+            origin: unit.pos
+          }
+        });
+        
+        // Self-destruct - kill the unit
+        sim.queuedEvents.push({
+          kind: 'damage',
+          source: unit.id,
+          target: unit.id,
+          meta: {
+            aspect: 'impact',
+            amount: 999
+          }
+        });
+      }
+    },
+
+    whipChain: {
+      name: 'Chain Whip',
+      cooldown: 20,
+      range: 3,
+      target: 'closest.enemy()',
+      trigger: 'distance(closest.enemy()?.pos) <= 3',
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        console.log(`${unit.id} whips ${target.id} with chain!`);
+        
+        sim.queuedEvents.push({
+          kind: 'damage',
+          source: unit.id,
+          target: target.id,
+          meta: {
+            aspect: 'impact',
+            amount: 4,
+            force: 3, // Pulls target closer
+            origin: unit.pos
+          }
+        });
+      }
+    },
+
+    chargeAttack: {
+      name: 'Roller Charge',
+      cooldown: 30,
+      config: { chargeDistance: 5 },
+      trigger: 'distance(closest.enemy()?.pos) <= 6',
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} begins charging!`);
+        unit.meta.charging = true;
+        unit.meta.chargeProgress = 0;
+        unit.meta.chargeTarget = target?.pos || { x: unit.pos.x + 5, y: unit.pos.y };
+      }
+    },
+
+    zapHighest: {
+      name: 'Power Zap',
+      cooldown: 25,
+      config: { range: 6 },
+      effect: (unit, target, sim) => {
+        // Find highest HP enemy in range
+        const enemies = sim.getRealUnits().filter(u => 
+          u.team !== unit.team && 
+          Math.abs(u.pos.x - unit.pos.x) <= 6 &&
+          Math.abs(u.pos.y - unit.pos.y) <= 6
+        );
+        
+        if (enemies.length === 0) return;
+        
+        const highestHpEnemy = enemies.reduce((prev, curr) => 
+          curr.hp > prev.hp ? curr : prev
+        );
+        
+        console.log(`${unit.id} zaps ${highestHpEnemy.id} with electricity!`);
+        
+        sim.queuedEvents.push({
+          kind: 'damage',
+          source: unit.id,
+          target: highestHpEnemy.id,
+          meta: {
+            aspect: 'shock',
+            amount: 6,
+            origin: unit.pos
+          }
+        });
       }
     },
   }
@@ -524,7 +686,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       state: "idle" as UnitState,
       hp: 25,
       maxHp: 25,
-      mass: 0.8, // Lighter than living units
+      mass: 1, // Lighter than living units
       tags: ['undead', 'black', 'hunt'],
       abilities: {},
       meta: {
@@ -619,6 +781,112 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         segmentCount: 5, // Larger than mimic-worm
         facing: 'right' as 'left' | 'right'
       }
+    },
+
+    // Toymaker and constructs
+    toymaker: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "toymaker",
+      state: "idle" as UnitState,
+      hp: 25,
+      maxHp: 25,
+      mass: 1,
+      tags: ['mechanical', 'craftor'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    freezebot: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "freezebot",
+      state: "idle" as UnitState,
+      hp: 8,
+      maxHp: 8,
+      mass: 0.5,
+      tags: ['construct', 'ice'],
+      meta: {
+        perdurance: 'sturdiness', // Takes max 1 damage per hit
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    clanker: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "clanker",
+      state: "idle" as UnitState,
+      hp: 6,
+      maxHp: 6,
+      mass: 0.8,
+      tags: ['construct', 'explosive'],
+      meta: {
+        perdurance: 'sturdiness',
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    spiker: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly", 
+      sprite: "spikebot",
+      state: "idle" as UnitState,
+      hp: 10,
+      maxHp: 10,
+      mass: 0.6,
+      tags: ['construct', 'melee'],
+      meta: {
+        perdurance: 'sturdiness',
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    swarmbot: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "swarmbot",
+      state: "idle" as UnitState,
+      hp: 12, // Population-based: each HP represents several small bots
+      maxHp: 12,
+      mass: 0.3,
+      tags: ['construct', 'swarm'],
+      meta: {
+        perdurance: 'swarm', // Population-based health
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    roller: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "jumpbot", // Using jumpbot sprite for roller
+      state: "idle" as UnitState,
+      hp: 15,
+      maxHp: 15,
+      mass: 1.2,
+      tags: ['construct', 'charger'],
+      meta: {
+        perdurance: 'sturdiness',
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    zapper: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "zapper", // Using proper zapper sprite
+      state: "idle" as UnitState,
+      hp: 8,
+      maxHp: 8,
+      mass: 0.4,
+      tags: ['construct', 'electrical'],
+      meta: {
+        perdurance: 'sturdiness',
+        facing: 'right' as 'left' | 'right'
+      }
     }
   }
 
@@ -646,7 +914,13 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           ...(beast === "mimic-worm" ? { jumps: this.abilities.jumps } : {}),
           ...(beast === "demon" ? { fireBlast: this.abilities.fireBlast } : {}),
           ...(beast === "big-worm" ? { breatheFire: this.abilities.breatheFire } : {}),
-          ...(beast === "rainmaker" ? { makeRain: this.abilities.makeRain } : {})
+          ...(beast === "rainmaker" ? { makeRain: this.abilities.makeRain } : {}),
+          ...(beast === "toymaker" ? { deployBot: this.abilities.deployBot } : {}),
+          ...(beast === "freezebot" ? { freezeAura: this.abilities.freezeAura } : {}),
+          ...(beast === "clanker" ? { explode: this.abilities.explode } : {}),
+          ...(beast === "spiker" ? { whipChain: this.abilities.whipChain } : {}),
+          ...(beast === "roller" ? { chargeAttack: this.abilities.chargeAttack } : {}),
+          ...(beast === "zapper" ? { zapHighest: this.abilities.zapHighest } : {})
         },
         tags: [
           ...(this.bestiary[beast]?.tags || []), // Include tags from bestiary

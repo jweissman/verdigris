@@ -15,6 +15,8 @@ import { CommandHandler, QueuedCommand } from "./rules/command_handler";
 import { HugeUnits } from "./rules/huge_units";
 import { SegmentedCreatures } from "./rules/segmented_creatures";
 import { Perdurance } from "./rules/perdurance";
+import { StatusEffects } from "./rules/status_effects";
+import { WinterEffects } from "./rules/winter_effects";
 
 interface Particle {
   pos: Vec2;
@@ -23,14 +25,16 @@ interface Particle {
   lifetime: number; // in ticks
   color: string; // CSS color string
   z?: number; // Height above ground for 3D effect
-  type?: 'leaf' | 'rain' | 'debris'; // Different particle types
+  type?: 'leaf' | 'rain' | 'debris' | 'snow'; // Different particle types
   landed?: boolean; // Has the particle landed on the ground
+  targetCell?: Vec2; // Target cell for precise positioning
 }
 
 class ScalarField {
   private grid: number[][];
   public readonly width: number;
   public readonly height: number;
+
   
   constructor(width: number, height: number, initialValue: number = 0) {
     this.width = width;
@@ -114,6 +118,9 @@ class ScalarField {
 }
 
 class Simulator {
+  sceneBackground: string = 'winter';  // burning-city';
+  // weather: string = 'clear'; // Default weather
+
   fieldWidth: number;
   fieldHeight: number;
 
@@ -132,7 +139,7 @@ class Simulator {
   
   // Weather system
   weather: {
-    current: 'clear' | 'rain' | 'storm';
+    current: 'clear' | 'rain' | 'storm' | 'snow';
     duration: number; // ticks remaining for current weather
     intensity: number; // 0-1 scale
   };
@@ -154,6 +161,18 @@ class Simulator {
     };
     
     this.reset();
+  }
+
+  parseCommand(inputString: string) {
+    // create a command and add it to the queue
+    let [ type, ...args ] = inputString.split(' ');
+    const command: QueuedCommand = {
+      // id: Date.now(),
+      args,
+      type
+    };
+    console.log(`Queuing command: ${type} with args:`, args);
+    this.queuedCommands.push(command);
   }
 
   paused: boolean = false;
@@ -185,6 +204,8 @@ class Simulator {
 
       new Jumping(this),
       new Tossing(this), // Handle tossed units
+      new StatusEffects(this), // Handle status effects before damage processing
+      new WinterEffects(this), // Handle environmental winter effects
       new Perdurance(this), // Process damage resistance before events are handled
       new EventHandler(this), // Process events last
       new Cleanup(this)
@@ -457,7 +478,7 @@ class Simulator {
       }
       
       // Breathing/movement generates slight humidity
-      if (unit.state === 'move' || unit.state === 'attack') {
+      if (unit.state === 'walk' || unit.state === 'attack') {
         this.humidityField.addGradient(unit.pos.x, unit.pos.y, 1.5, 0.02);
       }
     }
@@ -1000,7 +1021,8 @@ class Simulator {
                 vel,
                 radius: 1.5,
                 damage: 5,
-                team: unit.team
+                team: unit.team,
+                type: 'bullet'
               });
             }
           }

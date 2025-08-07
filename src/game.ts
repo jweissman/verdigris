@@ -33,6 +33,20 @@ import skeleton from "./assets/sprites/skeleton.png";
 import bigWorm from "./assets/sprites/big-worm.png";
 // @ts-ignore  
 import skeletonMage from "./assets/sprites/skeleton-mage.png";
+// @ts-ignore
+import clanker from "./assets/sprites/clanker.png";
+// @ts-ignore
+import freezebot from "./assets/sprites/freezebot.png";
+// @ts-ignore
+import spikebot from "./assets/sprites/spikebot.png";
+// @ts-ignore
+import swarmbot from "./assets/sprites/swarmbot.png";
+// @ts-ignore
+import jumpbot from "./assets/sprites/jumpbot.png";
+// @ts-ignore
+import zapper from "./assets/sprites/zapper.png";
+// @ts-ignore
+import toymaker from "./assets/sprites/toymaker.png";
 
 // Background imports
 // @ts-ignore
@@ -43,6 +57,8 @@ import mountainBg from "./assets/bg/mountain.png";
 import monasteryBg from "./assets/bg/monastery.png";
 // @ts-ignore
 import burningCityBg from "./assets/bg/burning-city.png";
+// @ts-ignore
+import winterBg from "./assets/bg/winter.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -121,14 +137,22 @@ class Game {
       { name: 'mimic-worm', src: mimicWorm },
       { name: 'skeleton', src: skeleton },
       { name: 'big-worm', src: bigWorm },
-      { name: 'skeleton-mage', src: skeletonMage }
+      { name: 'skeleton-mage', src: skeletonMage },
+      { name: 'clanker', src: clanker },
+      { name: 'freezebot', src: freezebot },
+      { name: 'spikebot', src: spikebot },
+      { name: 'swarmbot', src: swarmbot },
+      { name: 'jumpbot', src: jumpbot },
+      { name: 'toymaker', src: toymaker },
+      { name: 'zapper', src: zapper }
     ];
 
   static backgroundList = [
     { name: 'lake', src: lakeBg },
     { name: 'mountain', src: mountainBg },
     { name: 'monastery', src: monasteryBg },
-    { name: 'burning-city', src: burningCityBg }
+    { name: 'burning-city', src: burningCityBg },
+    { name: 'winter', src: winterBg }
   ];
 
   static loadBackgrounds(): Map<string, HTMLImageElement> {

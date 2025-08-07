@@ -4,16 +4,53 @@ import { Unit } from "../sim/types";
 export class Perdurance extends Rule {
   apply = () => {
     // Process damage events and apply perdurance rules
-    this.sim.queuedEvents = this.sim.queuedEvents.filter(event => {
+    this.sim.queuedEvents = this.sim.queuedEvents.map(event => {
       if (event.kind === 'damage') {
         const target = this.sim.units.find(u => u.id === event.target);
-        if (target && this.shouldBlockDamage(target, event.meta.aspect)) {
-          console.log(`${target.id} (${target.meta.perdurance}) resists ${event.meta.aspect} damage`);
-          return false; // Block this damage event
+        if (target) {
+          // Check if damage should be blocked completely
+          if (this.shouldBlockDamage(target, event.meta.aspect)) {
+            console.log(`${target.id} (${target.meta.perdurance}) resists ${event.meta.aspect} damage`);
+            return null; // Block this damage event
+          }
+          // Modify damage amount based on perdurance type
+          const modifiedEvent = this.modifyDamage(event, target);
+          return modifiedEvent;
         }
       }
-      return true; // Allow other events through
-    });
+      return event; // Allow other events through unchanged
+    }).filter(event => event !== null); // Remove blocked events
+  }
+
+  private modifyDamage(event: any, target: Unit): any {
+    const perdurance = target.meta?.perdurance;
+    if (!perdurance) return event;
+
+    const modifiedEvent = { ...event };
+    
+    switch (perdurance) {
+      case 'sturdiness':
+        // Cap all damage to maximum 1 (resistant to burst, weak to chip)
+        if (modifiedEvent.meta.amount > 1) {
+          console.log(`${target.id} sturdiness reduces ${modifiedEvent.meta.amount} damage to 1`);
+          modifiedEvent.meta.amount = 1;
+        }
+        break;
+      
+      case 'swarm':
+        // Population-based damage is processed normally but shown differently
+        // Could add special visual effects or modify how damage is displayed
+        console.log(`${target.id} swarm takes ${modifiedEvent.meta.amount} population damage`);
+        break;
+    }
+    
+    // Handle brittle (frozen) units - take double damage
+    if (target.meta.brittle) {
+      console.log(`${target.id} is brittle, taking double damage!`);
+      modifiedEvent.meta.amount *= 2;
+    }
+    
+    return modifiedEvent;
   }
 
   private shouldBlockDamage(unit: Unit, damageAspect?: string): boolean {
@@ -39,6 +76,14 @@ export class Perdurance extends Rule {
           return Math.random() < 0.5;
         }
         return false; // Allow other damage
+
+      case 'sturdiness':
+        // Constructs: reduce all damage to maximum 1 (resistant to burst, weak to chip)
+        return false; // Allow damage but we'll modify it below
+      
+      case 'swarm':
+        // Population-based health: each damage kills some of the swarm
+        return false; // Allow damage but handle it differently
       
       default:
         return false; // Unknown perdurance type, no resistance

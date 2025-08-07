@@ -6,6 +6,7 @@ import healing from './scenes/healing.battle.txt';
 import projectile from './scenes/projectile.battle.txt';
 import squirrel from './scenes/squirrel.battle.txt';
 import chess from './scenes/chesslike.battle.txt';
+import toymaker from './scenes/toymaker.battle.txt';
 import { Freehold } from "./freehold";
 import Encyclopaedia from "./dmg/encyclopaedia";
 
@@ -35,7 +36,7 @@ export interface SceneryTemplate {
 // const { farmer, soldier, worm, priest, ranger } = Freehold.bestiary;
 
 export class SceneLoader {
-  static scenarios = { simple, complex, healing, projectile, squirrel, chess };
+  static scenarios = { simple, complex, healing, projectile, squirrel, chess, toymaker };
   constructor(private sim: Simulator) {}
 
   loadScenario(scenario: string): void {
@@ -59,7 +60,7 @@ export class SceneLoader {
   defaultLegend: { [key: string]: string } = {
     f: 'farmer', s: 'soldier', w: 'worm', p: 'priest', r: 'ranger', b: 'bombardier',
     q: 'squirrel', t: 'tamer', Q: 'megasquirrel', W: 'bigworm', u: 'rainmaker',
-    d: 'demon', g: 'ghost', m: 'mimic-worm', k: 'skeleton'
+    d: 'demon', g: 'ghost', m: 'mimic-worm', k: 'skeleton', T: 'toymaker'
   }
 
   loadSimpleFormat(sceneText: string): void {

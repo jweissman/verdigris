@@ -14,8 +14,9 @@ export class MeleeCombat extends Rule {
     this.engagements.set(attacker.id, target.id);
     this.lastAttacks.set(attacker.id, this.sim.ticks);
     
-    // Track last attack time for rendering
+    // Track last attack time for rendering and set attack state
     attacker.meta.lastAttacked = this.sim.ticks;
+    attacker.state = 'attack'; // Set attack state for rendering
     
     this.sim.queuedEvents.push({
       kind: 'damage',
@@ -23,7 +24,7 @@ export class MeleeCombat extends Rule {
       target: target.id,
       meta: {
         amount: attacker.abilities?.melee?.config?.damage || 1,
-        aspect: 'physical'
+        aspect: 'impact' // Use 'impact' instead of 'physical'
       }
     });
   }

@@ -1,11 +1,13 @@
 import { Rule } from "./rule";
 import { Command } from "./command";
-import { Toss } from "../commands/toss_command";
+import { Toss } from "../commands/toss";
+import { ChangeWeather } from "../commands/change_weather";
+import { Deploy } from "../commands/deploy";
 
 export type QueuedCommand = {
-  commandType: 'toss';
-  unitId: string;
-  args: any[];
+  type: string;
+  args: string[];
+  unitId?: string; // Optional for system commands
   tick?: number;
 };
 
@@ -16,6 +18,9 @@ export class CommandHandler extends Rule {
     super(sim);
     // Register available commands
     this.commands.set('toss', new Toss(sim));
+    this.commands.set('weather', new ChangeWeather(sim));
+    this.commands.set('deploy', new Deploy(sim));
+    this.commands.set('spawn', new Deploy(sim)); // Alias for deploy
   }
 
   apply = () => {
@@ -26,13 +31,14 @@ export class CommandHandler extends Rule {
     console.log("CommandHandler: Processing", this.sim.queuedCommands.length, "queued commands");
     
     for (const queuedCommand of this.sim.queuedCommands) {
-      const command = this.commands.get(queuedCommand.commandType);
+      const command = this.commands.get(queuedCommand.type);
       if (command) {
-        // console.log(`Executing command: ${queuedCommand.commandType} on ${queuedCommand.unitId}`);
+        console.log(`Executing command: ${queuedCommand.type} with args:`, queuedCommand.args);
         queuedCommand.tick = this.sim.ticks;
-        command.execute(queuedCommand.unitId, ...queuedCommand.args);
+        // Pass unitId if it exists, otherwise pass null for system commands
+        command.execute(queuedCommand.unitId || null, ...queuedCommand.args);
       } else {
-        console.warn(`Unknown command type: ${queuedCommand.commandType}`);
+        console.warn(`Unknown command type: ${queuedCommand.type}`);
       }
     }
 

@@ -34,12 +34,12 @@ export default class CinematicView extends View {
 
   private renderBackground() {
     // Check if scene has a specific background set
-    const sceneBackground = (this.sim as any).sceneBackground;
+    const sceneBackground = this.sim.sceneBackground;
     
     if (sceneBackground) {
       this.renderSceneBackground(sceneBackground);
     } else {
-      this.renderProceduralBackground();
+      // this.renderProceduralBackground();
     }
   }
   
@@ -60,24 +60,24 @@ export default class CinematicView extends View {
       const offsetY = (this.ctx.canvas.height - scaledHeight) / 2;
       
       this.ctx.drawImage(backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
-    } else {
-      // Fallback to procedural backgrounds
-      switch (backgroundType) {
-        case 'lake':
-          this.renderLakeBackground();
-          break;
-        case 'mountain':
-          this.renderMountainBackground();
-          break;
-        case 'monastery':
-          // Add monastery procedural fallback if needed
-          this.renderProceduralBackground();
-          break;
-        default:
-          console.warn(`Unknown background type: ${backgroundType}`);
-          this.renderProceduralBackground();
-          break;
-      }
+    // } else {
+    //   // Fallback to procedural backgrounds
+    //   switch (backgroundType) {
+    //     case 'lake':
+    //       this.renderLakeBackground();
+    //       break;
+    //     case 'mountain':
+    //       this.renderMountainBackground();
+    //       break;
+        // case 'monastery':
+        //   // Add monastery procedural fallback if needed
+        //   this.renderProceduralBackground();
+        //   break;
+      //   default:
+      //     console.warn(`Unknown background type: ${backgroundType}`);
+      //     // this.renderProceduralBackground();
+      //     break;
+      // }
     }
     
     this.ctx.restore();
@@ -415,6 +415,8 @@ export default class CinematicView extends View {
       this.renderLeafParticle(particle, cinematicX, adjustedY, alpha);
     } else if (particle.type === 'rain') {
       this.renderRainParticle(particle, cinematicX, adjustedY, alpha);
+    } else if (particle.type === 'snow') {
+      this.renderSnowParticle(particle, cinematicX, adjustedY, alpha);
     } else if (particle.type === 'debris') { // Fire/spark particles use debris type
       this.renderFireParticle(particle, cinematicX, adjustedY, alpha);
     } else {
@@ -504,6 +506,33 @@ export default class CinematicView extends View {
       this.ctx.moveTo(x, y);
       this.ctx.lineTo(trailEndX, trailEndY);
       this.ctx.stroke();
+    }
+  }
+  
+  private renderSnowParticle(particle: any, x: number, y: number, alpha: number) {
+    this.ctx.globalAlpha = alpha;
+    
+    // Snow particles are single pixels with black borders for visibility
+    const pixelSize = Math.max(1, Math.round(particle.radius || 0.5));
+    
+    // Draw black border first (slightly larger)
+    this.ctx.fillStyle = '#000000';
+    this.ctx.fillRect(Math.floor(x) - 0.5, Math.floor(y) - 0.5, pixelSize + 1, pixelSize + 1);
+    
+    // Draw white center
+    this.ctx.fillStyle = particle.color || '#FFFFFF';
+    this.ctx.fillRect(Math.floor(x), Math.floor(y), pixelSize, pixelSize);
+    
+    // If landed, draw a subtle indicator showing the target cell
+    if (particle.landed && particle.targetCell) {
+      this.ctx.globalAlpha = alpha * 0.3;
+      this.ctx.strokeStyle = '#87CEEB'; // Light blue outline
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeRect(
+        particle.targetCell.x * 8 - 4, 
+        particle.targetCell.y * 8 - 4, 
+        8, 8
+      );
     }
   }
   
