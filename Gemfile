@@ -14,7 +14,8 @@ gemspec
 
 # gem "rubocop", "~> 1.21"
 
-gem "aua", path: '../aua'
+gem "aua", github: "jweissman/aua", branch: "main"
+#path: '../aua'
 
 # TODO make dependencies of aura-lang i think
 gem "rainbow", "~> 3.1"

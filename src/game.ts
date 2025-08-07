@@ -61,6 +61,8 @@ import monasteryBg from "./assets/bg/monastery.png";
 import burningCityBg from "./assets/bg/burning-city.png";
 // @ts-ignore
 import winterBg from "./assets/bg/winter.png";
+// @ts-ignore
+import toyforgeBg from "./assets/bg/toyforge.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -155,7 +157,8 @@ class Game {
     { name: 'mountain', src: mountainBg },
     { name: 'monastery', src: monasteryBg },
     { name: 'burning-city', src: burningCityBg },
-    { name: 'winter', src: winterBg }
+    { name: 'winter', src: winterBg },
+    { name: 'toyforge', src: toyforgeBg }
   ];
 
   static loadBackgrounds(): Map<string, HTMLImageElement> {

@@ -641,6 +641,222 @@ export default class Encyclopaedia {
       }
     },
 
+    // Support Mechanist abilities
+    reinforceConstruct: {
+      name: 'Reinforce Construct',
+      cooldown: 45,
+      config: { range: 3 },
+      target: 'closest.ally()',
+      trigger: 'closest.ally()?.tags?.includes("construct")',
+      effect: (unit, target, sim) => {
+        // Find the unit at the target position or closest ally construct
+        let targetUnit = sim.units.find(u => 
+          u.pos.x === target?.x && u.pos.y === target?.y &&
+          u.team === unit.team && u.tags?.includes('construct')
+        );
+        
+        // Fallback: find closest ally construct within range
+        if (!targetUnit) {
+          targetUnit = sim.units.find(u => 
+            u.team === unit.team && 
+            u.tags?.includes('construct') &&
+            Math.abs(u.pos.x - unit.pos.x) <= 3 &&
+            Math.abs(u.pos.y - unit.pos.y) <= 3
+          );
+        }
+        if (targetUnit) {
+          console.log(`${unit.id} reinforces ${targetUnit.id}!`);
+          targetUnit.hp += 10;
+          targetUnit.maxHp += 10;
+          targetUnit.meta.armor = (targetUnit.meta.armor || 0) + 1;
+          
+          // Visual effect
+          sim.particles.push({
+            pos: { x: targetUnit.pos.x * 8 + 4, y: targetUnit.pos.y * 8 + 4 },
+            vel: { x: 0, y: -0.5 },
+            radius: 2,
+            color: '#00FF88',
+            lifetime: 20,
+            type: 'energy'
+          });
+        }
+      }
+    },
+
+    powerSurge: {
+      name: 'Power Surge',
+      cooldown: 40,
+      config: { range: 4 },
+      target: 'self.pos',
+      trigger: 'closest.ally()?.tags?.includes("construct") || closest.ally()?.tags?.includes("mechanical")',
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} activates power surge!`);
+        
+        // Find all constructs/mechanical units in range
+        const boostedUnits = sim.units.filter(u => 
+          u.team === unit.team &&
+          (u.tags?.includes('construct') || u.tags?.includes('mechanical')) &&
+          Math.abs(u.pos.x - unit.pos.x) <= 4 &&
+          Math.abs(u.pos.y - unit.pos.y) <= 4
+        );
+        
+        // Reset their ability cooldowns
+        boostedUnits.forEach(ally => {
+          if (ally.lastAbilityTick) {
+            Object.keys(ally.lastAbilityTick).forEach(abilityName => {
+              ally.lastAbilityTick![abilityName] = 0; // Reset cooldown
+            });
+          }
+          console.log(`  - ${ally.id} abilities recharged!`);
+        });
+        
+        // Create energy field visual
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          sim.particles.push({
+            pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+            vel: { x: Math.cos(angle) * 0.3, y: Math.sin(angle) * 0.3 },
+            radius: 1.5,
+            color: '#FFAA00',
+            lifetime: 30,
+            type: 'energy'
+          });
+        }
+      }
+    },
+
+    emergencyRepair: {
+      name: 'Emergency Repair',
+      cooldown: 35,
+      config: { range: 2 },
+      target: 'closest.ally()',
+      trigger: 'closest.ally()?.hp < closest.ally()?.maxHp * 0.7', // Target damaged allies
+      effect: (unit, target, sim) => {
+        // Find the unit at the target position (ally, damaged, within range)
+        let targetUnit = sim.units.find(u => 
+          u.pos.x === target?.x && u.pos.y === target?.y &&
+          u.team === unit.team && u.hp < u.maxHp
+        );
+        
+        // Fallback: find closest damaged ally within range
+        if (!targetUnit) {
+          targetUnit = sim.units.find(u => 
+            u.team === unit.team &&
+            u.hp < u.maxHp &&
+            Math.abs(u.pos.x - unit.pos.x) <= 2 &&
+            Math.abs(u.pos.y - unit.pos.y) <= 2
+          );
+        }
+        
+        if (targetUnit) {
+          console.log(`${unit.id} performs emergency repair on ${targetUnit.id}!`);
+          const healAmount = 15;
+          targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
+          
+          // Remove debuffs
+          if (targetUnit.meta.stunned) delete targetUnit.meta.stunned;
+          if (targetUnit.meta.stunDuration) delete targetUnit.meta.stunDuration;
+          if (targetUnit.meta.frozen) delete targetUnit.meta.frozen;
+          
+          // Repair sparks visual
+          for (let i = 0; i < 6; i++) {
+            sim.particles.push({
+              pos: { x: targetUnit.pos.x * 8 + 4, y: targetUnit.pos.y * 8 + 4 },
+              vel: { x: (Math.random() - 0.5) * 1, y: (Math.random() - 0.5) * 1 },
+              radius: 0.5,
+              color: '#FFFF00',
+              lifetime: 15,
+              type: 'electric_spark'
+            });
+          }
+        }
+      }
+    },
+
+    shieldGenerator: {
+      name: 'Shield Generator',
+      cooldown: 60,
+      config: { range: 3 },
+      target: 'self.pos',
+      trigger: 'distance(closest.enemy()?.pos) <= 6',
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} activates shield generator!`);
+        
+        // Create 3x3 energy shield around the engineer
+        const shieldCells = [];
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const shieldX = unit.pos.x + dx;
+            const shieldY = unit.pos.y + dy;
+            if (shieldX >= 0 && shieldX < sim.fieldWidth && shieldY >= 0 && shieldY < sim.fieldHeight) {
+              shieldCells.push({ x: shieldX, y: shieldY });
+            }
+          }
+        }
+        
+        // Add shield barrier particles that block projectiles
+        shieldCells.forEach(cell => {
+          sim.particles.push({
+            pos: { x: cell.x * 8 + 4, y: cell.y * 8 + 4 },
+            vel: { x: 0, y: 0 },
+            radius: 3,
+            color: '#00CCFF',
+            lifetime: 80, // ~10 seconds
+            type: 'energy',
+            z: 2 // Elevated to block projectiles
+          });
+        });
+      }
+    },
+
+    systemHack: {
+      name: 'System Hack',
+      cooldown: 50,
+      config: { range: 6 },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) <= 6',
+      effect: (unit, targetPos, sim) => {
+        // Find enemy unit at target position
+        let targetUnit = sim.units.find(u => 
+          u.pos.x === targetPos?.x && u.pos.y === targetPos?.y &&
+          u.team !== unit.team
+        );
+        
+        // Fallback: find closest enemy within range
+        if (!targetUnit) {
+          targetUnit = sim.units.find(u => 
+            u.team !== unit.team &&
+            Math.abs(u.pos.x - unit.pos.x) <= 6 &&
+            Math.abs(u.pos.y - unit.pos.y) <= 6
+          );
+        }
+        
+        if (targetUnit) {
+          console.log(`${unit.id} hacks ${targetUnit.id}'s systems!`);
+          
+          // Disable abilities for 30 ticks
+          targetUnit.meta.systemsHacked = true;
+          targetUnit.meta.hackDuration = 30;
+          
+          // Add massive cooldowns to all abilities
+          if (!targetUnit.lastAbilityTick) targetUnit.lastAbilityTick = {};
+          Object.keys(targetUnit.abilities || {}).forEach(abilityName => {
+            targetUnit.lastAbilityTick![abilityName] = sim.tick;
+          });
+          
+          // Hack visual effect
+          sim.particles.push({
+            pos: { x: targetUnit.pos.x * 8 + 4, y: targetUnit.pos.y * 8 + 4 },
+            vel: { x: 0, y: -1 },
+            radius: 2,
+            color: '#FF0088',
+            lifetime: 30,
+            type: 'energy'
+          });
+        }
+      }
+    },
+
     // Construct abilities
     freezeAura: {
       name: 'Chill Aura',
@@ -1012,6 +1228,97 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       }
     },
 
+    // Support mechanist units
+    builder: { // Rigger role - construct assembly
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "builder",
+      state: "idle" as UnitState,
+      hp: 20,
+      maxHp: 20,
+      mass: 1,
+      tags: ['mechanical', 'support', 'builder'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    fueler: { // Energy management specialist
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "fueler",
+      state: "idle" as UnitState,
+      hp: 18,
+      maxHp: 18,
+      mass: 1,
+      tags: ['mechanical', 'support', 'energy'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    mechanic: { // Repair specialist
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "mechanic",
+      state: "idle" as UnitState,
+      hp: 22,
+      maxHp: 22,
+      mass: 1,
+      tags: ['mechanical', 'support', 'repair'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    engineer: { // Systems specialist
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "engineer",
+      state: "idle" as UnitState,
+      hp: 25,
+      maxHp: 25,
+      mass: 1,
+      tags: ['mechanical', 'support', 'systems'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    welder: { // Alternative repair/build unit
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "welder",
+      state: "idle" as UnitState,
+      hp: 24,
+      maxHp: 24,
+      mass: 1,
+      tags: ['mechanical', 'support', 'welder'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    assembler: { // Advanced constructor
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "assembler",
+      state: "idle" as UnitState,
+      hp: 26,
+      maxHp: 26,
+      mass: 1,
+      tags: ['mechanical', 'support', 'assembler'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
     // Massive war machine - airdropped from above
     mechatron: {
       intendedMove: { x: 0, y: 0 },
@@ -1182,6 +1489,27 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           ...(beast === "mechatronist" ? { 
             callAirdrop: this.abilities.callAirdrop,
             tacticalOverride: this.abilities.tacticalOverride
+          } : {}),
+          ...(beast === "builder" ? { 
+            reinforceConstruct: this.abilities.reinforceConstruct
+          } : {}),
+          ...(beast === "fueler" ? { 
+            powerSurge: this.abilities.powerSurge
+          } : {}),
+          ...(beast === "mechanic" ? { 
+            emergencyRepair: this.abilities.emergencyRepair
+          } : {}),
+          ...(beast === "engineer" ? { 
+            shieldGenerator: this.abilities.shieldGenerator,
+            systemHack: this.abilities.systemHack
+          } : {}),
+          ...(beast === "welder" ? { 
+            emergencyRepair: this.abilities.emergencyRepair,
+            reinforceConstruct: this.abilities.reinforceConstruct
+          } : {}),
+          ...(beast === "assembler" ? { 
+            reinforceConstruct: this.abilities.reinforceConstruct,
+            powerSurge: this.abilities.powerSurge
           } : {}),
           ...(beast === "mechatron" ? { 
             missileBarrage: this.abilities.missileBarrage,

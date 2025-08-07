@@ -1,5 +1,7 @@
-PATH
-  remote: ../aua
+GIT
+  remote: https://github.com/jweissman/aua.git
+  revision: b7a65c24e86fa647b26f8ba05fb10b0c6ec1b60d
+  branch: main
   specs:
     aua (0.1.0)
 
