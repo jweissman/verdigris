@@ -61,13 +61,13 @@ export default class Isometric extends View {
   }
   
   private toIsometric(x: number, y: number): { x: number; y: number } {
-    const tileWidth = 8;
+    const tileWidth = 16;
     // const tileHeight = 1;
     const rowOffset = 3; // Pixels to offset each row for pseudo-isometric depth
     
     // Simple orthogonal grid with row staggering for depth illusion
-    const screenX = x * tileWidth + (y * rowOffset) + 20; // Add base offset from edge
-    const screenY = (y * 2) + 165; // Keep units in battlestrip area around y=165
+    const screenX = x * tileWidth + (y * rowOffset) - 20; // Add base offset from edge
+    const screenY = (y * 3) + 125; // Keep units in battlestrip area around y=165
     
     return { x: screenX, y: screenY };
   }

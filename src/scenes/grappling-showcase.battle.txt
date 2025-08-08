@@ -1,0 +1,15 @@
+# Grappling Hook Showcase
+# Focused test of grappling mechanics with various targets
+
+g...w.....s......G
+.................
+w.......w........w
+.................
+s.......G.....w..s
+---
+# g/G = grapplers with different positions
+# w = worms (basic grapple targets)
+# s = soldiers (heavier units to test mass physics)
+bg: mountain  
+weather: clear
+temperature: 22
