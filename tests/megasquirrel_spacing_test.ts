@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../src/simulator.ts';
 import Encyclopaedia from '../src/dmg/encyclopaedia.ts';
+import { HugeUnits } from '../src/rules/huge_units.ts';
+import { Knockback } from '../src/rules/knockback.ts';
 
 describe('Megasquirrel Spacing', () => {
   it('should push other units away from phantom feet cells', () => {
     const sim = new Simulator(20, 20);
+    sim.rulebook = [new HugeUnits(sim), new Knockback(sim)];
     
     // Add megasquirrel at (10, 5) - away from edges
     sim.addUnit({
@@ -40,6 +43,7 @@ describe('Megasquirrel Spacing', () => {
   // NOTE: flaky somehow -- we should identify sources of randomness in the simulation and centralize them i think?
   it.skip('should prevent multiple megasquirrels from chaining together', () => {
     const sim = new Simulator(30, 20);
+    sim.rulebook = [new HugeUnits(sim), new Knockback(sim)];
     
     // Add two megasquirrels with overlapping body spaces
     sim.addUnit({
@@ -96,6 +100,7 @@ describe('Megasquirrel Spacing', () => {
   
   it('should allow phantom units to push but not be pushed', () => {
     const sim = new Simulator(20, 20);
+    sim.rulebook = [new HugeUnits(sim), new Knockback(sim)];
     
     // Add megasquirrel
     sim.addUnit({

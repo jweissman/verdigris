@@ -1,8 +1,10 @@
 import { Ability, Unit, UnitState, Vec2 } from "../sim/types";
 import { Simulator } from "../simulator";
+// import abilities from "../../data/abilities.json";
 
 export default class Encyclopaedia {
   static abilities: { [key: string]: Ability } = {
+    // ...abilities,
     squirrel: {
       name: 'Summon Squirrel',
       cooldown: 10,
@@ -986,6 +988,101 @@ export default class Encyclopaedia {
         });
       }
     },
+
+    // Grappling Hook - projectile that pins targets and creates taut lines
+    grapplingHook: {
+      name: 'Grappling Hook',
+      cooldown: 25, // 3 seconds at 8fps
+      config: { 
+        range: 8,
+        hookSpeed: 1.5,
+        pinDuration: 60 // 7.5 seconds pinned
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) <= 8',
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        
+        console.log(`${unit.id} fires grappling hook at (${target.x}, ${target.y})!`);
+        
+        // Check if grappler already has max grapples
+        const existingGrapples = sim.projectiles.filter(p => 
+          p.type === 'grapple' && 
+          p.team === unit.team && 
+          (p as any).grapplerID === unit.id
+        ).length;
+        
+        if (existingGrapples >= (unit.meta.maxGrapples || 2)) {
+          console.log(`${unit.id} already at max grapples (${existingGrapples})`);
+          return;
+        }
+        
+        const dx = target.x - unit.pos.x;
+        const dy = target.y - unit.pos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Create grappling hook projectile
+        sim.projectiles.push({
+          id: `grapple_${unit.id}_${Date.now()}`,
+          pos: { x: unit.pos.x, y: unit.pos.y },
+          vel: { 
+            x: (dx / distance) * 1.5, 
+            y: (dy / distance) * 1.5 
+          },
+          radius: 0.5,
+          damage: 0, // Grapples don't do damage, they pin
+          team: unit.team,
+          type: 'grapple' as any,
+          target: { x: target.x, y: target.y },
+          origin: { x: unit.pos.x, y: unit.pos.y },
+          grapplerID: unit.id,
+          pinDuration: 60
+        } as any);
+      }
+    },
+
+    // Pin Target - reinforces existing grapple to fully immobilize enemy
+    pinTarget: {
+      name: 'Pin Target',
+      cooldown: 35, // 4.5 seconds
+      config: { range: 8 },
+      target: 'closest.enemy()?.pos',
+      trigger: 'true', // Can always attempt to pin - will check grapple status in effect
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        
+        // Find the enemy at target position
+        const enemy = sim.units.find(u => 
+          u.pos.x === target.x && u.pos.y === target.y && u.team !== unit.team
+        );
+        
+        if (!enemy || !enemy.meta.grappled) {
+          console.log(`${unit.id} cannot pin - target not grappled`);
+          return;
+        }
+        
+        console.log(`${unit.id} reinforces grapple on ${enemy.id} - fully pinned!`);
+        
+        // Upgrade grapple to full pin
+        enemy.meta.pinned = true;
+        enemy.meta.pinDuration = 80; // 10 seconds fully pinned
+        enemy.meta.stunned = true;
+        enemy.intendedMove = { x: 0, y: 0 };
+        
+        // Create pin visual effect
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          sim.particles.push({
+            pos: { x: enemy.pos.x * 8 + 4, y: enemy.pos.y * 8 + 4 },
+            vel: { x: Math.cos(angle) * 0.3, y: Math.sin(angle) * 0.3 },
+            radius: 1,
+            color: '#AA4400', // Rope/chain color
+            lifetime: 40,
+            type: 'pin'
+          });
+        }
+      }
+    },
   }
 
 static bestiary: { [key: string]: Partial<Unit> } = {
@@ -1214,6 +1311,51 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         segmented: true,
         segmentCount: 5, // Larger than mimic-worm
         facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    // Desert Megaworm - massive segmented desert predator
+    'desert-megaworm': {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "big-worm", // Use big-worm sprite for now, can be updated later
+      state: "idle" as UnitState,
+      hp: 300,
+      maxHp: 300,
+      mass: 4,
+      tags: ['beast', 'desert', 'hunt', 'segmented', 'massive'],
+      abilities: {
+        sandBlast: this.abilities.fireBlast // Repurpose fire blast as sand blast
+      },
+      meta: {
+        huge: true,
+        segmented: true,
+        segmentCount: 12, // Much longer than other worms
+        facing: 'right' as 'left' | 'right',
+        desertAdapted: true,
+        heatResistant: true
+      }
+    },
+
+    // Desert Grappler - specialized hunter with grappling hooks
+    grappler: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "ranger", // Use ranger sprite for now, can be updated later
+      state: "idle" as UnitState,
+      hp: 35,
+      maxHp: 35,
+      mass: 1,
+      tags: ['desert', 'hunter', 'specialist', 'grappler'],
+      abilities: {
+        grapplingHook: this.abilities.grapplingHook,
+        pinTarget: this.abilities.pinTarget
+      },
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        desertAdapted: true,
+        grapplingRange: 8,
+        maxGrapples: 2 // Can maintain 2 grapples simultaneously
       }
     },
 
@@ -1486,6 +1628,11 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           ...(beast === "mimic-worm" ? { jumps: this.abilities.jumps } : {}),
           ...(beast === "demon" ? { fireBlast: this.abilities.fireBlast } : {}),
           ...(beast === "big-worm" ? { breatheFire: this.abilities.breatheFire } : {}),
+          ...(beast === "desert-megaworm" ? { sandBlast: this.abilities.fireBlast } : {}),
+          ...(beast === "grappler" ? { 
+            grapplingHook: this.abilities.grapplingHook,
+            pinTarget: this.abilities.pinTarget 
+          } : {}),
           ...(beast === "rainmaker" ? { makeRain: this.abilities.makeRain } : {}),
           ...(beast === "toymaker" ? { deployBot: this.abilities.deployBot } : {}),
           ...(beast === "freezebot" ? { freezeAura: this.abilities.freezeAura } : {}),
@@ -1536,6 +1683,11 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           // ...(beast === "priest" ? ["heal"] : [])
         ]
       };
+
+    // Ensure meta property always exists
+    if (!u.meta) {
+      u.meta = {};
+    }
 
     // console.log(`Creating unit ${u.id} of type ${beast} at (${u.pos?.x || 0}, ${u.pos?.y || 0})`);
     return u;

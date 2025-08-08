@@ -6,6 +6,7 @@ import { Abilities } from '../src/rules/abilities';
 import { EventHandler } from '../src/rules/event_handler';
 import { LightningStorm } from '../src/rules/lightning_storm';
 import { UnitMovement } from '../src/rules/unit_movement';
+import { MeleeCombat } from '../src/rules/melee_combat';
 
 describe('Mechatron Day - Epic Integration Scenario', () => {
   beforeEach(() => {
@@ -22,7 +23,8 @@ describe('Mechatron Day - Epic Integration Scenario', () => {
       new Abilities(sim), 
       new EventHandler(sim),
       new LightningStorm(sim),
-      new UnitMovement(sim)
+      new UnitMovement(sim),
+      new MeleeCombat(sim)
     ];
 
     console.log('🌩️ Initializing battlefield with lightning storm...');

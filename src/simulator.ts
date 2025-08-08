@@ -14,6 +14,8 @@ import { EventHandler } from "./rules/event_handler";
 import { CommandHandler, QueuedCommand } from "./rules/command_handler";
 import { HugeUnits } from "./rules/huge_units";
 import { SegmentedCreatures } from "./rules/segmented_creatures";
+import { GrapplingPhysics } from "./rules/grappling_physics";
+import { DesertEffects } from "./rules/desert_effects";
 import { Perdurance } from "./rules/perdurance";
 import { StatusEffects } from "./rules/status_effects";
 import { WinterEffects } from "./rules/winter_effects";
@@ -26,7 +28,7 @@ interface Particle {
   lifetime: number; // in ticks
   color: string; // CSS color string
   z?: number; // Height above ground for 3D effect
-  type?: 'leaf' | 'rain' | 'debris' | 'snow' | 'lightning' | 'lightning_branch' | 'electric_spark' | 'thunder_ring' | 'ozone' | 'storm_cloud' | 'power_surge' | 'energy'; // Different particle types
+  type?: 'leaf' | 'rain' | 'debris' | 'snow' | 'lightning' | 'lightning_branch' | 'electric_spark' | 'thunder_ring' | 'ozone' | 'storm_cloud' | 'power_surge' | 'energy' | 'heat_shimmer' | 'heat_stress' | 'grapple_line' | 'pin'; // Different particle types
   landed?: boolean; // Has the particle landed on the ground
   targetCell?: Vec2; // Target cell for precise positioning
 }
@@ -199,6 +201,7 @@ class Simulator {
       new UnitMovement(this),
       new HugeUnits(this), // Handle huge unit phantoms after movement
       new SegmentedCreatures(this), // Handle segmented creatures after movement
+      new GrapplingPhysics(this), // Handle grappling hook physics
       new MeleeCombat(this),
 
       new LightningStorm(this),
@@ -213,6 +216,7 @@ class Simulator {
       new Tossing(this), // Handle tossed units
       new StatusEffects(this), // Handle status effects before damage processing
       new WinterEffects(this), // Handle environmental winter effects
+      new DesertEffects(this), // Handle desert heat shimmer and environmental effects
       new Perdurance(this), // Process damage resistance before events are handled
       new EventHandler(this), // Process events last
       new Cleanup(this)

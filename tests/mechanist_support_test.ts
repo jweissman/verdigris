@@ -5,7 +5,7 @@ import { CommandHandler } from '../src/rules/command_handler';
 import { Abilities } from '../src/rules/abilities';
 import { EventHandler } from '../src/rules/event_handler';
 
-describe.skip('Mechanist Support Units', () => {
+describe('Mechanist Support Units', () => {
   beforeEach(() => {
     Encyclopaedia.counts = {}; // Reset unit counters
   });
@@ -89,19 +89,24 @@ describe.skip('Mechanist Support Units', () => {
     sim.addUnit(construct1);
     sim.addUnit(construct2);
     
+    // Get the actual units from the simulator
+    const simFueler = sim.units.find(u => u.sprite === 'fueler')!;
+    const simConstruct1 = sim.units.find(u => u.sprite === 'freezebot')!;
+    const simConstruct2 = sim.units.find(u => u.sprite === 'spikebot')!;
+    
     // Set up some cooldowns to test the reset
     sim.tick = 50;
-    construct1.lastAbilityTick = { freezeAura: 45 }; // Recently used
-    construct2.lastAbilityTick = { whipChain: 40 };
+    simConstruct1.lastAbilityTick = { freezeAura: 45 }; // Recently used
+    simConstruct2.lastAbilityTick = { whipChain: 40 };
     
     // Force the power surge ability
-    const powerSurge = fueler.abilities.powerSurge;
+    const powerSurge = simFueler.abilities.powerSurge;
     if (powerSurge.effect) {
-      powerSurge.effect(fueler, fueler.pos, sim);
+      powerSurge.effect(simFueler, simFueler.pos, sim);
       
       // Constructs should have their cooldowns reset
-      expect(construct1.lastAbilityTick!.freezeAura).toBe(0);
-      expect(construct2.lastAbilityTick!.whipChain).toBe(0);
+      expect(simConstruct1.lastAbilityTick!.freezeAura).toBe(0);
+      expect(simConstruct2.lastAbilityTick!.whipChain).toBe(0);
       
       // Should have energy field particles
       const energyParticles = sim.particles.filter(p => p.color === '#FFAA00');
@@ -288,11 +293,16 @@ describe.skip('Mechanist Support Units', () => {
     sim.addUnit(construct1);
     sim.addUnit(construct2);
     
+    // Get the actual units from the simulator
+    const simAssembler = sim.units.find(u => u.sprite === 'assembler')!;
+    const simConstruct1 = sim.units.find(u => u.sprite === 'jumpbot')!;
+    const simConstruct2 = sim.units.find(u => u.sprite === 'zapper')!;
+    
     // Test reinforcement
-    const reinforce = assembler.abilities.reinforceConstruct;
+    const reinforce = simAssembler.abilities.reinforceConstruct;
     if (reinforce.effect) {
-      const beforeHp = construct1.hp;
-      reinforce.effect(assembler, construct1.pos, sim);
+      const beforeHp = simConstruct1.hp;
+      reinforce.effect(simAssembler, simConstruct1.pos, sim);
       
       const reinforcedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
       expect(reinforcedConstruct).toBeDefined();
@@ -301,18 +311,18 @@ describe.skip('Mechanist Support Units', () => {
     }
     
     // Test power surge
-    const powerSurge = assembler.abilities.powerSurge;
+    const powerSurge = simAssembler.abilities.powerSurge;
     if (powerSurge.effect) {
       // Set up cooldowns
       sim.tick = 60;
-      construct1.lastAbilityTick = { chargeAttack: 55 };
-      construct2.lastAbilityTick = { zapHighest: 50 };
+      simConstruct1.lastAbilityTick = { chargeAttack: 55 };
+      simConstruct2.lastAbilityTick = { zapHighest: 50 };
       
-      powerSurge.effect(assembler, assembler.pos, sim);
+      powerSurge.effect(simAssembler, simAssembler.pos, sim);
       
       // Should reset cooldowns
-      expect(construct1.lastAbilityTick!.chargeAttack).toBe(0);
-      expect(construct2.lastAbilityTick!.zapHighest).toBe(0);
+      expect(simConstruct1.lastAbilityTick!.chargeAttack).toBe(0);
+      expect(simConstruct2.lastAbilityTick!.zapHighest).toBe(0);
       
       console.log('✅ Assembler power surge recharged all nearby construct abilities');
     }
@@ -333,40 +343,47 @@ describe.skip('Mechanist Support Units', () => {
     const construct1 = { ...Encyclopaedia.unit('clanker'), pos: { x: 8, y: 5 } };
     const construct2 = { ...Encyclopaedia.unit('freezebot'), pos: { x: 9, y: 5 } };
     
-    // Damage one construct
-    construct1.hp = 2;
-    construct1.meta.stunned = true;
-    
     sim.addUnit(builder);
     sim.addUnit(fueler);
     sim.addUnit(mechanic);
     sim.addUnit(construct1);
     sim.addUnit(construct2);
     
+    // Get the actual units from the simulator
+    const simBuilder = sim.units.find(u => u.sprite === 'builder')!;
+    const simFueler = sim.units.find(u => u.sprite === 'fueler')!;
+    const simMechanic = sim.units.find(u => u.sprite === 'mechanic')!;
+    const simConstruct1 = sim.units.find(u => u.sprite === 'clanker')!;
+    const simConstruct2 = sim.units.find(u => u.sprite === 'freezebot')!;
+    
+    // Damage one construct after getting the sim reference
+    simConstruct1.hp = 2;
+    simConstruct1.meta.stunned = true;
+    
     let synergisticActions = 0;
     
     // Test repair synergy
-    if (mechanic.abilities.emergencyRepair?.effect) {
-      const beforeHp = construct1.hp;
-      mechanic.abilities.emergencyRepair.effect(mechanic, construct1.pos, sim);
+    if (simMechanic.abilities.emergencyRepair?.effect) {
+      const beforeHp = simConstruct1.hp;
+      simMechanic.abilities.emergencyRepair.effect(simMechanic, simConstruct1.pos, sim);
       const repairedConstruct = sim.units.find(u => u.pos.x === 8 && u.pos.y === 5);
       if (repairedConstruct && repairedConstruct.hp > beforeHp) synergisticActions++;
     }
     
     // Test reinforcement synergy
-    if (builder.abilities.reinforceConstruct?.effect) {
+    if (simBuilder.abilities.reinforceConstruct?.effect) {
       const reinforcedConstruct = sim.units.find(u => u.pos.x === 8 && u.pos.y === 5);
       const beforeMaxHp = reinforcedConstruct!.maxHp;
-      builder.abilities.reinforceConstruct.effect(builder, construct1.pos, sim);
+      simBuilder.abilities.reinforceConstruct.effect(simBuilder, simConstruct1.pos, sim);
       if (reinforcedConstruct && reinforcedConstruct.maxHp > beforeMaxHp) synergisticActions++;
     }
     
     // Test power boost synergy
-    if (fueler.abilities.powerSurge?.effect) {
+    if (simFueler.abilities.powerSurge?.effect) {
       sim.tick = 30;
-      construct2.lastAbilityTick = { freezeAura: 25 };
-      fueler.abilities.powerSurge.effect(fueler, fueler.pos, sim);
-      if (construct2.lastAbilityTick!.freezeAura === 0) synergisticActions++;
+      simConstruct2.lastAbilityTick = { freezeAura: 25 };
+      simFueler.abilities.powerSurge.effect(simFueler, simFueler.pos, sim);
+      if (simConstruct2.lastAbilityTick!.freezeAura === 0) synergisticActions++;
     }
     
     expect(synergisticActions).toBe(3); // All synergies should work

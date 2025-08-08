@@ -5,6 +5,8 @@ import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
 import { AirdropCommand } from "../commands/airdrop_command";
 import { Lightning } from "../commands/lightning";
+import { Grapple } from "../commands/grapple";
+import { Pin } from "../commands/pin";
 
 export type QueuedCommand = {
   type: string;
@@ -27,6 +29,9 @@ export class CommandHandler extends Rule {
     this.commands.set('drop', new AirdropCommand(sim)); // Alias for airdrop
     this.commands.set('lightning', new Lightning(sim));
     this.commands.set('bolt', new Lightning(sim)); // Alias for lightning
+    this.commands.set('grapple', new Grapple(sim));
+    this.commands.set('hook', new Grapple(sim)); // Alias for grapple
+    this.commands.set('pin', new Pin(sim));
   }
 
   apply = () => {
