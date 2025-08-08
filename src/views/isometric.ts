@@ -88,11 +88,6 @@ export default class Isometric extends View {
     if (unit.meta.phantom) {
       return;
     }
-    
-    // Debug logging for mechatron
-    if (unit.sprite === 'mechatron') {
-      console.log(`Rendering mechatron at pos (${unit.pos.x}, ${unit.pos.y}), sprite: ${unit.sprite}, huge: ${unit.meta.huge}`);
-    }
 
     const recentDamage = this.sim.processedEvents.find(event => 
       event.kind === 'damage' && 
@@ -129,14 +124,11 @@ export default class Isometric extends View {
     const { x: screenX, y: screenY } = this.toIsometric(renderX, renderY);
     
     const pixelX = screenX - spriteWidth / 2;
-    const pixelY = screenY - spriteHeight;
+    const pixelY = screenY - spriteHeight / 2; // Center vertically instead of bottom-align
 
     let realPixelY = pixelY;
       
     const sprite = this.sprites.get(unit.sprite);
-    if (unit.sprite === 'mechatron') {
-      console.log(`Mechatron sprite found: ${!!sprite}, sprite dimensions: ${sprite?.width}x${sprite?.height}`);
-    }
     if (sprite) {
       let frameIndex = 0;
         
@@ -158,10 +150,6 @@ export default class Isometric extends View {
       }
 
       realPixelY = Math.round(realPixelY);
-      
-      if (unit.sprite === 'mechatron') {
-        console.log(`Mechatron render: screenPos (${screenX}, ${screenY}), pixelPos (${pixelX}, ${realPixelY}), spriteSize ${spriteWidth}x${spriteHeight}, frameX: ${frameX}`);
-      }
       
       this.ctx.save();
       this.ctx.fillStyle = '#00000005';
