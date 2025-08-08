@@ -113,9 +113,9 @@ export default class Encyclopaedia {
     },
     bombardier: {
       name: 'Bomb Toss',
-      cooldown: 20,
+      cooldown: 15, // 1.9 seconds - quicker bombing
       config: {
-        range: 14, damage: 6, aoeRadius: 4, duration: 12
+        range: 14, damage: 6, aoeRadius: 4, duration: 8 // Faster bomb flight (1 second)
       },
       target: 'closest.enemy()?.pos',
       trigger: 'distance(closest.enemy()?.pos) <= 14 && distance(closest.enemy()?.pos) > 5',
@@ -139,7 +139,7 @@ export default class Encyclopaedia {
             target: { x: targetPos.x, y: targetPos.y },
             origin: { x: u.pos.x, y: u.pos.y },
             progress: 0,
-            duration: 6,
+            duration: 4, // Faster projectile (0.5 seconds)
             z: 0,
             aoeRadius: 3
           });
@@ -462,7 +462,7 @@ export default class Encyclopaedia {
             type: 'bomb',
             target: { x: clampedX, y: clampedY },
             origin: { x: unit.pos.x, y: unit.pos.y - 2 },
-            duration: 30 + i * 5, // Stagger arrival times
+            duration: 12 + i * 2, // Much faster staggered arrivals (1.5s base + 0.25s each)
             progress: 0,
             z: 8 // Start high in the air
           });
@@ -472,7 +472,7 @@ export default class Encyclopaedia {
 
     laserSweep: {
       name: 'Laser Sweep',
-      cooldown: 60,
+      cooldown: 35, // 4.4 seconds - faster for better flow
       config: {
         range: 20,
         width: 3
@@ -489,6 +489,41 @@ export default class Encyclopaedia {
         const distance = Math.sqrt(dx * dx + dy * dy);
         const stepX = dx / distance;
         const stepY = dy / distance;
+        
+        // Create moving laser beam projectile
+        sim.projectiles.push({
+          id: `laser_${Date.now()}_${Math.random()}`,
+          type: 'laser_beam',
+          pos: { x: unit.pos.x, y: unit.pos.y },
+          vel: { x: stepX * 2, y: stepY * 2 }, // Fast laser speed
+          target: { x: target.x, y: target.y },
+          origin: { x: unit.pos.x, y: unit.pos.y },
+          progress: 0,
+          duration: Math.max(4, Math.floor(distance / 3)), // Speed based on distance
+          z: 0,
+          radius: 2,
+          color: '#FF0000'
+        });
+        
+        // Add muzzle flash effect at laser origin
+        sim.particles.push({
+          pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+          vel: { x: 0, y: 0 },
+          radius: 4,
+          color: '#FFFF00', // Bright yellow muzzle flash
+          lifetime: 6,
+          type: 'muzzle_flash'
+        });
+        
+        // Create impact flash at target
+        sim.particles.push({
+          pos: { x: target.x * 8 + 4, y: target.y * 8 + 4 },
+          vel: { x: 0, y: 0 },
+          radius: 3,
+          color: '#FF8800', // Orange impact
+          lifetime: 8,
+          type: 'laser_impact'
+        });
         
         // Fire laser along the line
         for (let step = 1; step < distance; step++) {
@@ -603,7 +638,7 @@ export default class Encyclopaedia {
 
     tacticalOverride: {
       name: 'Tactical Override',
-      cooldown: 60, // 7.5 seconds
+      cooldown: 45, // 5.6 seconds - more responsive leadership
       config: {
         range: 6,
         boostAmount: 0.5 // 50% cooldown reduction

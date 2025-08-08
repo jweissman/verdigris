@@ -4,7 +4,7 @@
 import { Projectile, Unit } from "../sim/types";
 import View from "./view";
 
-export default class Battle extends View {
+export default class Orthographic extends View {
   // animationTime: number = 0;
 
   show() {

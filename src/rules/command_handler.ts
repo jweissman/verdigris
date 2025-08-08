@@ -4,6 +4,7 @@ import { Toss } from "../commands/toss";
 import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
 import { AirdropCommand } from "../commands/airdrop_command";
+import { Lightning } from "../commands/lightning";
 
 export type QueuedCommand = {
   type: string;
@@ -24,6 +25,8 @@ export class CommandHandler extends Rule {
     this.commands.set('spawn', new Deploy(sim)); // Alias for deploy
     this.commands.set('airdrop', new AirdropCommand(sim));
     this.commands.set('drop', new AirdropCommand(sim)); // Alias for airdrop
+    this.commands.set('lightning', new Lightning(sim));
+    this.commands.set('bolt', new Lightning(sim)); // Alias for lightning
   }
 
   apply = () => {

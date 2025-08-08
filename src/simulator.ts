@@ -17,6 +17,7 @@ import { SegmentedCreatures } from "./rules/segmented_creatures";
 import { Perdurance } from "./rules/perdurance";
 import { StatusEffects } from "./rules/status_effects";
 import { WinterEffects } from "./rules/winter_effects";
+import { LightningStorm } from "./rules/lightning_storm";
 
 interface Particle {
   pos: Vec2;
@@ -199,6 +200,8 @@ class Simulator {
       new HugeUnits(this), // Handle huge unit phantoms after movement
       new SegmentedCreatures(this), // Handle segmented creatures after movement
       new MeleeCombat(this),
+
+      new LightningStorm(this),
 
       // not sure i trust either of these yet
       new AreaOfEffect(this),

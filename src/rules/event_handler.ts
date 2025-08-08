@@ -205,6 +205,16 @@ export class EventHandler extends Rule {
 
     // console.log(`* ${event.source} hit ${targetUnit.id} for ${event.meta.amount} ${event.meta.aspect} damage (now at ${targetUnit.hp} hp)`);
     targetUnit.hp -= event.meta.amount || 10;
+    
+    // Mark impact frame for precise attack animation timing (frame 3)
+    targetUnit.meta.impactFrame = this.sim.ticks;
+    
+    // Also mark the attacker for impact frame if they exist
+    let attackerUnit = this.sim.units.find(unit => unit.id === event.source);
+    if (attackerUnit) {
+      attackerUnit.meta.impactFrame = this.sim.ticks;
+    }
+    
     if (targetUnit.hp <= 0) {
       // console.log(`Unit ${targetUnit.id} has died`);
       targetUnit.state = 'dead';

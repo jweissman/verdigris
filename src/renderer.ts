@@ -1,6 +1,7 @@
 import { Simulator } from "./simulator";
-import Battle from "./views/battle";
-import CinematicView from "./views/cinematic";
+import Orthographic from "./views/orthographic";
+import Cinematic from "./views/cinematic";
+import Isometric from "./views/isometric";
 
 // Abstraction for canvas operations that works in both browser and Node
 interface CanvasLike {
@@ -147,25 +148,28 @@ class ScaledDisplay {
   }
 }
 
+type ViewMode = 'grid' | 'cinematic' | 'iso';
 export default class Renderer extends Display {
-  private viewMode: 'grid' | 'cinematic' = 'cinematic';
-  private battle: Battle | null = null;
-  private cinematic: CinematicView | null = null;
+  private viewMode: ViewMode = 'iso';
+  private battle: Orthographic | null = null;
+  private cinematic: Cinematic | null = null;
+  private isometric: Isometric | null = null;
 
   constructor(width: number, height: number, canvas: CanvasLike, private sim: Simulator, private sprites: Map<string, HTMLImageElement>, private backgrounds: Map<string, HTMLImageElement> = new Map()) {
     super(width, height, canvas);
 
-    this.battle = new Battle(this.ctx, this.sim, this.width, this.height, this.sprites, this.backgrounds);
-    this.cinematic = new CinematicView(this.ctx, this.sim, this.width, this.height, this.sprites, this.backgrounds);
+    this.battle = new Orthographic(this.ctx, this.sim, this.width, this.height, this.sprites, this.backgrounds);
+    this.cinematic = new Cinematic(this.ctx, this.sim, this.width, this.height, this.sprites, this.backgrounds);
+    this.isometric = new Isometric(this.ctx, this.sim, this.width, this.height, this.sprites, this.backgrounds);
   }
 
-  setViewMode(mode: 'grid' | 'cinematic') {
+  setViewMode(mode: ViewMode) {
     this.viewMode = mode;
   }
 
-  get cinematicView() {
-    return this.viewMode === 'cinematic';
-  }
+  get cinematicView() { return this.viewMode === 'cinematic'; }
+  get isometricView() { return this.viewMode === 'iso'; }
+  get gridView() { return this.viewMode === 'grid'; }
 
   render() {
     if (this.viewMode === 'cinematic') {
@@ -173,10 +177,15 @@ export default class Renderer extends Display {
         this.cinematic.sim = this.sim;
         this.cinematic.show();
       }
-    } else {
+    } else if (this.viewMode === 'grid') {
       if (this.battle) {
         this.battle.sim = this.sim;
         this.battle.show();
+      }
+    } else if (this.viewMode === 'iso') {
+      if (this.isometric) {
+        this.isometric.sim = this.sim;
+        this.isometric.show();
       }
     }
   }

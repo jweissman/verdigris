@@ -19,16 +19,23 @@ export class WinterEffects extends Rule {
   private addSnowfall(): void {
     // Add snowflakes as particles periodically
     if (this.sim.ticks % 5 === 0) { // Less frequent for cleaner effect
-      for (let i = 0; i < 1; i++) {
-        // Spawn at random X position at top of field
-        const x = Math.floor(Math.random() * this.sim.fieldWidth);
+      for (let i = 0; i < 3; i++) { // More snowflakes for better hit chance
+        // Focus snowfall around units - bias toward center 20x20 area
+        let x: number;
+        if (Math.random() < 0.7) {
+          // 70% chance to fall in center area where units usually are
+          x = 5 + Math.floor(Math.random() * 20); // x range 5-25
+        } else {
+          // 30% chance anywhere on field
+          x = Math.floor(Math.random() * this.sim.fieldWidth);
+        }
         const y = 0; // Start at top
         
         this.sim.particles.push({
           pos: { x, y },
-          vel: { x: 0, y: 0.15 }, // Pure vertical fall, even slower for visibility
+          vel: { x: 0, y: 0.15 }, // Pure vertical fall, slower
           radius: 0.25, // Truly single pixel
-          lifetime: 300, // Longer lifetime to cross field slowly
+          lifetime: 200, // Shorter lifetime but more focused
           color: '#FFFFFF',
           z: 5,
           type: 'snow',
@@ -58,9 +65,10 @@ export class WinterEffects extends Rule {
         const cellX = Math.floor(particle.pos.x);
         const cellY = Math.floor(particle.pos.y);
         
+        // More generous collision detection - check units within 1 cell distance
         const unitsInCell = this.sim.units.filter(unit => 
-          Math.floor(unit.pos.x) === cellX && 
-          Math.floor(unit.pos.y) === cellY &&
+          Math.abs(Math.floor(unit.pos.x) - cellX) <= 1 && 
+          Math.abs(Math.floor(unit.pos.y) - cellY) <= 1 &&
           unit.hp > 0
         );
         
@@ -68,9 +76,26 @@ export class WinterEffects extends Rule {
           if (!unit.meta.frozen && !unit.meta.recentlySnowed) {
             console.log(`❄️ Snowflake hits ${unit.id}! Instant freeze!`);
             unit.meta.frozen = true;
-            unit.meta.frozenDuration = 30;
+            unit.meta.frozenDuration = 60; // Longer freeze duration (7.5 seconds at 8fps)
             unit.meta.brittle = true;
             unit.meta.recentlySnowed = true; // Prevent multiple snowflakes from hitting same unit
+            unit.meta.snowFrozen = true; // Mark as snow-frozen to prevent immediate thawing
+            
+            // Create freeze impact particles for visual feedback
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              this.sim.particles.push({
+                pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+                vel: { 
+                  x: Math.cos(angle) * 0.5, 
+                  y: Math.sin(angle) * 0.5 
+                },
+                radius: 1,
+                color: '#AADDFF', // Ice blue
+                lifetime: 20,
+                type: 'freeze_impact'
+              });
+            }
             
             // Remove the snowflake on impact
             particle.lifetime = 0;
@@ -142,13 +167,15 @@ export class WinterEffects extends Rule {
         unit.meta.stunned = true;
         unit.intendedMove = { x: 0, y: 0 };
         
-        // Check if thawing
+        // Check if thawing - snow-frozen units need more time or higher temperature
         const temp = this.sim.temperatureField.get(unit.pos.x, unit.pos.y);
-        if (temp > 0 || unit.meta.frozenDuration <= 0) {
-          console.log(`${unit.id} thaws out!`);
+        const thawThreshold = unit.meta.snowFrozen ? 20 : 0; // Snow-frozen units need much warmer temps to thaw
+        if (temp > thawThreshold || unit.meta.frozenDuration <= 0) {
+          console.log(`${unit.id} thaws out! (temp: ${temp}°, threshold: ${thawThreshold}°)`);
           unit.meta.frozen = false;
           unit.meta.brittle = false;
           unit.meta.stunned = false;
+          unit.meta.snowFrozen = false;
           delete unit.meta.frozenDuration;
         }
       }
@@ -157,17 +184,18 @@ export class WinterEffects extends Rule {
 
   // Helper method to create winter weather
   static createWinterStorm(sim: any): void {
-    // Lower temperature across the field
+    // Lower temperature across the field - make it much colder
     for (let x = 0; x < sim.fieldWidth; x++) {
       for (let y = 0; y < sim.fieldHeight; y++) {
         const currentTemp = sim.temperatureField.get(x, y);
-        sim.temperatureField.set(x, y, Math.max(-5, currentTemp - 15));
+        // Drop temperature by 35 degrees, minimum -5°C  
+        sim.temperatureField.set(x, y, Math.max(-5, currentTemp - 35));
       }
     }
     
     // Add winter weather flag
     sim.winterActive = true;
-    console.log('Winter storm begins! Temperature drops across the battlefield.');
+    console.log('Winter storm begins! Temperature drops dramatically across the battlefield.');
   }
 
   static endWinterStorm(sim: any): void {

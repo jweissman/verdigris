@@ -91,7 +91,7 @@ export default class Input {
     
     if(e.key === "c" || e.key === "C") {
       this.renderer.setViewMode(
-        this.renderer.cinematicView ? 'grid' : 'cinematic'
+        this.renderer.gridView ? 'iso' : 'grid'
       );
     }
 
