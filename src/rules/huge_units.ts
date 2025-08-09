@@ -27,7 +27,7 @@ export class HugeUnits extends Rule {
   }
 
   private createPhantoms(hugeUnit: Unit) {
-    console.log(`Creating phantoms for huge unit: ${hugeUnit.id}`);
+    // console.log(`Creating phantoms for huge unit: ${hugeUnit.id}`);
     
     // Create 3 phantom units behind the megasquirrel (1x4 footprint)
     for (let i = 1; i <= 3; i++) {

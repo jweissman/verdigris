@@ -88,6 +88,63 @@ w...w`;
     expect(worm.abilities.jumps.config?.impact.radius).toBe(3);
   });
 
+  it('should parse metadata commands after --- separator', () => {
+    const sim = new Simulator(128, 128);
+    const loader = new SceneLoader(sim);
+    
+    const sceneText = `
+s..
+---
+bg desert
+desert-heat`;
+    
+    loader.loadFromText(sceneText.trim());
+    
+    // Should set background
+    expect((sim as any).sceneBackground).toBe('desert');
+    
+    // Should queue desert-heat command
+    expect(sim.queuedCommands).toBeDefined();
+    expect(sim.queuedCommands?.length).toBe(1);
+    expect(sim.queuedCommands?.[0].type).toBe('desert-heat');
+    expect(sim.queuedCommands?.[0].args).toEqual([]);
+  });
+
+  it('should parse commands with arguments', () => {
+    const sim = new Simulator(128, 128);
+    const loader = new SceneLoader(sim);
+    
+    const sceneText = `
+s..
+---
+weather rain 100
+sandstorm 120 0.8`;
+    
+    loader.loadFromText(sceneText.trim());
+    
+    expect(sim.queuedCommands?.length).toBe(2);
+    expect(sim.queuedCommands?.[0].type).toBe('weather');
+    expect(sim.queuedCommands?.[0].args).toEqual(['rain', '100']);
+    expect(sim.queuedCommands?.[1].type).toBe('sandstorm');
+    expect(sim.queuedCommands?.[1].args).toEqual(['120', '0.8']);
+  });
+
+  it('should handle background command specially', () => {
+    const sim = new Simulator(128, 128);
+    const loader = new SceneLoader(sim);
+    
+    const sceneText = `
+s..
+---
+bg lake`;
+    
+    loader.loadFromText(sceneText.trim());
+    
+    // Background should be set but not queued as command
+    expect((sim as any).sceneBackground).toBe('lake');
+    expect(sim.queuedCommands?.length || 0).toBe(0);
+  });
+
 //   it('should generate toss test scenario correctly', () => {
 //     const sim = new Simulator(128, 128);
 //     const loader = new SceneLoader(sim);

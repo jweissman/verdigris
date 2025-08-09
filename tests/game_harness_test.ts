@@ -13,6 +13,7 @@ describe('Game harness', () => {
       addInputListener: (cb) => { inputCallback = cb; },
       animationFrame: (cb) => {} // no-op for test
     });
+    game.bootstrap();
     // Simulate keydown
     inputCallback && inputCallback({ key: 'w' });
     expect(game.sim.units.length).toBe(1);

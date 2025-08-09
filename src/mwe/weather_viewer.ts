@@ -12,9 +12,9 @@ export default class SceneWeatherViewer {
   private ctx: CanvasRenderingContext2D;
   private views: { [key: string]: View };
   private backgrounds: string[] = [
-    'toyforge', 'winter', 'mountain', 'lake', 'burning-city', 'monastery'
+    'toyforge', 'winter', 'mountain', 'lake', 'burning-city', 'monastery', 'desert'
   ];
-  private weathers: string[] = ['clear', 'rain', 'winter', 'storm'];
+  private weathers: string[] = ['clear', 'rain', 'winter', 'storm', 'sandstorm'];
   private viewModes: string[] = ['isometric', 'orthographic'];
   private currentBgIndex: number = 0;
   private currentWeatherIndex: number = 0;
@@ -34,12 +34,12 @@ export default class SceneWeatherViewer {
 
     // Available backgrounds
     this.backgrounds = [
-      'toyforge', 'winter', 'mountain', 'lake', 'burning-city', 'monastery'
+      'toyforge', 'winter', 'mountain', 'lake', 'burning-city', 'monastery', 'desert'
     ];
 
     // Available weather types
     this.weathers = [
-      'clear', 'rain', 'winter', 'storm'
+      'clear', 'rain', 'winter', 'storm', 'sandstorm'
     ];
 
     // Available view modes
@@ -173,6 +173,12 @@ export default class SceneWeatherViewer {
         this.sim.queuedCommands = [
           { type: 'weather', args: ['rain', '120', '1.0'] },
           { type: 'lightning', args: ['16', '12'] }
+        ];
+        break;
+      case 'sandstorm':
+        this.sim.queuedCommands = [
+          { type: 'temperature', args: ['35'] },
+          { type: 'weather', args: ['sand', '200', '0.6'] }
         ];
         break;
       case 'clear':

@@ -28,6 +28,9 @@ export default class Isometric extends View {
       this.showProjectile(projectile);
     }
 
+    // Draw particles (lightning, weather effects, etc.)
+    this.renderParticles();
+
     // Render overlays (from battle view)
     this.renderOverlays();
   }
@@ -60,14 +63,17 @@ export default class Isometric extends View {
     this.ctx.restore();
   }
   
-  private toIsometric(x: number, y: number): { x: number; y: number } {
+  // Configurable coordinate offsets - can be adjusted for different canvas sizes
+  protected baseOffsetX: number = -20;  // Default for battle scenes
+  protected baseOffsetY: number = 125;  // Default for battle scenes (battlestrip area)
+  
+  protected toIsometric(x: number, y: number): { x: number; y: number } {
     const tileWidth = 16;
-    // const tileHeight = 1;
     const rowOffset = 3; // Pixels to offset each row for pseudo-isometric depth
     
     // Simple orthogonal grid with row staggering for depth illusion
-    const screenX = x * tileWidth + (y * rowOffset) - 20; // Add base offset from edge
-    const screenY = (y * 3) + 125; // Keep units in battlestrip area around y=165
+    const screenX = x * tileWidth + (y * rowOffset) + this.baseOffsetX;
+    const screenY = (y * 3) + this.baseOffsetY;
     
     return { x: screenX, y: screenY };
   }
@@ -88,6 +94,8 @@ export default class Isometric extends View {
     if (unit.meta.phantom) {
       return;
     }
+
+    // Removed debug logging - coordinate issue resolved
 
     const recentDamage = this.sim.processedEvents.find(event => 
       event.kind === 'damage' && 
@@ -122,6 +130,11 @@ export default class Isometric extends View {
     }
     
     const { x: screenX, y: screenY } = this.toIsometric(renderX, renderY);
+    
+    // Add coordinate logging for small canvas debugging
+    // if (isSmallCanvas) {
+    //   console.log(`      📍 toIsometric(${renderX}, ${renderY}) -> screen(${screenX}, ${screenY})`);
+    // }
     
     const pixelX = screenX - spriteWidth / 2;
     const pixelY = screenY - spriteHeight / 2; // Center vertically instead of bottom-align
@@ -177,6 +190,7 @@ export default class Isometric extends View {
       
       this.ctx.restore();
     } else {
+
       this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
       this.ctx.fillRect(pixelX, realPixelY, 8, 8);
     }
@@ -424,5 +438,45 @@ export default class Isometric extends View {
       
       this.ctx.restore();
     }
+  }
+
+  private renderParticles() {
+    if (!this.sim.particles || this.sim.particles.length === 0) return;
+
+    this.ctx.save();
+
+    for (const particle of this.sim.particles) {
+      this.renderParticle(particle);
+    }
+
+    this.ctx.restore();
+  }
+
+  private renderParticle(particle: any) {
+    const isoPos = this.toIsometric(particle.pos.x / 8, particle.pos.y / 8);
+    
+    this.ctx.save();
+    
+    // Apply particle transparency based on lifetime
+    const alpha = particle.lifetime > 100 ? 1 : particle.lifetime / 100;
+    this.ctx.globalAlpha = Math.min(alpha, 1);
+    
+    // Lightning particles get special bright rendering
+    if (particle.type === 'lightning') {
+      this.ctx.fillStyle = particle.color;
+      this.ctx.shadowColor = particle.color;
+      this.ctx.shadowBlur = 4;
+      this.ctx.beginPath();
+      this.ctx.arc(isoPos.x, isoPos.y, particle.radius, 0, 2 * Math.PI);
+      this.ctx.fill();
+    } else {
+      // Generic particle rendering
+      this.ctx.fillStyle = particle.color;
+      this.ctx.beginPath();
+      this.ctx.arc(isoPos.x, isoPos.y, particle.radius, 0, 2 * Math.PI);
+      this.ctx.fill();
+    }
+    
+    this.ctx.restore();
   }
 }

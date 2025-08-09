@@ -45,7 +45,7 @@ describe('Toysday Integration', () => {
       // Check for interesting events
       const frozenUnits = sim.units.filter(u => u.meta.frozen);
       if (frozenUnits.length > 0 && tick % 20 === 0) {
-        console.log(`Tick ${tick}: ${frozenUnits.length} units are frozen solid`);
+        // console.log(`Tick ${tick}: ${frozenUnits.length} units are frozen solid`);
       }
       
       // Battle ends when one side is eliminated

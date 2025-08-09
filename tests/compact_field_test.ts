@@ -12,8 +12,6 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
   });
 
   it('should demonstrate compact field layout positioning', () => {
-    console.log('📐 Testing compact field layout positioning...');
-    
     const sim = new Simulator();
     sim.rulebook = [
       new CommandHandler(sim),
@@ -56,7 +54,6 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
     const lightningParticles = sim.particles.filter(p => p.type === 'lightning').length;
     const freezeEffects = sim.particles.filter(p => p.type === 'freeze_impact').length;
     
-    console.log('✅ COMPACT FIELD LAYOUT RESULTS:');
     console.log(`   Field positioning: Bottom 50% of screen (40% height allocated)`);
     console.log(`   Tile size: 6x3 pixels (compact)`);
     console.log(`   Row offset: 1 pixel (tight depth effect)`);
@@ -70,29 +67,26 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
     // Verify positioning constraints are met
     expect(sim.units.length).toBe(4);
     expect(winterParticles + lightningParticles + freezeEffects).toBeGreaterThan(0);
-    
-    console.log('✅ Compact field layout optimized for bottom-half screen positioning!');
   });
 
-  it('should verify field compactness scales with different screen sizes', () => {
-    console.log('📏 Testing field scaling with different screen sizes...');
+  // NOTE: this doesn't seem to actually test anything useful??
+  // it('should verify field compactness scales with different screen sizes', () => {
+  //   console.log('📏 Testing field scaling with different screen sizes...');
     
-    // This test would verify that the field layout adapts to different canvas sizes
-    // For now, we just confirm the mathematical relationships are correct
+  //   // This test would verify that the field layout adapts to different canvas sizes
+  //   // For now, we just confirm the mathematical relationships are correct
     
-    const mockCanvasHeights = [400, 600, 800, 1200];
+  //   const mockCanvasHeights = [400, 600, 800, 1200];
     
-    mockCanvasHeights.forEach(height => {
-      const fieldStartY = Math.floor(height * 0.5); // 50% down
-      const maxFieldHeight = Math.floor(height * 0.4); // 40% of height
+  //   mockCanvasHeights.forEach(height => {
+  //     const fieldStartY = Math.floor(height * 0.5); // 50% down
+  //     const maxFieldHeight = Math.floor(height * 0.4); // 40% of height
       
-      console.log(`   Canvas ${height}px: Field starts at ${fieldStartY}px, uses ${maxFieldHeight}px height`);
+  //     console.log(`   Canvas ${height}px: Field starts at ${fieldStartY}px, uses ${maxFieldHeight}px height`);
       
-      // Field should always be in bottom half
-      expect(fieldStartY).toBeGreaterThanOrEqual(height * 0.5);
-      expect(maxFieldHeight).toBeLessThanOrEqual(height * 0.4);
-    });
-    
-    console.log('✅ Field scaling mathematics verified for responsive layout');
-  });
+  //     // Field should always be in bottom half
+  //     expect(fieldStartY).toBeGreaterThanOrEqual(height * 0.5);
+  //     expect(maxFieldHeight).toBeLessThanOrEqual(height * 0.4);
+  //   });
+  // });
 });

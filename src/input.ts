@@ -22,7 +22,7 @@ export default class Input {
         return;
       } else if (e.key === "Enter") {
         this.bufferingCommands = false;
-        console.log(`Executing command: ${this.commandBuffer}`);
+        // console.log(`Executing command: ${this.commandBuffer}`);
         this.sim.parseCommand(this.commandBuffer);
         this.commandBuffer = "";
         this.numBuffer = "";

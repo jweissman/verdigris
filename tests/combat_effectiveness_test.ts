@@ -68,15 +68,11 @@ describe('Combat Effectiveness Integration', () => {
     if (clanker) {
       expect(clanker.tags).toContain('hunt');
       expect(clanker.tags).toContain('aggressive');
-      console.log(`✅ Clanker at (${clanker.pos.x}, ${clanker.pos.y}) properly tagged for aggressive hunting`);
     }
     
     // Verify deployment limits were respected
     const deployEvents = sim.processedEvents.filter(e => e.kind === 'spawn');
     expect(deployEvents.length).toBeLessThanOrEqual(5); // Max 5 deployments
-    
-    console.log(`✅ Deployed ${deployEvents.length}/5 constructs within limits`);
-    console.log('✅ Tactical combat scenario completed successfully');
   });
   
   it('should test construct immediate engagement upon spawn', () => {
@@ -105,9 +101,11 @@ describe('Combat Effectiveness Integration', () => {
     
     // Verify construct has hunt tag for AI engagement
     expect(freezebot.tags).toContain('hunt');
-    
-    // In a real scenario, the AI would engage - we verify tag presence for AI system
-    console.log('✅ Construct properly tagged for AI engagement system');
+
+    // TODO Maybe verify enemy was engaged/frozen?
+    // const freezebotAfter = sim.units.find(u => u.sprite === 'freezebot');
+    // const freezebotTargeted = freezebot.meta.engagedTarget;
+    // expect(freezebotTargeted).toEqual('worm')
   });
   
   it('should test Mechatron airdrop in combat scenario', () => {
@@ -142,8 +140,6 @@ describe('Combat Effectiveness Integration', () => {
     expect(mechatron!.meta.dropping).toBe(true);
     expect(mechatron!.meta.z).toBeGreaterThan(15);
     
-    console.log(`✅ Mechatron deployed at altitude ${mechatron!.meta.z}`);
-    
     // Simulate until landing
     let landingTick = 0;
     while (mechatron!.meta.dropping && landingTick < 30) {
@@ -160,14 +156,9 @@ describe('Combat Effectiveness Integration', () => {
     const latestImpact = impactEvents[impactEvents.length - 1];
     expect(latestImpact.meta.radius).toBe(8); // Huge unit impact
     expect(latestImpact.meta.amount).toBe(25); // High damage
-    
-    console.log(`✅ Mechatron landed after ${landingTick} ticks with ${latestImpact.meta.radius}-cell impact`);
-    console.log('✅ Airdrop tactical deployment successful');
   });
   
   it('should test construct abilities in extended combat', () => {
-    console.log('🔥 Testing construct combat abilities');
-    
     const sim = new Simulator();
     sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
     
@@ -197,7 +188,6 @@ describe('Combat Effectiveness Integration', () => {
       const initialProjectiles = sim.projectiles.length;
       abilities.missileBarrage.effect(mechatron, distantEnemies[0].pos, sim);
       expect(sim.projectiles.length).toBe(initialProjectiles + 6);
-      console.log('✅ Missile barrage fired 6 projectiles');
     }
     
     // Test EMP pulse on nearby enemies  
@@ -208,7 +198,6 @@ describe('Combat Effectiveness Integration', () => {
       const empEvent = sim.queuedEvents[sim.queuedEvents.length - 1];
       expect(empEvent.meta.aspect).toBe('emp');
       expect(empEvent.meta.radius).toBe(8);
-      console.log('✅ EMP pulse created area effect');
     }
     
     // Test laser sweep
@@ -218,9 +207,6 @@ describe('Combat Effectiveness Integration', () => {
       const newEvents = sim.queuedEvents.slice(initialEvents);
       const laserEvents = newEvents.filter(e => e.meta.aspect === 'laser');
       expect(laserEvents.length).toBeGreaterThan(0);
-      console.log(`✅ Laser sweep created ${laserEvents.length} damage events`);
     }
-    
-    console.log('✅ All Mechatron combat abilities functional');
   });
 });

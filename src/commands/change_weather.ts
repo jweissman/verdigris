@@ -30,6 +30,19 @@ export class ChangeWeather extends Command {
         }
         break;
         
+      case 'sand':
+      case 'sandstorm':
+        // Sandstorm weather effect
+        if (this.sim.setWeather) {
+          this.sim.setWeather('sandstorm', durationValue, intensityValue);
+        }
+        // Find or create desert effects rule for visual sand particles
+        let desertRule = this.sim.rules?.find(r => r.constructor.name === 'DesertEffects');
+        if (desertRule && (desertRule as any).triggerSandstorm) {
+          (desertRule as any).triggerSandstorm(durationValue, intensityValue);
+        }
+        break;
+        
       case 'clear':
         if (this.sim.setWeather) {
           this.sim.setWeather('clear', 1, 0);

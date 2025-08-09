@@ -53,6 +53,8 @@ class Freehold extends Game {
       if (game && game.handleResize) {
         game.handleResize();
       }
+
+      game.bootstrap();
     } else {
       console.error(`Canvas element ${canvasId} not found!`);
     }

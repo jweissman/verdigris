@@ -24,6 +24,12 @@ export class SegmentedCreatures extends Rule {
     // Update segment positions with snake-like movement
     this.updateSegmentPositions();
 
+    // Handle segment damage propagation
+    this.handleSegmentDamage();
+
+    // Handle grappling interactions with segments
+    this.handleSegmentGrappling();
+
     // Clean up orphaned segments
     this.cleanupOrphanedSegments();
   }
@@ -44,10 +50,23 @@ export class SegmentedCreatures extends Rule {
     
     // Create segments behind the head
     for (let i = 1; i <= segmentCount; i++) {
-      const segmentPos = {
-        x: creature.pos.x,
-        y: creature.pos.y + i // Start behind head
-      };
+      // Try multiple positions to find a valid spot
+      let segmentPos = null;
+      const attempts = [
+        { x: creature.pos.x, y: creature.pos.y + i }, // Behind
+        { x: creature.pos.x - i, y: creature.pos.y }, // Left
+        { x: creature.pos.x + i, y: creature.pos.y }, // Right
+        { x: creature.pos.x, y: creature.pos.y - i }, // Above
+        { x: creature.pos.x + 1, y: creature.pos.y + i }, // Diagonal
+        { x: creature.pos.x - 1, y: creature.pos.y + i }  // Other diagonal
+      ];
+      
+      for (const attempt of attempts) {
+        if (this.isValidPosition(attempt) && !this.isOccupied(attempt)) {
+          segmentPos = attempt;
+          break;
+        }
+      }
 
       // Determine segment type
       let segmentType: 'head' | 'body' | 'tail';
@@ -57,7 +76,7 @@ export class SegmentedCreatures extends Rule {
         segmentType = 'body';
       }
 
-      if (this.isValidPosition(segmentPos) && !this.isOccupied(segmentPos)) {
+      if (segmentPos) {
         const segment: Unit = {
           id: `${creature.id}_segment_${i}`,
           pos: segmentPos,
@@ -173,6 +192,101 @@ export class SegmentedCreatures extends Rule {
         this.pathHistory.delete(segment.meta.parentId);
       }
     }
+  }
+
+  private handleSegmentDamage() {
+    // When a segment takes damage, propagate some to the head
+    this.sim.units.filter(unit => unit.meta.segment).forEach(segment => {
+      if (segment.meta.damageTaken && segment.meta.parentId) {
+        const parent = this.sim.units.find(u => u.id === segment.meta.parentId);
+        if (parent) {
+          // Transfer 50% of segment damage to head
+          const transferDamage = Math.floor(segment.meta.damageTaken * 0.5);
+          if (transferDamage > 0) {
+            console.log(`Segment ${segment.id} transfers ${transferDamage} damage to head ${parent.id}`);
+            parent.hp -= transferDamage;
+            
+            // Visual feedback - pain particles
+            this.sim.particles.push({
+              pos: { x: parent.pos.x * 8 + 4, y: parent.pos.y * 8 + 4 },
+              vel: { x: 0, y: -0.5 },
+              radius: 2,
+              color: '#FF0000',
+              lifetime: 15,
+              type: 'pain'
+            });
+          }
+          delete segment.meta.damageTaken;
+        }
+      }
+
+      // If segment is destroyed, deal damage to adjacent segments
+      if (segment.hp <= 0 && segment.meta.segmentIndex) {
+        const adjacentSegments = this.sim.units.filter(u => 
+          u.meta.segment && 
+          u.meta.parentId === segment.meta.parentId &&
+          Math.abs((u.meta.segmentIndex || 0) - segment.meta.segmentIndex) === 1
+        );
+        
+        adjacentSegments.forEach(adj => {
+          console.log(`Segment destruction damages adjacent segment ${adj.id}`);
+          adj.hp -= 5;
+        });
+      }
+    });
+  }
+
+  private handleSegmentGrappling() {
+    // Segments can be individually grappled/pinned
+    this.sim.units.filter(unit => unit.meta.segment).forEach(segment => {
+      if (segment.meta.grappled || segment.meta.pinned) {
+        // Grappled/pinned segments slow down the entire creature
+        const parent = this.sim.units.find(u => u.id === segment.meta.parentId);
+        if (parent) {
+          // Each grappled segment reduces movement speed
+          const grappledSegments = this.sim.units.filter(u => 
+            u.meta.segment && 
+            u.meta.parentId === parent.id &&
+            (u.meta.grappled || u.meta.pinned)
+          ).length;
+          
+          const speedPenalty = Math.min(0.8, grappledSegments * 0.2); // Max 80% slow
+          parent.meta.segmentSlowdown = speedPenalty;
+          
+          if (!parent.meta.originalSpeed) {
+            parent.meta.originalSpeed = parent.meta.moveSpeed || 1.0;
+          }
+          parent.meta.moveSpeed = parent.meta.originalSpeed * (1 - speedPenalty);
+          
+          // If head segment is pinned, entire creature is immobilized
+          if (segment.meta.segmentIndex === 1 && segment.meta.pinned) {
+            console.log(`Head segment pinned - entire creature immobilized!`);
+            parent.meta.stunned = true;
+            parent.intendedMove = { x: 0, y: 0 };
+          }
+        }
+      }
+    });
+
+    // Clean up speed penalties when no segments are grappled
+    this.sim.units.filter(unit => unit.meta.segmented).forEach(creature => {
+      const grappledSegments = this.sim.units.filter(u => 
+        u.meta.segment && 
+        u.meta.parentId === creature.id &&
+        (u.meta.grappled || u.meta.pinned)
+      ).length;
+      
+      if (grappledSegments === 0 && creature.meta.segmentSlowdown) {
+        delete creature.meta.segmentSlowdown;
+        if (creature.meta.originalSpeed) {
+          creature.meta.moveSpeed = creature.meta.originalSpeed;
+          delete creature.meta.originalSpeed;
+        }
+        if (creature.meta.stunned) {
+          delete creature.meta.stunned;
+        }
+      }
+    });
   }
 
   private isValidPosition(pos: { x: number, y: number }): boolean {

@@ -178,7 +178,7 @@ class Simulator {
       args,
       type
     };
-    console.log(`Queuing command: ${type} with args:`, args);
+    // console.log(`Queuing command: ${type} with args:`, args);
     this.queuedCommands.push(command);
   }
 

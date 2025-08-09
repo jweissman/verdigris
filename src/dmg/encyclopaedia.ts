@@ -57,14 +57,14 @@ export default class Encyclopaedia {
         }
         if (typeof t === 'object' && 'x' in t && 'y' in t) {
           // If target is a position, use it directly
-          console.debug(`${u.id} jumping to target at (${t.x}, ${t.y})`);
+          // console.debug(`${u.id} jumping to target at (${t.x}, ${t.y})`);
           u.meta.jumping = true;
           u.meta.jumpProgress = 0;
           u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
           u.meta.jumpTarget = { x: t.x, y: t.y };
         } else {
           // If target is a unit, use its position
-          console.debug(`${u.id} jumping to target unit ${t.id} at (${t.pos.x}, ${t.pos.y})`);
+          // console.debug(`${u.id} jumping to target unit ${t.id} at (${t.pos.x}, ${t.pos.y})`);
           u.meta.jumping = true;
           u.meta.jumpProgress = 0;
           u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
@@ -90,7 +90,7 @@ export default class Encyclopaedia {
           console.warn(`${u.id} has no valid target to shoot`);
           return;
         }
-        console.log(`${u.id} firing bullet at ${target.id} at (${target.pos.x}, ${target.pos.y})`);
+        // console.log(`${u.id} firing bullet at ${target.id} at (${target.pos.x}, ${target.pos.y})`);
         
         // Compute direction vector (normalized)
         const dx = target.pos.x - u.pos.x;
@@ -872,7 +872,7 @@ export default class Encyclopaedia {
       cooldown: 15,
       config: { radius: 2 },
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} emits chilling aura`);
+        // console.log(`${unit.id} emits chilling aura`);
         sim.queuedEvents.push({
           kind: 'aoe',
           source: unit.id,
@@ -990,6 +990,263 @@ export default class Encyclopaedia {
     },
 
     // Grappling Hook - projectile that pins targets and creates taut lines
+    // Desert day abilities
+    runGrappleLine: {
+      name: 'Run Grapple Line',
+      cooldown: 15,
+      config: {
+        range: 12,
+        speed: 2.0
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'true', // Manual trigger for now
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        
+        // Find grappled enemy
+        const grappledEnemy = sim.units.find(u => 
+          u.meta.grappled && u.meta.grappledBy
+        );
+        
+        if (!grappledEnemy) return;
+        
+        console.log(`${unit.id} runs along grapple line toward ${grappledEnemy.id}!`);
+        
+        // Dash along the grapple line
+        const dx = grappledEnemy.pos.x - unit.pos.x;
+        const dy = grappledEnemy.pos.y - unit.pos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+          const moveX = (dx / distance) * 2; // Move 2 cells per tick
+          const moveY = (dy / distance) * 2;
+          
+          unit.meta.dashingOnLine = true;
+          unit.meta.dashTarget = grappledEnemy.pos;
+          unit.intendedMove = { x: moveX, y: moveY };
+        }
+      }
+    },
+
+    waterBless: {
+      name: 'Water Blessing',
+      cooldown: 50,
+      config: {
+        range: 5,
+        healAmount: 15,
+        waterCost: 30
+      },
+      target: 'weakest.ally()',
+      effect: (unit, target, sim) => {
+        if (!unit.meta.waterReserves || unit.meta.waterReserves < 30) {
+          console.log(`${unit.id} has insufficient water reserves`);
+          return;
+        }
+        
+        const allies = sim.units.filter(u => 
+          u.team === unit.team && 
+          u.hp < u.maxHp &&
+          Math.abs(u.pos.x - unit.pos.x) <= 5 &&
+          Math.abs(u.pos.y - unit.pos.y) <= 5
+        );
+        
+        if (allies.length > 0) {
+          const healTarget = allies[0];
+          console.log(`${unit.id} blesses ${healTarget.id} with healing water`);
+          
+          sim.queuedEvents.push({
+            kind: 'heal',
+            source: unit.id,
+            target: healTarget.id,
+            meta: {
+              aspect: 'water',
+              amount: 15
+            }
+          });
+          
+          unit.meta.waterReserves -= 30;
+        }
+      }
+    },
+
+    detectSpies: {
+      name: 'Detect Spies',
+      cooldown: 40,
+      config: {
+        range: 6
+      },
+      target: 'self.pos',
+      effect: (unit, target, sim) => {
+        console.log(`${unit.id} scans for hidden enemies...`);
+        
+        // Reveal all hidden/stealthed units in range
+        const hiddenUnits = sim.units.filter(u => 
+          u.team !== unit.team &&
+          (u.meta.hidden || u.meta.stealthed || u.meta.invisible) &&
+          Math.abs(u.pos.x - unit.pos.x) <= 6 &&
+          Math.abs(u.pos.y - unit.pos.y) <= 6
+        );
+        
+        hiddenUnits.forEach(enemy => {
+          console.log(`  - Detected ${enemy.id}!`);
+          enemy.meta.hidden = false;
+          enemy.meta.stealthed = false;
+          enemy.meta.invisible = false;
+          enemy.meta.revealed = true;
+          enemy.meta.revealDuration = 80; // 10 seconds revealed
+          
+          // Visual effect
+          sim.particles.push({
+            pos: { x: enemy.pos.x * 8 + 4, y: enemy.pos.y * 8 + 4 },
+            vel: { x: 0, y: -0.5 },
+            radius: 3,
+            color: '#00AAFF',
+            lifetime: 30,
+            type: 'reveal'
+          });
+        });
+      }
+    },
+
+    dualKnifeDance: {
+      name: 'Dual Knife Dance',
+      cooldown: 20,
+      config: {
+        range: 2,
+        damage: 8,
+        hits: 2
+      },
+      target: 'closest.enemy()',
+      trigger: 'distance(closest.enemy()?.pos) <= 2',
+      effect: (unit, target, sim) => {
+        const enemies = sim.units.filter(u => 
+          u.team !== unit.team &&
+          Math.abs(u.pos.x - unit.pos.x) <= 2 &&
+          Math.abs(u.pos.y - unit.pos.y) <= 2
+        );
+        
+        if (enemies.length > 0) {
+          const victim = enemies[0];
+          console.log(`${unit.id} performs dual knife dance on ${victim.id}!`);
+          
+          // Two quick strikes
+          for (let i = 0; i < 2; i++) {
+            sim.queuedEvents.push({
+              kind: 'damage',
+              source: unit.id,
+              target: victim.id,
+              meta: {
+                aspect: 'slash',
+                amount: 8,
+                origin: unit.pos
+              }
+            });
+          }
+          
+          // Chance to dodge counter-attack
+          unit.meta.dodging = true;
+          unit.meta.dodgeDuration = 10;
+        }
+      }
+    },
+
+    sandBlast: {
+      name: 'Sand Blast',
+      cooldown: 45,
+      config: {
+        range: 5,
+        damage: 10,
+        blindDuration: 30
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) <= 5',
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        
+        console.log(`${unit.id} blasts sand at enemies!`);
+        
+        // Create sand blast cone
+        const dx = target.x - unit.pos.x;
+        const dy = target.y - unit.pos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+          const dirX = dx / distance;
+          const dirY = dy / distance;
+          
+          // Hit enemies in cone
+          for (let range = 1; range <= 5; range++) {
+            for (let spread = -1; spread <= 1; spread++) {
+              const blastX = Math.round(unit.pos.x + dirX * range + spread * 0.5);
+              const blastY = Math.round(unit.pos.y + dirY * range);
+              
+              sim.queuedEvents.push({
+                kind: 'aoe',
+                source: unit.id,
+                target: { x: blastX, y: blastY },
+                meta: {
+                  aspect: 'sand',
+                  amount: 10,
+                  radius: 1,
+                  blindDuration: 30 // Blind enemies hit
+                }
+              });
+              
+              // Sand particles
+              sim.particles.push({
+                pos: { x: blastX * 8, y: blastY * 8 },
+                vel: { x: dirX * 0.5, y: dirY * 0.5 },
+                radius: 2,
+                color: '#FFD700',
+                lifetime: 20,
+                type: 'sand'
+              });
+            }
+          }
+        }
+      }
+    },
+
+    burrowAmbush: {
+      name: 'Burrow Ambush',
+      cooldown: 60,
+      config: {
+        range: 8,
+        damage: 20
+      },
+      target: 'closest.enemy()?.pos',
+      trigger: 'distance(closest.enemy()?.pos) > 3',
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        
+        console.log(`${unit.id} burrows underground!`);
+        
+        // Burrow underground
+        unit.meta.burrowed = true;
+        unit.meta.burrowTarget = target;
+        unit.meta.invisible = true;
+        
+        // Will emerge after a delay
+        unit.meta.emergeTime = sim.ticks + 15;
+        
+        // Sand particles where it burrowed
+        for (let i = 0; i < 10; i++) {
+          const angle = (i / 10) * Math.PI * 2;
+          sim.particles.push({
+            pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+            vel: { 
+              x: Math.cos(angle) * 0.8, 
+              y: Math.sin(angle) * 0.8 
+            },
+            radius: 1.5,
+            color: '#D2691E',
+            lifetime: 25,
+            type: 'sand'
+          });
+        }
+      }
+    },
+
     grapplingHook: {
       name: 'Grappling Hook',
       cooldown: 25, // 3 seconds at 8fps
@@ -1341,7 +1598,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
     grappler: {
       intendedMove: { x: 0, y: 0 },
       team: "friendly",
-      sprite: "ranger", // Use ranger sprite for now, can be updated later
+      sprite: "grappler", // New grappler sprite!
       state: "idle" as UnitState,
       hp: 35,
       maxHp: 35,
@@ -1356,6 +1613,140 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         desertAdapted: true,
         grapplingRange: 8,
         maxGrapples: 2 // Can maintain 2 grapples simultaneously
+      }
+    },
+
+    // Desert day units
+    "worm-hunter": {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "wormrider", // New worm rider sprite!
+      state: "idle" as UnitState,
+      hp: 25,
+      maxHp: 25,
+      mass: 0.8, // Light and fast
+      tags: ['desert', 'hunter', 'agile', 'assassin'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        desertAdapted: true,
+        canClimbGrapples: true, // Can move along grapple lines
+        moveSpeed: 1.5, // 50% faster than normal
+        dashRange: 4
+      }
+    },
+
+    waterbearer: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "waterpriest", // New water priest sprite!
+      state: "idle" as UnitState,
+      hp: 30,
+      maxHp: 30,
+      mass: 1,
+      tags: ['desert', 'support', 'healer', 'detector'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        desertAdapted: true,
+        waterReserves: 100, // Special resource for abilities
+        detectRange: 6 // Can detect hidden/spy units
+      }
+    },
+
+    skirmisher: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "soldier", // Fast melee fighter
+      state: "idle" as UnitState,
+      hp: 22,
+      maxHp: 22,
+      mass: 0.9,
+      tags: ['desert', 'melee', 'agile', 'duelist'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        desertAdapted: true,
+        dualWield: true,
+        attackSpeed: 1.5, // Faster attacks
+        dodgeChance: 0.25 // 25% chance to dodge
+      }
+    },
+
+    // Segmented worm creatures
+    "sand-ant": {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "worm",
+      state: "idle" as UnitState,
+      hp: 20,
+      maxHp: 20,
+      mass: 2,
+      tags: ['desert', 'segmented', 'construct', 'toy'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        segmented: true,
+        segmentCount: 2, // Tiny toy ant with 2 segments
+        sandAdapted: true
+      }
+    },
+
+    "desert-worm": {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "worm",
+      state: "idle" as UnitState,
+      hp: 60,
+      maxHp: 60,
+      mass: 6,
+      tags: ['desert', 'segmented', 'beast', 'burrower'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        segmented: true,
+        segmentCount: 4, // 4 body segments - medium size
+        canBurrow: true,
+        sandAdapted: true
+      }
+    },
+
+    "giant-sandworm": {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "worm", // Will use larger sprite or multiple segments
+      state: "idle" as UnitState,
+      hp: 120,
+      maxHp: 120,
+      mass: 12,
+      tags: ['desert', 'segmented', 'titan', 'burrower'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        segmented: true,
+        segmentCount: 6, // 6 body segments for massive worm
+        canBurrow: true,
+        sandAdapted: true,
+        huge: true // Takes up multiple grid cells
+      }
+    },
+
+    "sand-ant": {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "worm", // Small segmented creature
+      state: "idle" as UnitState,
+      hp: 20,
+      maxHp: 20,
+      mass: 2,
+      tags: ['desert', 'segmented', 'swarm', 'construct'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        segmented: true,
+        segmentCount: 2, // Just 2 segments for ant
+        toyConstruct: true, // Mechanical toy ant
+        sandAdapted: true
       }
     },
 
@@ -1632,6 +2023,28 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           ...(beast === "grappler" ? { 
             grapplingHook: this.abilities.grapplingHook,
             pinTarget: this.abilities.pinTarget 
+          } : {}),
+          ...(beast === "worm-hunter" ? { 
+            runGrappleLine: this.abilities.runGrappleLine,
+            dualKnifeDance: this.abilities.dualKnifeDance
+          } : {}),
+          ...(beast === "waterbearer" ? { 
+            waterBless: this.abilities.waterBless,
+            detectSpies: this.abilities.detectSpies
+          } : {}),
+          ...(beast === "skirmisher" ? { 
+            dualKnifeDance: this.abilities.dualKnifeDance
+          } : {}),
+          ...(beast === "desert-worm" ? { 
+            sandBlast: this.abilities.sandBlast,
+            burrowAmbush: this.abilities.burrowAmbush
+          } : {}),
+          ...(beast === "giant-sandworm" ? { 
+            sandBlast: this.abilities.sandBlast,
+            burrowAmbush: this.abilities.burrowAmbush
+          } : {}),
+          ...(beast === "sand-ant" ? { 
+            // Small segmented toy ant, no special abilities
           } : {}),
           ...(beast === "rainmaker" ? { makeRain: this.abilities.makeRain } : {}),
           ...(beast === "toymaker" ? { deployBot: this.abilities.deployBot } : {}),

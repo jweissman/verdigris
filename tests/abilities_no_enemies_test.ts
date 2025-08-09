@@ -29,8 +29,6 @@ describe('Abilities Without Nearby Enemies', () => {
     // Verify constructs were deployed despite no enemies
     const constructs = sim.units.filter(u => u.tags?.includes('construct'));
     expect(constructs.length).toBeGreaterThan(0);
-    
-    console.log(`✅ Successfully deployed ${constructs.length} constructs with no enemies present`);
   });
   
   it('should test supportive abilities work without combat targets', () => {
@@ -60,9 +58,6 @@ describe('Abilities Without Nearby Enemies', () => {
       
       // This should work even with no enemies around since it's self-targeting
       shieldRecharge.effect(mechatron, mechatron.pos, sim);
-      
-      // The effect works (we see the console log), abilities may heal directly or queue events
-      console.log(`✅ Shield recharge ability triggered for unit at ${initialHp}/${mechatron.maxHp} HP`);
     }
   });
   
@@ -91,8 +86,6 @@ describe('Abilities Without Nearby Enemies', () => {
       expect(empEvent.kind).toBe('aoe');
       expect(empEvent.meta.aspect).toBe('emp');
       expect(empEvent.meta.radius).toBe(8);
-      
-      console.log(`✅ EMP pulse fired in empty area: radius ${empEvent.meta.radius}`);
     }
     
     // Test missile barrage toward empty coordinates
@@ -111,8 +104,6 @@ describe('Abilities Without Nearby Enemies', () => {
         expect(missile.type).toBe('bomb');
         expect(missile.damage).toBe(12);
       });
-      
-      console.log(`✅ Missile barrage fired at empty coordinates: ${missiles.length} missiles`);
     }
   });
   
@@ -147,8 +138,6 @@ describe('Abilities Without Nearby Enemies', () => {
     
     // Verify the ability has maxUses defined for limit tracking
     expect(toymaker.abilities.deployBot.maxUses).toBe(3);
-    
-    console.log(`✅ Deployed ${constructs.length} constructs - deployment ability has maxUses: ${toymaker.abilities.deployBot.maxUses}`);
   });
   
   it('should test environmental abilities work without combat context', () => {
@@ -171,9 +160,6 @@ describe('Abilities Without Nearby Enemies', () => {
     // Verify ability is configured for environmental effects
     if (makeRain.config) {
       expect(makeRain.config.duration).toBe(80); // 10 seconds of rain
-      console.log(`✅ Rain ability configured: duration ${makeRain.config.duration} ticks`);
     }
-    
-    console.log('✅ Environmental abilities properly configured for non-combat use');
   });
 });

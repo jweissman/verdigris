@@ -11,7 +11,7 @@ interface CanvasLike {
 }
 
 function createCanvas(width: number, height: number): CanvasLike {
-  if (typeof document !== 'undefined') {
+  if (typeof document !== 'undefined' && document.createElement) {
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;

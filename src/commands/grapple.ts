@@ -3,9 +3,9 @@ import { Command } from "../rules/command";
 export class Grapple extends Command {
   name = "grapple";
   description = "Fire grappling hook at target position or enemy";
-  usage = "grapple <x> <y> [grapplerID] - Fire grappling hook at position (x, y)";
+  usage = "grapple <x> <y> - Fire grappling hook at position (x, y)";
 
-  execute(args: string[], unitId?: string): void {
+  execute(unitId: string | null, ...args: string[]): void {
     if (args.length < 2) {
       console.error("Grapple command requires at least x and y coordinates");
       console.log("Usage:", this.usage);
@@ -14,7 +14,7 @@ export class Grapple extends Command {
 
     const targetX = parseInt(args[0]);
     const targetY = parseInt(args[1]);
-    const grapplerID = args[2] || unitId;
+    const grapplerID = unitId;
 
     if (isNaN(targetX) || isNaN(targetY)) {
       console.error("Invalid coordinates for grapple command");

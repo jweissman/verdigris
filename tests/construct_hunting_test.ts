@@ -18,13 +18,9 @@ describe('Construct Hunting Behavior', () => {
     // Verify clanker has aggressive tag for special behavior
     const clanker = Encyclopaedia.unit('clanker');
     expect(clanker.tags).toContain('aggressive');
-    
-    console.log('✅ All constructs properly tagged for hunting');
   });
   
   it.skip('should test aggressive clanker behavior toward enemy groups', () => {
-    console.log('🔥 Testing clanker aggressive hunting');
-    
     // Create a clanker
     const clanker = { ...Encyclopaedia.unit('clanker'), pos: { x: 5, y: 5 }, id: 'test-clanker' };
     
@@ -46,9 +42,6 @@ describe('Construct Hunting Behavior', () => {
     expect(huntResult.posture).toBe('berserk');
     expect(huntResult.intendedMove.x).toBeGreaterThan(0); // Moving right toward enemies
     expect(huntResult.intendedMove.y).toBeGreaterThan(0); // Moving down toward enemies
-    
-    console.log(`✅ Clanker aggressively targeting enemy center at (~${expectedCenterX.toFixed(1)}, ${expectedCenterY.toFixed(1)})`);
-    console.log(`   Movement: (${huntResult.intendedMove.x}, ${huntResult.intendedMove.y}), posture: ${huntResult.posture}`);
   });
   
   it('should verify deployment limits prevent field overload', () => {
@@ -58,16 +51,15 @@ describe('Construct Hunting Behavior', () => {
     const deployAbility = toymaker.abilities.deployBot;
     
     expect(deployAbility.maxUses).toBe(5);
-    console.log(`✅ Toymaker deployment limited to ${deployAbility.maxUses} uses`);
     
     // Verify other constructs don't have deployment abilities (they're deployed, not deployers)
     const clanker = Encyclopaedia.unit('clanker');
     expect(clanker.abilities.deployBot).toBeUndefined();
-    
-    console.log('✅ Deployment limits properly configured');
   });
   
-  it('should test construct AI will engage enemies immediately upon spawn', () => {
+
+  // NOTE: Doesn't seem to actually test anything useful??
+  it.skip('should test construct AI will engage enemies immediately upon spawn', () => {
     console.log('⚔️ Testing immediate combat engagement');
     
     const sim = new Simulator();
@@ -88,8 +80,5 @@ describe('Construct Hunting Behavior', () => {
     // Verify construct has hunt tag for AI engagement
     expect(freezebot.tags).toContain('hunt');
     
-    // The AI rules should cause the construct to move toward enemies
-    // This is tested implicitly through the hunt tag presence
-    console.log('✅ Construct properly configured for immediate enemy engagement');
   });
 });

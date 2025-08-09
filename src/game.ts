@@ -48,9 +48,17 @@ import zapper from "./assets/sprites/zapper.png";
 // @ts-ignore
 import toymaker from "./assets/sprites/toymaker.png";
 // @ts-ignore
+import lightning from "./assets/sprites/lightning.png";
+// @ts-ignore
 import mechatron from "./assets/sprites/mechatron.png";
 // @ts-ignore
 import mechantronist from "./assets/sprites/mechatronist.png";
+// @ts-ignore
+import grappler from "./assets/sprites/grappler.png";
+// @ts-ignore
+import waterpriest from "./assets/sprites/waterpriest.png";
+// @ts-ignore
+import wormrider from "./assets/sprites/wormrider.png";
 
 // Background imports
 // @ts-ignore
@@ -65,6 +73,8 @@ import burningCityBg from "./assets/bg/burning-city.png";
 import winterBg from "./assets/bg/winter.png";
 // @ts-ignore
 import toyforgeBg from "./assets/bg/toyforge.png";
+// @ts-ignore
+import desertBg from "./assets/bg/desert.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -73,12 +83,9 @@ class Game {
   private lastSimTime: number = 0;
   private simTickRate: number = 8; // Simulation runs at 8fps for strategic gameplay
 
-  // private canvas: HTMLCanvasElement
   renderer: Renderer;
   private _handleResize: () => void;
   private draw: () => void;
-  // private sprites: Map<string, HTMLImageElement> = new Map();
-
   private addInputListener: (cb: (e: { key: string }) => void) => void;
   private animationFrame: (cb: () => void) => void;
 
@@ -89,20 +96,13 @@ class Game {
       animationFrame?: (cb: () => void) => void
     }
   ) {
-    // this.canvas = canvas;
     this.addInputListener = opts?.addInputListener || (typeof window !== 'undefined' ? (cb) => window.addEventListener("keydown", cb as any) : () => {});
     this.animationFrame = opts?.animationFrame || (typeof window !== 'undefined' ? (cb) => requestAnimationFrame(cb) : () => {});
-    this.setupInput();
     this.loop = this.loop.bind(this);
-    this.animationFrame(this.loop);
-
     this.sim = new Simulator(40, 25); // 40×25 grid = 320×200 pixels at 8px per cell
     
-    // Load sprites
-    // this.sprites = Game.loadSprites();
-
     // Create scaled renderer for browser environments
-    if (typeof window !== 'undefined' && canvas instanceof HTMLCanvasElement) {
+    if (typeof window !== 'undefined') { //} && canvas instanceof HTMLCanvasElement) {
       const scaledRenderer = createScaledRenderer(320, 200, canvas, this.sim, Game.loadSprites(), Game.loadBackgrounds());
       this.renderer = scaledRenderer.renderer;
       this._handleResize = scaledRenderer.handleResize;
@@ -126,6 +126,15 @@ class Game {
       this.draw = () => this.renderer.draw();
     }
   }
+
+  bootstrap() {
+    // Setup input handling
+    this.setupInput();
+
+    // Start the main loop
+    this.animationFrame(this.loop);
+  }
+
   static spriteList = [
       { name: 'worm', src: worm },
       { name: 'soldier', src: soldier },
@@ -153,6 +162,10 @@ class Game {
       { name: 'zapper', src: zapper },
     { name: 'mechatron', src: mechatron },
     { name: 'mechatronist', src: mechantronist },
+    { name: 'lightning', src: lightning },
+    { name: 'grappler', src: grappler },
+    { name: 'waterpriest', src: waterpriest },
+    { name: 'wormrider', src: wormrider },
 
     ];
 
@@ -162,7 +175,8 @@ class Game {
     { name: 'monastery', src: monasteryBg },
     { name: 'burning-city', src: burningCityBg },
     { name: 'winter', src: winterBg },
-    { name: 'toyforge', src: toyforgeBg }
+    { name: 'toyforge', src: toyforgeBg },
+    { name: 'desert', src: desertBg }
   ];
 
   static loadBackgrounds(): Map<string, HTMLImageElement> {
@@ -195,21 +209,34 @@ class Game {
     }
 
     let sprites = new Map<string, HTMLImageElement>();
-    Game.spriteList.forEach(({ name, src }) => {
+    let master = Game.spriteList;
+    console.log("Loading sprites:", master.map(s => s.name).join(', '));
+    master.forEach(({ name, src }) => {
+      console.log(`Loading sprite: ${name} from ${src}`);
       const img = new Image();
       img.onload = () => {
-        console.debug(`Loaded sprite: ${name}`);
+        console.log(`Loaded sprite: ${name}`);
         sprites.set(name, img);
       };
       img.onerror = () => {
         console.error(`Failed to load sprite: ${src}`);
       };
       img.src = src;
+
+      // sprites.set(name, img);
     });
+    console.log(`Total sprites loaded: ${sprites.size}`);
+    console.log(`Available sprites: ${Array.from(sprites.keys()).slice(0, 10).join(', ')}...`);
+    // return Gam;
+    // wait a few milliseconds to ensure all sprites are loaded
+    setTimeout(() => {
+      console.log(`All sprites loaded: ${Array.from(sprites.keys()).join(', ')}`);
+    }, 100);
     return sprites;
   }
 
   setupInput() {
+
     this.addInputListener(this.getInputHandler());
   }
 

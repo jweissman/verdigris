@@ -143,7 +143,7 @@ export class UnitOperations {
       }
     }
     
-    console.log(`🔥 ${unit.id} aggressively rushing toward enemy center at (${Math.floor(centerX)}, ${Math.floor(centerY)})`);
+    // console.log(`🔥 ${unit.id} aggressively rushing toward enemy center at (${Math.floor(centerX)}, ${Math.floor(centerY)})`);
     
     return {
       ...unit,

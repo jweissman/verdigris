@@ -57,7 +57,7 @@ export class EventHandler extends Rule {
       this.sim.processedEvents.push(event);
 
       // Display translation
-      console.debug(`- ${this.glossary(event)}`);
+      // console.debug(`- ${this.glossary(event)}`);
     }
     
     // Keep only recent processed events (last 60 ticks for example)
@@ -203,7 +203,6 @@ export class EventHandler extends Rule {
       return;
     }
 
-    // console.log(`* ${event.source} hit ${targetUnit.id} for ${event.meta.amount} ${event.meta.aspect} damage (now at ${targetUnit.hp} hp)`);
     targetUnit.hp -= event.meta.amount || 10;
     
     // Mark impact frame for precise attack animation timing (frame 3)

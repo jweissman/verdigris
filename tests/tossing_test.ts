@@ -286,12 +286,12 @@ describe('Tossing mechanics', () => {
     expect(sim.queuedCommands.length).toBeGreaterThan(0);
     const tossCommand = sim.queuedCommands.find(c => c.type === 'toss' && c.unitId === 'light');
     expect(tossCommand).toBeDefined();
-    console.log("Toss command:", tossCommand);
+    // console.log("Toss command:", tossCommand);
     
     sim.tick(); // Process toss command
     
     const tossedUnit = sim.roster.light;
-    console.log("Tossed unit meta:", tossedUnit.meta);
+    // console.log("Tossed unit meta:", tossedUnit.meta);
     expect(tossedUnit.meta.tossing).toBe(true);
   });
 
