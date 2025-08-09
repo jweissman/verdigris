@@ -158,9 +158,9 @@ it('segmented creatures - desert worm has segments', () => {
   // Step to create segments
   sim.step();
   
-  // Check segments were created
+  // Check segments were created (desert-worm now has 4 segments)
   const segments = sim.units.filter(u => u.meta.segment && u.meta.parentId === worm.id);
-  expect(segments.length).toEqual(3);
+  expect(segments.length).toEqual(4);
   
   // Check segment properties
   segments.forEach((segment, index) => {

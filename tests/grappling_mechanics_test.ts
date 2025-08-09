@@ -10,18 +10,14 @@ describe('Grappling Mechanics - Core Physics', () => {
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
-      pos: { x: 5, y: 5 }
+      pos: { x: 5, y: 5 },
+      lastAbilityTick: { grapplingHook: -100 } // Ensure ability is off cooldown
     };
     sim.addUnit(grappler);
     
-    // Fire grapple at target position
-    sim.queuedCommands = [{
-      type: 'grapple',
-      unitId: 'grappler-1',
-      args: ['10', '5'] // Target at (10, 5)
-    }];
-    
-    sim.step();
+    // Fire grapple directly using the ability
+    const targetPos = { x: 10, y: 5 };
+    grappler.abilities.grapplingHook.effect(grappler, targetPos, sim);
     
     // Should create grapple projectile
     const grapples = sim.projectiles.filter(p => p.type === 'grapple');
@@ -39,7 +35,8 @@ describe('Grappling Mechanics - Core Physics', () => {
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
-      pos: { x: 5, y: 5 }
+      pos: { x: 5, y: 5 },
+      lastAbilityTick: { grapplingHook: -100 }
     };
     
     const target = {
@@ -52,21 +49,17 @@ describe('Grappling Mechanics - Core Physics', () => {
     sim.addUnit(grappler);
     sim.addUnit(target);
     
-    // Fire grapple at target
-    sim.queuedCommands = [{
-      type: 'grapple',
-      unitId: 'grappler-1',
-      args: ['8', '5']
-    }];
+    // Fire grapple directly at target
+    grappler.abilities.grapplingHook.effect(grappler, target.pos, sim);
     
-    // Process grapple firing and collision
+    // Process grapple projectile movement and collision
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
     
-    // Target should be tethered
-    expect(target.meta.tethered).toBe(true);
-    expect(target.meta.tetheredTo).toBe('grappler-1');
+    // Target should be grappled
+    expect(target.meta.grappled).toBe(true);
+    expect(target.meta.grappledBy).toBe('grappler-1');
     expect(target.meta.tetherPoint).toEqual({ x: 5, y: 5 });
   });
 
@@ -85,8 +78,8 @@ describe('Grappling Mechanics - Core Physics', () => {
       pos: { x: 8, y: 5 },
       team: 'hostile' as const,
       meta: {
-        tethered: true,
-        tetheredTo: 'grappler-1',
+        grappled: true,
+        grappledBy: 'grappler-1',
         tetherPoint: { x: 5, y: 5 },
         maxTetherDistance: 4 // Can't move more than 4 cells away
       }
@@ -125,8 +118,8 @@ describe('Grappling Mechanics - Core Physics', () => {
       pos: { x: 8, y: 5 },
       team: 'hostile' as const,
       meta: {
-        tethered: true,
-        tetheredTo: 'grappler-1',
+        grappled: true,
+        grappledBy: 'grappler-1',
         tetherPoint: { x: 5, y: 5 }
       }
     };
@@ -173,8 +166,8 @@ describe('Grappling Mechanics - Core Physics', () => {
       mass: 1, // Lighter unit
       team: 'hostile' as const,
       meta: {
-        tethered: true,
-        tetheredTo: 'grappler-1',
+        grappled: true,
+        grappledBy: 'grappler-1',
         tetherPoint: { x: 5, y: 5 },
         retracting: true // Grappler is retracting the line
       }
@@ -206,7 +199,8 @@ describe('Grappling Mechanics - Core Physics', () => {
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
-      pos: { x: 5, y: 5 }
+      pos: { x: 5, y: 5 },
+      lastAbilityTick: { grapplingHook: -100 }
     };
     
     // Create segmented worm
@@ -224,12 +218,8 @@ describe('Grappling Mechanics - Core Physics', () => {
     sim.addUnit(grappler);
     sim.addUnit(worm);
     
-    // Grapple the middle segment
-    sim.queuedCommands = [{
-      type: 'grapple',
-      unitId: 'grappler-1',
-      args: ['12', '5'] // Target middle segment position
-    }];
+    // Fire grapple at middle segment position
+    grappler.abilities.grapplingHook.effect(grappler, { x: 12, y: 5 }, sim);
     
     // Process grapple
     for (let i = 0; i < 10; i++) {
@@ -325,6 +315,7 @@ describe('Grappling Mechanics - Core Physics', () => {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
       pos: { x: 5, y: 5 },
+      lastAbilityTick: { grapplingHook: -100 },
       meta: {
         maxGrapples: 2 // Can only maintain 2 grapples
       }

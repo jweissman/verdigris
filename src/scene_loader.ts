@@ -70,7 +70,10 @@ export class SceneLoader {
     // Desert Day creatures
     M: 'desert-worm', G: 'grappler', X: 'mechatron',
     H: 'worm-hunter', P: 'waterbearer', K: 'skirmisher',
-    L: 'giant-sandworm', I: 'sand-ant', 
+    L: 'giant-sandworm', I: 'sand-ant',
+    
+    // Forest Day creatures  
+    O: 'owl', // B conflicts with builder
     
     // Mechanist support units
     B: 'builder', F: 'fueler', E: 'engineer', A: 'assembler',

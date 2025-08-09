@@ -79,8 +79,8 @@ describe('Tethering Basics - Step by Step', () => {
             );
             
             if (target) {
-              target.meta.tethered = true;
-              target.meta.tetheredTo = (p as any).grapplerID || grappler.id;
+              target.meta.grappled = true;
+              target.meta.grappledBy = (p as any).grapplerID || grappler.id;
               target.meta.tetherPoint = p.origin;
               target.meta.maxTetherDistance = 8;
             }
@@ -91,9 +91,9 @@ describe('Tethering Basics - Step by Step', () => {
       sim.step();
     }
     
-    // Check if heavy unit is tethered
-    expect(immovableUnit.meta.tethered).toBe(true);
-    expect(immovableUnit.meta.tetheredTo).toBe('grappler-1');
+    // Check if heavy unit is grappled
+    expect(immovableUnit.meta.grappled).toBe(true);
+    expect(immovableUnit.meta.grappledBy).toBe('grappler-1');
     expect(immovableUnit.meta.tetherPoint).toEqual({ x: 5, y: 5 });
   });
 

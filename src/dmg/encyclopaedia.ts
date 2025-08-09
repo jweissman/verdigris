@@ -165,13 +165,13 @@ export default class Encyclopaedia {
         );
         
         if (woundedAllies.length === 0) {
-          console.warn(`${u.id} has no wounded allies to heal`);
+          // console.warn(`${u.id} has no wounded allies to heal`);
           return;
         }
         
         // Use the first wounded ally's position as target
         const healTarget = woundedAllies[0].pos;
-        console.log(`${u.id} casting healing circle at (${healTarget.x}, ${healTarget.y})`);
+        // console.log(`${u.id} casting healing circle at (${healTarget.x}, ${healTarget.y})`);
         
         // Create healing AoE event
         if (sim && sim.queuedEvents) {
@@ -1591,6 +1591,100 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         facing: 'right' as 'left' | 'right',
         desertAdapted: true,
         heatResistant: true
+      }
+    },
+
+    // Forest Day creatures
+    "forest-squirrel": {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "squirrel",
+      state: "idle" as UnitState,
+      hp: 25,
+      maxHp: 25,
+      mass: 0.8,
+      tags: ['forest', 'agile', 'gatherer'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        canClimb: true,
+        jumpHeight: 3,
+        acornStash: 0
+      }
+    },
+
+    "owl": {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "demon", // Using demon sprite for now - looks owl-like
+      state: "idle" as UnitState,
+      hp: 30,
+      maxHp: 30,
+      mass: 1,
+      tags: ['forest', 'flying', 'hunter', 'nocturnal'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        flying: true,
+        z: 2, // Flies above ground
+        vision: 12, // Excellent night vision
+        silentFlight: true
+      }
+    },
+
+    "bear": {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "megasquirrel", // Using megasquirrel for now - large forest creature
+      state: "idle" as UnitState,
+      hp: 80,
+      maxHp: 80,
+      mass: 3,
+      tags: ['forest', 'tank', 'territorial'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        intimidating: true,
+        hibernating: false,
+        swipeRange: 2
+      }
+    },
+
+    "bird": {
+      intendedMove: { x: 0, y: 0 },
+      team: "neutral",
+      sprite: "leaf", // Small sprite for ambient bird
+      state: "idle" as UnitState,
+      hp: 5,
+      maxHp: 5,
+      mass: 0.2,
+      tags: ['forest', 'ambient', 'energy', 'flying'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        flying: true,
+        z: 3,
+        energyValue: 10, // Provides energy when caught
+        flightPattern: 'circular'
+      }
+    },
+
+    "tracker": {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "ranger",
+      state: "idle" as UnitState,
+      hp: 35,
+      maxHp: 35,
+      mass: 1,
+      tags: ['forest', 'hunter', 'specialist'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        tracking: true,
+        footprintDetection: 5, // Can see footprints within 5 tiles
+        trapSetting: true,
+        netRange: 4
       }
     },
 

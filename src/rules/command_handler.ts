@@ -71,7 +71,8 @@ export class CommandHandler extends Rule {
         // console.log(`Executing command: ${queuedCommand.type} with args:`, queuedCommand.args);
         // Pass unitId if it exists, otherwise pass null for system commands
         command.execute(queuedCommand.unitId || null, ...queuedCommand.args);
-      } else {
+      } else if (queuedCommand.type && queuedCommand.type !== '') {
+        // Only warn for non-empty command types
         console.warn(`Unknown command type: ${queuedCommand.type}`);
       }
     }

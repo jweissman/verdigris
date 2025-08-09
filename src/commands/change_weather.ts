@@ -43,6 +43,34 @@ export class ChangeWeather extends Command {
         }
         break;
         
+      case 'leaves':
+      case 'leaf':
+        // Falling leaves weather effect
+        if (this.sim.setWeather) {
+          this.sim.setWeather('leaves', durationValue, intensityValue);
+        }
+        // Create leaf particles
+        for (let i = 0; i < durationValue; i++) {
+          this.sim.particles.push({
+            id: `leaf_${Date.now()}_${i}`,
+            type: 'leaf',
+            pos: { 
+              x: Math.random() * this.sim.fieldWidth, 
+              y: Math.random() * this.sim.fieldHeight 
+            },
+            vel: { x: Math.random() * 0.2 - 0.1, y: 0.1 + Math.random() * 0.1 },
+            z: 5 + Math.random() * 10,
+            lifetime: 100 + Math.random() * 100,
+            meta: {
+              swayAmplitude: 0.5 + Math.random() * 0.5,
+              swayFrequency: 0.05 + Math.random() * 0.05,
+              swayPhase: Math.random() * Math.PI * 2
+            }
+          });
+        }
+        this.sim.weather.current = 'leaves';
+        break;
+        
       case 'clear':
         if (this.sim.setWeather) {
           this.sim.setWeather('clear', 1, 0);
