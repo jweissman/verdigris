@@ -5,13 +5,11 @@ import { UnitOperations } from '../src/UnitOperations';
 
 describe('Construct Hunting Behavior', () => {
   it('should verify all constructs have hunt tags', () => {
-    console.log('🏷️ Checking construct hunt tags');
     
     const constructTypes = ['clanker', 'freezebot', 'spiker', 'swarmbot', 'roller', 'mechatron'];
     
     for (const constructType of constructTypes) {
       const construct = Encyclopaedia.unit(constructType);
-      console.log(`- ${constructType}: tags = [${construct.tags.join(', ')}]`);
       expect(construct.tags).toContain('hunt');
     }
     
@@ -45,7 +43,6 @@ describe('Construct Hunting Behavior', () => {
   });
   
   it('should verify deployment limits prevent field overload', () => {
-    console.log('📦 Testing deployment limits');
     
     const toymaker = Encyclopaedia.unit('toymaker');
     const deployAbility = toymaker.abilities.deployBot;
@@ -60,7 +57,6 @@ describe('Construct Hunting Behavior', () => {
 
   // NOTE: Doesn't seem to actually test anything useful??
   it.skip('should test construct AI will engage enemies immediately upon spawn', () => {
-    console.log('⚔️ Testing immediate combat engagement');
     
     const sim = new Simulator();
     
@@ -74,8 +70,6 @@ describe('Construct Hunting Behavior', () => {
     const freezebot = { ...Encyclopaedia.unit('freezebot'), pos: { x: 10, y: 6 }, team: 'friendly' as const };
     sim.addUnit(freezebot);
     
-    console.log(`Spawned ${freezebot.sprite} at (${freezebot.pos.x}, ${freezebot.pos.y})`);
-    console.log(`Enemies at: (${enemy1.pos.x}, ${enemy1.pos.y}) and (${enemy2.pos.x}, ${enemy2.pos.y})`);
     
     // Verify construct has hunt tag for AI engagement
     expect(freezebot.tags).toContain('hunt');

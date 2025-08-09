@@ -11,7 +11,6 @@ describe('Winter Snow Freeze Interactions', () => {
   });
 
   it('should demonstrate snow particles freezing units on contact', () => {
-    console.log('❄️ Testing snow particle freeze interactions...');
     
     const sim = new Simulator();
     sim.rulebook = [
@@ -27,8 +26,6 @@ describe('Winter Snow Freeze Interactions', () => {
     sim.addUnit(soldier);
     sim.addUnit(worm);
     
-    console.log(`🪖 ${soldier.id} positioned at (${soldier.pos.x}, ${soldier.pos.y})`);
-    console.log(`🐛 ${worm.id} positioned at (${worm.pos.x}, ${worm.pos.y})`);
     
     // Manually spawn snowflakes directly at unit positions for guaranteed hit
     for (let i = 0; i < 5; i++) {
@@ -48,7 +45,6 @@ describe('Winter Snow Freeze Interactions', () => {
     sim.queuedCommands = [{ type: 'weather', args: ['winter'] }];
     sim.step();
     
-    console.log('🌨️ Winter storm activated - snowfall beginning...');
 
     let frozenUnits = 0;
     let snowParticles = 0;
@@ -62,12 +58,10 @@ describe('Winter Snow Freeze Interactions', () => {
       const currentFreezeImpacts = sim.particles.filter(p => p.type === 'freeze_impact').length;
       
       if (currentSnowParticles > snowParticles) {
-        console.log(`❄️ Tick ${tick}: ${currentSnowParticles} snowflakes falling`);
         snowParticles = Math.max(snowParticles, currentSnowParticles);
       }
       
       if (currentFreezeImpacts > freezeImpacts) {
-        console.log(`🧊 Tick ${tick}: Freeze impact particles created!`);
         freezeImpacts = Math.max(freezeImpacts, currentFreezeImpacts);
       }
       
@@ -76,7 +70,6 @@ describe('Winter Snow Freeze Interactions', () => {
       if (currentFrozenUnits > frozenUnits) {
         frozenUnits = currentFrozenUnits;
         const frozen = sim.units.find(u => u.meta.frozen);
-        console.log(`🧊 FREEZE! ${frozen?.id} hit by snowflake and frozen for ${frozen?.meta.frozenDuration} ticks`);
       }
     }
 
@@ -87,21 +80,13 @@ describe('Winter Snow Freeze Interactions', () => {
     const totalParticles = sim.particles.length;
     expect(totalParticles).toBeGreaterThan(0);
     
-    console.log('\n📊 WINTER INTERACTION RESULTS:');
-    console.log(`   Frozen units: ${finalFrozenUnits.length}/${sim.units.length}`);
-    console.log(`   Max snow particles: ${snowParticles}`);
-    console.log(`   Freeze impact effects: ${freezeImpacts > 0 ? 'YES' : 'NO'}`);
-    console.log(`   Total active particles: ${totalParticles}`);
     
     finalFrozenUnits.forEach(unit => {
-      console.log(`   ❄️ ${unit.id} is frozen (${unit.meta.frozenDuration} ticks remaining)`);
     });
     
-    console.log('\n✅ Snow particle freeze interaction system working!');
   });
 
   it('should show field overlay integration with winter effects', () => {
-    console.log('🌡️ Testing winter effects with field overlays...');
     
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new WinterEffects(sim)];
@@ -114,7 +99,6 @@ describe('Winter Snow Freeze Interactions', () => {
     if (sim.temperatureField) {
       const sampleTemp = sim.temperatureField.get(10, 10);
       expect(sampleTemp).toBeLessThan(20); // Should be cold
-      console.log(`🌡️ Field temperature after winter activation: ${sampleTemp}°`);
     }
     
     // Deploy units and run winter effects
@@ -130,15 +114,11 @@ describe('Winter Snow Freeze Interactions', () => {
       p.type === 'snow' || p.type === 'freeze_impact'
     ).length;
     
-    console.log(`❄️ Winter particles active: ${winterParticles}`);
-    console.log('✅ Field overlays will show cold temperature zones in blue');
-    console.log('✅ Lightning strikes will appear as electrical fields over winter landscape');
     
     expect(winterParticles).toBeGreaterThan(0);
   });
 
   it('should demonstrate complete environmental system integration', () => {
-    console.log('🌍 Testing complete environmental system...');
     
     const sim = new Simulator();
     sim.rulebook = [
@@ -156,7 +136,6 @@ describe('Winter Snow Freeze Interactions', () => {
     
     mechanistForce.forEach(unit => sim.addUnit(unit));
     
-    console.log('🤖 Mechanist force deployed in winter battlefield');
     
     // Activate winter + lightning combo
     sim.queuedCommands = [
@@ -182,8 +161,6 @@ describe('Winter Snow Freeze Interactions', () => {
       }
     }
     
-    console.log(`🌨️⚡ Environmental events detected: ${environmentalEvents}/25 ticks`);
-    console.log('✅ Winter snow + lightning storm + mechanist units = complete environmental integration!');
     
     expect(environmentalEvents).toBeGreaterThan(10);
   });

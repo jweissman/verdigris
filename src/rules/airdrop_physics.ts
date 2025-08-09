@@ -35,7 +35,7 @@ export class AirdropPhysics extends Rule {
   }
   
   private handleLanding(unit: any): void {
-    console.log(`💥 ${unit.id} lands with tremendous impact!`);
+    // console.log(`💥 ${unit.id} lands with tremendous impact!`);
     
     // Set unit on ground
     unit.meta.z = 0;
@@ -59,7 +59,7 @@ export class AirdropPhysics extends Rule {
         }
       });
       
-      console.log(`🌋 Landing creates ${impactRadius}-cell impact zone dealing ${impactDamage} damage`);
+      // console.log(`🌋 Landing creates ${impactRadius}-cell impact zone dealing ${impactDamage} damage`);
     }
     
     // Create dust cloud particle effects
@@ -88,7 +88,7 @@ export class AirdropPhysics extends Rule {
     // Screen shake effect (if implemented)
     if (unit.meta.huge) {
       // TODO: Add screen shake for massive units
-      console.log('📳 Ground shakes from massive impact!');
+      // console.log('📳 Ground shakes from massive impact!');
     }
     
     // Remove landing flags

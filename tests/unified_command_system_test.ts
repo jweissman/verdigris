@@ -10,7 +10,6 @@ describe('Unified Command System', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
     
-    console.log('🌦️ Testing unified command system for weather');
     
     // Test direct command parsing
     sim.parseCommand('weather rain 100 0.9');
@@ -19,21 +18,18 @@ describe('Unified Command System', () => {
     expect(sim.queuedCommands[0].type).toBe('weather');
     expect(sim.queuedCommands[0].args).toEqual(['rain', '100', '0.9']);
     
-    console.log('✅ Weather command queued correctly');
     
     // Process commands
     sim.step();
     
     // Commands should be processed and queue cleared
     expect(sim.queuedCommands.length).toBe(0);
-    console.log('✅ Weather command processed');
   });
   
   it('should handle deploy commands through the system', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
     
-    console.log('🤖 Testing unified command system for deployment');
     
     const unitsBefore = sim.units.length;
     
@@ -41,7 +37,6 @@ describe('Unified Command System', () => {
     sim.parseCommand('deploy clanker 10 10 friendly');
     
     expect(sim.queuedCommands.length).toBe(1);
-    console.log('✅ Deploy command queued correctly');
     
     // Process commands
     sim.step();
@@ -51,14 +46,12 @@ describe('Unified Command System', () => {
     const newUnit = sim.units[sim.units.length - 1];
     expect(newUnit.id).toContain('clanker');
     
-    console.log(`✅ Deployed ${newUnit.id} at (${newUnit.pos.x}, ${newUnit.pos.y})`);
   });
   
   it('should integrate with rainmaker ability', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)]; // Don't include Abilities to avoid double triggering
     
-    console.log('☔ Testing rainmaker integration with command system');
     
     // Create rainmaker
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 5, y: 5 } };
@@ -76,20 +69,17 @@ describe('Unified Command System', () => {
     expect(sim.queuedCommands[0].args).toEqual(['rain', '80', '0.8']);
     expect(sim.queuedCommands[0].unitId).toBe(rainmaker.id);
     
-    console.log('✅ Rainmaker queued weather command');
     
     // Process the command
     sim.step();
     
     expect(sim.queuedCommands.length).toBe(0);
-    console.log('✅ Weather command processed by rainmaker');
   });
   
   it('should integrate with toymaker ability', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)]; // Don't include Abilities to avoid double triggering
     
-    console.log('⚙️ Testing toymaker integration with command system');
     
     // Create toymaker and enemy
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
@@ -111,7 +101,6 @@ describe('Unified Command System', () => {
     expect(sim.queuedCommands[0].type).toBe('deploy');
     expect(sim.queuedCommands[0].unitId).toBe(toymaker.id);
     
-    console.log('✅ Toymaker queued deploy command');
     
     // Process the command - events are processed immediately
     sim.step();
@@ -120,6 +109,5 @@ describe('Unified Command System', () => {
     expect(sim.units.length).toBe(unitsBefore + 1);
     
     const construct = sim.units[sim.units.length - 1];
-    console.log(`✅ Toymaker deployed ${construct.id} via command system`);
   });
 });

@@ -23,7 +23,6 @@ describe('Jumping mechanics', () => {
           config: { height: 5, speed: 2 },
           target: 'random.position()',
           effect: (u, t) => {
-            // console.log(`Worm ${u.id} jumping to target:`, t);
             u.meta.jumping = true;
             u.meta.jumpProgress = 0;
             u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
@@ -46,7 +45,6 @@ describe('Jumping mechanics', () => {
     let reloaded = sim.roster.worm;
 
     expect(reloaded.meta.jumping).toBe(true);
-    console.log("worm meta:", reloaded.meta);
     expect(reloaded.meta.z).toBeGreaterThan(0);
   });
 
@@ -65,7 +63,6 @@ describe('Jumping mechanics', () => {
           config: { height: 5, speed: 2 },
           target: 'random.position()',
           effect: (u, t) => {
-            console.log(`Worm ${u.id} jumping to target:`, t);
             u.meta.jumping = true;
             u.meta.jumpProgress = 0;
             u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };

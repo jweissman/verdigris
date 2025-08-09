@@ -35,7 +35,6 @@ describe('Tossing mechanics', () => {
     sim.tick();
 
     const tossedUnit = sim.roster.target;
-    console.log("Tossed unit meta:", tossedUnit.meta);
     expect(tossedUnit.meta.tossing).toBe(true);
     expect(tossedUnit.meta.tossProgress).not.toBeUndefined();
     expect(tossedUnit.meta.tossOrigin).toEqual({ x: 5, y: 5 });
@@ -286,12 +285,10 @@ describe('Tossing mechanics', () => {
     expect(sim.queuedCommands.length).toBeGreaterThan(0);
     const tossCommand = sim.queuedCommands.find(c => c.type === 'toss' && c.unitId === 'light');
     expect(tossCommand).toBeDefined();
-    // console.log("Toss command:", tossCommand);
     
     sim.tick(); // Process toss command
     
     const tossedUnit = sim.roster.light;
-    // console.log("Tossed unit meta:", tossedUnit.meta);
     expect(tossedUnit.meta.tossing).toBe(true);
   });
 

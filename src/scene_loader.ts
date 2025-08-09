@@ -1,5 +1,4 @@
 import { Simulator } from "./simulator";
-import { Unit } from "./sim/types";
 import simple from './scenes/simple.battle.txt';
 import complex from './scenes/complex.battle.txt';
 import healing from './scenes/healing.battle.txt';
@@ -7,37 +6,11 @@ import projectile from './scenes/projectile.battle.txt';
 import squirrel from './scenes/squirrel.battle.txt';
 import chess from './scenes/chesslike.battle.txt';
 import toymaker from './scenes/toymaker.battle.txt';
-import desertday from './scenes/desert-day.battle.txt';
-import { Freehold } from "./freehold";
+import desert from './scenes/desert-day.battle.txt';
 import Encyclopaedia from "./dmg/encyclopaedia";
 
-export interface SceneDefinition {
-  layout: string[];
-  // legend: { [key: string]: UnitTemplate };
-  scenery?: { [key: string]: SceneryTemplate };
-}
-
-// export interface UnitTemplate {
-//   sprite: string;
-//   team: 'friendly' | 'hostile';
-//   hp?: number;
-//   maxHp?: number;
-//   mass?: number;
-//   abilities?: any;
-//   tags?: string[];
-// }
-// type UnitTemplate = Partial<Unit>
-
-export interface SceneryTemplate {
-  type: 'tree' | 'rock' | 'building' | 'water';
-  size?: number;
-  color?: string;
-}
-
-// const { farmer, soldier, worm, priest, ranger } = Freehold.bestiary;
-
 export class SceneLoader {
-  static scenarios = { simple, complex, healing, projectile, squirrel, chess, toymaker, 'desert-day': desertday };
+  static scenarios = { simple, complex, healing, projectile, squirrel, chess, toymaker, desert };
   constructor(private sim: Simulator) {}
 
   loadScene(scenario: string): void {
@@ -74,6 +47,10 @@ export class SceneLoader {
     
     // Forest Day creatures  
     O: 'owl', // B conflicts with builder
+    V: 'bear', // Using V for bear since B is builder
+    v: 'bird', // Using lowercase v for bird since b is bombardier  
+    N: 'forest-squirrel', // N for nature squirrel
+    Y: 'tracker', // Y for tracker
     
     // Mechanist support units
     B: 'builder', F: 'fueler', E: 'engineer', A: 'assembler',
@@ -85,7 +62,7 @@ export class SceneLoader {
   loadSimpleFormat(sceneText: string): void {
     this.sim.reset();
     const lines = sceneText.trim().split('\n');
-    console.log("Loading scene from text:", lines);
+    // console.log("Loading scene from text:", lines);
     
     let inMetadata = false;
     
@@ -116,6 +93,18 @@ export class SceneLoader {
         }
       }
     }
+    
+    // Process queued commands immediately
+    if (this.sim.queuedCommands && this.sim.queuedCommands.length > 0) {
+      const CommandHandler = require('./rules/command_handler').CommandHandler;
+      const commandHandler = new CommandHandler(this.sim);
+      commandHandler.apply();
+    }
+    
+    // Initialize segmented creatures immediately after loading
+    const SegmentedCreatures = require('./rules/segmented_creatures').SegmentedCreatures;
+    const segmentedRule = new SegmentedCreatures(this.sim);
+    segmentedRule.apply();
   }
   
   private parseMetadata(line: string): void {
@@ -129,6 +118,7 @@ export class SceneLoader {
     
     // Handle background separately (it's not a game command)
     if (command === 'bg') {
+      (this.sim as any).background = args[0] || '';
       (this.sim as any).sceneBackground = args[0] || '';
       return;
     }
@@ -146,7 +136,15 @@ export class SceneLoader {
 
   private createUnit(unitName: string, x: number, y: number): void {
     // console.log(`Creating unit ${unitName} at (${x}, ${y})`);
-    this.sim.addUnit({ ...Encyclopaedia.unit(unitName), pos: { x, y } });
+    const unitData = Encyclopaedia.unit(unitName);
+    const unitWithPos = { ...unitData, pos: { x, y } };
+    
+    // Ensure meta is preserved - deep copy if it exists
+    if (unitData.meta) {
+      unitWithPos.meta = { ...unitData.meta };
+    }
+    
+    this.sim.addUnit(unitWithPos);
   }
 
 }

@@ -9,9 +9,12 @@ export default class Isometric extends View {
     // Draw background from cinematic view
     this.renderBackground();
     
+    // Draw cell effects layer (fire, ice, etc)
+    this.renderCellEffects();
+    
     // Draw grid dots from battle view
     this.ctx.save();
-    this.ctx.globalAlpha = 0.2;
+    this.ctx.globalAlpha = 0.3; // Slightly more visible
     this.grid();
     this.ctx.restore();
     
@@ -27,6 +30,9 @@ export default class Isometric extends View {
     for (const projectile of this.sim.projectiles) {
       this.showProjectile(projectile);
     }
+
+    // Draw grappling lines
+    this.renderGrapplingLines();
 
     // Draw particles (lightning, weather effects, etc.)
     this.renderParticles();
@@ -58,6 +64,8 @@ export default class Isometric extends View {
       const offsetY = (this.ctx.canvas.height - scaledHeight) / 2;
       
       this.ctx.drawImage(backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
+    } else {
+      console.warn(`No background image found for type: ${backgroundType}`);
     }
     
     this.ctx.restore();
@@ -67,21 +75,71 @@ export default class Isometric extends View {
   protected baseOffsetX: number = -20;  // Default for battle scenes
   protected baseOffsetY: number = 125;  // Default for battle scenes (battlestrip area)
   
+  private getBattleStripOffsets(): { x: number, y: number } {
+    // Adjust battle strip position based on background
+    const bg = this.sim.sceneBackground || this.sim.background;
+    
+    switch(bg) {
+      case 'mountain':
+      case 'winter':
+        // Narrow battle strip for mountain/cliff scenes
+        return { x: -20, y: 140 };
+        
+      case 'desert':
+      case 'lake':
+        // Wide open battlefield
+        return { x: -20, y: 110 };
+        
+      case 'toyforge':
+      case 'monastery':
+        // Indoor/structured scenes
+        return { x: -20, y: 130 };
+        
+      case 'burning-city':
+        // Chaotic urban environment
+        return { x: -20, y: 120 };
+        
+      default:
+        return { x: this.baseOffsetX, y: this.baseOffsetY };
+    }
+  }
+  
   protected toIsometric(x: number, y: number): { x: number; y: number } {
     const tileWidth = 16;
     const rowOffset = 3; // Pixels to offset each row for pseudo-isometric depth
     
+    const offsets = this.getBattleStripOffsets();
+    
     // Simple orthogonal grid with row staggering for depth illusion
-    const screenX = x * tileWidth + (y * rowOffset) + this.baseOffsetX;
-    const screenY = (y * 3) + this.baseOffsetY;
+    const screenX = x * tileWidth + (y * rowOffset) + offsets.x;
+    const screenY = (y * 3) + offsets.y;
     
     return { x: screenX, y: screenY };
   }
 
   private grid({ dotSize } = { dotSize: 1 }) {
+    // Draw cell outlines for better visibility
+    this.ctx.strokeStyle = "#555";
+    this.ctx.lineWidth = 0.5;
+    
     for (let x = 0; x < this.sim.fieldWidth; x++) {
       for (let y = 0; y < this.sim.fieldHeight; y++) {
         const { x: screenX, y: screenY } = this.toIsometric(x, y);
+        
+        // Draw subtle cell outline
+        const cellWidth = 16;
+        const cellHeight = 8;
+        
+        this.ctx.beginPath();
+        // Diamond shape for isometric cell
+        this.ctx.moveTo(screenX, screenY - cellHeight/2);
+        this.ctx.lineTo(screenX + cellWidth/2, screenY);
+        this.ctx.lineTo(screenX, screenY + cellHeight/2);
+        this.ctx.lineTo(screenX - cellWidth/2, screenY);
+        this.ctx.closePath();
+        this.ctx.stroke();
+        
+        // Draw center dot
         this.ctx.beginPath();
         this.ctx.arc(screenX, screenY, dotSize, 0, 2 * Math.PI);
         this.ctx.fillStyle = "#888";
@@ -440,6 +498,163 @@ export default class Isometric extends View {
     }
   }
 
+  private renderCellEffects() {
+    const cellEffectsSprite = this.sprites.get('cell-effects');
+    if (!cellEffectsSprite) return;
+
+    // Track which cells have environmental effects
+    const effectiveCells = new Map<string, string>();
+    
+    // Check temperature effects
+    if (this.sim.temperature) {
+      if (this.sim.temperature > 30) {
+        // Hot cells - show heat shimmer
+        for (let x = 0; x < this.sim.fieldWidth; x++) {
+          for (let y = this.sim.fieldHeight - 2; y < this.sim.fieldHeight; y++) {
+            effectiveCells.set(`${x},${y}`, 'heat');
+          }
+        }
+      } else if (this.sim.temperature < 0) {
+        // Cold cells - show ice
+        for (let x = 0; x < this.sim.fieldWidth; x++) {
+          for (let y = this.sim.fieldHeight - 2; y < this.sim.fieldHeight; y++) {
+            effectiveCells.set(`${x},${y}`, 'ice');
+          }
+        }
+      }
+    }
+    
+    // Check for units on fire, frozen, etc
+    for (const unit of this.sim.units) {
+      const cellKey = `${Math.floor(unit.pos.x)},${Math.floor(unit.pos.y)}`;
+      if (unit.meta?.onFire) {
+        effectiveCells.set(cellKey, 'fire');
+      } else if (unit.meta?.frozen) {
+        effectiveCells.set(cellKey, 'ice');
+      } else if (unit.meta?.electrified) {
+        effectiveCells.set(cellKey, 'lightning');
+      }
+    }
+    
+    // Check particles that landed on cells
+    if (this.sim.particles) {
+      for (const particle of this.sim.particles) {
+        if (particle.landed && particle.targetCell) {
+          const cellKey = `${particle.targetCell.x},${particle.targetCell.y}`;
+          if (particle.type === 'snow') {
+            effectiveCells.set(cellKey, 'snow');
+          } else if (particle.type === 'fire') {
+            effectiveCells.set(cellKey, 'fire');
+          }
+        }
+      }
+    }
+    
+    // Render effect sprites
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.6;
+    
+    for (const [cellKey, effectType] of effectiveCells.entries()) {
+      const [x, y] = cellKey.split(',').map(Number);
+      const { x: screenX, y: screenY } = this.toIsometric(x, y);
+      
+      let spriteX = 0;
+      let spriteY = 0;
+      
+      // Map effect types to sprite positions (16x16 tiles)
+      switch(effectType) {
+        case 'fire': spriteX = 0; break;
+        case 'explosion': spriteX = 16; break;
+        case 'ice': case 'snow': spriteX = 32; break;
+        case 'lightning': spriteX = 48; break;
+        case 'poison': spriteX = 64; break;
+        case 'heal': spriteX = 80; break;
+        case 'shield': spriteX = 96; break;
+        case 'heat': spriteX = 112; break;
+      }
+      
+      // Animate with time
+      const frame = Math.floor((this.animationTime / 200) % 2);
+      spriteY = frame * 16;
+      
+      this.ctx.drawImage(
+        cellEffectsSprite,
+        spriteX, spriteY, 16, 16,
+        screenX - 8, screenY - 8, 16, 16
+      );
+    }
+    
+    this.ctx.restore();
+  }
+
+  private renderGrapplingLines() {
+    // Draw tether lines between grappled units
+    for (const unit of this.sim.units) {
+      if (unit.meta?.grappled && unit.meta?.tetherPoint) {
+        // Find the grappler
+        const grappler = this.sim.units.find(u => u.id === unit.meta.grappledBy);
+        if (!grappler) continue;
+        
+        const startPos = this.toIsometric(grappler.pos.x, grappler.pos.y);
+        const endPos = this.toIsometric(unit.pos.x, unit.pos.y);
+        
+        // Draw rope/tether line
+        this.ctx.save();
+        this.ctx.strokeStyle = '#8B4513'; // Brown rope color
+        this.ctx.lineWidth = 2;
+        this.ctx.setLineDash([2, 2]); // Dashed line for rope texture
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(startPos.x, startPos.y);
+        
+        // Add slight sag to the rope for physics feel
+        const midX = (startPos.x + endPos.x) / 2;
+        const midY = (startPos.y + endPos.y) / 2 + 5; // Sag downward
+        
+        this.ctx.quadraticCurveTo(midX, midY, endPos.x, endPos.y);
+        this.ctx.stroke();
+        
+        // Draw anchor points
+        this.ctx.fillStyle = '#666';
+        this.ctx.beginPath();
+        this.ctx.arc(startPos.x, startPos.y, 2, 0, 2 * Math.PI);
+        this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.arc(endPos.x, endPos.y, 2, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        this.ctx.restore();
+      }
+    }
+    
+    // Draw in-flight grapple projectiles with trailing rope
+    const grappleProjectiles = this.sim.projectiles.filter(p => 
+      (p as any).type === 'grapple'
+    );
+    
+    for (const grapple of grappleProjectiles) {
+      const grapplerID = (grapple as any).grapplerID;
+      const grappler = this.sim.units.find(u => u.id === grapplerID);
+      if (!grappler) continue;
+      
+      const startPos = this.toIsometric(grappler.pos.x, grappler.pos.y);
+      const endPos = this.toIsometric(grapple.pos.x, grapple.pos.y);
+      
+      // Draw rope trailing behind projectile
+      this.ctx.save();
+      this.ctx.strokeStyle = '#8B4513';
+      this.ctx.lineWidth = 1.5;
+      this.ctx.globalAlpha = 0.8;
+      
+      this.ctx.beginPath();
+      this.ctx.moveTo(startPos.x, startPos.y);
+      this.ctx.lineTo(endPos.x, endPos.y);
+      this.ctx.stroke();
+      
+      this.ctx.restore();
+    }
+  }
+
   private renderParticles() {
     if (!this.sim.particles || this.sim.particles.length === 0) return;
 
@@ -453,27 +668,48 @@ export default class Isometric extends View {
   }
 
   private renderParticle(particle: any) {
-    const isoPos = this.toIsometric(particle.pos.x / 8, particle.pos.y / 8);
+    // Particles should have x,y,z in sim coordinates, not pixel coordinates
+    const x = particle.x !== undefined ? particle.x : particle.pos.x;
+    const y = particle.y !== undefined ? particle.y : particle.pos.y;
+    const z = particle.z || 0;
+    
+    const isoPos = this.toIsometric(x, y);
+    const screenY = isoPos.y - (z * 8); // Apply height offset
     
     this.ctx.save();
     
     // Apply particle transparency based on lifetime
     const alpha = particle.lifetime > 100 ? 1 : particle.lifetime / 100;
-    this.ctx.globalAlpha = Math.min(alpha, 1);
+    this.ctx.globalAlpha = Math.min(alpha, 0.8);
     
     // Lightning particles get special bright rendering
     if (particle.type === 'lightning') {
-      this.ctx.fillStyle = particle.color;
-      this.ctx.shadowColor = particle.color;
+      this.ctx.fillStyle = particle.color || '#ffff00';
+      this.ctx.shadowColor = particle.color || '#ffff00';
       this.ctx.shadowBlur = 4;
       this.ctx.beginPath();
-      this.ctx.arc(isoPos.x, isoPos.y, particle.radius, 0, 2 * Math.PI);
+      this.ctx.arc(isoPos.x, screenY, particle.radius || 2, 0, 2 * Math.PI);
       this.ctx.fill();
+    } else if (particle.type === 'rain' || particle.type === 'snow') {
+      // Weather particles
+      this.ctx.fillStyle = particle.color || (particle.type === 'snow' ? '#ffffff' : '#4444ff');
+      this.ctx.beginPath();
+      this.ctx.arc(isoPos.x, screenY, particle.radius || 1, 0, 2 * Math.PI);
+      this.ctx.fill();
+      
+      // Draw shadow on ground if particle is in the air
+      if (z > 0) {
+        this.ctx.globalAlpha = 0.2;
+        this.ctx.fillStyle = '#000000';
+        this.ctx.beginPath();
+        this.ctx.arc(isoPos.x, isoPos.y, particle.radius || 1, 0, 2 * Math.PI);
+        this.ctx.fill();
+      }
     } else {
       // Generic particle rendering
-      this.ctx.fillStyle = particle.color;
+      this.ctx.fillStyle = particle.color || '#ffffff';
       this.ctx.beginPath();
-      this.ctx.arc(isoPos.x, isoPos.y, particle.radius, 0, 2 * Math.PI);
+      this.ctx.arc(isoPos.x, screenY, particle.radius || 1, 0, 2 * Math.PI);
       this.ctx.fill();
     }
     

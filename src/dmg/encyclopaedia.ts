@@ -9,7 +9,7 @@ export default class Encyclopaedia {
       name: 'Summon Squirrel',
       cooldown: 10,
       effect: (unit, target, sim: Simulator) => {
-        console.log(`${unit.id} summons a squirrel!`);
+        // console.log(`${unit.id} summons a squirrel!`);
         // Add a squirrel unit to the simulation
         sim.queuedEvents.push({
           kind: 'spawn',
@@ -87,7 +87,7 @@ export default class Encyclopaedia {
       trigger: 'distance(closest.enemy()?.pos) <= 10 && distance(closest.enemy()?.pos) > 2',
       effect: (u, target, sim) => {
         if (!target) {
-          console.warn(`${u.id} has no valid target to shoot`);
+          // console.warn(`${u.id} has no valid target to shoot`);
           return;
         }
         // console.log(`${u.id} firing bullet at ${target.id} at (${target.pos.x}, ${target.pos.y})`);
@@ -123,10 +123,10 @@ export default class Encyclopaedia {
       trigger: 'distance(closest.enemy()?.pos) <= 14 && distance(closest.enemy()?.pos) > 5',
       effect: (u, targetPos, sim) => {
         if (!targetPos) {
-          console.warn(`${u.id} has no valid target to bomb`);
+          // console.warn(`${u.id} has no valid target to bomb`);
           return;
         }
-        console.log(`${u.id} tossing bomb to (${targetPos.x}, ${targetPos.y})`);
+        // console.log(`${u.id} tossing bomb to (${targetPos.x}, ${targetPos.y})`);
         
         // Add bomb projectile to simulator with arc motion
         if (sim && sim.projectiles) {
@@ -212,9 +212,9 @@ export default class Encyclopaedia {
           // Extra damage to undead and spectral units
           if (target.tags?.includes('undead') || target.tags?.includes('spectral')) {
             damage = 20; // Radiant energy is very effective
-            console.log(`${u.id} deals radiant damage to ${target.id} (extra effective vs undead/spectral)!`);
+            // console.log(`${u.id} deals radiant damage to ${target.id} (extra effective vs undead/spectral)!`);
           } else {
-            console.log(`${u.id} deals radiant damage to ${target.id}!`);
+            // console.log(`${u.id} deals radiant damage to ${target.id}!`);
           }
           
           // Queue damage event
@@ -254,7 +254,7 @@ export default class Encyclopaedia {
         
         if (enemies.length > 0) {
           const target = enemies[0];
-          console.log(`${u.id} blasts ${target.id} with fire!`);
+          // console.log(`${u.id} blasts ${target.id} with fire!`);
           
           // Queue fire damage
           sim.queuedEvents.push({
@@ -293,7 +293,7 @@ export default class Encyclopaedia {
         radius: 5
       },
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} is making it rain!`);
+        // console.log(`${unit.id} is making it rain!`);
         
         // Use the command system for weather changes
         if (!sim.queuedCommands) {
@@ -324,7 +324,7 @@ export default class Encyclopaedia {
       },
       effect: (unit, target, sim) => {
         if (sim && sim.addHeat) {
-          console.log(`${unit.id} is breathing fire!`);
+          // console.log(`${unit.id} is breathing fire!`);
           
           // Add heat in a cone in front of the unit
           const facing = unit.meta.facing || 'right';
@@ -383,7 +383,7 @@ export default class Encyclopaedia {
       },
       effect: (unit, target, sim) => {
         if (target && typeof target === 'object' && 'id' in target) {
-          console.log(`${unit.id} uses radiant light on ${target.id}!`);
+          // console.log(`${unit.id} uses radiant light on ${target.id}!`);
           
           // Queue radiant damage (effective against spectral/undead)
           sim.queuedEvents.push({
@@ -413,7 +413,7 @@ export default class Encyclopaedia {
       trigger: 'distance(closest.enemy()?.pos) <= 12 || true', // Always allow deployment
       effect: (unit, targetPos, sim) => {
         if (!targetPos) return;
-        console.log(`${unit.id} deploys a construct!`);
+        // console.log(`${unit.id} deploys a construct!`);
         
         // Select random construct type
         const constructTypes = ['freezebot', 'clanker', 'spiker', 'swarmbot', 'roller', 'zapper'];
@@ -444,7 +444,7 @@ export default class Encyclopaedia {
       trigger: 'distance(closest.enemy()?.pos) <= 15',
       effect: (unit, target, sim) => {
         if (!target) return;
-        console.log(`${unit.id} launches missile barrage!`);
+        // console.log(`${unit.id} launches missile barrage!`);
         
         // Launch multiple missiles in a spread pattern
         for (let i = 0; i < 6; i++) {
@@ -483,7 +483,7 @@ export default class Encyclopaedia {
       trigger: 'distance(closest.enemy()?.pos) <= 20',
       effect: (unit, target, sim) => {
         if (!target) return;
-        console.log(`${unit.id} fires laser sweep!`);
+        // console.log(`${unit.id} fires laser sweep!`);
         
         // Create a line of damage from unit to target
         const dx = target.x - unit.pos.x;
@@ -525,7 +525,7 @@ export default class Encyclopaedia {
       target: 'self.pos',
       trigger: 'closest.enemy() && distance(closest.enemy()?.pos) <= 8',
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} releases EMP pulse!`);
+        // console.log(`${unit.id} releases EMP pulse!`);
         
         sim.queuedEvents.push({
           kind: 'aoe',
@@ -548,7 +548,7 @@ export default class Encyclopaedia {
       target: 'self.pos',
       trigger: 'self.hp < self.maxHp * 0.5', // When below 50% health
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} activating shield recharge!`);
+        // console.log(`${unit.id} activating shield recharge!`);
         
         const healAmount = Math.floor(unit.maxHp * 0.3); // Heal 30% of max HP
         sim.queuedEvents.push({
@@ -580,7 +580,7 @@ export default class Encyclopaedia {
       trigger: 'distance(closest.enemy()?.pos) > 8', // Strategic deployment when enemies are distant
       effect: (unit, targetPos, sim) => {
         if (!targetPos) return;
-        console.log(`${unit.id} calls in Mechatron airdrop!`);
+        // console.log(`${unit.id} calls in Mechatron airdrop!`);
         
         // Calculate tactical airdrop position - between mechatronist and enemies
         const dropX = Math.floor((unit.pos.x + targetPos.x) / 2);
@@ -613,7 +613,7 @@ export default class Encyclopaedia {
       target: 'self.pos',
       trigger: 'closest.ally() != null', // Need at least one ally for synergy
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} activates tactical override!`);
+        // console.log(`${unit.id} activates tactical override!`);
         
         // Find all mechanist units in range
         const mechanists = sim.units.filter(u => 
@@ -635,7 +635,7 @@ export default class Encyclopaedia {
             });
           }
           
-          console.log(`  - ${ally.id} receives tactical boost`);
+          // console.log(`  - ${ally.id} receives tactical boost`);
         });
         
         // Visual effect
@@ -674,7 +674,7 @@ export default class Encyclopaedia {
           );
         }
         if (targetUnit) {
-          console.log(`${unit.id} reinforces ${targetUnit.id}!`);
+          // console.log(`${unit.id} reinforces ${targetUnit.id}!`);
           targetUnit.hp += 10;
           targetUnit.maxHp += 10;
           targetUnit.meta.armor = (targetUnit.meta.armor || 0) + 1;
@@ -699,7 +699,7 @@ export default class Encyclopaedia {
       target: 'self.pos',
       trigger: 'closest.ally()?.tags?.includes("construct") || closest.ally()?.tags?.includes("mechanical")',
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} activates power surge!`);
+        // console.log(`${unit.id} activates power surge!`);
         
         // Find all constructs/mechanical units in range
         const boostedUnits = sim.units.filter(u => 
@@ -716,7 +716,7 @@ export default class Encyclopaedia {
               ally.lastAbilityTick![abilityName] = 0; // Reset cooldown
             });
           }
-          console.log(`  - ${ally.id} abilities recharged!`);
+          // console.log(`  - ${ally.id} abilities recharged!`);
         });
         
         // Create energy field visual
@@ -758,7 +758,7 @@ export default class Encyclopaedia {
         }
         
         if (targetUnit) {
-          console.log(`${unit.id} performs emergency repair on ${targetUnit.id}!`);
+          // console.log(`${unit.id} performs emergency repair on ${targetUnit.id}!`);
           const healAmount = 15;
           targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
           
@@ -789,7 +789,7 @@ export default class Encyclopaedia {
       target: 'self.pos',
       trigger: 'distance(closest.enemy()?.pos) <= 6',
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} activates shield generator!`);
+        // console.log(`${unit.id} activates shield generator!`);
         
         // Create 3x3 energy shield around the engineer
         const shieldCells = [];
@@ -841,7 +841,7 @@ export default class Encyclopaedia {
         }
         
         if (targetUnit) {
-          console.log(`${unit.id} hacks ${targetUnit.id}'s systems!`);
+          // console.log(`${unit.id} hacks ${targetUnit.id}'s systems!`);
           
           // Disable abilities for 30 ticks
           targetUnit.meta.systemsHacked = true;
@@ -892,7 +892,7 @@ export default class Encyclopaedia {
       cooldown: 1, // Only triggers once when near enemies
       trigger: 'distance(closest.enemy()?.pos) <= 3', // Slightly larger trigger radius for better tactical positioning
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} explodes!`);
+        // console.log(`${unit.id} explodes!`);
         sim.queuedEvents.push({
           kind: 'aoe',
           source: unit.id,
@@ -927,7 +927,7 @@ export default class Encyclopaedia {
       trigger: 'distance(closest.enemy()?.pos) <= 3',
       effect: (unit, target, sim) => {
         if (!target) return;
-        console.log(`${unit.id} whips ${target.id} with chain!`);
+        // console.log(`${unit.id} whips ${target.id} with chain!`);
         
         sim.queuedEvents.push({
           kind: 'damage',
@@ -949,7 +949,7 @@ export default class Encyclopaedia {
       config: { chargeDistance: 5 },
       trigger: 'distance(closest.enemy()?.pos) <= 6',
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} begins charging!`);
+        // console.log(`${unit.id} begins charging!`);
         unit.meta.charging = true;
         unit.meta.chargeProgress = 0;
         unit.meta.chargeTarget = target?.pos || { x: unit.pos.x + 5, y: unit.pos.y };
@@ -974,7 +974,7 @@ export default class Encyclopaedia {
           curr.hp > prev.hp ? curr : prev
         );
         
-        console.log(`${unit.id} zaps ${highestHpEnemy.id} with electricity!`);
+        // console.log(`${unit.id} zaps ${highestHpEnemy.id} with electricity!`);
         
         sim.queuedEvents.push({
           kind: 'damage',
@@ -1010,7 +1010,7 @@ export default class Encyclopaedia {
         
         if (!grappledEnemy) return;
         
-        console.log(`${unit.id} runs along grapple line toward ${grappledEnemy.id}!`);
+        // console.log(`${unit.id} runs along grapple line toward ${grappledEnemy.id}!`);
         
         // Dash along the grapple line
         const dx = grappledEnemy.pos.x - unit.pos.x;
@@ -1039,7 +1039,7 @@ export default class Encyclopaedia {
       target: 'weakest.ally()',
       effect: (unit, target, sim) => {
         if (!unit.meta.waterReserves || unit.meta.waterReserves < 30) {
-          console.log(`${unit.id} has insufficient water reserves`);
+          // console.log(`${unit.id} has insufficient water reserves`);
           return;
         }
         
@@ -1052,7 +1052,7 @@ export default class Encyclopaedia {
         
         if (allies.length > 0) {
           const healTarget = allies[0];
-          console.log(`${unit.id} blesses ${healTarget.id} with healing water`);
+          // console.log(`${unit.id} blesses ${healTarget.id} with healing water`);
           
           sim.queuedEvents.push({
             kind: 'heal',
@@ -1077,7 +1077,7 @@ export default class Encyclopaedia {
       },
       target: 'self.pos',
       effect: (unit, target, sim) => {
-        console.log(`${unit.id} scans for hidden enemies...`);
+        // console.log(`${unit.id} scans for hidden enemies...`);
         
         // Reveal all hidden/stealthed units in range
         const hiddenUnits = sim.units.filter(u => 
@@ -1088,7 +1088,7 @@ export default class Encyclopaedia {
         );
         
         hiddenUnits.forEach(enemy => {
-          console.log(`  - Detected ${enemy.id}!`);
+          // console.log(`  - Detected ${enemy.id}!`);
           enemy.meta.hidden = false;
           enemy.meta.stealthed = false;
           enemy.meta.invisible = false;
@@ -1127,7 +1127,7 @@ export default class Encyclopaedia {
         
         if (enemies.length > 0) {
           const victim = enemies[0];
-          console.log(`${unit.id} performs dual knife dance on ${victim.id}!`);
+          // console.log(`${unit.id} performs dual knife dance on ${victim.id}!`);
           
           // Two quick strikes
           for (let i = 0; i < 2; i++) {
@@ -1163,7 +1163,7 @@ export default class Encyclopaedia {
       effect: (unit, target, sim) => {
         if (!target) return;
         
-        console.log(`${unit.id} blasts sand at enemies!`);
+        // console.log(`${unit.id} blasts sand at enemies!`);
         
         // Create sand blast cone
         const dx = target.x - unit.pos.x;
@@ -1219,7 +1219,7 @@ export default class Encyclopaedia {
       effect: (unit, target, sim) => {
         if (!target) return;
         
-        console.log(`${unit.id} burrows underground!`);
+        // console.log(`${unit.id} burrows underground!`);
         
         // Burrow underground
         unit.meta.burrowed = true;
@@ -1260,7 +1260,7 @@ export default class Encyclopaedia {
       effect: (unit, target, sim) => {
         if (!target) return;
         
-        console.log(`${unit.id} fires grappling hook at (${target.x}, ${target.y})!`);
+        // console.log(`${unit.id} fires grappling hook at (${target.x}, ${target.y})!`);
         
         // Check if grappler already has max grapples
         const existingGrapples = sim.projectiles.filter(p => 
@@ -1270,7 +1270,7 @@ export default class Encyclopaedia {
         ).length;
         
         if (existingGrapples >= (unit.meta.maxGrapples || 2)) {
-          console.log(`${unit.id} already at max grapples (${existingGrapples})`);
+          // console.log(`${unit.id} already at max grapples (${existingGrapples})`);
           return;
         }
         
@@ -1279,7 +1279,7 @@ export default class Encyclopaedia {
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         // Create grappling hook projectile
-        sim.projectiles.push({
+        const grappleProjectile = {
           id: `grapple_${unit.id}_${Date.now()}`,
           pos: { x: unit.pos.x, y: unit.pos.y },
           vel: { 
@@ -1289,12 +1289,14 @@ export default class Encyclopaedia {
           radius: 0.5,
           damage: 0, // Grapples don't do damage, they pin
           team: unit.team,
-          type: 'grapple' as any,
+          type: 'grapple',
           target: { x: target.x, y: target.y },
           origin: { x: unit.pos.x, y: unit.pos.y },
           grapplerID: unit.id,
           pinDuration: 60
-        } as any);
+        };
+        (grappleProjectile as any).grapplerID = unit.id; // Ensure it's set
+        sim.projectiles.push(grappleProjectile as any);
       }
     },
 
@@ -1314,11 +1316,11 @@ export default class Encyclopaedia {
         );
         
         if (!enemy || !enemy.meta.grappled) {
-          console.log(`${unit.id} cannot pin - target not grappled`);
+          // console.log(`${unit.id} cannot pin - target not grappled`);
           return;
         }
         
-        console.log(`${unit.id} reinforces grapple on ${enemy.id} - fully pinned!`);
+        // console.log(`${unit.id} reinforces grapple on ${enemy.id} - fully pinned!`);
         
         // Upgrade grapple to full pin
         enemy.meta.pinned = true;
@@ -1696,6 +1698,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       state: "idle" as UnitState,
       hp: 35,
       maxHp: 35,
+      dmg: 8,
       mass: 1,
       tags: ['desert', 'hunter', 'specialist', 'grappler'],
       abilities: {
@@ -2086,6 +2089,112 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
       }
+    },
+
+    // Forest Day creatures
+    'forest-squirrel': {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "squirrel",
+      state: "idle" as UnitState,
+      hp: 12,
+      maxHp: 12,
+      dmg: 3,
+      mass: 0.5,
+      tags: ['forest', 'agile'],
+      abilities: {
+        squirrel: {
+          name: "nut-throw",
+          energy: 3,
+          cooldown: 8,
+          range: 4,
+          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
+            // console.log(`${unit.id} throws acorns!`);
+            const projectile = {
+              id: `acorn_${unit.id}_${Date.now()}`,
+              pos: { x: unit.pos.x, y: unit.pos.y },
+              vel: { x: (target.x - unit.pos.x) * 0.3, y: (target.y - unit.pos.y) * 0.3 },
+              team: unit.team,
+              damage: 3,
+              radius: 0.5,
+              type: 'projectile'
+            };
+            sim.projectiles.push(projectile as any);
+          }
+        }
+      }
+    },
+
+    owl: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "owl",
+      state: "idle" as UnitState,
+      hp: 20,
+      maxHp: 20,
+      dmg: 5,
+      mass: 0.8,
+      tags: ['forest', 'flying', 'nocturnal'],
+      abilities: {}
+    },
+
+    bear: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "bear",
+      state: "idle" as UnitState,
+      hp: 50,
+      maxHp: 50,
+      dmg: 12,
+      mass: 3,
+      tags: ['forest', 'heavy', 'powerful'],
+      abilities: {}
+    },
+
+    bird: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "bird",
+      state: "idle" as UnitState,
+      hp: 8,
+      maxHp: 8,
+      dmg: 2,
+      mass: 0.3,
+      tags: ['forest', 'flying', 'small'],
+      abilities: {}
+    },
+
+    tracker: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "ranger",
+      state: "idle" as UnitState,
+      hp: 25,
+      maxHp: 25,
+      dmg: 6,
+      mass: 1,
+      tags: ['forest', 'scout'],
+      abilities: {
+        ranged: {
+          name: "arrow",
+          energy: 3,
+          cooldown: 10,
+          range: 8,
+          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
+            // console.log(`${unit.id} fires an arrow!`);
+            const projectile = {
+              id: `arrow_${unit.id}_${Date.now()}`,
+              pos: { x: unit.pos.x, y: unit.pos.y },
+              vel: { x: (target.x - unit.pos.x) * 0.4, y: (target.y - unit.pos.y) * 0.4 },
+              team: unit.team,
+              damage: 6,
+              radius: 0.8,
+              type: 'bullet'
+            };
+            sim.projectiles.push(projectile as any);
+          }
+        }
+      }
     }
   }
 
@@ -2099,6 +2208,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
   static unit(beast: string): Partial<Unit> {
     let u = {
         id: beast + this.id(beast),
+        type: beast,
         // pos: { x, y },
         intendedMove: { x: 0, y: 0 },
         state: "idle" as UnitState,

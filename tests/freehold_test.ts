@@ -86,7 +86,6 @@ describe('Freehold Scenario Layer', () => {
   //   movement.apply();
 
   //   // Check positions after movement
-  //   console.log("sim roster", fh.sim.roster);
   //   w1 = fh.sim.roster.worm;
   //   // w1 = UnitOperations.move(w1, 1, fh.sim);
 

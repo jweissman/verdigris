@@ -14,7 +14,6 @@ describe('Lightning Storm Environmental System', () => {
     const sim = new Simulator();
     sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
     
-    console.log('⚡ Testing lightning storm creation and strikes');
     
     // Create lightning storm
     LightningStorm.createLightningStorm(sim);
@@ -53,7 +52,6 @@ describe('Lightning Storm Environmental System', () => {
       
       if (afterParticles > beforeParticles) {
         lightningStrikes++;
-        console.log(`⚡ Lightning strike ${lightningStrikes} at tick ${tick + 1}`);
       }
     }
     
@@ -71,14 +69,12 @@ describe('Lightning Storm Environmental System', () => {
     );
     expect(allLightningParticles.length).toBeGreaterThan(0);
     
-    console.log(`✅ Generated ${lightningStrikes} lightning strikes with ${allLightningParticles.length} particles`);
   });
 
   it('should stun non-mechanical units with EMP effects', () => {
     const sim = new Simulator();
     sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
     
-    console.log('⚡ Testing EMP stun effects on units');
     
     // Create test units - mix of mechanical and organic
     const soldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 5, y: 5 } }; // Organic
@@ -103,8 +99,6 @@ describe('Lightning Storm Environmental System', () => {
     const stunnedUnits = sim.units.filter(u => u.meta.stunned);
     const immuneUnits = sim.units.filter(u => !u.meta.stunned && u.tags?.includes('mechanical'));
     
-    console.log(`Stunned units: ${stunnedUnits.map(u => u.id).join(', ')}`);
-    console.log(`Immune units: ${immuneUnits.map(u => u.id).join(', ')}`);
     
     // Verify stun effects were applied correctly
     expect(stunnedUnits.length).toBeGreaterThan(0); // Some units should be stunned
@@ -113,14 +107,12 @@ describe('Lightning Storm Environmental System', () => {
     const empSparks = sim.particles.filter(p => p.type === 'electric_spark' && p.color === '#FFFF88');
     expect(empSparks.length).toBeGreaterThan(0);
     
-    console.log('✅ EMP effects properly stunned non-mechanical units');
   });
 
   it('should boost mechanical units when lightning strikes nearby', () => {
     const sim = new Simulator();
     sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
     
-    console.log('⚡ Testing lightning power boost for mechanical units');
     
     // Create mechanical units
     const mechatronist1 = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 10, y: 10 } };
@@ -156,14 +148,12 @@ describe('Lightning Storm Environmental System', () => {
     const powerSurgeParticles = sim.particles.filter(p => p.type === 'power_surge');
     expect(powerSurgeParticles.length).toBeGreaterThan(0);
     
-    console.log('✅ Lightning storm successfully boosted mechanical units');
   });
 
   it('should create diverse lightning visual effects', () => {
     const sim = new Simulator();
     sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
     
-    console.log('⚡ Testing lightning visual effects');
     
     // Create lightning storm
     LightningStorm.createLightningStorm(sim);
@@ -198,7 +188,6 @@ describe('Lightning Storm Environmental System', () => {
       const particles = sim.particles.filter(p => p.type === type);
       if (particles.length > 0) {
         typesFound++;
-        console.log(`  ✓ Found ${particles.length} ${type} particles`);
       }
     });
     
@@ -213,14 +202,12 @@ describe('Lightning Storm Environmental System', () => {
     );
     expect(lightningColors.length).toBeGreaterThan(2);
     
-    console.log(`✅ Created ${typesFound} types of lightning effects with ${lightningColors.length} different colors`);
   });
 
   it('should end lightning storm and clean up effects', () => {
     const sim = new Simulator();
     sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
     
-    console.log('⚡ Testing lightning storm cleanup');
     
     // Start storm
     LightningStorm.createLightningStorm(sim);
@@ -245,6 +232,5 @@ describe('Lightning Storm Environmental System', () => {
     const particlesAfter = sim.particles.filter(p => p.type === 'lightning').length;
     expect(particlesAfter).toBe(particlesBefore); // No new lightning particles
     
-    console.log('✅ Lightning storm properly ended');
   });
 });

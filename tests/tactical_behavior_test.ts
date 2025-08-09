@@ -11,7 +11,6 @@ describe('Tactical Behavior Improvements', () => {
     const sim = new Simulator();
     sim.rulebook = [new UnitMovement(sim), new EventHandler(sim)];
     
-    console.log('⚔️ Testing construct hunting behavior');
     
     // Create constructs and enemies
     const clanker = { ...Encyclopaedia.unit('clanker'), pos: { x: 5, y: 5 } };
@@ -29,8 +28,6 @@ describe('Tactical Behavior Improvements', () => {
     expect(clanker.tags).toContain('aggressive'); // Special for clanker
     expect(freezebot.tags).toContain('hunt');
     
-    console.log(`Clanker tags: ${clanker.tags}`);
-    console.log(`Freezebot tags: ${freezebot.tags}`);
     
     // Run simulation steps to see movement
     for (let i = 0; i < 10; i++) {
@@ -44,10 +41,8 @@ describe('Tactical Behavior Improvements', () => {
       
       if (updatedClanker && updatedFreezebot) {
         if (updatedClanker.pos.x !== oldClankerPos.x || updatedClanker.pos.y !== oldClankerPos.y) {
-          console.log(`🔥 Tick ${i}: Clanker moved from (${oldClankerPos.x}, ${oldClankerPos.y}) to (${updatedClanker.pos.x}, ${updatedClanker.pos.y}) [${updatedClanker.posture || 'idle'}]`);
         }
         if (updatedFreezebot.pos.x !== oldFreezebotPos.x || updatedFreezebot.pos.y !== oldFreezebotPos.y) {
-          console.log(`❄️ Tick ${i}: Freezebot moved from (${oldFreezebotPos.x}, ${oldFreezebotPos.y}) to (${updatedFreezebot.pos.x}, ${updatedFreezebot.pos.y}) [${updatedFreezebot.posture || 'idle'}]`);
         }
       }
     }
@@ -61,14 +56,12 @@ describe('Tactical Behavior Improvements', () => {
                          Math.abs(finalFreezebot.pos.x - 6) + Math.abs(finalFreezebot.pos.y - 5);
     
     expect(distanceMoved).toBeGreaterThan(0);
-    console.log('✅ Constructs are actively hunting enemies');
   });
   
   it('should limit toymaker deployment to prevent overload', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('🔧 Testing deployment limits');
     
     // Create toymaker 
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
@@ -76,7 +69,6 @@ describe('Tactical Behavior Improvements', () => {
     
     const deployBot = toymaker.abilities.deployBot;
     expect(deployBot.maxUses).toBe(5);
-    console.log(`Deploy ability limited to ${deployBot.maxUses} uses`);
     
     let deploymentsSuccessful = 0;
     const initialUnits = sim.units.length;
@@ -99,7 +91,6 @@ describe('Tactical Behavior Improvements', () => {
       
       if (sim.units.length > beforeUnits) {
         deploymentsSuccessful++;
-        console.log(`✅ Deployment ${deploymentsSuccessful} successful at tick ${i} (total units: ${sim.units.length})`);
       }
       
       // Stop once we've hit the expected limit
@@ -114,14 +105,12 @@ describe('Tactical Behavior Improvements', () => {
       expect(finalToymaker.abilityUsageCount.deployBot).toBe(5);
     }
     
-    console.log('✅ Deployment limits working correctly');
   });
   
   it('should allow deployment without enemies present', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('🚀 Testing deployment without enemies');
     
     // Create toymaker with NO enemies
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 10, y: 10 } };
@@ -145,9 +134,6 @@ describe('Tactical Behavior Improvements', () => {
     expect(sim.units.length).toBe(initialUnits + 1);
     
     const newConstruct = sim.units[sim.units.length - 1];
-    console.log(`✅ Deployed ${newConstruct.id} without enemies present`);
-    console.log(`   Position: (${newConstruct.pos.x}, ${newConstruct.pos.y})`);
-    console.log(`   Tags: ${newConstruct.tags}`);
     
     // Construct should have hunt behavior even without immediate targets
     expect(newConstruct.tags).toContain('hunt');

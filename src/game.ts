@@ -60,6 +60,14 @@ import waterpriest from "./assets/sprites/waterpriest.png";
 // @ts-ignore
 import wormrider from "./assets/sprites/wormrider.png";
 
+// Mechanical crew sprites
+import builder from "./assets/sprites/builder.png";
+import fueler from "./assets/sprites/fueler.png";
+import mechanic from "./assets/sprites/mechanic.png";
+import engineer from "./assets/sprites/engineer.png";
+import welder from "./assets/sprites/welder.png";
+import assembler from "./assets/sprites/assembler.png";
+
 // Background imports
 // @ts-ignore
 import lakeBg from "./assets/bg/lake.png";
@@ -75,6 +83,10 @@ import winterBg from "./assets/bg/winter.png";
 import toyforgeBg from "./assets/bg/toyforge.png";
 // @ts-ignore
 import desertBg from "./assets/bg/desert.png";
+// @ts-ignore
+import forestBg from "./assets/bg/forest.png";
+// @ts-ignore
+import cellEffects from "./assets/cell-effects.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -166,7 +178,14 @@ class Game {
     { name: 'grappler', src: grappler },
     { name: 'waterpriest', src: waterpriest },
     { name: 'wormrider', src: wormrider },
-
+    // Mechanical crew
+    { name: 'builder', src: builder },
+    { name: 'fueler', src: fueler },
+    { name: 'mechanic', src: mechanic },
+    { name: 'engineer', src: engineer },
+    { name: 'welder', src: welder },
+    { name: 'assembler', src: assembler },
+    { name: 'cell-effects', src: cellEffects }
     ];
 
   static backgroundList = [
@@ -176,7 +195,8 @@ class Game {
     { name: 'burning-city', src: burningCityBg },
     { name: 'winter', src: winterBg },
     { name: 'toyforge', src: toyforgeBg },
-    { name: 'desert', src: desertBg }
+    { name: 'desert', src: desertBg },
+    { name: 'forest', src: forestBg }
   ];
 
   static loadBackgrounds(): Map<string, HTMLImageElement> {
@@ -189,9 +209,9 @@ class Game {
     let backgrounds = new Map<string, HTMLImageElement>();
     Game.backgroundList.forEach(({ name, src }) => {
       const img = new Image();
+      backgrounds.set(name, img);
       img.onload = () => {
         console.debug(`Loaded background: ${name}`);
-        backgrounds.set(name, img);
       };
       img.onerror = () => {
         console.error(`Failed to load background: ${src}`);
@@ -210,28 +230,17 @@ class Game {
 
     let sprites = new Map<string, HTMLImageElement>();
     let master = Game.spriteList;
-    console.log("Loading sprites:", master.map(s => s.name).join(', '));
     master.forEach(({ name, src }) => {
-      console.log(`Loading sprite: ${name} from ${src}`);
       const img = new Image();
       img.onload = () => {
-        console.log(`Loaded sprite: ${name}`);
         sprites.set(name, img);
       };
       img.onerror = () => {
         console.error(`Failed to load sprite: ${src}`);
       };
       img.src = src;
-
-      // sprites.set(name, img);
     });
-    console.log(`Total sprites loaded: ${sprites.size}`);
-    console.log(`Available sprites: ${Array.from(sprites.keys()).slice(0, 10).join(', ')}...`);
-    // return Gam;
-    // wait a few milliseconds to ensure all sprites are loaded
-    setTimeout(() => {
-      console.log(`All sprites loaded: ${Array.from(sprites.keys()).join(', ')}`);
-    }, 100);
+
     return sprites;
   }
 
@@ -297,5 +306,3 @@ if (typeof window !== 'undefined') {
   // If running in browser, export Game globally
   (window as any).Game = Game;
 }
-
-console.log('Game module loaded.');

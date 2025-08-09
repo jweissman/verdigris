@@ -34,9 +34,9 @@ describe('Projectile simulation', () => {
   });
 
   it('should create a projectile when a unit receives a fire command', () => {
-    const sim = new Simulator()
-      .addUnit({ id: 'shooter', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'friendly', sprite: 'tiny', state: 'idle', hp: 10, maxHp: 10, mass: 1 })
-      .addUnit({ id: 'target', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
+    const sim = new Simulator();
+    sim.addUnit({ id: 'shooter', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'friendly', sprite: 'tiny', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
+    sim.addUnit({ id: 'target', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
 
     // Shooter receives a fire command targeting 'target'
     sim.accept({
@@ -156,9 +156,9 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     
     // The key test is that the bomb system is working
     // From the test output we can see:
-    // 1. "bombardier1 tossing bomb to (7, 0)" - bomb created ✅
-    // 2. "💥 Bomb bomb_... exploding at (7, 0)" - bomb exploded ✅  
-    // 3. "Processing event: aoe from [object Object]" - AoE triggered ✅
+    // 1. "bombardier1 tossing bomb to (7, 0)" - bomb created 
+    // 2. "💥 Bomb bomb_... exploding at (7, 0)" - bomb exploded   
+    // 3. "Processing event: aoe from [object Object]" - AoE triggered 
     expect(true).toBe(true); // Bomb mechanics verified via console output
   });
 

@@ -4,13 +4,14 @@ import Encyclopaedia from "../src/dmg/encyclopaedia";
 
 describe("New Sprites Integration", () => {
   it("should create Big Worm with correct sprite", () => {
-    const sim = new Simulator(15, 15);
-    const bigWorm = sim.createBigWorm({ x: 5, y: 5 }, 4);
+    // const sim = new Simulator(15, 15);
+    // const bigWorm = sim.createBigWorm({ x: 5, y: 5 }, 4);
+    const bigWorm = Encyclopaedia.unit("big-worm");
     
     expect(bigWorm.sprite).toBe('big-worm'); // Should use new sprite
-    expect(bigWorm.meta.segmented).toBe(true);
-    expect(bigWorm.meta.segmentCount).toBe(4);
-    expect(bigWorm.abilities.breatheFire).toBeDefined();
+    expect(bigWorm.meta?.segmented).toBe(true);
+    expect(bigWorm.meta?.segmentCount).toBe(5); // Big worm has 5 segments
+    expect(bigWorm.abilities?.breatheFire).toBeDefined();
     expect(bigWorm.team).toBe('hostile');
     expect(bigWorm.hp).toBe(120);
   });
@@ -34,7 +35,9 @@ describe("New Sprites Integration", () => {
 
   it("should run segmented creatures rule for Big Worm", () => {
     const sim = new Simulator(15, 15);
-    const bigWorm = sim.createBigWorm({ x: 5, y: 5 }, 3);
+    const bigWormUnit = Encyclopaedia.unit("big-worm");
+    sim.addUnit({ ...bigWormUnit, pos: { x: 5, y: 5 } });
+    const bigWorm = sim.units.find(u => u.type === 'big-worm');
     const wormId = bigWorm.id;
     
     // Run simulation step to create segments
@@ -79,9 +82,9 @@ describe("New Sprites Integration", () => {
     const skeletonMage = Encyclopaedia.unit('skeleton-mage');
     expect(skeletonMage.sprite).toBe('skeleton-mage');
     
-    // Big Worm uses createBigWorm method
-    const bigWorm = sim.createBigWorm({ x: 1, y: 1 });
-    expect(bigWorm.sprite).toBe('big-worm');
+    // Big Worm uses encyclopaedia
+    const bigWormUnit = Encyclopaedia.unit('big-worm');
+    expect(bigWormUnit.sprite).toBe('big-worm');
   });
 
   it("should have proper black faction variety", () => {

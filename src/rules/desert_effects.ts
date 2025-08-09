@@ -1,7 +1,9 @@
 import { Rule } from "./rule";
 import { Vec2, Unit } from "../sim/types";
 
+// NOTE: This and all specialized effect modules should just be scalar fields?
 export class DesertEffects extends Rule {
+
   private sandstormActive: boolean = false;
   private sandstormDuration: number = 0;
   private sandstormIntensity: number = 0;
@@ -181,7 +183,7 @@ export class DesertEffects extends Rule {
     
     // Add desert weather flag
     sim.desertActive = true;
-    console.log('🏜️ Desert heat begins! Temperatures soar across the battlefield.');
+    // console.log('🏜️ Desert heat begins! Temperatures soar across the battlefield.');
   }
 
   static endDesertHeat(sim: any): void {
@@ -195,14 +197,14 @@ export class DesertEffects extends Rule {
     }
     
     sim.desertActive = false;
-    console.log('🌤️ Desert heat subsides. The battlefield cools to moderate temperatures.');
+    // console.log('🌤️ Desert heat subsides. The battlefield cools to moderate temperatures.');
   }
 
   private updateSandstorm(): void {
     if (this.sandstormDuration > 0) {
       this.sandstormDuration--;
       if (this.sandstormDuration === 0) {
-        console.log("🏜️ Sandstorm subsides...");
+        // console.log("🏜️ Sandstorm subsides...");
         this.sandstormActive = false;
         this.sandstormIntensity = 0;
         this.clearSandstormEffects();
@@ -211,7 +213,7 @@ export class DesertEffects extends Rule {
   }
 
   public startSandstorm(duration: number = 160, intensity: number = 0.8): void {
-    console.log(`🏜️ Sandstorm begins! Duration: ${duration}, Intensity: ${intensity}`);
+    // console.log(`🏜️ Sandstorm begins! Duration: ${duration}, Intensity: ${intensity}`);
     this.sandstormActive = true;
     this.sandstormDuration = duration;
     this.sandstormIntensity = intensity;

@@ -12,7 +12,6 @@ describe('Mechatronist Deployment System', () => {
   });
 
   it('should create Mechatronist with proper abilities and stats', () => {
-    console.log('🤖 Testing Mechatronist unit creation');
     
     const mechatronist = Encyclopaedia.unit('mechatronist');
     
@@ -35,15 +34,12 @@ describe('Mechatronist Deployment System', () => {
     // Check riding capability
     expect(mechatronist.meta.canRideMechatron).toBe(true);
     
-    console.log(`✅ Mechatronist created with abilities: ${Object.keys(mechatronist.abilities).join(', ')}`);
-    console.log(`   Tags: ${mechatronist.tags.join(', ')}`);
   });
 
   it('should call Mechatron airdrop when conditions are met', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new AirdropPhysics(sim), new EventHandler(sim)];
     
-    console.log('🚁 Testing Mechatron airdrop deployment');
     
     // Create mechatronist and allies (need 2+ allies for trigger)
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 5, y: 5 } };
@@ -59,8 +55,6 @@ describe('Mechatronist Deployment System', () => {
     sim.addUnit(enemy);
     
     expect(sim.units.length).toBe(4);
-    console.log(`Setup: Mechatronist at (${mechatronist.pos.x}, ${mechatronist.pos.y}), enemy at (${enemy.pos.x}, ${enemy.pos.y})`);
-    console.log(`Distance to enemy: ${Math.sqrt(Math.pow(enemy.pos.x - mechatronist.pos.x, 2) + Math.pow(enemy.pos.y - mechatronist.pos.y, 2))}`);
     
     // Run simulation until airdrop triggers
     let airdropCalled = false;
@@ -70,7 +64,6 @@ describe('Mechatronist Deployment System', () => {
       // Check if airdrop command was queued
       if (sim.queuedCommands.some(cmd => cmd.type === 'airdrop')) {
         airdropCalled = true;
-        console.log(`✅ Tick ${tick}: Airdrop command queued!`);
         
         const airdropCmd = sim.queuedCommands.find(cmd => cmd.type === 'airdrop')!;
         expect(airdropCmd.args).toEqual(['mechatron', '10', '5']); // Tactical midpoint
@@ -82,7 +75,6 @@ describe('Mechatronist Deployment System', () => {
         const mechatron = sim.units.find(u => u.sprite === 'mechatron');
         if (mechatron) {
           airdropCalled = true;
-          console.log(`✅ Tick ${tick}: Mechatron deployed at (${mechatron.pos.x}, ${mechatron.pos.y})`);
           expect(mechatron.meta.dropping).toBe(true);
           expect(mechatron.meta.z).toBeGreaterThan(19); // High altitude
           break;
@@ -97,7 +89,6 @@ describe('Mechatronist Deployment System', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new AirdropPhysics(sim), new EventHandler(sim)];
     
-    console.log('🤖➡️🤖 Testing complete deployment sequence');
     
     // Set up scenario for airdrop
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 3, y: 3 } };
@@ -120,7 +111,6 @@ describe('Mechatronist Deployment System', () => {
       // Phase 1: Wait for airdrop call
       if (deploymentPhase === 'waiting' && sim.queuedCommands.some(cmd => cmd.type === 'airdrop')) {
         deploymentPhase = 'called';
-        console.log(`📞 Tick ${tick}: Mechatronist called airdrop!`);
       }
       
       // Phase 2: Mechatron appears in air
@@ -128,14 +118,12 @@ describe('Mechatronist Deployment System', () => {
         mechatron = sim.units.find(u => u.sprite === 'mechatron');
         if (mechatron && mechatron.meta.dropping) {
           deploymentPhase = 'dropping';
-          console.log(`🚁 Tick ${tick}: Mechatron dropping at (${mechatron.pos.x}, ${mechatron.pos.y}), altitude ${mechatron.meta.z}`);
         }
       }
       
       // Phase 3: Mechatron lands
       if (deploymentPhase === 'dropping' && mechatron && !mechatron.meta.dropping) {
         deploymentPhase = 'landed';
-        console.log(`💥 Tick ${tick}: Mechatron landed! Ready for action.`);
         break;
       }
     }
@@ -149,14 +137,12 @@ describe('Mechatronist Deployment System', () => {
     // Check deployment created impact
     expect(sim.particles.length).toBeGreaterThan(0); // Landing should create dust/debris
     
-    console.log('🎯 Full Mechatronist ➡️ Mechatron deployment sequence completed!');
   });
 
   it('should verify tactical override boosts nearby mechanists', () => {
     const sim = new Simulator();  
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('⚡ Testing tactical override synergy');
     
     // Create multiple mechanists for synergy trigger
     const commander = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 5, y: 5 } };
@@ -181,7 +167,6 @@ describe('Mechatronist Deployment System', () => {
       const energyParticles = sim.particles.filter(p => p.type === 'energy');
       expect(energyParticles.length).toBeGreaterThan(0);
       
-      console.log('✅ Tactical override applied boost to all nearby mechanists');
     }
   });
 });

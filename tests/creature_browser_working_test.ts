@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { CreatureBrowser } from '../src/creature_browser';
+import { CreatureBrowser } from '../src/mwe/creature_browser';
 
 describe('Creature Browser - Core Functionality Working', () => {
   it('should have working creature data and filtering', () => {

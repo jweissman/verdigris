@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { CreatureBrowser, type CreatureData } from '../src/creature_browser';
+import { CreatureBrowser, type CreatureData } from '../src/mwe/creature_browser';
 
 describe('CreatureBrowser Module', () => {
   it('should load creatures from encyclopaedia', () => {

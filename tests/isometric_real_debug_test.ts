@@ -6,7 +6,6 @@ import Isometric from '../src/views/isometric';
 
 describe.skip('Real Isometric Renderer Debug', () => {
   it('should debug real isometric rendering with detailed logging', () => {
-    console.log(`🔍 REAL ISOMETRIC DEBUG TEST:`);
     
     // Create mock canvas context to capture operations
     let operations: any[] = [];
@@ -47,49 +46,34 @@ describe.skip('Real Isometric Renderer Debug', () => {
     const farmer = Encyclopaedia.unit('farmer');
     sim.addUnit({ ...farmer, pos: { x: 1, y: 1 } });
 
-    console.log(`   📋 Farmer unit: sprite="${farmer.sprite}", hp=${farmer.hp}`);
 
     // Load sprites (same as creature browser)
     const sprites = Game.loadSprites();
     const backgrounds = Game.loadBackgrounds();
     
-    console.log(`   📦 Loaded ${sprites.size} sprites, ${backgrounds.size} backgrounds`);
     
     const farmerSprite = sprites.get(farmer.sprite);
-    console.log(`   🖼️  Farmer sprite: ${farmerSprite ? `${farmerSprite.width}x${farmerSprite.height}` : 'NOT FOUND'}`);
 
     // Create real isometric view (64x64 canvas - small canvas debugging will trigger)
     const isoView = new Isometric(mockContext as any, sim, 64, 64, sprites, backgrounds);
     
-    console.log(`\\n   🎬 Calling real Isometric.show()...`);
     isoView.show();
     
-    console.log(`\\n   📊 RENDERING OPERATIONS SUMMARY:`);
     const drawOps = operations.filter(op => ['fillRect', 'arc', 'ellipse', 'drawImage'].includes(op.type));
-    console.log(`   - Total operations: ${operations.length}`);
-    console.log(`   - Draw operations: ${drawOps.length}`);
     
     // Check for sprite drawing specifically
     const spriteDraws = operations.filter(op => op.type === 'drawImage');
     const fallbackSquares = operations.filter(op => op.type === 'fillRect' && 
       (op.fillStyle === 'blue' || op.fillStyle === 'green'));
     
-    console.log(`   - Sprite draws: ${spriteDraws.length}`);
-    console.log(`   - Fallback squares: ${fallbackSquares.length}`);
     
     if (spriteDraws.length > 0) {
-      console.log(`   ✅ Sprites were drawn!`);
       spriteDraws.forEach((draw, i) => {
-        console.log(`     - Draw ${i}: args=[${draw.args.slice(0, 4).join(', ')}...] (source x,y,w,h)`);
-        console.log(`       dest=[${draw.args.slice(4, 8).join(', ')}] (dest x,y,w,h)`);
       });
     } else if (fallbackSquares.length > 0) {
-      console.log(`   ⚠️  No sprites - fallback squares drawn`);
       fallbackSquares.forEach(square => {
-        console.log(`     - Square at (${square.x}, ${square.y}) color=${square.fillStyle}`);
       });
     } else {
-      console.log(`   ❌ No drawing operations at all - something is broken`);
     }
 
     expect(operations.length).toBeGreaterThan(0);

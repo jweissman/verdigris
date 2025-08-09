@@ -6,7 +6,6 @@ import { EventHandler } from '../src/rules/event_handler';
 
 describe('Lightning Command', () => {
   it('should trigger lightning strikes via command', () => {
-    console.log('⚡ Testing lightning command...');
     
     const sim = new Simulator();
     sim.rulebook = [
@@ -28,7 +27,6 @@ describe('Lightning Command', () => {
     );
     expect(lightningParticles.length).toBeGreaterThan(0);
     
-    console.log(`✅ Random lightning strike created ${lightningParticles.length} particles`);
     
     // Test targeted lightning strike
     const beforeParticles = sim.particles.length;
@@ -38,7 +36,6 @@ describe('Lightning Command', () => {
     const afterParticles = sim.particles.length;
     expect(afterParticles).toBeGreaterThan(beforeParticles);
     
-    console.log('✅ Targeted lightning strike at (10, 10) successful');
     
     // Test alias command
     const beforeAlias = sim.particles.length;
@@ -48,6 +45,5 @@ describe('Lightning Command', () => {
     const afterAlias = sim.particles.length;
     expect(afterAlias).toBeGreaterThan(beforeAlias);
     
-    console.log('✅ Lightning command works with both "lightning" and "bolt" aliases');
   });
 });

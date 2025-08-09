@@ -42,7 +42,7 @@ export class SegmentedCreatures extends Rule {
 
   private createSegments(creature: Unit) {
     const segmentCount = creature.meta.segmentCount || 4; // Default to 4 segments
-    console.log(`Creating ${segmentCount} segments for segmented creature: ${creature.id}`);
+    // console.log(`Creating ${segmentCount} segments for segmented creature: ${creature.id}`);
     
     // Initialize path history with creature's starting position
     const initialPath = Array(segmentCount + 2).fill(creature.pos);
@@ -185,7 +185,7 @@ export class SegmentedCreatures extends Rule {
 
     // Remove orphaned segments and their path history
     for (const segment of orphanedSegments) {
-      console.log(`Removing orphaned segment: ${segment.id}`);
+      // console.log(`Removing orphaned segment: ${segment.id}`);
       this.sim.units = this.sim.units.filter(u => u.id !== segment.id);
       
       if (segment.meta.parentId) {
@@ -203,7 +203,7 @@ export class SegmentedCreatures extends Rule {
           // Transfer 50% of segment damage to head
           const transferDamage = Math.floor(segment.meta.damageTaken * 0.5);
           if (transferDamage > 0) {
-            console.log(`Segment ${segment.id} transfers ${transferDamage} damage to head ${parent.id}`);
+            // console.log(`Segment ${segment.id} transfers ${transferDamage} damage to head ${parent.id}`);
             parent.hp -= transferDamage;
             
             // Visual feedback - pain particles
@@ -229,7 +229,7 @@ export class SegmentedCreatures extends Rule {
         );
         
         adjacentSegments.forEach(adj => {
-          console.log(`Segment destruction damages adjacent segment ${adj.id}`);
+          // console.log(`Segment destruction damages adjacent segment ${adj.id}`);
           adj.hp -= 5;
         });
       }
@@ -260,7 +260,7 @@ export class SegmentedCreatures extends Rule {
           
           // If head segment is pinned, entire creature is immobilized
           if (segment.meta.segmentIndex === 1 && segment.meta.pinned) {
-            console.log(`Head segment pinned - entire creature immobilized!`);
+            // console.log(`Head segment pinned - entire creature immobilized!`);
             parent.meta.stunned = true;
             parent.intendedMove = { x: 0, y: 0 };
           }

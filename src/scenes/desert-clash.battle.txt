@@ -11,7 +11,7 @@ M................w
 # G = grappler leader 
 # w = big-worm (5 segments)
 # M = desert-megaworm (12 segments)
-bg: desert
-weather: clear
-temperature: 35
-humidity: 0.2
+bg desert
+weather clear
+temperature 35
+humidity 2

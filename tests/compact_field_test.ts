@@ -30,9 +30,7 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
     
     units.forEach(unit => sim.addUnit(unit));
     
-    console.log('🤖 Units deployed across compact field:');
     units.forEach(unit => {
-      console.log(`   ${unit.id} at field position (${unit.pos.x}, ${unit.pos.y})`);
     });
 
     // Activate environmental effects to test field overlay rendering in compact space
@@ -43,7 +41,6 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
     ];
     sim.step();
     
-    console.log('🌨️⚡ Environmental effects active in compact field');
     
     // Run simulation to generate particles and effects
     for (let i = 0; i < 25; i++) {
@@ -54,15 +51,6 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
     const lightningParticles = sim.particles.filter(p => p.type === 'lightning').length;
     const freezeEffects = sim.particles.filter(p => p.type === 'freeze_impact').length;
     
-    console.log(`   Field positioning: Bottom 50% of screen (40% height allocated)`);
-    console.log(`   Tile size: 6x3 pixels (compact)`);
-    console.log(`   Row offset: 1 pixel (tight depth effect)`);
-    console.log(`   Active units: ${sim.units.length}`);
-    console.log(`   Snow particles: ${winterParticles}`);
-    console.log(`   Lightning particles: ${lightningParticles}`);
-    console.log(`   Freeze effects: ${freezeEffects}`);
-    console.log(`   Field overlays: Temperature + Humidity + Lightning zones`);
-    console.log('   Background: Visible in top 50% of screen');
     
     // Verify positioning constraints are met
     expect(sim.units.length).toBe(4);
@@ -71,7 +59,6 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
 
   // NOTE: this doesn't seem to actually test anything useful??
   // it('should verify field compactness scales with different screen sizes', () => {
-  //   console.log('📏 Testing field scaling with different screen sizes...');
     
   //   // This test would verify that the field layout adapts to different canvas sizes
   //   // For now, we just confirm the mathematical relationships are correct
@@ -82,7 +69,6 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
   //     const fieldStartY = Math.floor(height * 0.5); // 50% down
   //     const maxFieldHeight = Math.floor(height * 0.4); // 40% of height
       
-  //     console.log(`   Canvas ${height}px: Field starts at ${fieldStartY}px, uses ${maxFieldHeight}px height`);
       
   //     // Field should always be in bottom half
   //     expect(fieldStartY).toBeGreaterThanOrEqual(height * 0.5);

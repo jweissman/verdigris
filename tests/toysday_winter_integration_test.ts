@@ -32,10 +32,6 @@ describe('Toysday Winter Integration', () => {
     sim.addUnit(toymaker);
     sim.addUnit(enemy);
     
-    console.log('🏔️ TOYSDAY WINTER INTEGRATION TEST 🏔️');
-    console.log(`Winter storm active: ${sim.winterActive}`);
-    console.log(`Toymaker at (${toymaker.pos.x}, ${toymaker.pos.y})`);
-    console.log(`Enemy at (${enemy.pos.x}, ${enemy.pos.y})`);
     
     let constructDeployed = false;
     let snowflakeCount = 0;
@@ -50,7 +46,6 @@ describe('Toysday Winter Integration', () => {
       if (sim.units.length > beforeUnits) {
         const newUnit = sim.units[sim.units.length - 1];
         const unitType = newUnit.id.split(':')[0];
-        console.log(`⚙️ Tick ${tick}: Deployed ${unitType} (sprite: ${newUnit.sprite}) at (${newUnit.pos.x}, ${newUnit.pos.y})`);
         constructDeployed = true;
       }
       
@@ -58,13 +53,11 @@ describe('Toysday Winter Integration', () => {
       const currentSnowflakes = sim.particles.filter(p => p.type === 'snow').length;
       if (currentSnowflakes > snowflakeCount) {
         snowflakeCount = currentSnowflakes;
-        console.log(`❄️ Tick ${tick}: ${snowflakeCount} snowflakes falling`);
       }
       
       // Check for frozen units
       const frozenUnits = sim.units.filter(u => u.meta.frozen);
       if (frozenUnits.length > 0 && !unitFrozen) {
-        console.log(`🧊 Tick ${tick}: ${frozenUnits.length} units frozen by snowfall`);
         unitFrozen = true;
       }
       
@@ -85,7 +78,6 @@ describe('Toysday Winter Integration', () => {
     expect(constructs.length).toBeGreaterThan(0);
     
     const construct = constructs[0];
-    console.log(`🤖 Construct ${construct.sprite} has abilities:`, Object.keys(construct.abilities));
     
     // Verify snowflakes are properly configured
     const snowflakes = sim.particles.filter(p => p.type === 'snow');
@@ -93,14 +85,7 @@ describe('Toysday Winter Integration', () => {
       const flake = snowflakes[0];
       expect(flake.radius).toBe(0.25); // Single pixel
       expect(flake.vel.x).toBe(0); // Vertical only
-      console.log(`❄️ Snowflake verified: radius=${flake.radius}, vel=(${flake.vel.x}, ${flake.vel.y})`);
     }
     
-    console.log('✅ TOYSDAY WINTER INTEGRATION COMPLETE');
-    console.log(`- Toymaker deployed constructs: ${constructDeployed}`);
-    console.log(`- Winter effects active: ${snowflakeCount > 0}`);
-    console.log(`- Units can be frozen: ${unitFrozen}`);
-    console.log(`- Total units: ${sim.units.length}`);
-    console.log(`- Total particles: ${sim.particles.length}`);
   });
 });

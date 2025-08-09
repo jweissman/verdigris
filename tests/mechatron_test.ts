@@ -8,7 +8,6 @@ import { AirdropPhysics } from '../src/rules/airdrop_physics';
 
 describe('Mechatron Airdrop System', () => {
   it('should create Mechatron with proper dimensions and abilities', () => {
-    console.log('🤖 Testing Mechatron unit creation');
     
     const mechatron = Encyclopaedia.unit('mechatron');
     
@@ -39,16 +38,12 @@ describe('Mechatron Airdrop System', () => {
     expect(mechatron.abilities).toHaveProperty('empPulse');
     expect(mechatron.abilities).toHaveProperty('shieldRecharge');
     
-    console.log(`✅ Mechatron created: ${mechatron.meta.width}x${mechatron.meta.height} pixels`);
-    console.log(`   Abilities: ${Object.keys(mechatron.abilities).join(', ')}`);
-    console.log(`   Tags: ${mechatron.tags.join(', ')}`);
   });
   
   it('should execute airdrop command successfully', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new AirdropPhysics(sim), new EventHandler(sim)];
     
-    console.log('🚁 Testing airdrop command execution');
     
     const initialUnits = sim.units.length;
     expect(initialUnits).toBe(0);
@@ -78,15 +73,12 @@ describe('Mechatron Airdrop System', () => {
     const smokeParticles = sim.particles.filter(p => p.type === 'debris');
     expect(smokeParticles.length).toBe(12); // 12 smoke trail particles
     
-    console.log(`✅ Mechatron airdropped at (${mechatron.pos.x}, ${mechatron.pos.y}) altitude ${mechatron.meta.z}`);
-    console.log(`   Created ${sim.particles.length} atmospheric entry particles`);
   });
   
   it('should handle Mechatron landing with impact damage', () => {
     const sim = new Simulator();
     sim.rulebook = [new AirdropPhysics(sim), new EventHandler(sim)];
     
-    console.log('💥 Testing Mechatron landing impact');
     
     // Create enemies around landing zone
     const enemies = [];
@@ -105,7 +97,6 @@ describe('Mechatron Airdrop System', () => {
     sim.addUnit(mechatron);
     
     const enemiesBefore = enemies.map(e => e.hp);
-    console.log(`Enemies before impact: ${enemiesBefore}`);
     
     // Run physics step - should cause landing
     sim.step();
@@ -128,15 +119,12 @@ describe('Mechatron Airdrop System', () => {
     const dustParticles = sim.particles.filter(p => p.color === '#8B4513');
     expect(dustParticles.length).toBe(20);
     
-    console.log(`✅ Landing created impact zone: radius ${impactEvent!.meta.radius}, damage ${impactEvent!.meta.amount}`);
-    console.log(`   Created ${dustParticles.length} dust particles`);
   });
   
   it('should test Mechatron abilities in combat', () => {
     const sim = new Simulator();
     sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
     
-    console.log('⚔️ Testing Mechatron combat abilities');
     
     // Create Mechatron and enemies
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 10, y: 10 } };
@@ -167,7 +155,6 @@ describe('Mechatron Airdrop System', () => {
         expect(missile.z).toBe(8); // High altitude missiles
       });
       
-      console.log(`✅ Missile barrage fired: ${missiles.length} missiles created`);
     }
     
     // Test EMP pulse ability
@@ -186,7 +173,6 @@ describe('Mechatron Airdrop System', () => {
       expect(empEvent.meta.radius).toBe(8);
       expect(empEvent.meta.stunDuration).toBe(40);
       
-      console.log(`✅ EMP pulse activated: radius ${empEvent.meta.radius}, stun duration ${empEvent.meta.stunDuration}`);
     }
     
     // Test laser sweep ability
@@ -205,9 +191,7 @@ describe('Mechatron Airdrop System', () => {
         expect(event.meta.piercing).toBe(true);
       });
       
-      console.log(`✅ Laser sweep fired: ${laserEvents.length} laser damage events created`);
     }
     
-    console.log('🎯 All Mechatron abilities tested successfully');
   });
 });

@@ -55,9 +55,9 @@ export class CommandHandler extends Rule {
       }
     }
     
-    if (commandsToProcess.length > 0) {
-      console.log("CommandHandler: Processing", commandsToProcess.length, "queued commands");
-    }
+    // if (commandsToProcess.length > 0) {
+    //   console.log("CommandHandler: Processing", commandsToProcess.length, "queued commands");
+    // }
     
     for (const queuedCommand of commandsToProcess) {
       // Skip commands with undefined or null type

@@ -18,7 +18,6 @@ describe('Performance Tests', () => {
       // Load the scenario
       loader.loadScenario(scenario);
       const initialUnits = sim.getRealUnits().length;
-      console.log(`Loaded ${scenario}: ${initialUnits} units`);
       
       // Run simulation for specified steps
       for (let step = 0; step < SIMULATION_STEPS; step++) {
@@ -32,9 +31,6 @@ describe('Performance Tests', () => {
       const endTime = performance.now();
       const executionTime = endTime - startTime;
       
-      console.log(`${scenario} scenario: ${executionTime.toFixed(2)}ms for ${SIMULATION_STEPS} steps`);
-      console.log(`  Average: ${(executionTime / SIMULATION_STEPS).toFixed(2)}ms per step`);
-      console.log(`  Final units: ${sim.getRealUnits().length} real, ${sim.getApparentUnits().length} total`);
       
       // Performance assertion
       expect(executionTime).toBeLessThan(MAX_EXECUTION_TIME);
@@ -108,8 +104,6 @@ describe('Performance Tests', () => {
     const endTime = performance.now();
     const executionTime = endTime - startTime;
     
-    console.log(`Stress test: ${executionTime.toFixed(2)}ms for 30 steps with ${initialUnits} initial units`);
-    console.log(`  Final: ${sim.getRealUnits().length} real units, ${sim.getApparentUnits().length} total`);
     
     // Should complete in reasonable time even with multiple megasquirrels
     expect(executionTime).toBeLessThan(2000); // 1.5 seconds max

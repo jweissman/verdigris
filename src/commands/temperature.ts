@@ -5,7 +5,7 @@ export class Temperature extends Command {
   description = "Set the temperature across the battlefield";
   usage = "temperature <degrees> - Set temperature in Celsius";
 
-  execute(unitId: string | null, ...args: any[]): void {
+  execute(_unitId: string | null, ...args: any[]): void {
     const temp = args[0] ? parseFloat(args[0]) : 20;
 
     if (isNaN(temp)) {
@@ -13,7 +13,11 @@ export class Temperature extends Command {
       return;
     }
 
-    console.log(`🌡️ Setting temperature to ${temp}°C`);
+    // console.log(`🌡️ Setting temperature to ${temp}°C`);
+    
+    // Set global temperature
+    // NOTE: Should actually set the scalar field baseline temperature?
+    this.sim.temperature = temp;
 
     // Set temperature across the field
     for (let x = 0; x < this.sim.fieldWidth; x++) {

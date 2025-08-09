@@ -29,7 +29,6 @@ describe("Scene Integration", () => {
       
       const currentAlive = sim.units.filter(u => u.hp > 0).length;
       if (currentAlive < aliveUnits) {
-        console.log(`Unit died at step ${i}, alive: ${currentAlive}/${initialUnitCount}`);
         break;
       }
     }
@@ -43,7 +42,6 @@ describe("Scene Integration", () => {
     const sim = new Simulator(10, 10);
     const loader = new SceneLoader(sim);
     for (const scene in SceneLoader.scenarios) {
-      console.log(`Running scene: ${scene}`);
       loader.loadScenario(scene);
 
       const initialUnitCount = sim.units.filter(u => !u.meta.segment).length; // Don't count segments
@@ -84,15 +82,12 @@ describe("Scene Integration", () => {
     
   //   const initialGhostHp = ghost.hp;
     
-  //   console.log(`Starting priest vs ghost: priest abilities = ${Object.keys(priest.abilities || {})}`);
-  //   console.log(`Ghost perdurance = ${ghost.meta?.perdurance}`);
     
   //   // Run for multiple steps
   //   for (let i = 0; i < 50; i++) {
   //     sim.step();
       
   //     if (ghost.hp < initialGhostHp) {
-  //       console.log(`Ghost took damage at step ${i}: ${ghost.hp}/${initialGhostHp}`);
   //       break;
   //     }
   //   }
@@ -113,7 +108,6 @@ describe("Scene Integration", () => {
     
   //   sim.addUnit(rainmaker);
     
-  //   console.log(`Rainmaker abilities: ${Object.keys(rainmaker.abilities || {})}`);
     
   //   const initialWeather = sim.weather.current;
     
@@ -122,7 +116,6 @@ describe("Scene Integration", () => {
   //     sim.step();
       
   //     if (sim.weather.current !== initialWeather) {
-  //       console.log(`Weather changed at step ${i}: ${sim.weather.current}`);
   //       break;
   //     }
   //   }

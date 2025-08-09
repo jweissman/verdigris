@@ -1,24 +1,19 @@
 <!doctype html>
 <html>
   <head>
-    <script src="../freehold.ts" type="module"></script>
-    <script src="../simulator.ts" type="module"></script>
-    <script src="../game.ts" type="module"></script>
-    <script src="../scene_loader.ts" type="module"></script>
+    <script src="./scene_viewer.ts" type="module"></script>
   </head>
   <body>
     <div class="controls">
       <select id="scene-selector">
         <option value="">Select a battle scenario...</option>
-        <!-- <option value="scenes/simple.battle">Simple Battle</option> -->
         <option value="simple">Basic Formation</option>
         <option value="complex">Complex Formation</option>
         <option value="healing">Healing</option>
         <option value="projectile">Projectile Test</option>
-        <option value="squirrel" selected>Squirrel vs. Worm</option>
-        <option value="chess" selected>Strategic Combat</option>
-        <!-- <option value="scenes/healing.battle">Healing Test</option> -->
-        <!-- <option value="scenes/projectile.battle">Projectile Test</option> -->
+        <option value="squirrel">Squirrel vs. Worm</option>
+        <option value="chess">Strategic Combat</option>
+        <option value="desert" selected>Desert Ambush</option>
       </select>
       <button class="button" id="play-pause">Play/Pause</button>
       <button class="button" id="step">Step</button>
@@ -33,115 +28,7 @@
     </div>
   </body>
   
-  <script type="module">
-    // import { Simulator } from '../simulator.js';
-    // import { SceneLoader } from '../scene_loader.js';
-    // import { createScaledRenderer } from '../renderer.js';
-    console.log("Battlefield scene tester initialized");
-
-    // Set up the game
-    const canvas = document.getElementById('battlefield');
-    const sim = new Simulator(40, 25); // Smaller field for testing
-    const sceneLoader = new SceneLoader(sim);
-    const sprites = Game.loadSprites(); //new Map(); // Empty for now - will use fallback rendering
+  <!-- <script type="module">
     
-    const { renderer, handleResize, draw } = createScaledRenderer(320, 200, canvas, sim, sprites);
-    handleResize();
-    
-    // Console logging to the UI
-    const logDiv = document.getElementById('console-log');
-    logDiv.style.whiteSpace = 'pre-wrap';
-    logDiv.style.fontFamily = 'monospace';
-    logDiv.style.color = 'white';
-    logDiv.style.backgroundColor = 'black';
-    logDiv.style.padding = '10px';
-    logDiv.style.overflowY = 'auto';
-    logDiv.style.maxHeight = '200px';
-    logDiv.style.border = '1px solid #333';
-    const originalLog = console.log;
-    console.log = (...args) => {
-      originalLog(...args);
-      logDiv.textContent += args.join(' ') + '\n\n';
-      logDiv.scrollTop = logDiv.scrollHeight;
-    };
-
-    let isPlaying = false;
-    let gameLoop;
-
-    function startGame() {
-      if (gameLoop) clearInterval(gameLoop);
-      gameLoop = setInterval(() => {
-        if (isPlaying) {
-          sim.step();
-          console.log(`Stepped to tick ${sim.ticks}`);
-        }
-        draw();
-      }, 100); // 10 FPS for easier observation
-    }
-
-    // Controls
-    function handleSceneChange(e) {
-      const selectedScene = e.target.value;
-      if (!selectedScene) return;
-      
-      console.log('Loading scene:', selectedScene);
-      
-      try {
-        sceneLoader.loadScenario(selectedScene);
-        console.log(`Loaded scene with ${sim.units.length} units`);
-        console.log('Units:', sim.units.map(u => `${u.sprite}(${u.team}) at (${u.pos.x},${u.pos.y})`).join(', '));
-        draw();
-        // startGame();
-      } catch (error) {
-        console.error('Failed to load scene:', error);
-      }
-    };
-    document.getElementById('scene-selector').addEventListener('change', async (e) => {
-      handleSceneChange(e);
-    });
-
-    document.getElementById('play-pause').addEventListener('click', () => {
-      isPlaying = !isPlaying;
-      console.log(isPlaying ? 'Playing...' : 'Paused');
-    });
-
-    document.getElementById('step').addEventListener('click', () => {
-      sim.step();
-      console.log(`Stepped to tick ${sim.ticks}`);
-      draw();
-    });
-
-    document.getElementById('restart').addEventListener('click', () => {
-      // const selector = document.getElementById('scene-selector');
-      // if (selector.value) {
-      //   selector.dispatchEvent(new Event('change'));
-      // }
-      // console.log('Restarted scene');
-      handleSceneChange({ target: document.getElementById('scene-selector') });
-    });
-
-    document.getElementById('toggle-view').addEventListener('click', () => {
-      const currentMode = renderer.viewMode || 'cinematic';
-      const newMode = currentMode === 'grid' ? 'cinematic' : 'grid';
-      renderer.setViewMode(newMode);
-      console.log(`Switched to ${newMode} view`);
-      draw();
-    });
-
-    // Start the rendering loop
-    startGame();
-    console.log('Scene tester ready! Select a battle scenario to begin.');
-    // load the first scene if any
-    // const initialScene = document.getElementById('scene-selector').value;
-    // if (initialScene) {
-    //   document.getElementById('scene-selector').dispatchEvent(new Event('change'));
-    // }
-    window.onload = () => {
-      const initialScene = document.getElementById('scene-selector').value;
-      console.log('Initial scene:', initialScene);
-      if (initialScene) {
-        document.getElementById('scene-selector').dispatchEvent(new Event('change'));
-      }
-    };
-  </script>
+  </script> -->
 </html>

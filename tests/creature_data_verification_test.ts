@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test';
-import { CreatureBrowser } from '../src/creature_browser';
+import { CreatureBrowser } from '../src/mwe/creature_browser';
 
-describe('Creature Data Verification - Step by Step', () => {
-  it('step 1: verify creatures actually load from encyclopaedia', () => {
+describe('Creature Data Verification', () => {
+  it('creatures actually load from encyclopaedia', () => {
     const browser = new CreatureBrowser();
     const allCreatures = browser.getAll();
     
@@ -16,14 +16,9 @@ describe('Creature Data Verification - Step by Step', () => {
     expect(farmer).toBeDefined();
     expect(soldier).toBeDefined(); 
     expect(worm).toBeDefined();
-    
-    console.log(`Step 1 ✅: ${allCreatures.length} creatures loaded`);
-    console.log(`   farmer: ${farmer ? 'exists' : 'missing'}`);
-    console.log(`   soldier: ${soldier ? 'exists' : 'missing'}`);
-    console.log(`   worm: ${worm ? 'exists' : 'missing'}`);
   });
 
-  it('step 2: verify each creature has complete data structure', () => {
+  it('creature has complete data structure', () => {
     const browser = new CreatureBrowser();
     const creatures = browser.getAll();
     
@@ -56,13 +51,11 @@ describe('Creature Data Verification - Step by Step', () => {
     expect(invalidCreatures.length).toBe(0);
     expect(validCount).toBe(creatures.length);
     
-    console.log(`Step 2 ✅: ${validCount}/${creatures.length} creatures have valid data structure`);
     if (invalidCreatures.length > 0) {
-      console.log(`   Invalid: ${invalidCreatures.join(', ')}`);
     }
   });
 
-  it('step 3: verify filtering returns correct creatures', () => {
+  it('filtering returns correct creatures', () => {
     const browser = new CreatureBrowser();
     
     const all = browser.getByFilter('all');
@@ -88,8 +81,6 @@ describe('Creature Data Verification - Step by Step', () => {
       expect(creature.team).toBe('friendly');
     });
     
-    console.log(`Step 3 ✅: Filtering verified`);
-    console.log(`   all: ${all.length}, huge: ${huge.length}, mechanical: ${mechanical.length}, friendly: ${friendly.length}`);
   });
 
   it('step 4: verify specific creatures have expected stats', () => {
@@ -115,9 +106,6 @@ describe('Creature Data Verification - Step by Step', () => {
       expect(mechatron.hp).toBeGreaterThan(50); // Should be high HP
     }
     
-    console.log(`Step 4 ✅: Specific creature stats verified`);
-    console.log(`   farmer: sprite=${farmer?.sprite}, hp=${farmer?.hp}, team=${farmer?.team}`);
-    console.log(`   mechatron: ${mechatron ? `sprite=${mechatron.sprite}, hp=${mechatron.hp}, huge=${mechatron.isHuge}` : 'not found'}`);
   });
 
   it('step 5: generate HTML output and verify it contains creature data', () => {
@@ -159,10 +147,5 @@ describe('Creature Data Verification - Step by Step', () => {
     const cardCount = (html.match(/creature-card/g) || []).length;
     expect(cardCount).toBe(creatures.length);
     
-    console.log(`Step 5 ✅: HTML generation verified`);
-    console.log(`   Generated ${cardCount} creature cards`);
-    console.log(`   HTML contains farmer: ${html.includes('farmer')}`);
-    console.log(`   HTML contains HUGE tag: ${html.includes('HUGE')}`);
-    console.log(`   HTML contains MECHANICAL tag: ${html.includes('MECHANICAL')}`);
   });
 });

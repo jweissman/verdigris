@@ -18,7 +18,7 @@ export class Tossing extends Rule {
 
     if (unit.meta.tossProgress >= tossDuration) {
       // Toss completed - land at target
-      console.log(`🤾 Toss completed for ${unit.id}. Landing at target.`);
+      // console.log(`🤾 Toss completed for ${unit.id}. Landing at target.`);
       unit.meta.tossing = false;
       unit.meta.z = 0;
       

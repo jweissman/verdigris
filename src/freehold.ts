@@ -9,7 +9,6 @@ class Freehold extends Game {
     return (e) => {
       if (e.key.match(/[0-9]/)) {
         this.numBuffer += e.key;
-        console.log(`Buffering number: ${this.numBuffer}`);
         return;
       }
       let repetitions = parseInt(this.numBuffer, 10) || 1; // Default to 1 if no number
@@ -29,7 +28,6 @@ class Freehold extends Game {
     const canvas = canvasId instanceof HTMLCanvasElement
       ? canvasId
       : document.getElementById(canvasId) as HTMLCanvasElement;
-    console.log('Canvas element:', canvas);
     if (canvas) {
       let addInputListener = (cb: (e: { key: string }) => void) => {
         document.addEventListener('keydown', (e) => {
@@ -58,7 +56,6 @@ class Freehold extends Game {
     } else {
       console.error(`Canvas element ${canvasId} not found!`);
     }
-    console.log('Game initialized:', game);
     function gameLoop() {
       if (game) { game.update(); }
       requestAnimationFrame(gameLoop);
@@ -69,8 +66,6 @@ class Freehold extends Game {
 
 export { Freehold };
 
-
-console.log('Freehold module loaded.');
 if (typeof window !== 'undefined') {
   // @ts-ignore
   window.Freehold = Freehold; // Expose for browser use

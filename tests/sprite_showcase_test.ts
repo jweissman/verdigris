@@ -22,11 +22,8 @@ describe('Sprite Showcase - Visual Testing', () => {
   });
 
   it('should create a comprehensive creature showcase for visual testing', () => {
-    console.log('🎭 Creating comprehensive creature showcase for visual testing');
-    
     // Get all available creatures from the bestiary
     const allCreatures = Object.keys(Encyclopaedia.bestiary);
-    console.log(`📋 Found ${allCreatures.length} creature types to test`);
     
     let x = 2;
     let y = 2;
@@ -57,7 +54,6 @@ describe('Sprite Showcase - Visual Testing', () => {
           abilities: Object.keys(creature.abilities)
         });
         
-        console.log(`  ✅ ${creatureType}: ${creature.sprite} at (${x}, ${y}) - ${creature.meta.huge ? 'HUGE' : 'normal'}${creature.meta.segmented ? ` | ${creature.meta.segmentCount} segments` : ''}`);
         
         // Move to next position
         x += spacing;
@@ -67,7 +63,7 @@ describe('Sprite Showcase - Visual Testing', () => {
         }
         
       } catch (error) {
-        console.warn(`  ⚠️ Failed to create ${creatureType}: ${error}`);
+        // Failed to create creature, skip
       }
     });
     
@@ -76,9 +72,6 @@ describe('Sprite Showcase - Visual Testing', () => {
       sim.step();
     }
     
-    // Generate showcase report
-    console.log('\n🎯 CREATURE SHOWCASE REPORT');
-    console.log('================================');
     
     const categories = {
       normal: creatureDetails.filter(c => !c.huge && !c.segmented),
@@ -91,30 +84,14 @@ describe('Sprite Showcase - Visual Testing', () => {
     };
     
     Object.entries(categories).forEach(([category, creatures]) => {
-      if (creatures.length > 0) {
-        console.log(`\n📦 ${category.toUpperCase()} (${creatures.length}):`);
-        creatures.forEach(c => {
-          console.log(`  • ${c.type}: sprite="${c.sprite}" pos=(${c.position.x},${c.position.y}) hp=${c.hp}${c.segmentCount ? ` segments=${c.segmentCount}` : ''}`);
-        });
-      }
+      // Category processed
     });
     
     // Verify all creatures were created successfully
     expect(sim.units.length).toBeGreaterThan(0);
     expect(sim.units.length).toBeLessThanOrEqual(allCreatures.length * 15); // Allow for segments
     
-    // Test different rendering scenarios
-    console.log('\n🎨 RENDERING SCENARIOS TO TEST:');
-    console.log('1. Grid View: Check creature positioning and overlap detection');
-    console.log('2. Isometric View: Verify depth sorting and segment rendering');
-    console.log('3. Different states: idle, attack, dead animations');
-    console.log('4. Facing directions: left/right sprite flipping');
-    console.log('5. Status effects: grappled, frozen, burning particles');
-    console.log('6. Segmented creatures: proper chain following');
-    console.log('7. Huge units: phantom placement and multi-cell rendering');
-    
     // Create some interaction scenarios
-    console.log('\n⚔️ Adding interaction scenarios...');
     
     // Add some projectiles for visual testing
     sim.projectiles.push({
@@ -140,25 +117,12 @@ describe('Sprite Showcase - Visual Testing', () => {
       target: { x: 20, y: 12 }
     } as any);
     
-    console.log('✅ Sprite showcase created successfully!');
-    console.log(`📊 Total units: ${sim.units.length} (including segments)`);
-    console.log(`🎯 Total projectiles: ${sim.projectiles.length}`);
-    console.log('');
-    console.log('🔍 Visual Testing Checklist:');
-    console.log('□ All sprites render without errors');
-    console.log('□ Huge units have proper phantom placement');
-    console.log('□ Segmented creatures form proper chains');
-    console.log('□ Facing directions work correctly');
-    console.log('□ Health bars display properly');
-    console.log('□ Shadows and anchor points are correct');
-    console.log('□ Overlays and status effects render');
-    console.log('□ Different view modes (grid/iso) work');
-    console.log('□ Animation frames cycle correctly');
-    console.log('□ No clipping or rendering artifacts');
+    // Verify units were created
+    expect(sim.units.length).toBeGreaterThan(allCreatures.length); // Includes segments
+    expect(sim.projectiles.length).toBeGreaterThan(0);
   });
 
   it('should test specific problematic rendering scenarios', () => {
-    console.log('🔍 Testing specific rendering edge cases');
     
     // Test overlapping huge units
     const megasquirrel1 = Encyclopaedia.unit('megasquirrel');
@@ -188,17 +152,14 @@ describe('Sprite Showcase - Visual Testing', () => {
       sim.step();
     }
     
-    console.log('✅ Edge case scenarios created');
-    console.log(`  - Overlapping huge units: 2`);
-    console.log(`  - Boundary segmented creatures: 1`);
-    console.log(`  - Desert megaworm (12 segments): 1`);
-    console.log(`  - Total units including segments: ${sim.units.length}`);
+    // Verify edge cases created
+    expect(sim.units.filter(u => u.meta?.huge).length).toBeGreaterThanOrEqual(2);
+    expect(sim.units.filter(u => u.meta?.segmented).length).toBeGreaterThanOrEqual(1);
     
     expect(sim.units.length).toBeGreaterThan(4); // Original units + segments
   });
 
   it('should create animation state testing scenarios', () => {
-    console.log('🎬 Creating animation state testing scenarios');
     
     const testUnits = ['soldier', 'demon', 'grappler', 'mechatronist'];
     
@@ -231,10 +192,8 @@ describe('Sprite Showcase - Visual Testing', () => {
       sim.addUnit(leftUnit);
     });
     
-    console.log('✅ Animation test scenarios created');
-    console.log(`  - States tested: idle, attack, dead, facing left`);
-    console.log(`  - Unit types: ${testUnits.join(', ')}`);
-    console.log(`  - Total animation test units: ${testUnits.length * 4}`);
+    // Verify animation test units
+    expect(sim.units.length).toBe(testUnits.length * 4);
     
     expect(sim.units.filter(u => u.id.includes('_idle')).length).toBe(testUnits.length);
     expect(sim.units.filter(u => u.id.includes('_attack')).length).toBe(testUnits.length);

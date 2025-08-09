@@ -59,7 +59,6 @@ describe("Ability System Integration", () => {
       // Get fresh ghost reference
       const freshGhost = sim.units.find(u => u.id === ghost.id);
       if (freshGhost && freshGhost.hp < initialGhostHp) {
-        console.log(`Ghost took radiant damage at step ${i}: ${freshGhost.hp}/${initialGhostHp}`);
         break;
       }
     }

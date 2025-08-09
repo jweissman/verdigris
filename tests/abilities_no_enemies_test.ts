@@ -7,7 +7,6 @@ import { CommandHandler } from '../src/rules/command_handler';
 
 describe('Abilities Without Nearby Enemies', () => {
   it('should allow deployment commands even without enemies present', () => {
-    console.log('📦 Testing deployment without enemies');
     
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
@@ -17,7 +16,6 @@ describe('Abilities Without Nearby Enemies', () => {
     toymaker.abilities.deployBot = { ...Encyclopaedia.abilities.deployBot, maxUses: 5 };
     sim.addUnit(toymaker);
     
-    console.log('Deployed toymaker with no enemies present');
     
     // Test that deployment commands work without enemies
     sim.parseCommand('deploy clanker');
@@ -32,7 +30,6 @@ describe('Abilities Without Nearby Enemies', () => {
   });
   
   it('should test supportive abilities work without combat targets', () => {
-    console.log('🛡️ Testing supportive abilities without enemies');
     
     const sim = new Simulator();
     sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
@@ -43,7 +40,6 @@ describe('Abilities Without Nearby Enemies', () => {
     mechatron.hp = 80; // 40% health to trigger self-heal
     sim.addUnit(mechatron);
     
-    console.log(`Mechatron at ${mechatron.hp}/${mechatron.maxHp} HP, no enemies present`);
     
     // Test shield recharge ability manually (self-targeting supportive ability)
     const shieldRecharge = mechatron.abilities.shieldRecharge;
@@ -62,7 +58,6 @@ describe('Abilities Without Nearby Enemies', () => {
   });
   
   it('should test area effect abilities can trigger in empty areas', () => {
-    console.log('💨 Testing area abilities without targets');
     
     const sim = new Simulator();
     sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
@@ -71,7 +66,6 @@ describe('Abilities Without Nearby Enemies', () => {
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 20, y: 15 } };
     sim.addUnit(mechatron);
     
-    console.log('Mechatron deployed in empty field');
     
     // Test EMP pulse in empty area
     const empPulse = mechatron.abilities.empPulse;
@@ -108,7 +102,6 @@ describe('Abilities Without Nearby Enemies', () => {
   });
   
   it('should verify toymaker deployment limits work during solo play', () => {
-    console.log('🎯 Testing deployment limits in peaceful scenario');
     
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
@@ -118,7 +111,6 @@ describe('Abilities Without Nearby Enemies', () => {
     toymaker.abilities.deployBot = { ...Encyclopaedia.abilities.deployBot, maxUses: 3 }; // Lower limit for test
     sim.addUnit(toymaker);
     
-    console.log('Toymaker deployed in peaceful field with 3 deployment limit');
     
     // Try to deploy more constructs than the limit
     sim.parseCommand('deploy clanker');
@@ -141,7 +133,6 @@ describe('Abilities Without Nearby Enemies', () => {
   });
   
   it('should test environmental abilities work without combat context', () => {
-    console.log('🌨️ Testing environmental abilities');
     
     const sim = new Simulator();
     sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
@@ -150,7 +141,6 @@ describe('Abilities Without Nearby Enemies', () => {
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 20, y: 20 } };
     sim.addUnit(rainmaker);
     
-    console.log('Rainmaker deployed for environmental testing');
     
     // Test that environmental abilities are defined and can trigger
     const makeRain = rainmaker.abilities.makeRain;

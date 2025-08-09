@@ -5,7 +5,9 @@ import Encyclopaedia from "../src/dmg/encyclopaedia";
 describe("New Units Integration", () => {
   it("should create rainmaker with weather abilities", () => {
     const sim = new Simulator(20, 20);
-    const rainmaker = sim.createRainmaker({ x: 5, y: 5 });
+    const rainmakerUnit = Encyclopaedia.unit('rainmaker');
+    sim.addUnit({ ...rainmakerUnit, pos: { x: 5, y: 5 } });
+    const rainmaker = sim.units.find(u => u.type === 'rainmaker');
     
     expect(rainmaker.sprite).toBe('rainmaker');
     expect(rainmaker.abilities.makeRain).toBeDefined();
@@ -15,12 +17,14 @@ describe("New Units Integration", () => {
 
   it("should create Big Worm with segmented body", () => {
     const sim = new Simulator(20, 20);
-    const bigWorm = sim.createBigWorm({ x: 5, y: 5 }, 4);
+    const bigWormUnit = Encyclopaedia.unit('big-worm');
+    sim.addUnit({ ...bigWormUnit, pos: { x: 5, y: 5 } });
+    const bigWorm = sim.units.find(u => u.type === 'big-worm');
     const wormId = bigWorm.id;
     
     expect(bigWorm.sprite).toBe('big-worm'); // Updated to use new sprite
     expect(bigWorm.meta.segmented).toBe(true);
-    expect(bigWorm.meta.segmentCount).toBe(4);
+    expect(bigWorm.meta.segmentCount).toBe(5); // Big worm has 5 segments
     expect(bigWorm.abilities.breatheFire).toBeDefined();
     expect(bigWorm.team).toBe('hostile');
     

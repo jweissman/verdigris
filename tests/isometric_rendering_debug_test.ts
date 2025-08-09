@@ -42,11 +42,6 @@ describe.skip('Isometric Rendering Debug - Coordinate Analysis', () => {
     const farmer = Encyclopaedia.unit('farmer');
     sim.addUnit({ ...farmer, pos: { x: 1, y: 1 } });
 
-    console.log(`🔍 SETUP ANALYSIS:`);
-    console.log(`   - Canvas: 64x64 pixels`);
-    console.log(`   - Sim field: 2x2 cells`); 
-    console.log(`   - Unit position: (1, 1) - center of 2x2 grid`);
-    console.log(`   - Expected: sprite should render at center of 64x64 canvas`);
 
     // Create isometric view
     const sprites = new Map(); // Empty sprites for now
@@ -56,14 +51,11 @@ describe.skip('Isometric Rendering Debug - Coordinate Analysis', () => {
     // Render and analyze
     isoView.show();
     
-    console.log(`\n📊 RENDERING OPERATIONS (${operations.length} total):`);
     
     // Analyze coordinate patterns
     const drawOps = operations.filter(op => ['fillRect', 'arc', 'drawImage'].includes(op.type));
     const transforms = operations.filter(op => ['translate', 'scale', 'setTransform'].includes(op.type));
     
-    console.log(`   - Draw operations: ${drawOps.length}`);
-    console.log(`   - Transform operations: ${transforms.length}`);
     
     // Check if anything renders within canvas bounds
     const inBounds = drawOps.filter(op => {
@@ -75,17 +67,14 @@ describe.skip('Isometric Rendering Debug - Coordinate Analysis', () => {
       return true;
     });
     
-    console.log(`   - Operations in canvas bounds: ${inBounds.length}`);
     
     // Show actual coordinates
     drawOps.forEach((op, i) => {
       if (i < 10) { // Limit output
-        console.log(`   - ${op.type}: x=${op.x}, y=${op.y} ${op.r ? `r=${op.r}` : ''}`);
       }
     });
     
     if (drawOps.length === 0) {
-      console.log(`   ❌ NO DRAW OPERATIONS - Isometric view not rendering anything`);
     }
     
     expect(operations.length).toBeGreaterThan(0);
@@ -135,12 +124,10 @@ describe.skip('Isometric Rendering Debug - Coordinate Analysis', () => {
         return true;
       });
 
-      console.log(`📐 ${size.name} (${size.width}x${size.height}): ${drawOps.length} ops, ${inBounds.length} in bounds`);
     });
   });
 
   it('should analyze isometric coordinate transformation', () => {
-    console.log(`\n🔄 ISOMETRIC COORDINATE ANALYSIS:`);
     
     // Test the toIsometric transformation manually
     // This is what Isometric view should be doing:
@@ -160,13 +147,8 @@ describe.skip('Isometric Rendering Debug - Coordinate Analysis', () => {
 
     gridPositions.forEach(pos => {
       const iso = toIsometric(pos.gridX, pos.gridY);
-      console.log(`   Grid (${pos.gridX}, ${pos.gridY}) -> Iso (${iso.x}, ${iso.y})`);
     });
 
-    console.log(`\n💡 HYPOTHESIS:`);
-    console.log(`   - If farmer at (1,1) maps to coordinates outside 64x64 canvas`);
-    console.log(`   - Then isometric view renders but outside visible area`);
-    console.log(`   - Solution: Adjust canvas size or coordinate scaling`);
     
     expect(true).toBe(true);
   });

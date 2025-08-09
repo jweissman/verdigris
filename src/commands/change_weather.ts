@@ -1,8 +1,8 @@
 import { Command } from "../rules/command";
 
 export class ChangeWeather extends Command {
-  execute(unitId: string | null, weatherType: string, duration?: string, intensity?: string) {
-    console.log(`Weather command: ${weatherType} for ${duration || 'default'} duration`);
+  execute(_unitId: string | null, weatherType: string, duration?: string, intensity?: string) {
+    // console.log(`Weather command: ${weatherType} for ${duration || 'default'} duration`);
     
     const durationValue = duration ? parseInt(duration) : 80; // Default 10 seconds at 8fps
     const intensityValue = intensity ? parseFloat(intensity) : 0.8;
@@ -11,6 +11,21 @@ export class ChangeWeather extends Command {
       case 'rain':
         if (this.sim.setWeather) {
           this.sim.setWeather('rain', durationValue, intensityValue);
+        }
+        // Create rain particles immediately
+        for (let i = 0; i < Math.min(durationValue, 100); i++) {
+          this.sim.particles.push({
+            id: `rain_${Date.now()}_${i}`,
+            type: 'rain',
+            pos: { 
+              x: Math.random() * this.sim.fieldWidth * 8, 
+              y: Math.random() * 10 
+            },
+            vel: { x: 0, y: 1 + Math.random() * 2 },
+            radius: 1,
+            color: '#4488CC',
+            lifetime: 100
+          });
         }
         break;
         
@@ -33,10 +48,28 @@ export class ChangeWeather extends Command {
       case 'sand':
       case 'sandstorm':
         // Sandstorm weather effect
+        console.log(`Setting weather to sandstorm for ${durationValue} ticks at ${intensityValue} intensity`);
         if (this.sim.setWeather) {
           this.sim.setWeather('sandstorm', durationValue, intensityValue);
         }
-        // Find or create desert effects rule for visual sand particles
+        
+        // Create sand particles immediately
+        for (let i = 0; i < Math.min(durationValue, 200); i++) {
+          this.sim.particles.push({
+            id: `sand_${Date.now()}_${i}`,
+            type: 'sand',
+            pos: { 
+              x: -5 + Math.random() * (this.sim.fieldWidth + 10) * 8, 
+              y: Math.random() * this.sim.fieldHeight * 8 
+            },
+            vel: { x: 2 + Math.random() * 3, y: (Math.random() - 0.5) * 0.5 },
+            radius: 0.5 + Math.random() * 0.5,
+            color: '#D2691E',
+            lifetime: 100 + Math.random() * 50
+          });
+        }
+        
+        // Also trigger desert effects rule if available
         let desertRule = this.sim.rules?.find(r => r.constructor.name === 'DesertEffects');
         if (desertRule && (desertRule as any).triggerSandstorm) {
           (desertRule as any).triggerSandstorm(durationValue, intensityValue);

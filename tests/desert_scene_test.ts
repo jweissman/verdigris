@@ -24,7 +24,7 @@ describe('Desert Day Scene', () => {
     ];
     
     // Load the desert scene
-    loader.loadScene('desert-day');
+    loader.loadScene('desert');
     
     // Check that units were loaded
     const grapplers = sim.units.filter(u => u.sprite === 'grappler');
@@ -50,7 +50,7 @@ describe('Desert Day Scene', () => {
     ];
     
     // Load scene
-    loader.loadScene('desert-day');
+    loader.loadScene('desert');
     
     // Step to create segments
     sim.step();
@@ -61,13 +61,11 @@ describe('Desert Day Scene', () => {
     
     // Count desert worms first
     const desertWorms = sim.units.filter(u => u.id?.includes('desert-worm') && !u.meta.segment);
-    console.log(`Found ${desertWorms.length} desert worms`);
     
     // Desert worms should have 3 segments each
     const desertWormSegments = segments.filter(s => 
       s.meta.parentId?.includes('desert-worm')
     );
-    console.log(`Found ${desertWormSegments.length} desert worm segments`);
     // With 2 desert worms, we should have at least 6 segments
     expect(desertWormSegments.length).toBeGreaterThanOrEqual(3); // At least 1 worm * 3 segments for now
     
@@ -88,7 +86,7 @@ describe('Desert Day Scene', () => {
     ];
     
     // Load scene (which includes temperature 35 command)
-    loader.loadScene('desert-day');
+    loader.loadScene('desert');
     
     // Process initial commands
     sim.step();
@@ -111,7 +109,7 @@ describe('Desert Day Scene', () => {
     ];
     
     // Load scene
-    loader.loadScene('desert-day');
+    loader.loadScene('desert');
     
     // Manually trigger sandstorm
     desertRule.triggerSandstorm(100, 0.8);
@@ -134,7 +132,7 @@ describe('Desert Day Scene', () => {
     ];
     
     // Load scene
-    loader.loadScene('desert-day');
+    loader.loadScene('desert');
     
     // Find grapplers
     const grapplers = sim.units.filter(u => u.sprite === 'grappler');
@@ -170,7 +168,7 @@ describe('Desert Day Scene', () => {
     ];
     
     // Add a hidden enemy
-    loader.loadScene('desert-day');
+    loader.loadScene('desert');
     
     // Make one enemy hidden
     const enemy = sim.units.find(u => u.team === 'hostile');

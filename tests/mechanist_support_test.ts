@@ -11,7 +11,6 @@ describe('Mechanist Support Units', () => {
   });
 
   it('should create all mechanist support units with correct properties', () => {
-    console.log('🤖 Testing mechanist support unit creation');
     
     const mechanistUnits = ['builder', 'fueler', 'mechanic', 'engineer', 'welder', 'assembler'];
     
@@ -27,7 +26,6 @@ describe('Mechanist Support Units', () => {
       expect(unit.hp).toBeGreaterThan(15); // All are reasonably durable
       expect(unit.abilities).toBeDefined();
       
-      console.log(`✅ ${unitType}: ${unit.hp}hp, abilities: ${Object.keys(unit.abilities).join(', ')}`);
     });
     
     // Verify specific role tags
@@ -43,7 +41,6 @@ describe('Mechanist Support Units', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('🔧 Testing Builder construct reinforcement');
     
     // Create builder and a construct to reinforce
     const builder = { ...Encyclopaedia.unit('builder'), pos: { x: 5, y: 5 } };
@@ -70,7 +67,6 @@ describe('Mechanist Support Units', () => {
       const reinforceParticles = sim.particles.filter(p => p.color === '#00FF88');
       expect(reinforceParticles.length).toBeGreaterThan(0);
       
-      console.log(`✅ Builder reinforced construct: ${originalHp}→${reinforcedConstruct!.hp}hp, armor +${reinforcedConstruct!.meta.armor}`);
     }
   });
 
@@ -78,7 +74,6 @@ describe('Mechanist Support Units', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('⚡ Testing Fueler power surge');
     
     // Create fueler and mechanical units to boost
     const fueler = { ...Encyclopaedia.unit('fueler'), pos: { x: 5, y: 5 } };
@@ -112,7 +107,6 @@ describe('Mechanist Support Units', () => {
       const energyParticles = sim.particles.filter(p => p.color === '#FFAA00');
       expect(energyParticles.length).toBe(8); // Energy field ring
       
-      console.log('✅ Fueler recharged all nearby mechanical unit abilities');
     }
   });
 
@@ -120,7 +114,6 @@ describe('Mechanist Support Units', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('🔧 Testing Mechanic emergency repair');
     
     // Create mechanic and damaged units
     const mechanic = { ...Encyclopaedia.unit('mechanic'), pos: { x: 5, y: 5 } };
@@ -158,7 +151,6 @@ describe('Mechanist Support Units', () => {
       const sparkParticles = sim.particles.filter(p => p.type === 'electric_spark' && p.color === '#FFFF00');
       expect(sparkParticles.length).toBe(6);
       
-      console.log(`✅ Mechanic repaired construct: ${originalHp}→${repairedConstruct!.hp}hp, debuffs cleared`);
     }
   });
 
@@ -166,7 +158,6 @@ describe('Mechanist Support Units', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('🛡️ Testing Engineer shield generator');
     
     // Create engineer and nearby enemy to trigger shield
     const engineer = { ...Encyclopaedia.unit('engineer'), pos: { x: 5, y: 5 } };
@@ -194,7 +185,6 @@ describe('Mechanist Support Units', () => {
         expect(particle.vel.y).toBe(0);
       });
       
-      console.log(`✅ Engineer generated ${shieldParticles.length} shield barrier particles`);
     }
   });
 
@@ -202,7 +192,6 @@ describe('Mechanist Support Units', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('💻 Testing Engineer system hack');
     
     // Create engineer and enemy to hack
     const engineer = { ...Encyclopaedia.unit('engineer'), pos: { x: 5, y: 5 } };
@@ -233,7 +222,6 @@ describe('Mechanist Support Units', () => {
       const hackParticles = sim.particles.filter(p => p.color === '#FF0088');
       expect(hackParticles.length).toBe(1);
       
-      console.log('✅ Engineer hacked enemy systems, disabling abilities for 30 ticks');
     }
   });
 
@@ -241,7 +229,6 @@ describe('Mechanist Support Units', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('🔥 Testing Welder repair + reinforcement abilities');
     
     const welder = { ...Encyclopaedia.unit('welder'), pos: { x: 5, y: 5 } };
     const construct = { ...Encyclopaedia.unit('swarmbot'), pos: { x: 6, y: 5 } };
@@ -261,7 +248,6 @@ describe('Mechanist Support Units', () => {
       const repairedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
       expect(repairedConstruct).toBeDefined();
       expect(repairedConstruct!.hp).toBe(Math.min(repairedConstruct!.maxHp, beforeHp + 15));
-      console.log(`✅ Welder repaired construct: ${beforeHp}→${repairedConstruct!.hp}hp`);
     }
     
     // Test reinforcement
@@ -275,7 +261,6 @@ describe('Mechanist Support Units', () => {
       expect(reinforcedConstruct!.hp).toBe(beforeHp + 10);
       expect(reinforcedConstruct!.maxHp).toBe(beforeMaxHp + 10);
       expect(reinforcedConstruct!.meta.armor).toBe(1);
-      console.log(`✅ Welder reinforced construct: max hp ${beforeMaxHp}→${reinforcedConstruct!.maxHp}, +armor`);
     }
   });
 
@@ -283,7 +268,6 @@ describe('Mechanist Support Units', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('⚙️ Testing Assembler advanced abilities');
     
     const assembler = { ...Encyclopaedia.unit('assembler'), pos: { x: 5, y: 5 } };
     const construct1 = { ...Encyclopaedia.unit('roller'), pos: { x: 6, y: 5 } };
@@ -307,7 +291,6 @@ describe('Mechanist Support Units', () => {
       const reinforcedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
       expect(reinforcedConstruct).toBeDefined();
       expect(reinforcedConstruct!.hp).toBe(beforeHp + 10);
-      console.log(`✅ Assembler reinforced construct: +10hp, +armor`);
     }
     
     // Test power surge
@@ -324,7 +307,6 @@ describe('Mechanist Support Units', () => {
       expect(simConstruct1.lastAbilityTick!.chargeAttack).toBe(0);
       expect(simConstruct2.lastAbilityTick!.zapHighest).toBe(0);
       
-      console.log('✅ Assembler power surge recharged all nearby construct abilities');
     }
   });
 
@@ -332,7 +314,6 @@ describe('Mechanist Support Units', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    console.log('🤝 Testing mechanist-construct synergy');
     
     // Create a diverse mechanist support team
     const builder = { ...Encyclopaedia.unit('builder'), pos: { x: 5, y: 5 } };
@@ -387,6 +368,5 @@ describe('Mechanist Support Units', () => {
     }
     
     expect(synergisticActions).toBe(3); // All synergies should work
-    console.log(`✅ All ${synergisticActions} mechanist-construct synergies working correctly`);
   });
 });

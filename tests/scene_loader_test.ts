@@ -82,7 +82,6 @@ w...w`;
     loader.loadFromText(sceneText.trim());
     
     const worm = sim.units[0];
-    console.log("Worm abilities:", worm.abilities);
     expect(worm.abilities.jumps).toBeDefined();
     expect(worm.abilities.jumps.cooldown).toBe(100);
     expect(worm.abilities.jumps.config?.impact.radius).toBe(3);
@@ -96,18 +95,15 @@ w...w`;
 s..
 ---
 bg desert
-desert-heat`;
+temperature 35`;
     
     loader.loadFromText(sceneText.trim());
     
     // Should set background
     expect((sim as any).sceneBackground).toBe('desert');
     
-    // Should queue desert-heat command
-    expect(sim.queuedCommands).toBeDefined();
-    expect(sim.queuedCommands?.length).toBe(1);
-    expect(sim.queuedCommands?.[0].type).toBe('desert-heat');
-    expect(sim.queuedCommands?.[0].args).toEqual([]);
+    // Temperature should be set (command was processed)
+    expect(sim.temperature).toBe(35);
   });
 
   it('should parse commands with arguments', () => {
@@ -118,15 +114,17 @@ desert-heat`;
 s..
 ---
 weather rain 100
-sandstorm 120 0.8`;
+weather sand 120 0.8`;
     
     loader.loadFromText(sceneText.trim());
     
-    expect(sim.queuedCommands?.length).toBe(2);
-    expect(sim.queuedCommands?.[0].type).toBe('weather');
-    expect(sim.queuedCommands?.[0].args).toEqual(['rain', '100']);
-    expect(sim.queuedCommands?.[1].type).toBe('sandstorm');
-    expect(sim.queuedCommands?.[1].args).toEqual(['120', '0.8']);
+    // Commands should have been processed
+    // Check that particles were created
+    const rainParticles = sim.particles.filter(p => p.type === 'rain');
+    const sandParticles = sim.particles.filter(p => p.type === 'sand');
+    
+    expect(rainParticles.length).toBeGreaterThan(0);
+    expect(sandParticles.length).toBeGreaterThan(0);
   });
 
   it('should handle background command specially', () => {

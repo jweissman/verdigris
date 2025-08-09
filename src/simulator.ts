@@ -184,7 +184,7 @@ class Simulator {
 
   paused: boolean = false;
   pause() {
-    console.log(`!!! Simulation paused at tick ${this.ticks}`);
+    // console.log(`!!! Simulation paused at tick ${this.ticks}`);
     this.paused = true;
   }
 
@@ -223,7 +223,7 @@ class Simulator {
     ];
   }
 
-  addUnit(unit: Partial<Unit>) {
+  addUnit(unit: Partial<Unit>): Unit {
     let u = {
       ...unit,
       id: unit.id || `unit_${Date.now()}`,
@@ -240,7 +240,8 @@ class Simulator {
     };
     this.units.push(u);
     // console.log(`Added unit ${u.id} at (${u.pos.x}, ${u.pos.y}) with hp: ${u.hp}, team: ${u.team}`, u);
-    return this;
+    // return this;
+    return u;
   }
 
   create(unit: Unit) {
@@ -261,10 +262,9 @@ class Simulator {
     // console.log(`Simulator step called at tick ${this.ticks}, paused: ${this.paused}`);
     if (this.paused) {
       if (!force) {
-        console.log(`Simulation is paused, skipping step.`);
         return this;
       } else {
-        console.log(`Forcing simulation step while paused.`);
+        console.debug(`Forcing simulation step while paused.`);
       }
     }
 
@@ -283,7 +283,10 @@ class Simulator {
 
       // Debugging: print unit changes
       this._debugUnits(lastUnits, rule.constructor.name);
-      lastUnits = this.units.map(u => ({ ...u }));
+      lastUnits = this.units.map(u => ({ 
+        ...u,
+        meta: u.meta ? { ...u.meta } : {}
+      }));
     }
     let t1 = performance.now();
     let elapsed = t1 - t0;
@@ -531,7 +534,7 @@ class Simulator {
       
       // Weather ends
       if (this.weather.duration <= 0) {
-        console.log(`Weather ended: ${this.weather.current}`);
+        // console.log(`Weather ended: ${this.weather.current}`);
         this.weather.current = 'clear';
         this.weather.intensity = 0;
       }
@@ -589,7 +592,7 @@ class Simulator {
   
   // Weather control methods
   setWeather(type: 'clear' | 'rain' | 'storm', duration: number = 80, intensity: number = 0.7): void {
-    console.log(`Setting weather to ${type} for ${duration} ticks at ${intensity} intensity`);
+    // console.log(`Setting weather to ${type} for ${duration} ticks at ${intensity} intensity`);
     this.weather.current = type;
     this.weather.duration = duration;
     this.weather.intensity = intensity;
@@ -640,7 +643,7 @@ class Simulator {
     if (!unit.meta) unit.meta = {}; // Ensure meta exists
     if (unit.meta.onFire) return; // Already on fire
     
-    console.log(`${unit.id} is set on fire!`);
+    // console.log(`${unit.id} is set on fire!`);
     unit.meta.onFire = true;
     unit.meta.fireDuration = 40; // Burn for 5 seconds at 8fps
     unit.meta.fireTickDamage = 2; // Damage per tick while burning
@@ -666,7 +669,7 @@ class Simulator {
         
         // Extinguish if duration expires
         if (unit.meta.fireDuration <= 0) {
-          console.log(`${unit.id} fire extinguished`);
+          // console.log(`${unit.id} fire extinguished`);
           unit.meta.onFire = false;
           delete unit.meta.fireDuration;
           delete unit.meta.fireTickDamage;
@@ -685,7 +688,7 @@ class Simulator {
           
           // High humidity and lower temperature can extinguish fires
           if (humidity > 0.6 && temperature < 30) {
-            console.log(`Rain extinguished fire on ${unit.id}`);
+            // console.log(`Rain extinguished fire on ${unit.id}`);
             unit.meta.onFire = false;
             delete unit.meta.fireDuration;
             delete unit.meta.fireTickDamage;
@@ -694,131 +697,6 @@ class Simulator {
       }
     }
   }
-
-  // Helper method to create a rainmaker unit
-  createRainmaker(pos: Vec2, team: 'friendly' | 'hostile' = 'friendly'): Unit {
-    const rainmaker: Unit = {
-      id: `rainmaker_${Date.now()}`,
-      pos,
-      intendedMove: { x: 0, y: 0 },
-      team,
-      sprite: 'rainmaker', // Use dedicated rainmaker sprite
-      state: 'idle',
-      hp: 80,
-      maxHp: 80,
-      mass: 1,
-      abilities: {
-        makeRain: {
-          name: 'Make Rain',
-          cooldown: 200, // 25 seconds at 8fps
-          range: 10,
-          target: 'area',
-          config: {
-            duration: 80, // 10 seconds of rain at 8fps
-            intensity: 0.8,
-            radius: 5
-          },
-          effect: (unit: Unit, target?: Unit | Vec2, sim?: any) => {
-            if (sim && sim.setWeather) {
-              console.log(`${unit.id} is making it rain!`);
-              sim.setWeather('rain', 80, 0.8);
-              
-              // Add visual effect at unit's position
-              sim.addMoisture(unit.pos.x, unit.pos.y, 0.5, 3);
-              sim.adjustPressure(unit.pos.x, unit.pos.y, -0.1, 4);
-            }
-          }
-        }
-      },
-      lastAbilityTick: {},
-      meta: {
-        facing: 'right'
-      }
-    };
-    
-    this.units.push(rainmaker);
-    return rainmaker;
-  }
-
-  // Helper method to create a Big Worm segmented creature
-  createBigWorm(pos: Vec2, segmentCount: number = 5, team: 'friendly' | 'hostile' = 'hostile'): Unit {
-    const bigWorm: Unit = {
-      id: `bigworm_${Date.now()}`,
-      pos,
-      intendedMove: { x: 0, y: 0 },
-      team,
-      sprite: 'big-worm',
-      state: 'idle',
-      hp: 120,
-      maxHp: 120,
-      mass: 2, // Heavier than normal units
-      abilities: {
-        breatheFire: {
-          name: 'Breathe Fire',
-          cooldown: 60, // 7.5 seconds at 8fps
-          range: 4,
-          target: 'closest.enemy()',
-          config: {
-            coneAngle: Math.PI / 3, // 60 degree cone
-            fireIntensity: 15,
-            sparkCount: 8
-          },
-          effect: (unit: Unit, target?: Unit | Vec2, sim?: any) => {
-            if (sim && sim.addHeat) {
-              console.log(`${unit.id} is breathing fire!`);
-              
-              // Determine fire direction based on facing
-              const facing = unit.meta.facing || 'right';
-              const direction = facing === 'right' ? 1 : -1;
-              
-              // Create fire cone in front of worm
-              for (let i = 1; i <= 4; i++) { // Fire reaches 4 cells ahead
-                for (let j = -1; j <= 1; j++) { // Fire spreads 1 cell to each side
-                  const fireX = unit.pos.x + (i * direction);
-                  const fireY = unit.pos.y + j;
-                  
-                  // Add heat to temperature field
-                  const intensity = 15 - (i * 3); // Heat decreases with distance
-                  sim.addHeat(fireX, fireY, intensity, 1);
-                  
-                  // Spawn fire/spark particles
-                  if (Math.random() < 0.7) {
-                    sim.spawnFireParticle(fireX, fireY);
-                  }
-                }
-              }
-              
-              // Set units on fire if they're in the heat
-              for (const targetUnit of sim.units) {
-                if (targetUnit.team !== unit.team) {
-                  const dx = targetUnit.pos.x - unit.pos.x;
-                  const dy = targetUnit.pos.y - unit.pos.y;
-                  const distance = Math.sqrt(dx * dx + dy * dy);
-                  
-                  if (distance <= 4) {
-                    const temperature = sim.getTemperature(targetUnit.pos.x, targetUnit.pos.y);
-                    if (temperature > 35) { // Hot enough to catch fire
-                      sim.setUnitOnFire(targetUnit);
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      lastAbilityTick: {},
-      meta: {
-        segmented: true,
-        segmentCount,
-        facing: 'right'
-      }
-    };
-    
-    this.units.push(bigWorm);
-    return bigWorm;
-  }
-
   // Helper method to add weather command handling
   processWeatherCommand(command: string, ...args: any[]): void {
     switch (command) {

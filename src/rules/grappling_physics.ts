@@ -38,25 +38,26 @@ export class GrapplingPhysics extends Rule {
       // Check for collision with enemy units
       const hitUnit = this.sim.units.find(unit =>
         unit.team !== grapple.team &&
-        Math.abs(unit.pos.x - grapple.pos.x) <= 0.8 &&
-        Math.abs(unit.pos.y - grapple.pos.y) <= 0.8
+        Math.abs(unit.pos.x - grapple.pos.x) <= 1.0 &&
+        Math.abs(unit.pos.y - grapple.pos.y) <= 1.0
       );
 
       if (hitUnit) {
-        console.log(`🪝 Grapple hits ${hitUnit.id}!`);
-        
         // Create grapple line
-        const grapplerID = (grapple as any).grapplerID;
+        const grapplerID = (grapple as any).grapplerID || 'unknown';
         const grappler = this.sim.units.find(u => u.id === grapplerID);
         
-        if (grappler) {
+        // Use grapple origin if grappler not found
+        const grapplerPos = grappler?.pos || (grapple as any).origin || grapple.pos;
+        
+        if (grapplerPos) {
           const lineID = `${grapplerID}_${hitUnit.id}`;
-          const distance = this.calculateDistance(grappler.pos, hitUnit.pos);
+          const distance = this.calculateDistance(grapplerPos, hitUnit.pos);
           
           this.grappleLines.set(lineID, {
             grapplerID,
             targetID: hitUnit.id,
-            startPos: { ...grappler.pos },
+            startPos: { ...grapplerPos },
             endPos: { ...hitUnit.pos },
             length: distance,
             taut: true,
@@ -65,14 +66,14 @@ export class GrapplingPhysics extends Rule {
           });
 
           // Apply grapple effects to target
+          if (!hitUnit.meta) hitUnit.meta = {};
           hitUnit.meta.grappled = true;
           hitUnit.meta.grappledBy = grapplerID;
           hitUnit.meta.grappledDuration = (grapple as any).pinDuration || 60;
+          hitUnit.meta.tetherPoint = grapplerPos;
           
           // Reduce movement speed while grappled
           hitUnit.meta.movementPenalty = 0.5; // 50% slower
-          
-          console.log(`  - ${hitUnit.id} is now grappled by ${grapplerID}`);
         }
 
         // Remove the projectile

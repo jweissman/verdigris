@@ -10,7 +10,7 @@ export class Perdurance extends Rule {
         if (target) {
           // Check if damage should be blocked completely
           if (this.shouldBlockDamage(target, event.meta.aspect)) {
-            console.log(`${target.id} (${target.meta.perdurance}) resists ${event.meta.aspect} damage`);
+            // console.log(`${target.id} (${target.meta.perdurance}) resists ${event.meta.aspect} damage`);
             return null; // Block this damage event
           }
           // Modify damage amount based on perdurance type
@@ -32,21 +32,19 @@ export class Perdurance extends Rule {
       case 'sturdiness':
         // Cap all damage to maximum 1 (resistant to burst, weak to chip)
         if (modifiedEvent.meta.amount > 1) {
-          console.log(`${target.id} sturdiness reduces ${modifiedEvent.meta.amount} damage to 1`);
           modifiedEvent.meta.amount = 1;
         }
         break;
       
       case 'swarm':
-        // Population-based damage is processed normally but shown differently
-        // Could add special visual effects or modify how damage is displayed
-        console.log(`${target.id} swarm takes ${modifiedEvent.meta.amount} population damage`);
+        // NOTE: Swarm units should attack with population damage so we do actually need to track it here?
+        // how are we even tracking swarm population if this is empty rule??
         break;
     }
     
     // Handle brittle (frozen) units - take double damage
     if (target.meta.brittle) {
-      console.log(`${target.id} is brittle, taking double damage!`);
+      // console.log(`${target.id} is brittle, taking double damage!`);
       modifiedEvent.meta.amount *= 2;
     }
     

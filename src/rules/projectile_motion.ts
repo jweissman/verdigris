@@ -24,8 +24,11 @@ export class ProjectileMotion extends Rule {
                proj.pos.y >= 0 && proj.pos.y < this.sim.fieldHeight;
       } else if (proj.type === 'bomb') {
         return (proj.progress || 0) <= (proj.duration || 12);
+      } else if (proj.type === 'grapple') {
+        // Grapple projectiles are handled by GrapplingPhysics rule
+        return true;
       }
-      return false; // Keep legacy projectiles
+      return true; // Keep other projectiles by default
     });
   }
 
@@ -53,7 +56,7 @@ export class ProjectileMotion extends Rule {
     if (progress > duration) {
     // if (t >= 1) {
       // Bomb has landed - trigger AoE explosion
-      console.log(`💥 Bomb ${proj.id} exploding at (${proj.target.x}, ${proj.target.y})`);
+      // console.log(`💥 Bomb ${proj.id} exploding at (${proj.target.x}, ${proj.target.y})`);
       
       if (proj.aoeRadius && proj.aoeRadius > 0) {
         // Extract the unit ID from the projectile ID (e.g., "bomb_bombardier1_123" -> "bombardier1")

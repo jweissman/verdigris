@@ -10,7 +10,6 @@ describe('Field Overlays - Environmental Visualization', () => {
   });
 
   it('should create temperature and humidity fields for visualization', () => {
-    console.log('🌡️ Testing environmental field overlays...');
     
     const sim = new Simulator();
     sim.rulebook = [
@@ -30,9 +29,7 @@ describe('Field Overlays - Environmental Visualization', () => {
       expect(sim.temperatureField.get(10, 10)).toBe(30);
       expect(sim.temperatureField.get(15, 15)).toBe(15);
       
-      console.log('✅ Temperature field working: cold (-10°), hot (30°), moderate (15°)');
     } else {
-      console.log('ℹ️ Temperature field not available in this simulator instance');
     }
 
     // Test humidity field
@@ -43,14 +40,11 @@ describe('Field Overlays - Environmental Visualization', () => {
       expect(sim.humidityField.get(8, 8)).toBe(0.8);
       expect(sim.humidityField.get(12, 12)).toBe(0.3);
       
-      console.log('✅ Humidity field working: high (0.8), low (0.3)');
     } else {
-      console.log('ℹ️ Humidity field not available in this simulator instance');
     }
   });
 
   it('should visualize lightning strike zones with electrical fields', () => {
-    console.log('⚡ Testing lightning field visualization...');
     
     const sim = new Simulator();
     sim.rulebook = [
@@ -74,18 +68,15 @@ describe('Field Overlays - Environmental Visualization', () => {
     ) || [];
     
     expect(empEvents.length).toBeGreaterThan(0);
-    console.log(`✅ ${empEvents.length} lightning strike zones available for field visualization`);
     
     // Verify lightning storm particles were created
     const lightningParticles = sim.particles.filter(p => 
       p.type === 'lightning' || p.type === 'electric_spark'
     );
     expect(lightningParticles.length).toBeGreaterThan(0);
-    console.log(`⚡ ${lightningParticles.length} lightning particles for enhanced field effects`);
   });
 
   it('should demonstrate weather interaction with field overlays', () => {
-    console.log('🌨️ Testing weather-field interactions...');
     
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
@@ -97,24 +88,20 @@ describe('Field Overlays - Environmental Visualization', () => {
     // Verify weather state changed
     if (sim.weather && sim.weather.current) {
       expect(sim.weather.current).toBe('snow');
-      console.log('❄️ Winter weather active - field should show cold temperatures');
     }
 
     // Test rain weather for humidity
     sim.queuedCommands = [{ type: 'weather', args: ['rain'] }];
     sim.step();
     
-    console.log('🌧️ Rain weather tested - field should show increased humidity');
     
     // Clear weather
     sim.queuedCommands = [{ type: 'weather', args: ['clear'] }];
     sim.step();
     
-    console.log('☀️ Clear weather tested - field should return to normal temperatures');
   });
 
   it('should test environmental effects on units', () => {
-    console.log('🧪 Testing unit-environment interactions...');
     
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
@@ -147,10 +134,7 @@ describe('Field Overlays - Environmental Visualization', () => {
     expect(finalColdUnit).toBeDefined();
     expect(finalHotUnit).toBeDefined();
     
-    console.log(`❄️ Cold unit: ${finalColdUnit?.hp}/${finalColdUnit?.maxHp} hp (at -15°)`);
-    console.log(`🔥 Hot unit: ${finalHotUnit?.hp}/${finalHotUnit?.maxHp} hp (at 35°)`);
     
     // Note: Environmental damage implementation would go in WinterEffects rule
-    console.log('✅ Environmental field overlay system ready for unit interactions');
   });
 });

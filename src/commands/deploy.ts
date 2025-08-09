@@ -3,7 +3,7 @@ import Encyclopaedia from "../dmg/encyclopaedia";
 
 export class Deploy extends Command {
   execute(unitId: string | null, unitType: string, x?: string, y?: string, team?: string) {
-    console.log(`Deploy command: ${unitType} at ${x || 'auto'}, ${y || 'auto'} for team ${team || 'friendly'}`);
+    // console.log(`Deploy command: ${unitType} at ${x || 'auto'}, ${y || 'auto'} for team ${team || 'friendly'}`);
     
     // Determine deployment position
     let deployX: number, deployY: number;
@@ -46,7 +46,7 @@ export class Deploy extends Command {
     // Validate unit type exists
     try {
       const unit = Encyclopaedia.unit(unitType);
-      console.log(`Deploying ${unitType} at (${deployX}, ${deployY})`);
+      // console.log(`Deploying ${unitType} at (${deployX}, ${deployY})`);
       
       // Queue spawn event
       this.sim.queuedEvents.push({

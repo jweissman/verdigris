@@ -22,13 +22,6 @@ describe('Sprite Integration', () => {
     const zapper = Encyclopaedia.unit('zapper');
     expect(zapper.sprite).toBe('zapper'); // Now has dedicated zapper sprite
     
-    console.log('✅ All construct sprites properly assigned to match PNG files:');
-    console.log(`  Freezebot: ${freezebot.sprite}.png`);
-    console.log(`  Clanker: ${clanker.sprite}.png`);
-    console.log(`  Spiker: ${spiker.sprite}.png`);
-    console.log(`  Swarmbot: ${swarmbot.sprite}.png`);
-    console.log(`  Roller: ${roller.sprite}.png`);
-    console.log(`  Zapper: ${zapper.sprite}.png`);
   });
 
   it('should verify toymaker uses appropriate sprite', () => {
@@ -37,6 +30,5 @@ describe('Sprite Integration', () => {
     expect(toymaker.tags).toContain('mechanical');
     expect(toymaker.tags).toContain('craftor');
     
-    console.log('✅ Toymaker sprite assignment verified: toymaker.png');
   });
 });

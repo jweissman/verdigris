@@ -3,9 +3,9 @@ import { Simulator } from '../src/simulator.ts';
 
 describe('AOE and Knockback', () => {
   it('projectile deals AoE damage and knocks back worms', () => {
-    const sim = new Simulator()
-      .addUnit({ id: 'worm1', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'walk', hp: 10, mass: 1 })
-      .addUnit({ id: 'worm2', pos: { x: 5, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'walk', hp: 10, mass: 1 });
+    const sim = new Simulator();
+    sim.addUnit({ id: 'worm1', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'walk', hp: 10, mass: 1 });
+    sim.addUnit({ id: 'worm2', pos: { x: 5, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'walk', hp: 10, mass: 1 });
 
     sim.projectiles.push({
       id: 'p1', pos: { x: 4, y: 0 }, vel: { x: 0, y: 0 }, radius: 1, damage: 5, team: 'friendly'
@@ -23,9 +23,9 @@ describe('AOE and Knockback', () => {
 
   // note: not technically an aoe knock test?
   it('big creature knocks back small ones on collision', () => {
-    const sim = new Simulator()
-      .addUnit({ id: 'giant', pos: { x: 0, y: 0 }, intendedMove: { x: 1, y: 0 }, team: 'hostile', sprite: 'giant', state: 'walk', posture: 'bully', hp: 100, mass: 10 })
-      .addUnit({ id: 'worm', pos: { x: 1, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'friendly', sprite: 'worm', state: 'idle', hp: 10, mass: 1 });
+    const sim = new Simulator();
+    sim.addUnit({ id: 'giant', pos: { x: 0, y: 0 }, intendedMove: { x: 1, y: 0 }, team: 'hostile', sprite: 'giant', state: 'walk', posture: 'bully', hp: 100, mass: 10 });
+    sim.addUnit({ id: 'worm', pos: { x: 1, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'friendly', sprite: 'worm', state: 'idle', hp: 10, mass: 1 });
 
     sim.step(); // giant moves to (1,0), collides with worm
 

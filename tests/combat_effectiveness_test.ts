@@ -8,7 +8,6 @@ import { AirdropPhysics } from '../src/rules/airdrop_physics';
 
 describe('Combat Effectiveness Integration', () => {
   it('should test full tactical scenario with multiple constructs', () => {
-    console.log('⚔️ Running comprehensive tactical scenario');
     
     const sim = new Simulator();
     sim.rulebook = [
@@ -27,13 +26,11 @@ describe('Combat Effectiveness Integration', () => {
     ];
     
     enemies.forEach(enemy => sim.addUnit(enemy));
-    console.log(`Deployed ${enemies.length} enemies at far right side`);
     
     // Deploy toymaker to left side 
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 10 } };
     toymaker.abilities.deployBot = { ...Encyclopaedia.abilities.deployBot, maxUses: 5 };
     sim.addUnit(toymaker);
-    console.log('Deployed toymaker at (5, 10)');
     
     // Test deployment commands
     sim.parseCommand('deploy clanker');
@@ -53,7 +50,6 @@ describe('Combat Effectiveness Integration', () => {
             Math.abs(u.pos.x - construct.pos.x) + Math.abs(u.pos.y - construct.pos.y) < 10
           );
           if (nearbyEnemies.length > 0) {
-            console.log(`Step ${i}: ${construct.sprite} at (${construct.pos.x}, ${construct.pos.y}) hunting ${nearbyEnemies.length} enemies`);
           }
         });
       }
@@ -76,7 +72,6 @@ describe('Combat Effectiveness Integration', () => {
   });
   
   it('should test construct immediate engagement upon spawn', () => {
-    console.log('🎯 Testing immediate enemy engagement');
     
     const sim = new Simulator();
     sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
@@ -86,13 +81,11 @@ describe('Combat Effectiveness Integration', () => {
     sim.addUnit(enemy);
     
     const initialEnemyHp = enemy.hp;
-    console.log(`Enemy worm at (${enemy.pos.x}, ${enemy.pos.y}) with ${initialEnemyHp} HP`);
     
     // Spawn construct very close to enemy
     const freezebot = { ...Encyclopaedia.unit('freezebot'), pos: { x: 10, y: 10 } };
     freezebot.abilities = { freezeRay: Encyclopaedia.abilities.freezeRay };
     sim.addUnit(freezebot);
-    console.log(`Spawned ${freezebot.sprite} at (${freezebot.pos.x}, ${freezebot.pos.y})`);
     
     // Run several simulation steps
     for (let i = 0; i < 5; i++) {
@@ -109,7 +102,6 @@ describe('Combat Effectiveness Integration', () => {
   });
   
   it('should test Mechatron airdrop in combat scenario', () => {
-    console.log('🚁 Testing Mechatron tactical airdrop');
     
     const sim = new Simulator();
     sim.rulebook = [
@@ -126,7 +118,6 @@ describe('Combat Effectiveness Integration', () => {
       enemies.push(enemy);
       sim.addUnit(enemy);
     }
-    console.log(`Deployed ${enemies.length} enemies in tight formation`);
     
     // Execute airdrop right into enemy formation
     sim.parseCommand('airdrop mechatron 22 15');
@@ -178,7 +169,6 @@ describe('Combat Effectiveness Integration', () => {
     ];
     
     [...closeEnemies, ...distantEnemies].forEach(enemy => sim.addUnit(enemy));
-    console.log(`Deployed ${closeEnemies.length} close enemies, ${distantEnemies.length} distant enemies`);
     
     // Test abilities manually to verify they work
     const abilities = mechatron.abilities;

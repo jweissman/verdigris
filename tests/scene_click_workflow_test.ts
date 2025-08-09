@@ -78,7 +78,6 @@ describe('Scene Browser Click Workflow', () => {
     expect(result.gridX).toBe(21); // (170/320) * 40 = 21.25 -> 21
     expect(result.gridY).toBe(13); // (110/200) * 25 = 13.75 -> 13
     
-    console.log(`✅ Click workflow: (${mockClickEvent.clientX}, ${mockClickEvent.clientY}) -> grid (${result.gridX}, ${result.gridY}) -> ${lightningParticles.length} particles`);
   });
 
   it('should integrate scene loading with click-to-lightning functionality', () => {
@@ -135,7 +134,6 @@ w.M..`;
         );
         
         if (clickedUnit) {
-          console.log(`Clicked near ${clickedUnit.sprite} at (${clickedUnit.pos.x}, ${clickedUnit.pos.y})`);
         }
         
         // Always trigger lightning at click position
@@ -162,7 +160,6 @@ w.M..`;
     const lightningParticles = game.sim.particles.filter(p => p.type === 'lightning');
     expect(lightningParticles.length).toBeGreaterThan(0);
     
-    console.log(`✅ Scene integration: ${units.length} units loaded, click -> grid (${result.gridX}, ${result.gridY}) -> ${lightningParticles.length} lightning particles`);
   });
 
   it('should provide the foundation for a real scene browser MWE', () => {
@@ -193,13 +190,9 @@ w.M..`;
     expect(typeof Game).toBe('function');
     expect(typeof SceneLoader).toBe('function');
     
-    console.log('✅ Scene Browser MWE Foundation Ready:');
     Object.entries(sceneBrowserMWEStructure).forEach(([key, description]) => {
       if (typeof description === 'string') {
-        console.log(`   - ${key}: ${description}`);
       } else if (Array.isArray(description)) {
-        console.log(`   - ${key}:`);
-        description.forEach(scenario => console.log(`     • ${scenario}`));
       }
     });
   });

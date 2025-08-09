@@ -1,8 +1,8 @@
-import Encyclopaedia from "./dmg/encyclopaedia";
-import { Game } from "./game";
-import { Simulator } from "./simulator";
-import Isometric from "./views/isometric";
-import Orthographic from "./views/orthographic";
+import Encyclopaedia from "../dmg/encyclopaedia";
+import { Game } from "../game";
+import { Simulator } from "../simulator";
+import Isometric from "../views/isometric";
+import Orthographic from "../views/orthographic";
 
 // Isometric view configured for tiny encyclopedia canvases
 // class TinyIsometric extends Isometric {
@@ -40,7 +40,9 @@ export class CreatureBrowser {
       'demon', 'ghost', 'mimic-worm', 'big-worm', 'toymaker',
       'mechatron', 'grappler', 'desert-megaworm', 'builder', 'fueler',
       'mechanic', 'engineer', 'welder', 'assembler', 'clanker',
-      'freezebot', 'spiker', 'swarmbot', 'roller', 'zapper'
+      'freezebot', 'spiker', 'swarmbot', 'roller', 'zapper',
+      // Desert day creatures
+      'worm-hunter', 'waterbearer', 'skirmisher', 'desert-worm'
     ];
 
     this.creatures = creatureTypes.map(type => {
@@ -50,18 +52,19 @@ export class CreatureBrowser {
           type,
           sprite: unit.sprite || 'unknown',
           hp: unit.hp || 0,
-          team: unit.team || 'hostile',
+          team: (unit.team || 'hostile') as 'friendly' | 'hostile',
           tags: unit.tags || [],
           abilities: Object.keys(unit.abilities || {}),
           isHuge: unit.tags?.includes('huge') || false,
           isMechanical: unit.tags?.includes('mechanical') || false,
-          segmentCount: (unit as any).segments?.length || 0
+          segmentCount: (unit.meta as any)?.segmentCount || 0
         };
       } catch (error) {
         console.warn(`Failed to load creature: ${type}`);
         return null;
       }
-    }).filter((c): c is CreatureData => c !== null);
+      // @ts-ignore
+    }).filter((c): c is CreatureData => c !== null) as CreatureData[];
   }
 
   getAll(): CreatureData[] {
@@ -177,7 +180,7 @@ export default class CreatureBrowserUI {
   }
 
   renderSprites() {
-    console.log(`🎨 CREATURE BROWSER: Starting sprite rendering`);
+    // console.log(`🎨 CREATURE BROWSER: Starting sprite rendering`);
     
     // sleep for 100ms to ensure sprites are loaded
     // setTimeout(() => {

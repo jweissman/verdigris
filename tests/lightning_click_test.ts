@@ -27,7 +27,6 @@ describe('Lightning Click MWE', () => {
     const gridX = Math.floor((screenX / canvasWidth) * sim.fieldWidth);
     const gridY = Math.floor((screenY / canvasHeight) * sim.fieldHeight);
     
-    console.log(`Click at screen (${screenX}, ${screenY}) -> grid (${gridX}, ${gridY})`);
     
     // Trigger lightning command at clicked position
     const initialParticles = sim.particles.length;
@@ -49,7 +48,6 @@ describe('Lightning Click MWE', () => {
     );
     
     expect(nearbyParticles.length).toBeGreaterThan(0);
-    console.log(`✅ Lightning triggered at grid (${gridX}, ${gridY}) with ${lightningParticles.length} particles`);
   });
 
   it('should load animated lightning sprite (16x48, 8 frames)', () => {
@@ -67,7 +65,6 @@ describe('Lightning Click MWE', () => {
     // - Each frame is 16x6
     // - Animation cycles through 8 frames
     
-    console.log(`✅ Lightning sprite: ${expectedWidth}x${expectedHeight}, ${expectedFrames} frames (${frameHeight}px each)`);
     
     // This validates our understanding of the sprite format
     expect(expectedFrames * frameHeight).toBe(expectedHeight);
@@ -120,6 +117,5 @@ describe('Lightning Click MWE', () => {
     expect(result.gridX).toBe(expectedGridX);
     expect(result.gridY).toBe(expectedGridY);
     
-    console.log(`✅ Click handler converts (${mockClickEvent.clientX}, ${mockClickEvent.clientY}) -> grid (${result.gridX}, ${result.gridY})`);
   });
 });

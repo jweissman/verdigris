@@ -25,9 +25,6 @@ describe('Toysday Integration', () => {
     WinterEffects.createWinterStorm(sim);
     expect(sim.winterActive).toBe(true);
     
-    console.log('=== TOYSDAY BATTLE BEGINS ===');
-    console.log(`Toymaker vs ${enemies.length} enemies in winter storm`);
-    
     // Run battle simulation
     let battleComplete = false;
     let constructs = [];
@@ -39,13 +36,11 @@ describe('Toysday Integration', () => {
       const currentConstructs = sim.units.filter(u => u.tags?.includes('construct'));
       if (currentConstructs.length > constructs.length) {
         constructs = currentConstructs;
-        console.log(`Tick ${tick}: Toymaker deployed ${constructs[constructs.length - 1].sprite}! Total constructs: ${constructs.length}`);
       }
       
       // Check for interesting events
       const frozenUnits = sim.units.filter(u => u.meta.frozen);
       if (frozenUnits.length > 0 && tick % 20 === 0) {
-        // console.log(`Tick ${tick}: ${frozenUnits.length} units are frozen solid`);
       }
       
       // Battle ends when one side is eliminated
@@ -54,9 +49,6 @@ describe('Toysday Integration', () => {
       
       if (aliveFriendlies.length === 0 || aliveEnemies.length === 0) {
         battleComplete = true;
-        console.log(`=== BATTLE END (Tick ${tick}) ===`);
-        console.log(`Friendlies: ${aliveFriendlies.length}, Enemies: ${aliveEnemies.length}`);
-        console.log(`Constructs deployed: ${constructs.length}`);
         break;
       }
     }
@@ -66,8 +58,6 @@ describe('Toysday Integration', () => {
     
     // Verify winter effects occurred
     expect(sim.particles.filter(p => p.type === 'snow').length).toBeGreaterThan(0);
-    
-    console.log('=== TOYSDAY INTEGRATION TEST COMPLETE ===');
   });
 
   it('should demonstrate all construct types in winter battlefield', () => {
@@ -91,8 +81,6 @@ describe('Toysday Integration', () => {
     const enemy2 = { ...Encyclopaedia.unit('soldier'), pos: { x: 3, y: 5 }, team: 'hostile' as const };
     sim.addUnit(enemy1);
     sim.addUnit(enemy2);
-    
-    console.log('=== CONSTRUCT SHOWCASE IN WINTER ===');
     
     // Run simulation to see construct behaviors
     let activitiesObserved = {
@@ -138,10 +126,6 @@ describe('Toysday Integration', () => {
     // Verify we saw interesting construct behaviors
     expect(constructs.length).toBe(6);
     expect(sim.particles.filter(p => p.type === 'snow').length).toBeGreaterThan(0);
-    
-    console.log('Activities observed:', activitiesObserved);
-    console.log('Final unit count:', sim.units.length);
-    console.log('=== CONSTRUCT SHOWCASE COMPLETE ===');
   });
 
   it('should verify deploy command creates instant placement', () => {
@@ -173,7 +157,6 @@ describe('Toysday Integration', () => {
         expect(Math.abs(construct?.pos.y - 5)).toBeLessThanOrEqual(1); // Within 1 cell of same lane
         
         deployed = true;
-        console.log(`Deploy command worked! Construct at (${construct?.pos.x}, ${construct?.pos.y})`);
         break;
       }
     }

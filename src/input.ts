@@ -18,7 +18,7 @@ export default class Input {
         this.commandBuffer = "";
         this.numBuffer = "";
         this.bufferingCommands = false;
-        console.log("Command input cancelled.");
+        // console.log("Command input cancelled.");
         return;
       } else if (e.key === "Enter") {
         this.bufferingCommands = false;
@@ -29,7 +29,7 @@ export default class Input {
         return;
       } else {
         this.commandBuffer += e.key;
-        console.log(`Buffering command: ${this.commandBuffer}`);
+        // console.log(`Buffering command: ${this.commandBuffer}`);
         return;
       }
     }
@@ -39,7 +39,7 @@ export default class Input {
       this.bufferingCommands = true;
       this.commandBuffer = "";
       this.numBuffer = "";
-      console.log("Command input started. Type your command and press Enter to execute, or Escape to cancel.");
+      // console.log("Command input started. Type your command and press Enter to execute, or Escape to cancel.");
       return;
     }
 
@@ -50,7 +50,6 @@ export default class Input {
     // } else
     if (e.key.match(/[0-9]/)) {
       this.numBuffer += e.key;
-      console.log(`Buffering number: ${this.numBuffer}`);
       return;
     }
 
@@ -70,21 +69,14 @@ export default class Input {
       this.sim.reset();
       return;
     } else if (e.key === ".") {
-      console.log("STEPPING MANUALLY");
       this.sim.step(true);
       return;
     } else if (e.key === ",") {
-      if (this.sim.paused) {
-        console.log(`Simulation is already paused (Enter to unpause).`);
-      }
       this.sim.pause();
       return
     } else if (e.key === "Enter") {
       if (this.sim.paused) {
-        console.log(`Unpausing simulation (press , to pause again).`);
         this.sim.paused = false;
-      } else {
-        console.log(`Simulation is running (press , to pause).`);
       }
       return;
     }

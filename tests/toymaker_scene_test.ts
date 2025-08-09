@@ -25,8 +25,6 @@ describe('Toymaker Scene Integration', () => {
     WinterEffects.createWinterStorm(sim);
     
     // Run a few simulation steps
-    console.log('🎯 Testing toymaker scene with winter effects...');
-    console.log(`Initial: Toymaker at (${toymaker?.pos.x}, ${toymaker?.pos.y}) vs ${enemies.length} enemies`);
     
     let constructsDeployed = [];
     let snowflakesGenerated = 0;
@@ -47,7 +45,6 @@ describe('Toymaker Scene Integration', () => {
             type: newConstruct.sprite,
             position: `(${newConstruct.pos.x}, ${newConstruct.pos.y})`
           });
-          console.log(`Tick ${i}: Deployed ${newConstruct.sprite} at ${newConstruct.position}`);
         }
       }
       
@@ -71,14 +68,8 @@ describe('Toymaker Scene Integration', () => {
       expect(Math.abs(snowflakes[0].vel.x)).toBeLessThan(0.1); // Gentle drift
     }
     
-    console.log(`✅ Scene test complete:`);
-    console.log(`  - Constructs deployed: ${constructsDeployed.length}`);
-    console.log(`  - Snowflakes generated: ${snowflakesGenerated}`);
-    console.log(`  - Current snowflakes: ${snowflakes.length}`);
-    console.log(`  - Units remaining: ${sim.units.filter(u => u.hp > 0).length}`);
     
     if (constructsDeployed.length > 0) {
-      console.log(`  - Deployed types: ${constructsDeployed.map(c => c.type).join(', ')}`);
     }
   });
 
@@ -104,7 +95,6 @@ describe('Toymaker Scene Integration', () => {
       expect(Math.abs(flake.vel.x)).toBeLessThan(0.1); // Minimal horizontal drift
       
       if (index === 0) {
-        console.log(`✅ Snowflake physics: radius=${flake.radius}, vel=(${flake.vel.x.toFixed(3)}, ${flake.vel.y.toFixed(3)})`);
       }
     });
   });
