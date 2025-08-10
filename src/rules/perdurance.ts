@@ -26,13 +26,18 @@ export class Perdurance extends Rule {
     const perdurance = target.meta?.perdurance;
     if (!perdurance) return event;
 
-    const modifiedEvent = { ...event };
+    const modifiedEvent = { 
+      ...event,
+      meta: { ...event.meta } // Deep clone the meta object
+    };
     
     switch (perdurance) {
       case 'sturdiness':
         // Cap all damage to maximum 1 (resistant to burst, weak to chip)
+        const originalAmount = modifiedEvent.meta.amount;
         if (modifiedEvent.meta.amount > 1) {
           modifiedEvent.meta.amount = 1;
+          // console.log(`[Perdurance] Sturdiness: reduced damage from ${originalAmount} to 1`);
         }
         break;
       
