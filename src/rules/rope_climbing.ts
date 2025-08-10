@@ -15,6 +15,7 @@ interface GrappleLine {
 export class RopeClimbing extends Rule {
   apply = () => {
     // Find all units that can climb grapples
+    // Use units array for filtering, but we'll use roster for updates
     const climbers = this.sim.units.filter(u => 
       u.meta.canClimbGrapples && !u.meta.climbingLine
     );
@@ -136,8 +137,10 @@ export class RopeClimbing extends Rule {
   }
   
   private attachToGrappleLine(unit: Unit, line: GrappleLine) {
-    // console.log(`${unit.id} attaches to grapple line!`);
+    // Ensure meta exists
+    if (!unit.meta) unit.meta = {};
     
+    // Update the unit's meta
     unit.meta.climbingLine = true;
     unit.meta.lineStart = { ...line.startPos };
     unit.meta.lineEnd = { ...line.endPos };
@@ -225,11 +228,17 @@ export class RopeClimbing extends Rule {
   
   private checkLineExists(unit: Unit): boolean {
     // Check if the grapple line still exists by looking for grappled units
+    // Don't require exact position match since units move when grappled
     const grappledUnits = this.sim.units.filter(u => 
-      u.meta.grappled && u.pos.x === unit.meta.lineEnd.x && u.pos.y === unit.meta.lineEnd.y
+      u.meta.grappled && 
+      Math.abs(u.pos.x - unit.meta.lineEnd.x) < 3 && 
+      Math.abs(u.pos.y - unit.meta.lineEnd.y) < 3
     );
     
-    return grappledUnits.length > 0;
+    // Also check if grapple line particles still exist
+    const lineParticles = this.sim.particles.filter(p => p.type === 'grapple_line');
+    
+    return grappledUnits.length > 0 || lineParticles.length > 0;
   }
   
   private detachFromLine(unit: Unit) {

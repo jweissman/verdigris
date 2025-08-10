@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text & Font Review - Verdigris MWE</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: #222;
+            color: #FFF;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        canvas {
+            border: 2px solid #444;
+            background: #000;
+            display: block;
+            margin: 20px 0;
+            image-rendering: pixelated;
+        }
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .control-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 5px;
+            background: #333;
+            color: #FFF;
+            border: 1px solid #666;
+        }
+        input[type="color"], select {
+            margin-left: 10px;
+        }
+        button {
+            background: #444;
+            color: #FFF;
+            border: 1px solid #666;
+            padding: 5px 15px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        button:hover {
+            background: #555;
+        }
+        .preview-section {
+            border-top: 1px solid #444;
+            margin-top: 20px;
+            padding-top: 20px;
+        }
+        h2 {
+            color: #4CAF50;
+        }
+        .sample-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .sample-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .key {
+            color: #FFD700;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Text & Font Review</h1>
+        <p>Test and review font rendering capabilities</p>
+
+        <div class="controls">
+            <h2>Text Input</h2>
+            <div class="control-group">
+                <label for="textInput">Text:</label>
+                <input type="text" id="textInput" value="HELLO WORLD!" />
+            </div>
+            <div class="control-group">
+                <label for="fontSelect">Font:</label>
+                <select id="fontSelect">
+                    <option value="tiny">Tiny (4x4)</option>
+                    <option value="large">Large (16x16)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="colorInput">Color:</label>
+                <input type="color" id="colorInput" value="#FFFFFF" />
+            </div>
+            <div class="control-group">
+                <label for="scaleInput">Scale:</label>
+                <input type="range" id="scaleInput" min="1" max="8" value="2" />
+                <span id="scaleValue">2</span>
+            </div>
+            <div class="control-group">
+                <label for="bubbleType">Bubble Type:</label>
+                <select id="bubbleType">
+                    <option value="none">None</option>
+                    <option value="speech">Speech Bubble</option>
+                    <option value="thought">Thought Bubble</option>
+                    <option value="damage">Damage Number</option>
+                </select>
+            </div>
+        </div>
+
+        <canvas id="fontCanvas" width="640" height="400"></canvas>
+
+        <div class="preview-section">
+            <h2>Common Game Text Samples</h2>
+            <div class="sample-grid">
+                <div class="sample-item">
+                    <h3>Combat</h3>
+                    <button onclick="setPreset('OOF!')">OOF!</button>
+                    <button onclick="setPreset('-15')">-15</button>
+                    <button onclick="setPreset('CRITICAL!')">CRITICAL!</button>
+                </div>
+                <div class="sample-item">
+                    <h3>Status</h3>
+                    <button onclick="setPreset('FROZEN')">FROZEN</button>
+                    <button onclick="setPreset('BURNING')">BURNING</button>
+                    <button onclick="setPreset('STUNNED')">STUNNED</button>
+                </div>
+                <div class="sample-item">
+                    <h3>Desert</h3>
+                    <button onclick="setPreset('WORMSIGN')">WORMSIGN</button>
+                    <button onclick="setPreset('SANDSTORM')">SANDSTORM</button>
+                    <button onclick="setPreset('HEAT WAVE')">HEAT WAVE</button>
+                </div>
+                <div class="sample-item">
+                    <h3>Abilities</h3>
+                    <button onclick="setPreset('HEALING')">HEALING</button>
+                    <button onclick="setPreset('GRAPPLED')">GRAPPLED</button>
+                    <button onclick="setPreset('AIRDROP!')">AIRDROP!</button>
+                </div>
+                <div class="sample-item">
+                    <h3>Units</h3>
+                    <button onclick="setPreset('MECHATRON')">MECHATRON</button>
+                    <button onclick="setPreset('WORMRIDER')">WORMRIDER</button>
+                    <button onclick="setPreset('RAINMAKER')">RAINMAKER</button>
+                </div>
+                <div class="sample-item">
+                    <h3>UI</h3>
+                    <button onclick="setPreset('PRESS START')">PRESS START</button>
+                    <button onclick="setPreset('GAME OVER')">GAME OVER</button>
+                    <button onclick="setPreset('WAVE 1')">WAVE 1</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <h2>Character Set Preview</h2>
+            <canvas id="charsetCanvas" width="640" height="200"></canvas>
+            <p>Shows full character set of selected font</p>
+        </div>
+
+        <div class="controls">
+            <h2>Keyboard Shortcuts</h2>
+            <div><span class="key">1-6</span> Quick text samples</div>
+            <div><span class="key">F</span> Toggle font size</div>
+            <div><span class="key">B</span> Cycle bubble types</div>
+            <div><span class="key">+/-</span> Adjust scale</div>
+        </div>
+    </div>
+
+    <script type="module" src="./text_renderer.ts"></script>
+    <script type="module">
+        // Global preset function
+        window.setPreset = function(text) {
+            document.getElementById('textInput').value = text;
+            if (window.textReview) {
+                window.textReview.render();
+            }
+        };
+        
+        // Initialize
+        // window.addEventListener('load', () => {
+        //     window.textReview = new TextReviewer();
+        // });
+    </script>
+</body>
+</html>

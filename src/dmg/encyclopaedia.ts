@@ -2217,6 +2217,147 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           }
         }
       }
+    },
+
+    druid: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "druid",
+      state: "idle" as UnitState,
+      hp: 35,
+      maxHp: 35,
+      dmg: 4,
+      mass: 1,
+      tags: ['forest', 'magic', 'nature'],
+      abilities: {
+        entangle: {
+          name: "entangle",
+          energy: 5,
+          cooldown: 15,
+          range: 6,
+          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
+            // Find enemy at target position
+            const enemy = sim.units.find(u => 
+              u.team !== unit.team &&
+              Math.abs(u.pos.x - target.x) < 1 &&
+              Math.abs(u.pos.y - target.y) < 1
+            );
+            if (enemy) {
+              if (!enemy.meta) enemy.meta = {};
+              enemy.meta.pinned = true;
+              enemy.meta.pinDuration = 30;
+              // Visual effect
+              sim.particles.push({
+                pos: { x: enemy.pos.x * 8, y: enemy.pos.y * 8 },
+                vel: { x: 0, y: -1 },
+                radius: 3,
+                color: '#228B22',
+                lifetime: 30,
+                type: 'entangle'
+              });
+            }
+          }
+        }
+      },
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    naturist: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "naturist",
+      state: "idle" as UnitState,
+      hp: 28,
+      maxHp: 28,
+      dmg: 3,
+      mass: 1,
+      tags: ['forest', 'support', 'nature'],
+      abilities: {
+        regenerate: {
+          name: "regenerate",
+          energy: 4,
+          cooldown: 20,
+          range: 5,
+          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
+            // Heal all nearby friendly units
+            const allies = sim.units.filter(u => 
+              u.team === unit.team &&
+              Math.abs(u.pos.x - unit.pos.x) <= 5 &&
+              Math.abs(u.pos.y - unit.pos.y) <= 5
+            );
+            allies.forEach(ally => {
+              if (ally.hp < ally.maxHp) {
+                ally.hp = Math.min(ally.maxHp, ally.hp + 5);
+                // Visual effect
+                sim.particles.push({
+                  pos: { x: ally.pos.x * 8, y: ally.pos.y * 8 },
+                  vel: { x: 0, y: -0.5 },
+                  radius: 2,
+                  color: '#90EE90',
+                  lifetime: 15,
+                  type: 'heal'
+                });
+              }
+            });
+          }
+        }
+      },
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
+    },
+
+    wildmage: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "wildmage",
+      state: "idle" as UnitState,
+      hp: 25,
+      maxHp: 25,
+      dmg: 6,
+      mass: 1,
+      tags: ['forest', 'magic', 'chaos'],
+      abilities: {
+        wildBolt: {
+          name: "wild-bolt",
+          energy: 4,
+          cooldown: 8,
+          range: 7,
+          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
+            // Random elemental projectile
+            const elements = ['fire', 'ice', 'lightning'];
+            const element = elements[Math.floor(Math.random() * elements.length)];
+            const colors = { fire: '#FF4500', ice: '#00BFFF', lightning: '#FFD700' };
+            
+            const projectile = {
+              id: `wild_bolt_${unit.id}_${Date.now()}`,
+              pos: { x: unit.pos.x, y: unit.pos.y },
+              vel: { x: (target.x - unit.pos.x) * 0.4, y: (target.y - unit.pos.y) * 0.4 },
+              team: unit.team,
+              damage: element === 'lightning' ? 8 : 6,
+              radius: 1,
+              type: 'bullet',
+              element: element
+            };
+            sim.projectiles.push(projectile as any);
+            
+            // Visual effect at launch
+            sim.particles.push({
+              pos: { x: unit.pos.x * 8, y: unit.pos.y * 8 },
+              vel: { x: Math.random() * 2 - 1, y: Math.random() * 2 - 1 },
+              radius: 2,
+              color: colors[element],
+              lifetime: 10,
+              type: 'magic'
+            });
+          }
+        }
+      },
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
     }
   }
 
@@ -2236,6 +2377,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         state: "idle" as UnitState,
         ...this.bestiary[beast],
         abilities: {
+          ...(this.bestiary[beast]?.abilities || {}), // Preserve abilities defined in bestiary
           ...(beast === "worm" ? { jumps: this.abilities.jumps } : {}),
           ...(beast === "ranger" ? { ranged: this.abilities.ranged } : {}),
           ...(beast === "bombardier" ? { bombardier: this.abilities.bombardier } : {}),

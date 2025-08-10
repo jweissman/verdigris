@@ -29,6 +29,10 @@ describe('Rope Climbing Mechanics', () => {
     
     sim.addUnit(hunter);
     
+    // Debug: Check if hunter is in roster
+    console.log('Hunter in roster after add:', sim.roster['hunter1'] ? 'YES' : 'NO');
+    console.log('Roster keys:', Object.keys(sim.roster));
+    
     // Create a grappler and target to establish a line
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
@@ -71,10 +75,13 @@ describe('Rope Climbing Mechanics', () => {
     // Now apply rope climbing
     ropeClimbing.apply();
     
+    // Get the updated hunter from the sim roster
+    const hunterInSim = sim.roster['hunter1'];
+    
     // Hunter should detect the nearby grapple line
     // Since the hunter is at x:8, between grappler (x:5) and target (x:12)
     // and the line is horizontal at y:10, hunter should attach
-    expect(hunter.meta.climbingLine).toBeDefined();
+    expect(hunterInSim?.meta.climbingLine).toBeDefined();
   });
   
   it('should move climber along the grapple line', () => {
@@ -101,8 +108,11 @@ describe('Rope Climbing Mechanics', () => {
     // Update climbing
     ropeClimbing.apply();
     
+    // Get the updated hunter from the sim roster
+    const hunterAfter = sim.roster['hunter1'];
+    
     // Progress should increase
-    expect(hunter.meta.climbProgress).toBeGreaterThan(initialProgress);
+    expect(hunterAfter?.meta.climbProgress).toBeGreaterThan(initialProgress);
     
     // Position should update based on progress
     const expectedX = 5 + (15 - 5) * hunter.meta.climbProgress;
@@ -140,8 +150,11 @@ describe('Rope Climbing Mechanics', () => {
     // Update climbing - should reach end and attack
     ropeClimbing.apply();
     
+    // Get the updated hunter from the sim roster
+    const hunterAfter = sim.roster['hunter1'];
+    
     // Should detach after reaching end
-    expect(hunter.meta.climbingLine).toBeUndefined();
+    expect(hunterAfter?.meta.climbingLine).toBeUndefined();
     
     // Enemy should take damage from climb attack
     expect(enemy.hp).toBeLessThan(30);
@@ -167,8 +180,11 @@ describe('Rope Climbing Mechanics', () => {
     // No grappled unit at line end (line broken)
     ropeClimbing.apply();
     
+    // Get the updated hunter from the sim roster
+    const hunterAfter = sim.roster['hunter1'];
+    
     // Should detach from broken line
-    expect(hunter.meta.climbingLine).toBeUndefined();
+    expect(hunterAfter?.meta.climbingLine).toBeUndefined();
   });
   
   it('should not climb own grapple lines', () => {
@@ -255,8 +271,12 @@ describe('Rope Climbing Mechanics', () => {
     
     ropeClimbing.apply();
     
-    const fastProgressGain = fastHunter.meta.climbProgress - fastInitialProgress;
-    const slowProgressGain = slowHunter.meta.climbProgress - slowInitialProgress;
+    // Get updated units from sim roster
+    const fastHunterAfter = sim.roster['fast1'];
+    const slowHunterAfter = sim.roster['slow1'];
+    
+    const fastProgressGain = (fastHunterAfter?.meta.climbProgress || 0) - fastInitialProgress;
+    const slowProgressGain = (slowHunterAfter?.meta.climbProgress || 0) - slowInitialProgress;
     
     // Fast hunter should climb faster
     expect(fastProgressGain).toBeGreaterThan(slowProgressGain);

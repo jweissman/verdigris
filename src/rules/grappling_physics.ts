@@ -72,8 +72,16 @@ export class GrapplingPhysics extends Rule {
           hitUnit.meta.grappledDuration = (grapple as any).pinDuration || 60;
           hitUnit.meta.tetherPoint = grapplerPos;
           
-          // Reduce movement speed while grappled
-          hitUnit.meta.movementPenalty = 0.5; // 50% slower
+          // Check if target is massive and should be pinned
+          const targetMass = hitUnit.mass || 1;
+          if (targetMass > 30) {
+            // Massive creatures can't be pulled, only pinned
+            hitUnit.meta.pinned = true;
+            hitUnit.meta.movementPenalty = 1.0; // 100% movement reduction
+          } else {
+            // Regular creatures are slowed
+            hitUnit.meta.movementPenalty = 0.5; // 50% slower
+          }
         }
 
         // Remove the projectile
@@ -99,12 +107,11 @@ export class GrapplingPhysics extends Rule {
       
       const currentDistance = this.calculateDistance(grappler.pos, target.pos);
       const maxDistance = grappleLine.length + 2; // Allow some slack
-      const releaseDistance = 1.5; // Release when dragged within 1.5 cells
+      const releaseDistance = 0.5; // Release when dragged very close (within 0.5 cells)
       
       // Check if target has been dragged close enough to release
       if (currentDistance < releaseDistance) {
         // Release the grapple
-        console.log(`Grapple released - target dragged within ${releaseDistance} cells`);
         this.grappleLines.delete(lineID);
         
         // Clear grapple effects from target
@@ -123,6 +130,22 @@ export class GrapplingPhysics extends Rule {
       // Check if line is taut
       grappleLine.taut = currentDistance >= grappleLine.length;
       
+      // Ensure meta exists
+      if (!target.meta) target.meta = {};
+      
+      // Apply movement penalties based on mass
+      const targetMass = target.mass || 1;
+      if (targetMass > 30) {
+        // Massive creatures are ALWAYS pinned when grappled
+        target.meta.pinned = true;
+        target.meta.movementPenalty = 1.0;
+      } else {
+        // Regular creatures are slowed
+        if (!target.meta.movementPenalty) {
+          target.meta.movementPenalty = 0.5;
+        }
+      }
+      
       // Apply taut effects if line is stretched
       if (grappleLine.taut && currentDistance > releaseDistance) {
         this.applyTautEffects(grappler, target, grappleLine);
@@ -139,7 +162,7 @@ export class GrapplingPhysics extends Rule {
     this.renderGrappleLines();
   }
 
-  private applyTautEffects(grappler: Unit, target: Unit, grappleLine: GrappleLine) {
+  private applyTautEffects(grappler: Unit, target: Unit, _grappleLine: GrappleLine) {
     const dx = target.pos.x - grappler.pos.x;
     const dy = target.pos.y - grappler.pos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -188,6 +211,9 @@ export class GrapplingPhysics extends Rule {
 
   private applyPinningEffects() {
     for (const unit of this.sim.units) {
+      // Skip if no meta
+      if (!unit.meta) continue;
+      
       // Handle grappled units
       if (unit.meta.grappled && unit.meta.grappledDuration > 0) {
         // Apply movement penalty
@@ -195,9 +221,14 @@ export class GrapplingPhysics extends Rule {
           unit.intendedMove.x *= (1 - unit.meta.movementPenalty);
           unit.intendedMove.y *= (1 - unit.meta.movementPenalty);
         }
-      } else if (unit.meta.grappled) {
-        // Grapple expired
+      } else if (unit.meta.grappled && unit.meta.grappledDuration <= 0) {
+        // Grapple expired - but don't remove pinned status for massive units
+        const wasPinned = unit.meta.pinned;
         this.removeGrappleFromUnit(unit);
+        if (wasPinned && (unit.mass || 1) > 30) {
+          // Restore pinned for massive units as it's a separate status
+          unit.meta.pinned = true;
+        }
       }
 
       // Handle fully pinned units
@@ -205,9 +236,14 @@ export class GrapplingPhysics extends Rule {
         unit.meta.stunned = true;
         unit.intendedMove = { x: 0, y: 0 };
         unit.meta.pinDuration--;
-      } else if (unit.meta.pinned) {
-        // Pin expired
-        this.removePinFromUnit(unit);
+      } else if (unit.meta.pinned && !unit.meta.pinDuration) {
+        // Massive units that are grappled stay pinned (no duration needed)
+        if ((unit.mass || 1) > 30 && unit.meta.grappled) {
+          unit.intendedMove = { x: 0, y: 0 };
+        } else {
+          // Pin expired for non-massive units
+          this.removePinFromUnit(unit);
+        }
       }
     }
   }
@@ -248,7 +284,7 @@ export class GrapplingPhysics extends Rule {
           vel: { x: 0, y: 0 },
           radius: grappleLine.taut ? 0.8 : 0.5,
           color: grappleLine.pinned ? '#DD4400' : '#AA6600', // Red when pinned, brown when grappled
-          lifetime: 2, // Short lifetime, constantly renewed
+          lifetime: 100, // Longer lifetime for rope climbing to work
           type: 'grapple_line'
         });
       }

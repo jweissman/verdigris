@@ -193,19 +193,23 @@ describe('Grappling Mass Physics', () => {
 
     const initialWormX = massiveWorm.pos.x;
     const initialGrapplerX = grappler.pos.x;
-
+    
     // Apply physics update
     grapplingPhysics.apply();
 
+    // Get the updated units from the sim
+    const updatedWorm = sim.units.find(u => u.id === 'sandworm');
+    const updatedGrappler = sim.units.find(u => u.id === 'grappler');
+
     // Massive worm should not move at all
-    expect(massiveWorm.pos.x).toBe(initialWormX);
+    expect(updatedWorm!.pos.x).toBe(initialWormX);
     
     // Grappler should be pulled toward the worm
-    expect(grappler.pos.x).toBeGreaterThan(initialGrapplerX);
+    expect(updatedGrappler!.pos.x).toBeGreaterThan(initialGrapplerX);
     
     // Worm should be marked as pinned
-    expect(massiveWorm.meta.pinned).toBe(true);
-    expect(massiveWorm.meta.movementPenalty).toBe(1.0);
+    expect(updatedWorm!.meta.pinned).toBe(true);
+    expect(updatedWorm!.meta.movementPenalty).toBe(1.0);
   });
 
   test('multiple grapplers can pin a heavy unit', () => {
