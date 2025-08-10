@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
 import { Abilities } from '../../src/rules/abilities';
 import { CommandHandler } from '../../src/rules/command_handler';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 /**

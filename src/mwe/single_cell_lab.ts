@@ -1,4 +1,4 @@
-import { Game } from "../game";
+import { Game } from "../core/game";
 import { Simulator } from "../simulator";
 import Isometric from "../views/isometric";
 import { createScaledRenderer } from "./scene_viewer";

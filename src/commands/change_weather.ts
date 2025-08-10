@@ -12,9 +12,6 @@ export class ChangeWeather extends Command {
     const weatherType = params.weatherType as string;
     const duration = params.duration as number | undefined;
     const intensity = params.intensity as number | undefined;
-    
-    // console.log(`Weather command: ${weatherType} for ${duration || 'default'} duration`);
-    
     const durationValue = duration ?? 80; // Default 10 seconds at 8fps
     const intensityValue = intensity ?? 0.8;
     
@@ -42,10 +39,7 @@ export class ChangeWeather extends Command {
         
       case 'winter':
       case 'snow':
-        // Enable winter effects
         if (this.sim.temperatureField) {
-          console.log('Activating winter storm...');
-          // Lower temperature across the field
           for (let x = 0; x < this.sim.fieldWidth; x++) {
             for (let y = 0; y < this.sim.fieldHeight; y++) {
               const currentTemp = this.sim.temperatureField.get(x, y);
@@ -58,13 +52,10 @@ export class ChangeWeather extends Command {
         
       case 'sand':
       case 'sandstorm':
-        // Sandstorm weather effect
-        console.log(`Setting weather to sandstorm for ${durationValue} ticks at ${intensityValue} intensity`);
         if (this.sim.setWeather) {
           this.sim.setWeather('sandstorm', durationValue, intensityValue);
         }
         
-        // Create sand particles immediately
         for (let i = 0; i < Math.min(durationValue, 200); i++) {
           this.sim.particles.push({
             id: `sand_${Date.now()}_${i}`,
@@ -121,7 +112,6 @@ export class ChangeWeather extends Command {
         }
         // Warm up from winter
         if (this.sim.temperatureField) {
-          console.log('Clearing winter storm...');
           for (let x = 0; x < this.sim.fieldWidth; x++) {
             for (let y = 0; y < this.sim.fieldHeight; y++) {
               const currentTemp = this.sim.temperatureField.get(x, y);

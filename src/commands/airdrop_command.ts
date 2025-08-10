@@ -14,8 +14,6 @@ export class AirdropCommand extends Command {
     const x = params.x as number | undefined;
     const y = params.y as number | undefined;
     
-    console.log(`🚁 Airdrop command: Dropping ${unitType} at ${x || 'center'}, ${y || 'center'}`);
-    
     // Determine drop position
     let dropX: number, dropY: number;
     
@@ -34,7 +32,6 @@ export class AirdropCommand extends Command {
     
     try {
       const unit = Encyclopaedia.unit(unitType);
-      console.log(`📦 Airdropping ${unitType} at (${dropX}, ${dropY})`);
       
       // Create unit at high altitude first
       const droppedUnit = { 
@@ -55,8 +52,6 @@ export class AirdropCommand extends Command {
       
       // Add atmospheric entry particle effects
       this.createAtmosphericEntry(dropX, dropY);
-      
-      console.log(`🎯 ${unitType} incoming! ETA: ${Math.floor(20 / 0.8)} ticks`);
       
     } catch (error) {
       console.error(`Airdrop failed: Unknown unit type '${unitType}'`);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import type { Unit } from '../../src/sim/types';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { Tossing } from '../../src/rules/tossing';

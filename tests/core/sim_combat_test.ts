@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { Simulator } from '../../src/simulator.ts';
+import { Simulator } from '../../src/core/simulator';
 
 describe('End-to-end combat', () => {
   it('giant defeats swarm of small creatures', () => {

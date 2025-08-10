@@ -1,6 +1,6 @@
 import { Abilities } from "../rules/abilities";
 import { Unit, UnitState, Vec2 } from "../sim/types";
-import { Simulator } from "../simulator";
+import { Simulator } from "../core/simulator";
 // import abilities from "../../data/abilities.json";
 
 export default class Encyclopaedia {
@@ -928,7 +928,6 @@ export default class Encyclopaedia {
           cooldown: 8,
           range: 4,
           effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
-            // console.log(`${unit.id} throws acorns!`);
             const projectile = {
               id: `acorn_${unit.id}_${Date.now()}`,
               pos: { x: unit.pos.x, y: unit.pos.y },
@@ -1000,7 +999,6 @@ export default class Encyclopaedia {
           cooldown: 10,
           range: 8,
           effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
-            // console.log(`${unit.id} fires an arrow!`);
             const projectile = {
               id: `arrow_${unit.id}_${Date.now()}`,
               pos: { x: unit.pos.x, y: unit.pos.y },
@@ -1272,8 +1270,6 @@ export default class Encyclopaedia {
     if (!u.meta) {
       u.meta = {};
     }
-
-    // console.log(`Creating unit ${u.id} of type ${beast} at (${u.pos?.x || 0}, ${u.pos?.y || 0})`);
     return u;
   }
 }

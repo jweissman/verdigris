@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { SceneLoader } from '../../src/scene_loader';
-import { Simulator } from '../../src/simulator';
+import { SceneLoader } from '../../src/core/scene_loader';
+import { Simulator } from '../../src/core/simulator';
 import * as fs from 'fs';
 import * as path from 'path';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
@@ -9,7 +9,7 @@ import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 
 describe('Desert Day Combat Integration', () => {
   it('should have functioning segmented worms', () => {
-    const scenePath = path.join(__dirname, '../../src/scenes/desert-day.battle.txt');
+    const scenePath = path.join(__dirname, '../../src/core/scenes/desert-day.battle.txt');
     const sceneContent = fs.readFileSync(scenePath, 'utf-8');
     
     const sim = new Simulator();
@@ -111,7 +111,7 @@ describe('Desert Day Combat Integration', () => {
   });
 
   it('should have proper desert atmosphere with sandstorm', () => {
-    const scenePath = path.join(__dirname, '../../src/scenes/desert-day.battle.txt');
+    const scenePath = path.join(__dirname, '../../src/core/scenes/desert-day.battle.txt');
     const sceneContent = fs.readFileSync(scenePath, 'utf-8');
     
     const sim = new Simulator();

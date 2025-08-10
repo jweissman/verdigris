@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
-import { Simulator } from '../../src/simulator.ts';
-import { SceneLoader } from '../../src/scene_loader.ts';
+import { Simulator } from '../../src/core/simulator.ts';
+import { SceneLoader } from '../../src/core/scene_loader';
 
 describe('Performance Tests', () => {
   const scenarios = ['simple', 'complex', 'healing', 'projectile', 'squirrel'];

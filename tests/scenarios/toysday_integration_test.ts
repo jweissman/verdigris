@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { SceneLoader } from '../../src/scene_loader';
+import { SceneLoader } from '../../src/core/scene_loader';
 import { WinterEffects } from '../../src/rules/winter_effects';
 
 describe('Toysday Integration', () => {

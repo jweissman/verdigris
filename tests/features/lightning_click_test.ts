@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
-import { SceneLoader } from '../../src/scene_loader';
+import { Simulator } from '../../src/core/simulator';
+import { SceneLoader } from '../../src/core/scene_loader';
 
 describe('Lightning Click MWE', () => {
   it('should convert screen coordinates to grid coordinates for lightning placement', () => {

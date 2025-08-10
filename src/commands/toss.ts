@@ -72,9 +72,5 @@ export class Toss extends Command {
     unit.meta.tossTarget = { x: clampedTargetX, y: clampedTargetY };
     unit.meta.tossForce = force;
     unit.meta.z = 0; // Start at ground level
-
-    // console.log(`🤾 Tossing ${targetId} from (${unit.pos.x},${unit.pos.y}) to (${clampedTargetX},${clampedTargetY}) with force ${force}`);
-
-    // console.log("Handled toss", unit.meta);
   }
 }

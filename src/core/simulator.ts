@@ -1,27 +1,27 @@
-import { MeleeCombat } from "./rules/melee_combat";
-import { Knockback } from "./rules/knockback";
-import { ProjectileMotion } from "./rules/projectile_motion";
-import { UnitMovement } from "./rules/unit_movement";
-import { AreaOfEffect } from "./rules/area_of_effect";
-import { Rule } from "./rules/rule";
-import { UnitBehavior } from "./rules/unit_behavior";
-import Cleanup from "./rules/cleanup";
-import { Jumping } from "./rules/jumping";
-import { Tossing } from "./rules/tossing";
-import { Abilities } from "./rules/abilities";
-import { EventHandler } from "./rules/event_handler";
-import { CommandHandler, QueuedCommand } from "./rules/command_handler";
-import { HugeUnits } from "./rules/huge_units";
-import { SegmentedCreatures } from "./rules/segmented_creatures";
-import { GrapplingPhysics } from "./rules/grappling_physics";
-import { DesertEffects } from "./rules/desert_effects";
-import { Perdurance } from "./rules/perdurance";
-import { StatusEffects } from "./rules/status_effects";
-import { WinterEffects } from "./rules/winter_effects";
-import { LightningStorm } from "./rules/lightning_storm";
-import { Projectile } from "./types/Projectile";
-import { Unit } from "./types/Unit";
-import { Particle } from "./types/Particle";
+import { MeleeCombat } from "../rules/melee_combat";
+import { Knockback } from "../rules/knockback";
+import { ProjectileMotion } from "../rules/projectile_motion";
+import { UnitMovement } from "../rules/unit_movement";
+import { AreaOfEffect } from "../rules/area_of_effect";
+import { Rule } from "../rules/rule";
+import { UnitBehavior } from "../rules/unit_behavior";
+import Cleanup from "../rules/cleanup";
+import { Jumping } from "../rules/jumping";
+import { Tossing } from "../rules/tossing";
+import { Abilities } from "../rules/abilities";
+import { EventHandler } from "../rules/event_handler";
+import { CommandHandler, QueuedCommand } from "../rules/command_handler";
+import { HugeUnits } from "../rules/huge_units";
+import { SegmentedCreatures } from "../rules/segmented_creatures";
+import { GrapplingPhysics } from "../rules/grappling_physics";
+import { DesertEffects } from "../rules/desert_effects";
+import { Perdurance } from "../rules/perdurance";
+import { StatusEffects } from "../rules/status_effects";
+import { WinterEffects } from "../rules/winter_effects";
+import { LightningStorm } from "../rules/lightning_storm";
+import { Projectile } from "../types/Projectile";
+import { Unit } from "../types/Unit";
+import { Particle } from "../types/Particle";
 
 class ScalarField {
   private grid: number[][];
@@ -161,25 +161,20 @@ class Simulator {
   }
 
   parseCommand(inputString: string) {
-    // create a command and add it to the queue
     let [ type, ...args ] = inputString.split(' ');
     const command: QueuedCommand = {
-      // id: Date.now(),
       args,
       type
     };
-    // console.log(`Queuing command: ${type} with args:`, args);
     this.queuedCommands.push(command);
   }
 
   paused: boolean = false;
   pause() {
-    // console.log(`!!! Simulation paused at tick ${this.ticks}`);
     this.paused = true;
   }
 
   reset() {
-    // console.log(`Initializing simulator with field size: ${fieldWidth}x${fieldHeight}`);
     this.units = [];
     this.projectiles = [];
     this.processedEvents = [];
@@ -229,7 +224,6 @@ class Simulator {
       meta: unit.meta || {}
     };
     this.units.push(u);
-    // console.log(`Added unit ${u.id} at (${u.pos.x}, ${u.pos.y}) with hp: ${u.hp}, team: ${u.team}`, u);
     // return this;
     return u;
   }
@@ -249,7 +243,6 @@ class Simulator {
   ticks = 0;
   lastCall: number = 0;
   step(force = false) {
-    // console.log(`Simulator step called at tick ${this.ticks}, paused: ${this.paused}`);
     if (this.paused) {
       if (!force) {
         return this;
@@ -261,14 +254,13 @@ class Simulator {
     let t0 = performance.now();
     this.ticks++;
     let lastUnits = [...this.units];
-    // console.log(`Executing rules (${this.rulebook.length} rules) at tick ${this.ticks}`);
     for (const rule of this.rulebook) {
       let tr0 = performance.now();
       rule.execute();
       let tr1 = performance.now();
       let elapsed = tr1 - tr0;
       if (elapsed > 10) {
-        console.log(`- Rule ${rule.constructor.name} executed in ${tr1 - tr0}ms`);
+        console.warn(`- Rule ${rule.constructor.name} executed in ${tr1 - tr0}ms`);
       }
 
       // Debugging: print unit changes
@@ -281,7 +273,7 @@ class Simulator {
     let t1 = performance.now();
     let elapsed = t1 - t0;
     if (elapsed > 30) {
-      console.log(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
+      console.warn(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
     }
     
     // Update particles
@@ -302,8 +294,6 @@ class Simulator {
       this.spawnLeafParticle();
     }
     
-    // console.log(`Total ticks: ${this.ticks}`);
-    // console.log(`Time since last call: ${t0 - this.lastCall}ms`);
     this.lastCall = t0;
     return this;
   }
@@ -524,7 +514,6 @@ class Simulator {
       
       // Weather ends
       if (this.weather.duration <= 0) {
-        // console.log(`Weather ended: ${this.weather.current}`);
         this.weather.current = 'clear';
         this.weather.intensity = 0;
       }
@@ -582,7 +571,6 @@ class Simulator {
   
   // Weather control methods
   setWeather(type: 'clear' | 'rain' | 'storm', duration: number = 80, intensity: number = 0.7): void {
-    // console.log(`Setting weather to ${type} for ${duration} ticks at ${intensity} intensity`);
     this.weather.current = type;
     this.weather.duration = duration;
     this.weather.intensity = intensity;
@@ -632,8 +620,6 @@ class Simulator {
   setUnitOnFire(unit: Unit) {
     if (!unit.meta) unit.meta = {}; // Ensure meta exists
     if (unit.meta.onFire) return; // Already on fire
-    
-    // console.log(`${unit.id} is set on fire!`);
     unit.meta.onFire = true;
     unit.meta.fireDuration = 40; // Burn for 5 seconds at 8fps
     unit.meta.fireTickDamage = 2; // Damage per tick while burning
@@ -659,7 +645,6 @@ class Simulator {
         
         // Extinguish if duration expires
         if (unit.meta.fireDuration <= 0) {
-          // console.log(`${unit.id} fire extinguished`);
           unit.meta.onFire = false;
           delete unit.meta.fireDuration;
           delete unit.meta.fireTickDamage;
@@ -678,7 +663,6 @@ class Simulator {
           
           // High humidity and lower temperature can extinguish fires
           if (humidity > 0.6 && temperature < 30) {
-            // console.log(`Rain extinguished fire on ${unit.id}`);
             unit.meta.onFire = false;
             delete unit.meta.fireDuration;
             delete unit.meta.fireTickDamage;
@@ -956,8 +940,6 @@ class Simulator {
     // Update cooldown
     if (!unit.lastAbilityTick) unit.lastAbilityTick = {};
     unit.lastAbilityTick[abilityName] = this.ticks;
-    
-    console.log(`🎯 ${unitId} forced to use ability: ${jsonAbility.name}`);
   }
 
   // Legacy forceAbility implementation (to be removed)
@@ -1018,7 +1000,6 @@ class Simulator {
 }
 
 export { Simulator };
-console.log('Simulator module loaded.');
 if (typeof window !== 'undefined') {
   // @ts-ignore
   window.Simulator = Simulator; // Expose for browser use

@@ -1,92 +1,98 @@
 import { Simulator } from "./simulator";
 // @ts-ignore
-import worm from "./assets/sprites/worm.png";
+import worm from "../assets/sprites/worm.png";
 // @ts-ignore
-import soldier from "./assets/sprites/soldier.png";
+import soldier from "../assets/sprites/soldier.png";
 // @ts-ignore
-import farmer from "./assets/sprites/farmer.png";
+import farmer from "../assets/sprites/farmer.png";
 // @ts-ignore
-import slinger from "./assets/sprites/slinger.png";
+import slinger from "../assets/sprites/slinger.png";
 // @ts-ignore
-import priest from "./assets/sprites/priest.png";
+import priest from "../assets/sprites/priest.png";
 // @ts-ignore
-import bombardier from "./assets/sprites/bombardier.png";
+import bombardier from "../assets/sprites/bombardier.png";
 // @ts-ignore
-import tamer from "./assets/sprites/squirrel-tamer.png";
+import tamer from "../assets/sprites/squirrel-tamer.png";
 // @ts-ignore
-import squirrel from "./assets/sprites/squirrel.png";
+import squirrel from "../assets/sprites/squirrel.png";
 // @ts-ignore
-import megasquirrel from "./assets/sprites/megasquirrel.png";
+import megasquirrel from "../assets/sprites/megasquirrel.png";
 // @ts-ignore
-import leaf from "./assets/sprites/leaf.png";
+import leaf from "../assets/sprites/leaf.png";
 // @ts-ignore
-import rainmaker from "./assets/sprites/rainmaker.png";
+import rainmaker from "../assets/sprites/rainmaker.png";
 // @ts-ignore
-import demon from "./assets/sprites/demon.png";
+import demon from "../assets/sprites/demon.png";
 // @ts-ignore
-import ghost from "./assets/sprites/ghost.png";
+import ghost from "../assets/sprites/ghost.png";
 // @ts-ignore
-import mimicWorm from "./assets/sprites/mimic-worm.png";
+import mimicWorm from "../assets/sprites/mimic-worm.png";
 // @ts-ignore
-import skeleton from "./assets/sprites/skeleton.png";
+import skeleton from "../assets/sprites/skeleton.png";
 // @ts-ignore
-import bigWorm from "./assets/sprites/big-worm.png";
+import bigWorm from "../assets/sprites/big-worm.png";
 // @ts-ignore  
-import skeletonMage from "./assets/sprites/skeleton-mage.png";
+import skeletonMage from "../assets/sprites/skeleton-mage.png";
 // @ts-ignore
-import clanker from "./assets/sprites/clanker.png";
+import clanker from "../assets/sprites/clanker.png";
 // @ts-ignore
-import freezebot from "./assets/sprites/freezebot.png";
+import freezebot from "../assets/sprites/freezebot.png";
 // @ts-ignore
-import spikebot from "./assets/sprites/spikebot.png";
+import spikebot from "../assets/sprites/spikebot.png";
 // @ts-ignore
-import swarmbot from "./assets/sprites/swarmbot.png";
+import swarmbot from "../assets/sprites/swarmbot.png";
 // @ts-ignore
-import jumpbot from "./assets/sprites/jumpbot.png";
+import jumpbot from "../assets/sprites/jumpbot.png";
 // @ts-ignore
-import zapper from "./assets/sprites/zapper.png";
+import zapper from "../assets/sprites/zapper.png";
 // @ts-ignore
-import toymaker from "./assets/sprites/toymaker.png";
+import toymaker from "../assets/sprites/toymaker.png";
 // @ts-ignore
-import lightning from "./assets/sprites/lightning.png";
+import lightning from "../assets/sprites/lightning.png";
 // @ts-ignore
-import mechatron from "./assets/sprites/mechatron.png";
+import mechatron from "../assets/sprites/mechatron.png";
 // @ts-ignore
-import mechantronist from "./assets/sprites/mechatronist.png";
+import mechantronist from "../assets/sprites/mechatronist.png";
 // @ts-ignore
-import grappler from "./assets/sprites/grappler.png";
+import grappler from "../assets/sprites/grappler.png";
 // @ts-ignore
-import waterpriest from "./assets/sprites/waterpriest.png";
+import waterpriest from "../assets/sprites/waterpriest.png";
 // @ts-ignore
-import wormrider from "./assets/sprites/wormrider.png";
+import wormrider from "../assets/sprites/wormrider.png";
 
 // Mechanical crew sprites
-import builder from "./assets/sprites/builder.png";
-import fueler from "./assets/sprites/fueler.png";
-import mechanic from "./assets/sprites/mechanic.png";
-import engineer from "./assets/sprites/engineer.png";
-import welder from "./assets/sprites/welder.png";
-import assembler from "./assets/sprites/assembler.png";
+// @ts-ignore
+import builder from "../assets/sprites/builder.png";
+// @ts-ignore
+import fueler from "../assets/sprites/fueler.png";
+// @ts-ignore
+import mechanic from "../assets/sprites/mechanic.png";
+// @ts-ignore
+import engineer from "../assets/sprites/engineer.png";
+// @ts-ignore
+import welder from "../assets/sprites/welder.png";
+// @ts-ignore
+import assembler from "../assets/sprites/assembler.png";
 
 // Background imports
 // @ts-ignore
-import lakeBg from "./assets/bg/lake.png";
+import lakeBg from "../assets/bg/lake.png";
 // @ts-ignore
-import mountainBg from "./assets/bg/mountain.png";
+import mountainBg from "../assets/bg/mountain.png";
 // @ts-ignore
-import monasteryBg from "./assets/bg/monastery.png";
+import monasteryBg from "../assets/bg/monastery.png";
 // @ts-ignore
-import burningCityBg from "./assets/bg/burning-city.png";
+import burningCityBg from "../assets/bg/burning-city.png";
 // @ts-ignore
-import winterBg from "./assets/bg/winter.png";
+import winterBg from "../assets/bg/winter.png";
 // @ts-ignore
-import toyforgeBg from "./assets/bg/toyforge.png";
+import toyforgeBg from "../assets/bg/toyforge.png";
 // @ts-ignore
-import desertBg from "./assets/bg/desert.png";
+import desertBg from "../assets/bg/desert.png";
 // @ts-ignore
-import forestBg from "./assets/bg/forest.png";
+import forestBg from "../assets/bg/forest.png";
 // @ts-ignore
-import cellEffects from "./assets/cell-effects.png";
+import cellEffects from "../assets/cell-effects.png";
 
 import Renderer, { createScaledRenderer } from "./renderer";
 
@@ -251,7 +257,7 @@ class Game {
 
   // Default input handler: spawn a worm on 'w'
   getInputHandler(): (e: { key: string }) => void {
-    return (e) => { console.log(`Key pressed: ${e.key} [default handler]`); };
+    return (e) => { console.debug(`Key pressed: ${e.key} [default handler]`); };
   }
 
   loop() {
@@ -263,34 +269,23 @@ class Game {
   update() {
     const now = Date.now();
     
-    // Simulation runs at 8fps (every 125ms)
-    const simTickInterval = 1000 / this.simTickRate; // 125ms for 8fps
+    const simTickInterval = 1000 / this.simTickRate;
     if (now - this.lastSimTime >= simTickInterval) {
       this.sim.step();
       this.lastSimTime = now;
-
-      console.log(
-        "List of units after step:",
-        this.sim.units.map(u => u.id).join(', ')
-      )
     }
     
-    // Animation and rendering run at 60fps
-    // this.animationTime += 16; // ~16ms per frame at 60fps
-    // this.updateMovementInterpolations();
-    // console.log('Draw frame!');
     this.drawFrame();
   }
 
   
   drawFrame() {
-    // console.log('Drawing frame...');
     let t0 = performance.now();
     this.draw();
     let t1 = performance.now();
     let elapsed = t1 - t0;
     if (elapsed > 10) {
-      console.log(`Frame drawn in ${elapsed.toFixed(2)}ms`);
+      console.warn(`Frame drawn in ${elapsed.toFixed(2)}ms`);
     }
   }
 

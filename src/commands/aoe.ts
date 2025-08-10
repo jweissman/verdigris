@@ -37,6 +37,5 @@ export class AoE extends Command {
     });
 
     const effectType = damage > 0 ? 'damage' : 'healing';
-    console.log(`💥 ${unitId} creates ${effectType} AoE at (${x}, ${y}) radius ${radius}`);
   }
 }

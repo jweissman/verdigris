@@ -1,19 +1,8 @@
 import Encyclopaedia from "../dmg/encyclopaedia";
-import { Game } from "../game";
-import { Simulator } from "../simulator";
+import { Game } from "../core/game";
+import { Simulator } from "../core/simulator";
 import Isometric from "../views/isometric";
 import Orthographic from "../views/orthographic";
-
-// Isometric view configured for tiny encyclopedia canvases
-// class TinyIsometric extends Isometric {
-//   constructor(ctx: any, sim: any, width: number, height: number, sprites: any, backgrounds: any) {
-//     super(ctx, sim, width, height, sprites, backgrounds);
-//     // Adjust offsets for tiny 64x64 canvas - center the unit
-//     this.baseOffsetX = 16;  // Center horizontally
-//     this.baseOffsetY = 16;  // Center vertically (no +125 battlestrip offset)
-//   }
-// }
-
 export interface CreatureData {
   type: string;
   sprite: string;
@@ -180,20 +169,8 @@ export default class CreatureBrowserUI {
   }
 
   renderSprites() {
-    // console.log(`🎨 CREATURE BROWSER: Starting sprite rendering`);
-    
-    // sleep for 100ms to ensure sprites are loaded
-    // setTimeout(() => {
-    //   console.log(`   🖼️  Backgrounds loaded: ${bgs.size}`);
-    // }, 100);
-
-    
-    console.log(`   📦 Loaded ${this.sprites.size} sprites, ${this.bgs.size} backgrounds`);
-    console.log(`   🖼️  Available sprites: ${Array.from(this.sprites.keys()).slice(0, 10).join(', ')}...`);
-    
     const canvases = document.querySelectorAll('.creature-canvas-left, .creature-canvas-right');
-    console.log(`   🎯 Found ${canvases.length} canvases to render`);
-    
+
     canvases.forEach((canvas, index) => {
       const canvasEl = canvas as HTMLCanvasElement;
       const ctx = canvasEl.getContext('2d');
@@ -201,7 +178,6 @@ export default class CreatureBrowserUI {
       const facing = canvasEl.dataset.facing;
 
       if (!ctx || !creatureType) {
-        console.log(`   ❌ Canvas ${index}: Missing context or creature type`);
         return;
       }
 
@@ -209,10 +185,6 @@ export default class CreatureBrowserUI {
       const unit = Encyclopaedia.unit(creatureType);
       const spriteName = unit.sprite || 'soldier';
       const spriteImage = this.sprites.get(spriteName);
-      
-      if (!spriteImage && index < 5) { // Only log first few missing sprites
-        console.log(`   ⚠️  Missing sprite for ${creatureType}: "${spriteName}"`);
-      }
 
       // Setup sim - single unit centered
       let sim = new Simulator(1, 1);
@@ -222,21 +194,15 @@ export default class CreatureBrowserUI {
 
       // Create Isometric view with adjusted offsets for creature browser
       let view = new Isometric(ctx, sim, 320, 200, this.sprites, this.bgs);
-      // Adjust offsets to center the single unit
       view.baseOffsetX = 160;  // Center horizontally in 320px
       view.baseOffsetY = 100;  // Center vertically in 200px
       view.show();
     });
-    
-    console.log(`\\n🏁 CREATURE BROWSER: Sprite rendering finished`);
   }
 }
 
-// Auto-boot when module loads
 if (typeof window !== 'undefined') {
-  // CreatureBrowser.boot();
   window.addEventListener('load', () => {
-    console.log('CreatureBrowserUI booting...');
-      new CreatureBrowserUI();
-    });
+    new CreatureBrowserUI();
+  });
 }

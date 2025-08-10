@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { Game } from '../../src/game';
-import { SceneLoader } from '../../src/scene_loader';
+import { Game } from '../../src/core/game';
+import { SceneLoader } from '../../src/core/scene_loader';
 
 describe('Scene Browser MWE - Test-Driven', () => {
   it('should create game instance with proper canvas and renderer setup', () => {

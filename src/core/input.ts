@@ -1,4 +1,4 @@
-import Encyclopaedia from "./dmg/encyclopaedia";
+import Encyclopaedia from "../dmg/encyclopaedia";
 import Renderer from "./renderer";
 import { Simulator } from "./simulator";
 
@@ -18,18 +18,15 @@ export default class Input {
         this.commandBuffer = "";
         this.numBuffer = "";
         this.bufferingCommands = false;
-        // console.log("Command input cancelled.");
         return;
       } else if (e.key === "Enter") {
         this.bufferingCommands = false;
-        // console.log(`Executing command: ${this.commandBuffer}`);
         this.sim.parseCommand(this.commandBuffer);
         this.commandBuffer = "";
         this.numBuffer = "";
         return;
       } else {
         this.commandBuffer += e.key;
-        // console.log(`Buffering command: ${this.commandBuffer}`);
         return;
       }
     }
@@ -39,7 +36,6 @@ export default class Input {
       this.bufferingCommands = true;
       this.commandBuffer = "";
       this.numBuffer = "";
-      // console.log("Command input started. Type your command and press Enter to execute, or Escape to cancel.");
       return;
     }
 
@@ -110,7 +106,6 @@ export default class Input {
       e: "mechatronist",
       T: "mechatron",
     }
-    console.log(`Available beasts: ${Object.values(beasts).join(", ")}`);
     if (Object.keys(beasts).some(b => b === e.key)) {
       const { x, y } = this.randomGridPosition();
 

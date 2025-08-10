@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { Simulator } from '../../src/simulator.ts';
+import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia.ts';
 import { HugeUnits } from '../../src/rules/huge_units.ts';
 import { Knockback } from '../../src/rules/knockback.ts';

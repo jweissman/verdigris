@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'bun:test';
-import { SceneLoader } from '../../src/scene_loader';
-import { Simulator } from '../../src/simulator';
+import { SceneLoader } from '../../src/core/scene_loader';
+import { Simulator } from '../../src/core/simulator';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 
-describe('Desert Day Visual Readiness Checklist', () => {
+describe('Desert Day Checklist', () => {
   const setupDesertScene = () => {
-    const scenePath = path.join(__dirname, '../../src/scenes/desert-day.battle.txt');
+    const scenePath = path.join(__dirname, '../../src/core/scenes/desert-day.battle.txt');
     const sceneContent = fs.readFileSync(scenePath, 'utf-8');
     const sim = new Simulator();
     const loader = new SceneLoader(sim);

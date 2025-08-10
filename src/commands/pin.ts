@@ -18,7 +18,6 @@ export class Pin extends Command {
     
     if (targetX === undefined || targetY === undefined) {
       console.error("Pin command requires x and y coordinates");
-      console.log("Usage:", this.usage);
       return;
     }
     const grapplerID = unitId;
@@ -96,8 +95,6 @@ export class Pin extends Command {
       console.error(`Target at (${targetX}, ${targetY}) is out of range for pin (distance: ${distance.toFixed(1)}, max: ${maxRange})`);
       return;
     }
-
-    console.log(`📌 ${grappler.id} reinforces grapple on ${target.id} at (${targetX}, ${targetY}) - PINNED!`);
 
     // Execute the pin target ability
     const targetPos = { x: targetX, y: targetY };

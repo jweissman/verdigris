@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
-import { CommandHandler } from '../../src/rules/command_handler';
-import { EventHandler } from '../../src/rules/event_handler';
+import { Simulator } from '../../src/core/simulator';
 
 describe('Command DSL', () => {
   it('should handle temperature command', () => {

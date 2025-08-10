@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 
 describe('Grappler Unit Verification', () => {
   it('should create a grappler unit with correct properties', () => {

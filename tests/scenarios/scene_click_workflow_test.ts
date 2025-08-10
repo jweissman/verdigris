@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { Game } from '../../src/game';
-import { SceneLoader } from '../../src/scene_loader';
+import { Game } from '../../src/core/game';
+import { SceneLoader } from '../../src/core/scene_loader';
 
 describe('Scene Browser Click Workflow', () => {
   it('should handle canvas click events and convert to grid coordinates', () => {

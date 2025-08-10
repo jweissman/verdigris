@@ -1,5 +1,5 @@
 import { Rule } from './rule';
-import type { Simulator } from '../simulator';
+import type { Simulator } from '../core/simulator';
 import type { Position } from '../sim/types';
 
 export class LightningStorm extends Rule {

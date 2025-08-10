@@ -1,6 +1,6 @@
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { Freehold } from "../freehold";
-import { Game } from "../game";
+import { Game } from "../core/game";
 import { Simulator } from "../simulator";
 import Isometric from "../views/isometric";
 import Orthographic from "../views/orthographic";
@@ -23,7 +23,6 @@ export default class SceneWeatherViewer {
   private lastTime: number = 0;
 
   constructor() {
-    console.log('Initializing SceneWeatherViewer...');
     this.canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     // this.canvas.width = 640; // Set desired width
     // this.canvas.height = 400; // Set desired height

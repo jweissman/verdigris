@@ -12,7 +12,7 @@ export class Lightning extends Command {
     const lightningRule = this.sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     
     if (!lightningRule) {
-      console.log('⚡ No lightning storm system found. Add LightningStorm to rulebook first.');
+      console.warn('⚡ No lightning storm system found. Add LightningStorm to rulebook first.');
       return;
     }
 
@@ -32,8 +32,5 @@ export class Lightning extends Command {
     // Otherwise strike at random position (default behavior)
 
     lightningRule.generateLightningStrike(targetPos);
-    
-    const posStr = targetPos ? `at (${targetPos.x}, ${targetPos.y})` : 'at random location';
-    console.log(`⚡ Lightning bolt strikes ${posStr}!`);
   }
 }

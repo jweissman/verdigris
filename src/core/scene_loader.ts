@@ -10,7 +10,9 @@ import desert from './scenes/desert-day.battle.txt';
 import toymakerChallenge from './scenes/toymaker-challenge.battle.txt';
 import mechatronSolo from './scenes/mechatron-solo.battle.txt';
 import forestTracker from './scenes/forest-tracker.battle.txt';
-import Encyclopaedia from "./dmg/encyclopaedia";
+import Encyclopaedia from "../dmg/encyclopaedia";
+import { CommandHandler } from "../rules/command_handler";
+import { SegmentedCreatures } from "../rules/segmented_creatures";
 
 export class SceneLoader {
   static scenarios = { 
@@ -68,13 +70,11 @@ export class SceneLoader {
   loadSimpleFormat(sceneText: string): void {
     this.sim.reset();
     const lines = sceneText.trim().split('\n');
-    // console.log("Loading scene from text:", lines);
-    
     let inMetadata = false;
     
     for (let y = 0; y < lines.length; y++) {
       const line = lines[y];
-      if (!line.trim()) continue; // Skip empty lines
+      if (!line.trim()) continue;
       
       if (line === "---") {
         inMetadata = true;
@@ -82,7 +82,6 @@ export class SceneLoader {
       }
       
       if (inMetadata) {
-        // Parse metadata like "bg: lake"
         this.parseMetadata(line);
         continue;
       }
@@ -102,13 +101,11 @@ export class SceneLoader {
     
     // Process queued commands immediately
     if (this.sim.queuedCommands && this.sim.queuedCommands.length > 0) {
-      const CommandHandler = require('./rules/command_handler').CommandHandler;
       const commandHandler = new CommandHandler(this.sim);
       commandHandler.apply();
     }
     
     // Initialize segmented creatures immediately after loading
-    const SegmentedCreatures = require('./rules/segmented_creatures').SegmentedCreatures;
     const segmentedRule = new SegmentedCreatures(this.sim);
     segmentedRule.apply();
   }
@@ -117,12 +114,10 @@ export class SceneLoader {
     const trimmed = line.trim();
     if (!trimmed) return;
     
-    // Simple command format: "command arg1 arg2"
     const parts = trimmed.split(' ');
     const command = parts[0];
     const args = parts.slice(1);
     
-    // Handle background separately (it's not a game command)
     if (command === 'bg') {
       (this.sim as any).background = args[0] || '';
       (this.sim as any).sceneBackground = args[0] || '';
@@ -153,7 +148,6 @@ export class SceneLoader {
   }
 
   private createUnit(unitName: string, x: number, y: number): void {
-    // console.log(`Creating unit ${unitName} at (${x}, ${y})`);
     const unitData = Encyclopaedia.unit(unitName);
     const unitWithPos = { ...unitData, pos: { x, y } };
     
@@ -167,7 +161,6 @@ export class SceneLoader {
 
 }
 
-console.log('SceneLoader module loaded.');
 if (typeof window !== 'undefined') {
   // @ts-ignore
   window.SceneLoader = SceneLoader; // Expose for browser use

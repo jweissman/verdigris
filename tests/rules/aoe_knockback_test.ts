@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { Simulator } from '../../src/simulator.ts';
+import { Simulator } from '../../src/core/simulator';
 
 describe('AOE and Knockback', () => {
   it('projectile deals AoE damage and knocks back worms', () => {

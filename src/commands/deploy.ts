@@ -16,8 +16,6 @@ export class Deploy extends Command {
     const y = params.y as number | undefined;
     const team = params.team as string | undefined;
     
-    // console.log(`Deploy command: ${unitType} at ${x || 'auto'}, ${y || 'auto'} for team ${team || 'friendly'}`);
-    
     // Determine deployment position
     let deployX: number, deployY: number;
     
@@ -26,10 +24,9 @@ export class Deploy extends Command {
       deployX = x;
       deployY = y;
     } else if (unitId) {
-      // Deploy near the unit that issued the command (toymaker)
+      // Deploy near the unit that issued the command
       const deployerUnit = this.sim.units.find(u => u.id === unitId);
       if (deployerUnit) {
-        // Find target for tactical positioning
         const enemies = this.sim.units.filter(u => u.team !== deployerUnit.team && u.hp > 0);
         if (enemies.length > 0) {
           const closestEnemy = enemies.reduce((closest, enemy) => {
@@ -38,11 +35,9 @@ export class Deploy extends Command {
             return dist1 < dist2 ? enemy : closest;
           });
           
-          // Deploy between toymaker and target
           deployX = Math.floor((deployerUnit.pos.x + closestEnemy.pos.x) / 2);
           deployY = Math.floor((deployerUnit.pos.y + closestEnemy.pos.y) / 2);
         } else {
-          // No enemies, deploy in front of deployer
           deployX = deployerUnit.pos.x + 1;
           deployY = deployerUnit.pos.y;
         }
@@ -51,15 +46,12 @@ export class Deploy extends Command {
         return;
       }
     } else {
-      // Random deployment
       deployX = Math.floor(Math.random() * this.sim.fieldWidth);
       deployY = Math.floor(Math.random() * this.sim.fieldHeight);
     }
     
-    // Validate unit type exists
     try {
       const unit = Encyclopaedia.unit(unitType);
-      // console.log(`Deploying ${unitType} at (${deployX}, ${deployY})`);
       
       // Queue spawn event
       this.sim.queuedEvents.push({

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { Game } from '../../src/game';
+import { Game } from '../../src/core/game';
 import Isometric from '../../src/views/isometric';
 
 describe.skip('Real Isometric Renderer Debug', () => {

@@ -1,6 +1,6 @@
 
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import type { Unit, Ability } from '../../src/sim/types';
 
 describe('Abilities Rule', () => {

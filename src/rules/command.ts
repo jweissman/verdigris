@@ -1,4 +1,4 @@
-import { Simulator } from "../simulator";
+import { Simulator } from "../core/simulator";
 
 export interface CommandParams {
   [key: string]: any;

@@ -41,13 +41,9 @@ export class Temperature extends Command {
           }
         }
       }
-      // console.log(`🌡️ Setting temperature at (${x}, ${y}) with radius ${radius}`);
     } else {
-      // Set global temperature
-      // console.log(`🌡️ Setting global temperature to ${amount}°C`);
       this.sim.temperature = amount;
 
-      // Set temperature across the field
       for (let fx = 0; fx < this.sim.fieldWidth; fx++) {
         for (let fy = 0; fy < this.sim.fieldHeight; fy++) {
           // Add some variation for realism

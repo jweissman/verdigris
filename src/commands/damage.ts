@@ -36,7 +36,5 @@ export class Damage extends Command {
         origin: origin
       }
     });
-
-    console.log(`💥 ${unitId} deals ${amount} ${aspect} damage to ${targetId}`);
   }
 }

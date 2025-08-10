@@ -10,7 +10,6 @@
   <script type="module">
     let scaledDisplay = null;
     const canvas = document.getElementById('game');
-    console.log('Canvas element:', canvas);
     if (canvas) {
       // Create simple display without simulation for MWE
       scaledDisplay = new ScaledDisplay(320, 200, canvas);
@@ -27,7 +26,6 @@
     } else {
       console.error('Canvas element not found!');
     }
-    console.log('ScaledDisplay initialized:', scaledDisplay);
     
     function gameLoop() {
       if (scaledDisplay) { 

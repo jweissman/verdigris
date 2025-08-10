@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import { WinterEffects } from '../../src/rules/winter_effects';
 import { EventHandler } from '../../src/rules/event_handler';
 

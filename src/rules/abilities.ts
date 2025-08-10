@@ -30,7 +30,6 @@ export class Abilities extends Rule {
           unit.meta.invisible = false;
           delete unit.meta.burrowStartTick;
           delete unit.meta.burrowDuration;
-          // console.log(`${unit.id} emerges from burrow!`);
         }
       }
     });
@@ -464,8 +463,6 @@ export class Abilities extends Rule {
     if (!caster.meta) caster.meta = {};
     if (!caster.meta.deployBotUses) caster.meta.deployBotUses = 0;
     caster.meta.deployBotUses++;
-    
-    console.log(`${caster.id} used deployBot ${caster.meta.deployBotUses}/5 times`);
   }
 
   private grapply(effect: AbilityEffect, caster: any, primaryTarget: any): void {
@@ -542,8 +539,7 @@ export class Abilities extends Rule {
 
   private buff(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Buff effects might need special handling for area buffs
-    // For now, just log it
-    console.log(`${caster.id} uses buff ability - not fully implemented yet`);
+    console.warn('Buff effect not implemented yet');
   }
 
   private summon(effect: AbilityEffect, caster: any, primaryTarget: any): void {

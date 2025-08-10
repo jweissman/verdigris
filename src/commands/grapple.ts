@@ -18,8 +18,7 @@ export class Grapple extends Command {
     
     if (targetX === undefined || targetY === undefined) {
       console.error("Grapple command requires x and y coordinates");
-      console.log("Usage:", this.usage);
-      return;
+      throw new Error("Grapple command requires x and y coordinates");
     }
     const grapplerID = unitId;
 
@@ -74,8 +73,6 @@ export class Grapple extends Command {
         return;
       }
     }
-
-    console.log(`🪝 ${grappler.id} fires grappling hook at (${targetX}, ${targetY})`);
 
     // Create the grapple projectile directly
     const targetPos = { x: targetX, y: targetY };

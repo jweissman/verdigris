@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
-import { SceneLoader } from '../../src/scene_loader';
+import { Simulator } from '../../src/core/simulator';
+import { SceneLoader } from '../../src/core/scene_loader';
 import { DesertEffects } from '../../src/rules/desert_effects';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';

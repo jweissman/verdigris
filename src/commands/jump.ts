@@ -36,7 +36,5 @@ export class JumpCommand extends Command {
         origin: { x: targetX, y: targetY }
       }
     });
-
-    console.log(`🦘 ${unitId} jumps to (${targetX}, ${targetY}) with impact damage ${damage}`);
   }
 }

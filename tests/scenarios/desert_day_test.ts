@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import { DesertEffects } from '../../src/rules/desert_effects';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';

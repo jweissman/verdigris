@@ -1,7 +1,7 @@
 import { Simulator } from "./simulator";
-import Orthographic from "./views/orthographic";
-import Cinematic from "./views/cinematic";
-import Isometric from "./views/isometric";
+import Orthographic from "../views/orthographic";
+import Cinematic from "../views/cinematic";
+import Isometric from "../views/isometric";
 
 // Abstraction for canvas operations that works in both browser and Node
 interface CanvasLike {
@@ -57,8 +57,6 @@ class Display {
     if (this.ctx) {
       this.ctx.imageSmoothingEnabled = false;
     }
-    
-    // console.log(`Display initialized: ${width}x${height}`);
   }
 
   draw() {
@@ -228,7 +226,7 @@ export function createScaledRenderer(targetWidth: number, targetHeight: number, 
     const ctx = physicalCanvas.getContext('2d')!;
     ctx.imageSmoothingEnabled = false;
     
-    // console.log(`Scaled to ${scale}x: virtual(${targetWidth}x${targetHeight}) → physical(${exactWidth}x${exactHeight}), DPR: ${dpr}`);
+    console.debug(`Scaled to ${scale}x: virtual(${targetWidth}x${targetHeight}) → physical(${exactWidth}x${exactHeight}), DPR: ${dpr}`);
   };
   
   const draw = () => {
@@ -250,7 +248,6 @@ export function createScaledRenderer(targetWidth: number, targetHeight: number, 
   return { renderer, handleResize, draw };
 }
 
-// console.log('Renderer module loaded.');
 if (typeof window !== 'undefined') {
   // @ts-ignore
   window.Display = Display;

@@ -1,4 +1,4 @@
-import type { Simulator } from "../simulator";
+import type { Simulator } from "../core/simulator";
 import type { Unit } from "../sim/types";
 
 export abstract class Rule {

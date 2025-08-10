@@ -1,6 +1,6 @@
 import Encyclopaedia from "./dmg/encyclopaedia";
-import { Game } from "./game";
-import Input from "./input";
+import { Game } from "./core/game";
+import Input from "./core/input";
 
 class Freehold extends Game {
   input: Input = new Input(this.sim, this.renderer);

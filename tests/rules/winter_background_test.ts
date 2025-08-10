@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { SceneLoader } from '../../src/scene_loader';
-import { Simulator } from '../../src/simulator';
+import { SceneLoader } from '../../src/core/scene_loader';
+import { Simulator } from '../../src/core/simulator';
 
 describe('Winter Background Integration', () => {
   it('should load winter background in toymaker scenario', () => {

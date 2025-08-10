@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import { UnitMovement } from '../../src/rules/unit_movement';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 

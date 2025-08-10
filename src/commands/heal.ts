@@ -33,7 +33,5 @@ export class Heal extends Command {
         amount: amount
       }
     });
-
-    console.log(`✨ ${unitId} heals ${targetId} for ${amount} points`);
   }
 }

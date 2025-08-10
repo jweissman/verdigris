@@ -1,4 +1,4 @@
-import { Simulator } from "../simulator";
+import { Simulator } from "../core/simulator";
 import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 

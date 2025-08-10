@@ -1,7 +1,7 @@
 import { Rule } from "./rule";
 import { UnitOperations } from "../UnitOperations";
 import { Unit } from "../sim/types";
-import { Simulator } from "../simulator";
+import { Simulator } from "../core/simulator";
 
 export class UnitMovement extends Rule {
   static wanderRate: number = 0.15; // Slower, more deliberate movement

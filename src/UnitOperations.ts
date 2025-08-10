@@ -1,46 +1,36 @@
-import { Unit } from "./sim/types";
-import { Simulator } from "./simulator";
-
+import { Simulator } from "./core/simulator";
+import { Unit } from "./types/Unit";
 
 export class UnitOperations {
   static move(unit: Unit, deltaTime: number = 1, sim?: any): Unit {
-    // Update facing direction based on intended movement
     let facing = unit.meta.facing || 'right'; // Default to right
     if (unit.intendedMove.x > 0) {
       facing = 'right';
     } else if (unit.intendedMove.x < 0) {
       facing = 'left';
     }
-    // Don't change facing for purely vertical movement
     
-    // Apply chill effects - slow movement
     let effectiveDeltaTime = deltaTime;
     if (unit.meta.chilled) {
       const slowFactor = 1 - (unit.meta.chillIntensity || 0.5);
       effectiveDeltaTime *= slowFactor;
-      // console.log(`${unit.id} is chilled, moving at ${slowFactor * 100}% speed`);
     }
     
-    // Apply stun effects - completely prevent movement
     if (unit.meta.stunned) {
       effectiveDeltaTime = 0;
     }
     
-    // console.log(`Moving unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with intendedMove (${unit.intendedMove.x}, ${unit.intendedMove.y})`);
     let x = unit.pos.x + unit.intendedMove.x * effectiveDeltaTime;
     let y = unit.pos.y + unit.intendedMove.y * effectiveDeltaTime;
 
-    // Clamp position within bounds if sim is provided
     if (sim && typeof sim.fieldWidth === 'number' && typeof sim.fieldHeight === 'number') {
       x = Math.max(0, Math.min(x, sim.fieldWidth - 1));
       y = Math.max(0, Math.min(y, sim.fieldHeight - 1));
     }
 
-    // console.log(`Unit ${unit.id} moved to (${x}, ${y})`);
-
     return {
       ...unit,
-      intendedMove: { x: 0, y: 0 }, // Reset intended move after applying
+      intendedMove: { x: 0, y: 0 },
       pos: {
         x,
         y
@@ -49,7 +39,7 @@ export class UnitOperations {
         ...unit.meta,
         facing
       }
-    }; //, null];
+    };
   }
 
   static wander(unit: Unit): Unit {
@@ -60,7 +50,6 @@ export class UnitOperations {
       { x: 0, y: -1 }
     ];
     const dir = dirs[Math.floor(Math.random() * dirs.length)];
-    // console.log(`Wandering unit ${unit.id} at (${unit.pos.x}, ${unit.pos.y}) with new velocity (${dir.x}, ${dir.y})`);
     return {
       ...unit,
       intendedMove: { x: dir.x, y: dir.y }
@@ -68,21 +57,16 @@ export class UnitOperations {
   }
 
   static hunt(unit: Unit, sim: any): Unit {
-    // Find nearest hostile unit
     const hostiles = sim.getRealUnits().filter((u: Unit) => 
       u.team !== unit.team && u.state !== 'dead'
     );
     if (hostiles.length === 0) {
-      // console.log(`🕵️ ${unit.sprite} found no hostiles to hunt`);
-      // No hostiles, just wander
-      return unit;  //UnitOperations.wander(unit);
+      return unit;
     }
     
-    // Aggressive units (like clanker) seek enemy groups, not just closest
     if (unit.tags && unit.tags.includes('aggressive')) {
       return UnitOperations.huntAggressively(unit, hostiles, sim);
     }
-    // Find closest hostile
     let closest = hostiles[0];
     let closestDist = Math.abs(closest.pos.x - unit.pos.x) + Math.abs(closest.pos.y - unit.pos.y);
     for (const hostile of hostiles) {
@@ -92,7 +76,6 @@ export class UnitOperations {
         closestDist = dist;
       }
     }
-    // Move toward closest hostile along the axis with the greatest distance
     const dxRaw = closest.pos.x - unit.pos.x;
     const dyRaw = closest.pos.y - unit.pos.y;
     let dx = 0, dy = 0;
@@ -103,7 +86,6 @@ export class UnitOperations {
     } else if (Math.abs(dxRaw) > 0) {
       dx = dxRaw > 0 ? 1 : -1;
     }
-    // console.log(`🎯 ${unit.sprite} hunting ${closest.sprite}: moving (${dx},${dy})`);
     return {
       ...unit,
       posture: 'pursue',
@@ -142,8 +124,6 @@ export class UnitOperations {
         dy = dyRaw > 0 ? 1 : -1;
       }
     }
-    
-    // console.log(`🔥 ${unit.id} aggressively rushing toward enemy center at (${Math.floor(centerX)}, ${Math.floor(centerY)})`);
     
     return {
       ...unit,
@@ -184,10 +164,8 @@ export class UnitOperations {
     }
     // Fallback: if (0,0), wander
     if (dx === 0 && dy === 0) {
-      // console.log(`🐛 ${unit.sprite} swarming: at centroid, fallback to wander`);
       return UnitOperations.wander(unit);
     }
-    // console.log(`🐛 ${unit.sprite} swarming: moving (${dx},${dy}) towards centroid of ${allies.length} allies`);
     return {
       ...unit,
       intendedMove: { x: dx, y: dy }

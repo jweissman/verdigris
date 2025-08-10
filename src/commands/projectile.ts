@@ -64,6 +64,5 @@ export class Projectile extends Command {
     }
 
     this.sim.projectiles.push(projectile);
-    console.log(`🏹 ${unitId} fires ${projectileType} projectile from (${x}, ${y})`);
   }
 }

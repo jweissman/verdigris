@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { Abilities } from '../../src/rules/abilities';

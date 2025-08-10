@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
-import { Simulator } from '../../src/simulator.ts';
-import { SceneLoader } from '../../src/scene_loader';
+import { Simulator } from '../../src/core/simulator';
+import { SceneLoader } from '../../src/core/scene_loader';
 
 describe('Projectile simulation', () => {
   it('should move a projectile each step', () => {

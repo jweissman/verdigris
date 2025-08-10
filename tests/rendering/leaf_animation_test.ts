@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 
 describe('Leaf Animation System', () => {
   it('should create falling leaf particles with weather command', () => {

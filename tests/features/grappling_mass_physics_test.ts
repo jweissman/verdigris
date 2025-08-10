@@ -1,6 +1,6 @@
 import { expect } from 'bun:test';
 import { describe, test, beforeEach } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 
 describe('Grappling Mass Physics', () => {

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test';
-import { SceneLoader } from '../../src/scene_loader';
-import { Simulator } from '../../src/simulator';
+import { SceneLoader } from '../../src/core/scene_loader';
+import { Simulator } from '../../src/core/simulator';
 import * as fs from 'fs';
 import * as path from 'path';
 
 describe('Forest Scene - Cozy Atmosphere', () => {
   it('should load forest-day battle scene with cozy elements', () => {
-    const scenePath = path.join(__dirname, '../../src/scenes/forest-day.battle.txt');
+    const scenePath = path.join(__dirname, '../../src/core/scenes/forest-day.battle.txt');
     const sceneContent = fs.readFileSync(scenePath, 'utf-8');
     
     const sim = new Simulator();
@@ -41,7 +41,7 @@ describe('Forest Scene - Cozy Atmosphere', () => {
   });
 
   it('should have soft rain and falling leaves', () => {
-    const scenePath = path.join(__dirname, '../../src/scenes/forest-day.battle.txt');
+    const scenePath = path.join(__dirname, '../../src/core/scenes/forest-day.battle.txt');
     const sceneContent = fs.readFileSync(scenePath, 'utf-8');
     
     const sim = new Simulator();
@@ -59,7 +59,7 @@ describe('Forest Scene - Cozy Atmosphere', () => {
   });
 
   it('should create meditative forest atmosphere', () => {
-    const scenePath = path.join(__dirname, '../../src/scenes/forest-day.battle.txt');
+    const scenePath = path.join(__dirname, '../../src/core/scenes/forest-day.battle.txt');
     const sceneContent = fs.readFileSync(scenePath, 'utf-8');
     
     const sim = new Simulator();

@@ -48,10 +48,10 @@ export interface AbilityEffect {
   size?: ValueExpression;
   stagger?: ValueExpression;
 
-  // Nested effects and metadata
-  effects?: AbilityEffect[];
+  // Nested effects and conditions
+  effects?: AbilityEffect[]; // For nested effects (cone, area effects)
   effectsToRemove?: string[]; // For cleanse effect - list of effect names to remove
-  condition?: string;
+  condition?: ValueExpression;
   meta?: Record<string, any>;
 
   // Other common fields

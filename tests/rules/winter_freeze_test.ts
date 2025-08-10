@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
-import { Simulator } from '../../src/simulator';
+import { Simulator } from '../../src/core/simulator';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { WinterEffects } from '../../src/rules/winter_effects';
 import { EventHandler } from '../../src/rules/event_handler';
