@@ -65,15 +65,33 @@ describe('Mesoworm - Medium Segmented Creature', () => {
     const segments = sim.units.filter(u => u.tags?.includes('segment'));
     const initialPositions = segments.map(s => ({ ...s.pos }));
     
-    // Move the head
-    mesoworm.pos = { x: 11, y: 10 };
-    sim.step();
+    // Find the actual head unit in sim
+    const headUnit = sim.units.find(u => u.id === 'mesoworm1')!;
     
-    // Segments should follow
-    segments.forEach((segment, i) => {
-      // Each segment should have moved or be preparing to move
-      expect(segment.pos).not.toEqual(initialPositions[i]);
+    // Move the head
+    headUnit.pos = { x: 11, y: 10 };
+    
+    // Need multiple steps for segments to follow the path
+    for (let i = 0; i < 3; i++) {
+      sim.step();
+    }
+    
+    // Get updated segments from sim
+    const updatedSegments = sim.units.filter(u => u.tags?.includes('segment'));
+    
+    // At least one segment should have moved from initial position
+    const anySegmentMoved = updatedSegments.some((segment, i) => {
+      return segment.pos.x !== initialPositions[i].x || segment.pos.y !== initialPositions[i].y;
     });
+    
+    expect(anySegmentMoved).toBe(true);
+    
+    // Segments should follow in order (body, then tail)
+    const bodySegment = updatedSegments.find(s => s.meta.segmentType === 'body');
+    const tailSegment = updatedSegments.find(s => s.meta.segmentType === 'tail');
+    
+    expect(bodySegment?.pos.x).toBe(11); // Body follows head immediately
+    expect(tailSegment?.pos.x).toBe(11); // Tail follows after a delay
   });
   
   it('should be grappable due to medium mass', () => {
@@ -138,7 +156,11 @@ describe('Mesoworm - Medium Segmented Creature', () => {
     const tailSegment = segments.find(s => s.meta.segmentType === 'tail');
     
     if (tailSegment) {
-      const initialHeadHp = mesoworm.hp;
+      // Get the actual head unit from sim
+      const headUnit = sim.units.find(u => u.id === 'mesoworm1');
+      expect(headUnit).toBeDefined();
+      
+      const initialHeadHp = headUnit!.hp;
       
       // Damage the tail
       tailSegment.hp -= 10;
@@ -147,8 +169,9 @@ describe('Mesoworm - Medium Segmented Creature', () => {
       // Apply damage propagation
       sim.step();
       
-      // Head should take partial damage
-      expect(mesoworm.hp).toBeLessThan(initialHeadHp);
+      // Head should take partial damage (50% of segment damage)
+      expect(headUnit!.hp).toBeLessThan(initialHeadHp);
+      expect(headUnit!.hp).toBe(initialHeadHp - 5); // 50% of 10 damage
     }
   });
   

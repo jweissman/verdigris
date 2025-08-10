@@ -616,13 +616,18 @@ export default class Encyclopaedia {
       effect: (unit, target, sim) => {
         if (!target) return;
         
-        // Find the target unit - target could be a unit object or just have an id
-        const targetUnit = 'id' in target ? sim.units.find(u => u.id === target.id) : target;
-        if (!targetUnit || targetUnit.mass < 10) return;
+        // Handle both unit objects and units with just id
+        let targetUnit = target;
+        if ('id' in target && !('hp' in target)) {
+          // If we only have an id, find the full unit
+          targetUnit = sim.units.find(u => u.id === target.id);
+        }
+        if (!targetUnit || !targetUnit.mass || targetUnit.mass < 10) return;
         
         // Temporarily convert the megabeast to friendly team
+        if (!targetUnit.meta) targetUnit.meta = {};
         targetUnit.meta.originalTeam = targetUnit.team;
-        targetUnit.team = unit.team;
+        targetUnit.team = unit.team || 'friendly';
         targetUnit.meta.tamed = true;
         targetUnit.meta.tamedBy = unit.id;
         targetUnit.meta.tameDuration = 100;
@@ -657,6 +662,7 @@ export default class Encyclopaedia {
         // Find all beasts in range
         const beasts = sim.units.filter(u => 
           u.tags?.includes('beast') &&
+          u.pos && unit.pos &&
           Math.abs(u.pos.x - unit.pos.x) <= 6 &&
           Math.abs(u.pos.y - unit.pos.y) <= 6
         );
@@ -1580,7 +1586,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       hp: 5,
       maxHp: 5,
       mass: 1,
-      tags: ['follower'],
+      tags: ['follower', 'beast', 'forest'],
       abilities: {
         jumps: this.abilities.jumps // Mini-squirrels can jump too
       }
@@ -1593,7 +1599,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       hp: 40,
       maxHp: 40,
       mass: 8, // Much heavier than regular units
-      tags: ['mythic'],
+      tags: ['mythic', 'beast', 'forest'],
       abilities: {
         jumps: this.abilities.jumps,
         // Could add special megasquirrel abilities here
@@ -2447,7 +2453,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       maxHp: 20,
       dmg: 5,
       mass: 0.8,
-      tags: ['forest', 'flying', 'nocturnal'],
+      tags: ['forest', 'flying', 'nocturnal', 'beast'],
       abilities: {}
     },
 
@@ -2460,7 +2466,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       maxHp: 50,
       dmg: 12,
       mass: 3,
-      tags: ['forest', 'heavy', 'powerful'],
+      tags: ['forest', 'heavy', 'powerful', 'beast'],
       abilities: {}
     },
 
@@ -2473,7 +2479,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       maxHp: 8,
       dmg: 2,
       mass: 0.3,
-      tags: ['forest', 'flying', 'small'],
+      tags: ['forest', 'flying', 'small', 'beast'],
       abilities: {}
     },
 
