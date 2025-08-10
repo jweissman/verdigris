@@ -1,11 +1,12 @@
+import { Unit } from "../types/Unit";
+import { Vec2 } from "../types/Vec2";
 import { Rule } from "./rule";
-import { Unit, Vec2 } from "../sim/types";
 
-interface SegmentData {
-  position: Vec2;
-  facing: 'left' | 'right';
-  segmentType: 'head' | 'body' | 'tail';
-}
+// interface SegmentData {
+//   position: Vec2;
+//   facing: 'left' | 'right';
+//   segmentType: 'head' | 'body' | 'tail';
+// }
 
 export class SegmentedCreatures extends Rule {
   private pathHistory: Map<string, Vec2[]> = new Map(); // Track movement history for snake-like following

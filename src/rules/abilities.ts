@@ -1,6 +1,7 @@
 import DSL from './dsl';
 import { Rule } from './rule';
-import { Ability, AbilityEffect } from './json_abilities_loader';
+import { AbilityEffect } from "../types/AbilityEffect";
+import { Ability } from "../types/Ability";
 import abilities from '../../data/abilities.json';
 
 /**
@@ -29,7 +30,7 @@ export class Abilities extends Rule {
           unit.meta.invisible = false;
           delete unit.meta.burrowStartTick;
           delete unit.meta.burrowDuration;
-          console.log(`${unit.id} emerges from burrow!`);
+          // console.log(`${unit.id} emerges from burrow!`);
         }
       }
     });
@@ -95,7 +96,6 @@ export class Abilities extends Rule {
         }
         unit.lastAbilityTick[abilityName] = this.sim.ticks;
         
-        console.log(`🎯 ${unit.id} uses JSON ability: ${ability.name}`);
       }
       return unit;
     });
@@ -108,97 +108,98 @@ export class Abilities extends Rule {
 
     switch (effect.type) {
       case 'damage':
-        this.queueDamageCommand(effect, caster, primaryTarget);
+        this.hurt(effect, caster, primaryTarget);
         break;
       case 'heal':
-        this.queueHealCommand(effect, caster, primaryTarget);
+        this.heal(effect, caster, primaryTarget);
         break;
       case 'aoe':
-        this.queueAoECommand(effect, caster, primaryTarget);
+        this.areaOfEffect(effect, caster, primaryTarget);
         break;
       case 'projectile':
-        this.queueProjectileCommand(effect, caster, primaryTarget);
+        this.project(effect, caster, primaryTarget);
         break;
       case 'weather':
-        this.queueWeatherCommand(effect, caster, primaryTarget);
+        this.changeWeather(effect, caster, primaryTarget);
         break;
       case 'lightning':
-        this.queueLightningCommand(effect, caster, primaryTarget);
+        this.bolt(effect, caster, primaryTarget);
         break;
       case 'jump':
-        this.queueJumpCommand(effect, caster, primaryTarget);
+        this.leap(effect, caster, primaryTarget);
         break;
       case 'heat':
-        this.queueHeatCommand(effect, caster, primaryTarget);
+        this.adjustTemperature(effect, caster, primaryTarget);
         break;
       case 'deploy':
-        this.queueDeployCommand(effect, caster, primaryTarget);
+        this.deploy(effect, caster, primaryTarget);
         break;
       case 'grapple':
-        this.queueGrappleCommand(effect, caster, primaryTarget);
+        this.grapply(effect, caster, primaryTarget);
         break;
       case 'pin':
-        this.queuePinCommand(effect, caster, primaryTarget);
+        this.pin(effect, caster, primaryTarget);
         break;
       case 'airdrop':
-        this.queueAirdropCommand(effect, caster, primaryTarget);
+        this.airdrop(effect, caster, primaryTarget);
         break;
       case 'buff':
-        this.queueBuffCommand(effect, caster, primaryTarget);
+        this.buff(effect, caster, primaryTarget);
         break;
       case 'summon':
-        this.queueSummonCommand(effect, caster, primaryTarget);
+        this.summon(effect, caster, primaryTarget);
         break;
       case 'moisture':
-        this.queueMoistureCommand(effect, caster, primaryTarget);
+        this.adjustHumidity(effect, caster, primaryTarget);
         break;
       case 'toss':
-        this.queueTossCommand(effect, caster, primaryTarget);
+        this.toss(effect, caster, primaryTarget);
         break;
       case 'setOnFire':
-        this.queueSetOnFireCommand(effect, caster, primaryTarget);
+        this.ignite(effect, caster, primaryTarget);
         break;
       case 'particles':
-        // Particles are visual only, no command needed
+        // NOTE: We probably should handle them actually???
         break;
       case 'cone':
-        this.queueConeCommand(effect, caster, primaryTarget);
+        this.coneOfEffect(effect, caster, primaryTarget);
         break;
       case 'multiple_projectiles':
-        this.queueMultipleProjectilesCommand(effect, caster, primaryTarget);
+        this.multiproject(effect, caster, primaryTarget);
         break;
       case 'line_aoe':
-        this.queueLineAoECommand(effect, caster, primaryTarget);
+        this.lineOfEffect(effect, caster, primaryTarget);
         break;
       case 'area_buff':
-        this.queueAreaBuffCommand(effect, caster, primaryTarget);
+        this.domainBuff(effect, caster, primaryTarget);
         break;
       case 'debuff':
-        this.queueDebuffCommand(effect, caster, primaryTarget);
+        this.debuff(effect, caster, primaryTarget);
         break;
       case 'cleanse':
-        this.queueCleanseCommand(effect, caster, primaryTarget);
+        this.cleanse(effect, caster, primaryTarget);
         break;
       case 'area_particles':
-        // Visual only
+        // NOTE: should be a real command???
         break;
       case 'reveal':
-        this.queueRevealCommand(effect, caster, primaryTarget);
+        this.reveal(effect, caster, primaryTarget);
         break;
       case 'burrow':
-        this.queueBurrowCommand(effect, caster, primaryTarget);
+        this.burrow(effect, caster, primaryTarget);
         break;
       case 'tame':
-        this.queueTameCommand(effect, caster, primaryTarget);
+        this.tame(effect, caster, primaryTarget);
         break;
       case 'calm':
-        this.queueCalmCommand(effect, caster, primaryTarget);
+        this.calm(effect, caster, primaryTarget);
         break;
       case 'entangle':
-        this.queueEntangleCommand(effect, caster, primaryTarget);
+        this.tangle(effect, caster, primaryTarget);
         break;
       default:
-        console.warn(`JSON Abilities: Unknown effect type ${effect.type}`);
+        console.warn(`Abilities: Unknown effect type ${effect.type}`);
+        throw new Error(`Unknown effect type: ${effect.type}`);
     }
   }
 
@@ -218,6 +219,17 @@ export class Abilities extends Rule {
   }
 
   private resolveValue(value: any, caster: any, target: any): any {
+    // Handle string DSL expressions
+    if (typeof value === 'string') {
+      try {
+        return DSL.evaluate(value, caster, this.sim, target);
+      } catch (error) {
+        console.warn(`Failed to resolve DSL value '${value}':`, error);
+        return value; // fallback to literal
+      }
+    }
+    
+    // Handle non-object values
     if (typeof value !== 'object') return value;
     
     if (value.$random) {
@@ -260,7 +272,7 @@ export class Abilities extends Rule {
     return value;
   }
 
-  private queueDamageCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private hurt(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target, caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -278,7 +290,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueHealCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private heal(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target, caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -296,7 +308,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueAoECommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private areaOfEffect(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target, caster, primaryTarget);
     if (!target) return;
 
@@ -318,7 +330,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueProjectileCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private project(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const startPos = this.resolveTarget(effect.pos || 'self.pos', caster, primaryTarget);
     if (!startPos) return;
 
@@ -359,7 +371,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueWeatherCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private changeWeather(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const weatherType = effect.weatherType || 'rain';
     const duration = effect.duration || 60;
     const intensity = effect.intensity || 0.5;
@@ -375,7 +387,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueLightningCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private bolt(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     
     const params: any = {};
@@ -392,7 +404,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueJumpCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private leap(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
@@ -414,7 +426,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueHeatCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private adjustTemperature(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
@@ -435,7 +447,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueDeployCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private deploy(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const constructType = this.resolveValue((effect as any).constructType, caster, primaryTarget) || 'clanker';
 
     // Queue deploy command without position to let it calculate tactical placement
@@ -456,7 +468,7 @@ export class Abilities extends Rule {
     console.log(`${caster.id} used deployBot ${caster.meta.deployBotUses}/5 times`);
   }
 
-  private queueGrappleCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private grapply(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
@@ -472,7 +484,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queuePinCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private pin(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
@@ -490,7 +502,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueAirdropCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private airdrop(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
@@ -528,13 +540,13 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueBuffCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private buff(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Buff effects might need special handling for area buffs
     // For now, just log it
     console.log(`${caster.id} uses buff ability - not fully implemented yet`);
   }
 
-  private queueSummonCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private summon(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const unitType = this.resolveValue(effect.unit, caster, primaryTarget) || 'squirrel';
     const pos = caster.pos;
 
@@ -559,7 +571,7 @@ export class Abilities extends Rule {
     console.log(`${caster.id} summoned ${unitType} at (${summonedUnit.pos.x.toFixed(1)}, ${summonedUnit.pos.y.toFixed(1)})`);
   }
 
-  private queueMoistureCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private adjustHumidity(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Similar to heat but for moisture
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
@@ -574,7 +586,7 @@ export class Abilities extends Rule {
     }
   }
 
-  private queueTossCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private toss(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -590,7 +602,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private queueSetOnFireCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private ignite(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -600,7 +612,7 @@ export class Abilities extends Rule {
     target.meta.onFireDuration = 30;
   }
   
-  private queueEntangleCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private tangle(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
     
@@ -634,7 +646,7 @@ export class Abilities extends Rule {
     }
   }
 
-  private queueConeCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private coneOfEffect(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Cone attacks affect multiple targets in a cone shape
     const direction = caster.facing || { x: 1, y: 0 };
     const range = effect.range || 4;
@@ -658,16 +670,16 @@ export class Abilities extends Rule {
     }
   }
 
-  private queueMultipleProjectilesCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private multiproject(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const count = effect.count || 1;
     for (let i = 0; i < count; i++) {
       // Create projectile with slight variation
       const projectileEffect = { ...effect, type: 'projectile' };
-      this.queueProjectileCommand(projectileEffect, caster, primaryTarget);
+      this.project(projectileEffect, caster, primaryTarget);
     }
   }
 
-  private queueLineAoECommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private lineOfEffect(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Line AoE from start to end
     const start = this.resolveTarget((effect as any).start || 'self.pos', caster, primaryTarget);
     const end = this.resolveTarget((effect as any).end || 'target', caster, primaryTarget);
@@ -697,7 +709,7 @@ export class Abilities extends Rule {
     }
   }
 
-  private queueAreaBuffCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private domainBuff(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
@@ -719,7 +731,7 @@ export class Abilities extends Rule {
     }
   }
 
-  private queueDebuffCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private debuff(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -730,19 +742,19 @@ export class Abilities extends Rule {
     }
   }
 
-  private queueCleanseCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private cleanse(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
     // Remove specified effects
-    if (effect.effects && target.meta) {
-      for (const effectName of effect.effects) {
+    if (effect.effectsToRemove && target.meta) {
+      for (const effectName of effect.effectsToRemove) {
         delete target.meta[effectName];
       }
     }
   }
 
-  private queueRevealCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private reveal(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
@@ -764,7 +776,7 @@ export class Abilities extends Rule {
     }
   }
 
-  private queueBurrowCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private burrow(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self', caster, primaryTarget);
     if (!target) return;
 
@@ -778,7 +790,7 @@ export class Abilities extends Rule {
     target.meta.burrowStartTick = this.sim.ticks;
   }
 
-  private queueTameCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private tame(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -802,7 +814,7 @@ export class Abilities extends Rule {
     
     // Change target's team to caster's team  
     actualTarget.team = caster.team;
-    console.log(`${caster.id} tamed ${actualTarget.id}!`);
+    // console.log(`${caster.id} tamed ${actualTarget.id}!`);
     
     // Add taming particles
     for (let i = 0; i < 5; i++) {
@@ -821,7 +833,7 @@ export class Abilities extends Rule {
     }
   }
 
-  private queueCalmCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private calm(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
@@ -840,7 +852,7 @@ export class Abilities extends Rule {
       unit.meta.calmed = true;
       unit.meta.aggressive = false;
       unit.intendedMove = { x: 0, y: 0 }; // Stop movement
-      console.log(`${unit.id} has been calmed`);
+      // console.log(`${unit.id} has been calmed`);
       
       // Add calm particles
       this.sim.particles.push({

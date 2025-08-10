@@ -1,4 +1,3 @@
-import { Action, Projectile, Unit, Vec2 } from "./sim/types";
 import { MeleeCombat } from "./rules/melee_combat";
 import { Knockback } from "./rules/knockback";
 import { ProjectileMotion } from "./rules/projectile_motion";
@@ -10,7 +9,6 @@ import Cleanup from "./rules/cleanup";
 import { Jumping } from "./rules/jumping";
 import { Tossing } from "./rules/tossing";
 import { Abilities } from "./rules/abilities";
-import { Abilities } from "./rules/abilities";
 import { EventHandler } from "./rules/event_handler";
 import { CommandHandler, QueuedCommand } from "./rules/command_handler";
 import { HugeUnits } from "./rules/huge_units";
@@ -21,18 +19,9 @@ import { Perdurance } from "./rules/perdurance";
 import { StatusEffects } from "./rules/status_effects";
 import { WinterEffects } from "./rules/winter_effects";
 import { LightningStorm } from "./rules/lightning_storm";
-
-interface Particle {
-  pos: Vec2;
-  vel: Vec2;
-  radius: number;
-  lifetime: number; // in ticks
-  color: string; // CSS color string
-  z?: number; // Height above ground for 3D effect
-  type?: 'leaf' | 'rain' | 'debris' | 'snow' | 'lightning' | 'lightning_branch' | 'electric_spark' | 'thunder_ring' | 'ozone' | 'storm_cloud' | 'power_surge' | 'energy' | 'heat_shimmer' | 'heat_stress' | 'grapple_line' | 'pin'; // Different particle types
-  landed?: boolean; // Has the particle landed on the ground
-  targetCell?: Vec2; // Target cell for precise positioning
-}
+import { Projectile } from "./types/Projectile";
+import { Unit } from "./types/Unit";
+import { Particle } from "./types/Particle";
 
 class ScalarField {
   private grid: number[][];

@@ -1,9 +1,10 @@
-import { Unit, Vec2 } from "../sim/types";
 import { Simulator } from "../simulator";
+import { Unit } from "../types/Unit";
+import { Vec2 } from "../types/Vec2";
 
 export default class DSL {
 
-  static evaluate(expression: string, subject: Unit, sim: Simulator): any {
+  static evaluate(expression: string, subject: Unit, sim: Simulator, target?: any): any {
     // Core unit getters
     let allies = () => sim.getRealUnits().filter(u => u.team === subject.team && u.state !== 'dead' && u.id !== subject.id);
     let enemies = () => sim.getRealUnits().filter(u => u.team !== subject.team && u.state !== 'dead');
@@ -101,6 +102,19 @@ export default class DSL {
     
     // Unit lookup
     let unit = (id: string) => sim.roster[id] || null;
+    
+    // Simple random utilities
+    let randomFloat = (min: number, max: number) => min + Math.random() * (max - min);
+    let randomInt = (min: number, max: number) => Math.floor(randomFloat(min, max + 1));
+    let pick = (array: any[]) => array[Math.floor(Math.random() * array.length)];
+    let randomPos = (centerX: number, centerY: number, range: number) => ({
+      x: centerX + randomFloat(-range, range),
+      y: centerY + randomFloat(-range, range)
+    });
+
+    // Self reference and target context
+    let self = subject;
+    // target parameter available if provided
 
     // Evaluate the expression
     try {

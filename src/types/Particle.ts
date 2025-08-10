@@ -1,0 +1,13 @@
+import { Vec2 } from "./Vec2";
+
+export interface Particle {
+  pos: Vec2;
+  vel: Vec2;
+  radius: number;
+  lifetime: number; // in ticks
+  color: string; // CSS color string
+  z?: number; // Height above ground for 3D effect
+  type?: 'leaf' | 'rain' | 'debris' | 'snow' | 'lightning' | 'lightning_branch' | 'electric_spark' | 'thunder_ring' | 'ozone' | 'storm_cloud' | 'power_surge' | 'energy' | 'heat_shimmer' | 'heat_stress' | 'grapple_line' | 'pin'; // Different particle types
+  landed?: boolean; // Has the particle landed on the ground
+  targetCell?: Vec2; // Target cell for precise positioning
+}
