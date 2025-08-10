@@ -1,19 +1,22 @@
 import DSL from './dsl';
 import { Rule } from './rule';
-import { JsonAbility, JsonAbilityEffect } from './json_abilities_loader';
+import { Ability, AbilityEffect } from './json_abilities_loader';
 import abilities from '../../data/abilities.json';
 
 /**
  * Alternative to the hardcoded Abilities rule
  * Processes abilities defined in JSON format and converts them to commands
  */
-export class JsonAbilities extends Rule {
-  private abilities: { [key: string]: JsonAbility } = {};
+export class Abilities extends Rule {
+  // private abilities: { [key: string]: Ability } = {};
+  static all: { [key: string]: Ability } = abilities; // Load all abilities from JSON
 
   constructor(sim: any) {
     super(sim);
-    this.abilities = abilities; // JsonAbilitiesLoader.load();
+    // this.abilities = abilities; // JsonAbilitiesLoader.load();
   }
+
+  ability = (name: string): Ability | undefined => Abilities.all[name];
 
   apply = (): void => {
     // First, check for units that need to emerge from burrow
@@ -35,16 +38,17 @@ export class JsonAbilities extends Rule {
       // Process each ability the unit has
       for (const abilityName in unit.abilities) {
         // Skip if ability doesn't exist in JSON definitions
-        if (!this.abilities[abilityName]) {
+        const ability = this.ability(abilityName);
+        if (!ability) {
           continue;
         }
 
-        const jsonAbility = this.abilities[abilityName];
+        // const jsonAbility = this.abilities[abilityName];
         
         // Check cooldown
         let lastTick = unit.lastAbilityTick ? unit.lastAbilityTick[abilityName] : undefined;
         let currentTick = this.sim.ticks;
-        let ready = lastTick === undefined || (currentTick - lastTick >= jsonAbility.cooldown);
+        let ready = lastTick === undefined || (currentTick - lastTick >= ability.cooldown);
 
         if (!ready) {
           continue;
@@ -52,9 +56,9 @@ export class JsonAbilities extends Rule {
 
         // Check trigger condition
         let shouldTrigger = true;
-        if (jsonAbility.trigger) {
+        if (ability.trigger) {
           try {
-            shouldTrigger = DSL.evaluate(jsonAbility.trigger, unit, this.sim);
+            shouldTrigger = DSL.evaluate(ability.trigger, unit, this.sim);
           } catch (error) {
             console.error(`Error evaluating JSON ability trigger for ${abilityName}:`, error);
             shouldTrigger = false;
@@ -67,9 +71,9 @@ export class JsonAbilities extends Rule {
 
         // Resolve primary target
         let target = unit; // Default to self
-        if (jsonAbility.target && jsonAbility.target !== 'self') {
+        if (ability.target && ability.target !== 'self') {
           try {
-            target = DSL.evaluate(jsonAbility.target, unit, this.sim);
+            target = DSL.evaluate(ability.target, unit, this.sim);
           } catch (error) {
             console.error(`Error evaluating JSON ability target for ${abilityName}:`, error);
             continue;
@@ -81,7 +85,7 @@ export class JsonAbilities extends Rule {
         }
 
         // Process each effect by converting to commands
-        for (const effect of jsonAbility.effects) {
+        for (const effect of ability.effects) {
           this.processEffectAsCommand(effect, unit, target);
         }
 
@@ -91,13 +95,13 @@ export class JsonAbilities extends Rule {
         }
         unit.lastAbilityTick[abilityName] = this.sim.ticks;
         
-        console.log(`🎯 ${unit.id} uses JSON ability: ${jsonAbility.name}`);
+        console.log(`🎯 ${unit.id} uses JSON ability: ${ability.name}`);
       }
       return unit;
     });
   }
 
-  private processEffectAsCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private processEffectAsCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     if (!this.sim.queuedCommands) {
       this.sim.queuedCommands = [];
     }
@@ -256,7 +260,7 @@ export class JsonAbilities extends Rule {
     return value;
   }
 
-  private queueDamageCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueDamageCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target, caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -274,7 +278,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueHealCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueHealCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target, caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -292,7 +296,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueAoECommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueAoECommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target, caster, primaryTarget);
     if (!target) return;
 
@@ -314,7 +318,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueProjectileCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueProjectileCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const startPos = this.resolveTarget(effect.pos || 'self.pos', caster, primaryTarget);
     if (!startPos) return;
 
@@ -355,7 +359,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueWeatherCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueWeatherCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const weatherType = effect.weatherType || 'rain';
     const duration = effect.duration || 60;
     const intensity = effect.intensity || 0.5;
@@ -371,7 +375,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueLightningCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueLightningCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     
     const params: any = {};
@@ -388,7 +392,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueJumpCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueJumpCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
@@ -410,7 +414,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueHeatCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueHeatCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
@@ -431,7 +435,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueDeployCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueDeployCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const constructType = this.resolveValue((effect as any).constructType, caster, primaryTarget) || 'clanker';
 
     // Queue deploy command without position to let it calculate tactical placement
@@ -452,7 +456,7 @@ export class JsonAbilities extends Rule {
     console.log(`${caster.id} used deployBot ${caster.meta.deployBotUses}/5 times`);
   }
 
-  private queueGrappleCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueGrappleCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
@@ -468,7 +472,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queuePinCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queuePinCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
@@ -486,7 +490,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueAirdropCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueAirdropCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
@@ -524,13 +528,13 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueBuffCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueBuffCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Buff effects might need special handling for area buffs
     // For now, just log it
     console.log(`${caster.id} uses buff ability - not fully implemented yet`);
   }
 
-  private queueSummonCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueSummonCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const unitType = this.resolveValue(effect.unit, caster, primaryTarget) || 'squirrel';
     const pos = caster.pos;
 
@@ -555,7 +559,7 @@ export class JsonAbilities extends Rule {
     console.log(`${caster.id} summoned ${unitType} at (${summonedUnit.pos.x.toFixed(1)}, ${summonedUnit.pos.y.toFixed(1)})`);
   }
 
-  private queueMoistureCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueMoistureCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Similar to heat but for moisture
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
@@ -570,7 +574,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueTossCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueTossCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -586,7 +590,7 @@ export class JsonAbilities extends Rule {
     });
   }
 
-  private queueSetOnFireCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueSetOnFireCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -596,7 +600,7 @@ export class JsonAbilities extends Rule {
     target.meta.onFireDuration = 30;
   }
   
-  private queueEntangleCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueEntangleCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
     
@@ -630,7 +634,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueConeCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueConeCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Cone attacks affect multiple targets in a cone shape
     const direction = caster.facing || { x: 1, y: 0 };
     const range = effect.range || 4;
@@ -654,7 +658,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueMultipleProjectilesCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueMultipleProjectilesCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const count = effect.count || 1;
     for (let i = 0; i < count; i++) {
       // Create projectile with slight variation
@@ -663,7 +667,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueLineAoECommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueLineAoECommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Line AoE from start to end
     const start = this.resolveTarget((effect as any).start || 'self.pos', caster, primaryTarget);
     const end = this.resolveTarget((effect as any).end || 'target', caster, primaryTarget);
@@ -693,7 +697,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueAreaBuffCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueAreaBuffCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
@@ -715,7 +719,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueDebuffCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueDebuffCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -726,7 +730,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueCleanseCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueCleanseCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -738,7 +742,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueRevealCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueRevealCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
@@ -760,7 +764,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueBurrowCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueBurrowCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self', caster, primaryTarget);
     if (!target) return;
 
@@ -774,7 +778,7 @@ export class JsonAbilities extends Rule {
     target.meta.burrowStartTick = this.sim.ticks;
   }
 
-  private queueTameCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueTameCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
@@ -817,7 +821,7 @@ export class JsonAbilities extends Rule {
     }
   }
 
-  private queueCalmCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
+  private queueCalmCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 

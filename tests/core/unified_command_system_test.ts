@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { JsonAbilities } from '../../src/rules/json_abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
+import { Abilities } from '../../src/rules/abilities';
 
 describe('Unified Command System', () => {
   it('should handle weather commands through the system', () => {
@@ -50,7 +50,7 @@ describe('Unified Command System', () => {
   
   it('should integrate with rainmaker ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Create rainmaker
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 5, y: 5 } };
@@ -60,7 +60,7 @@ describe('Unified Command System', () => {
     if (!rainmaker.lastAbilityTick) rainmaker.lastAbilityTick = {};
     delete rainmaker.lastAbilityTick.makeRain;
     
-    // Run JsonAbilities to trigger the ability
+    // Run Abilities to trigger the ability
     sim.step();
     
     // Commands are processed at the start of next step
@@ -83,7 +83,7 @@ describe('Unified Command System', () => {
   
   it('should integrate with toymaker ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Create toymaker and enemy
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
@@ -100,7 +100,7 @@ describe('Unified Command System', () => {
     if (!toymaker.meta) toymaker.meta = {};
     toymaker.meta.deployBotUses = 0;
     
-    // Run JsonAbilities to trigger deployment
+    // Run Abilities to trigger deployment
     sim.step();
     
     // Should have queued a deploy command

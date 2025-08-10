@@ -1,9 +1,10 @@
-import { Ability, Unit, UnitState, Vec2 } from "../sim/types";
+import { Abilities } from "../rules/abilities";
+import { Unit, UnitState, Vec2 } from "../sim/types";
 import { Simulator } from "../simulator";
-import abilities from "../../data/abilities.json";
+// import abilities from "../../data/abilities.json";
 
 export default class Encyclopaedia {
-  static abilities = {...abilities};
+  static abilities = Abilities.all;  //{...abilities};
 
   static bestiary: { [key: string]: Partial<Unit> } = {
     worm: {
@@ -34,7 +35,6 @@ export default class Encyclopaedia {
       maxHp: 30,
       mass: 1,
       tags: ['hunt'],
-      abilities: {}
     },
     ranger: {
       intendedMove: { x: 0, y: 0 },
@@ -44,7 +44,6 @@ export default class Encyclopaedia {
       hp: 20,
       maxHp: 20,
       mass: 1,
-      abilities: {}
     },
     bombardier: {
       intendedMove: { x: 0, y: 0 },
@@ -54,7 +53,6 @@ export default class Encyclopaedia {
       hp: 18,
       maxHp: 18,
       mass: 1,
-      abilities: {}
     },
     priest: {
       intendedMove: { x: 0, y: 0 },
@@ -62,11 +60,11 @@ export default class Encyclopaedia {
       sprite: "priest",
       state: "idle" as UnitState,
       hp: 20,
-      maxHp: 20,
       mass: 1,
-      abilities: {
-        heal: this.abilities.heal
-      }
+      abilities: ['heal']
+      // {
+      //   heal: this.abilities.heal
+      // }
     },
     tamer: {
       intendedMove: { x: 0, y: 0 },
@@ -76,9 +74,9 @@ export default class Encyclopaedia {
       hp: 20,
       maxHp: 20,
       mass: 1,
-      abilities: {
-        // summon: Freehold.abilities.squirrel
-      }
+      // abilities: {
+      //   // summon: Freehold.abilities.squirrel
+      // }
     },
     squirrel: {
       intendedMove: { x: 0, y: 0 },
@@ -1176,6 +1174,7 @@ export default class Encyclopaedia {
         intendedMove: { x: 0, y: 0 },
         state: "idle" as UnitState,
         ...this.bestiary[beast],
+        maxHp: this.bestiary[beast].hp,
         abilities: {
           ...(this.bestiary[beast]?.abilities || {}), // Preserve abilities defined in bestiary
           ...(beast === "worm" ? { jumps: this.abilities.jumps } : {}),

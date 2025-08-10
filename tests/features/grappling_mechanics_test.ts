@@ -2,14 +2,14 @@ import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { ProjectileMotion } from '../../src/rules/projectile_motion';
 
 describe('Grappling Mechanics - Core Physics', () => {
   it('should create a grapple projectile when grappler fires hook', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
     
     // Create grappler unit
     const grappler = {
@@ -29,8 +29,8 @@ describe('Grappling Mechanics - Core Physics', () => {
       sprite: 'soldier'
     });
     
-    // Run JsonAbilities to fire grapple
-    sim.step(); // JsonAbilities queues the grapple command
+    // Run Abilities to fire grapple
+    sim.step(); // Abilities queues the grapple command
     sim.step(); // CommandHandler processes the grapple command
     
     // Should create grapple projectile
@@ -45,7 +45,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should establish tether when grapple hits target unit', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
@@ -64,8 +64,8 @@ describe('Grappling Mechanics - Core Physics', () => {
     sim.addUnit(grappler);
     sim.addUnit(target);
     
-    // Fire grapple using JsonAbilities
-    sim.step(); // JsonAbilities queues the grapple command
+    // Fire grapple using Abilities
+    sim.step(); // Abilities queues the grapple command
     sim.step(); // CommandHandler processes the grapple command
     
     // Process grapple projectile movement and collision
@@ -85,7 +85,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should damage and pin segments when grappling segmented creature', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
@@ -112,8 +112,8 @@ describe('Grappling Mechanics - Core Physics', () => {
     
     const initialSegmentHp = worm.segments[0].hp;
     
-    // Fire grapple using JsonAbilities
-    sim.step(); // JsonAbilities queues the grapple command
+    // Fire grapple using Abilities
+    sim.step(); // Abilities queues the grapple command
     sim.step(); // CommandHandler processes the grapple command
     
     // Process grapple hit
@@ -133,7 +133,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should limit grappler to maximum simultaneous grapples', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),

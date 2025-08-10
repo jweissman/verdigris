@@ -2,7 +2,7 @@
  * Compatibility layer for JSON abilities to work with tests expecting .effect() methods
  */
 
-import { JsonAbilitiesLoader } from '../rules/json_abilities_loader';
+// import { JsonAbilitiesLoader } from '../rules/json_abilities_loader';
 
 export function wrapAbilityWithEffect(abilityName: string, jsonAbility: any): any {
   return {

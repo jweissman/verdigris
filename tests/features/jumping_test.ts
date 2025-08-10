@@ -5,7 +5,7 @@ import { Jumping } from '../../src/rules/jumping';
 import { MeleeCombat } from '../../src/rules/melee_combat';
 import { Knockback } from '../../src/rules/knockback';
 import { UnitBehavior } from '../../src/rules/unit_behavior';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { EventHandler } from '../../src/rules/event_handler';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
@@ -13,7 +13,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 describe('Jumping mechanics', () => {
   it('worm should be able to jump', () => {
     const sim = new Simulator(128, 128);
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new Jumping(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new Jumping(sim), new EventHandler(sim)];
 
     // Use a unit that has jumps ability
     const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 0, y: 0 } };
@@ -59,7 +59,7 @@ describe('Jumping mechanics', () => {
     const sim = new Simulator(16, 16);
     sim.rulebook = [
       new CommandHandler(sim),
-      new JsonAbilities(sim),
+      new Abilities(sim),
       new Jumping(sim),
       new EventHandler(sim)
     ];

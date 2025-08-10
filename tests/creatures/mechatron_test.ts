@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { AirdropPhysics } from '../../src/rules/airdrop_physics';
@@ -123,7 +123,7 @@ describe('Mechatron Airdrop System', () => {
   
   it('should test Mechatron abilities in combat', () => {
     const sim = new Simulator();
-    sim.rulebook = [new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
     
     
     // Create Mechatron and enemies

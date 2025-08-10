@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 import { CommandHandler } from '../../src/rules/command_handler';
@@ -13,7 +13,7 @@ describe('Combat Effectiveness Integration', () => {
     const sim = new Simulator();
     sim.rulebook = [
       new CommandHandler(sim), 
-      new JsonAbilities(sim), 
+      new Abilities(sim), 
       new AirdropPhysics(sim),
       new EventHandler(sim)
     ];
@@ -75,7 +75,7 @@ describe('Combat Effectiveness Integration', () => {
   it('should test construct immediate engagement upon spawn', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
     
     // Create nearby enemy
     const enemy = { ...Encyclopaedia.unit('worm'), pos: { x: 12, y: 10 }, team: 'hostile' as const };
@@ -109,7 +109,7 @@ describe('Combat Effectiveness Integration', () => {
       new CommandHandler(sim),
       new AirdropPhysics(sim), 
       new EventHandler(sim),
-      new JsonAbilities(sim)
+      new Abilities(sim)
     ];
     
     // Create enemy cluster for Mechatron to impact
@@ -152,7 +152,7 @@ describe('Combat Effectiveness Integration', () => {
   
   it('should test construct abilities in extended combat', () => {
     const sim = new Simulator();
-    sim.rulebook = [new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
     
     // Create Mechatron with all abilities
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 15, y: 15 } };

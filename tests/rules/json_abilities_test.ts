@@ -1,12 +1,11 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
-import { JsonAbilities } from '../../src/rules/json_abilities';
-import { JsonAbilitiesLoader } from '../../src/rules/json_abilities_loader';
+import { Abilities } from '../../src/rules/abilities';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { Simulator } from '../../src/simulator';
 
-describe('JsonAbilities', () => {
+describe('Abilities', () => {
   let sim: Simulator;
-  let jsonAbilities: JsonAbilities;
+  let abilities: Abilities;
   let commandHandler: CommandHandler;
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('JsonAbilities', () => {
 
     // Use the REAL abilities from abilities_clean.json (no mocking)
     
-    jsonAbilities = new JsonAbilities(sim);
+    abilities = new Abilities(sim);
     commandHandler = new CommandHandler(sim);
     sim.rulebook = [commandHandler]; // Add command handler to process queued commands
   });
@@ -50,7 +49,7 @@ describe('JsonAbilities', () => {
     (sim as any).getRealUnits = () => (sim as any).units.filter(u => u.state !== 'dead');
 
     // Apply JSON abilities rule
-    jsonAbilities.apply();
+    abilities.apply();
 
     // Should queue a projectile command
     expect(sim.queuedCommands.length).toBe(1);
@@ -85,7 +84,7 @@ describe('JsonAbilities', () => {
     (sim as any).getRealUnits = () => (sim as any).units.filter(u => u.state !== 'dead');
 
     // Apply JSON abilities rule
-    jsonAbilities.apply();
+    abilities.apply();
 
     // Should queue a heal command
     expect(sim.queuedCommands.length).toBe(1);
@@ -122,7 +121,7 @@ describe('JsonAbilities', () => {
     sim.ticks = 3; // Only 3 ticks passed, but cooldown is 6
 
     // Apply JSON abilities rule
-    jsonAbilities.apply();
+    abilities.apply();
 
     // Should NOT queue any commands due to cooldown
     expect(sim.queuedCommands.length).toBe(0);

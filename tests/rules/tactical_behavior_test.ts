@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { UnitMovement } from '../../src/rules/unit_movement';
@@ -61,7 +61,7 @@ describe('Tactical Behavior Improvements', () => {
   
   it('should limit toymaker deployment to prevent overload', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     
     // Create toymaker 
@@ -110,7 +110,7 @@ describe('Tactical Behavior Improvements', () => {
   
   it('should allow deployment without enemies present', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     
     // Create toymaker with NO enemies

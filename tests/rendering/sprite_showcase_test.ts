@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { CommandHandler } from '../../src/rules/command_handler';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 import { HugeUnits } from '../../src/rules/huge_units';
@@ -14,7 +14,7 @@ describe('Sprite Showcase - Visual Testing', () => {
     sim = new Simulator();
     sim.rulebook = [
       new CommandHandler(sim), 
-      new JsonAbilities(sim), 
+      new Abilities(sim), 
       new EventHandler(sim),
       new HugeUnits(sim),
       new SegmentedCreatures(sim)

@@ -3,7 +3,7 @@ import { Simulator } from '../../src/simulator';
 import { DesertEffects } from '../../src/rules/desert_effects';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 
@@ -281,8 +281,8 @@ it('segmented creatures - grappling affects segments', () => {
 it('desert worm can burrow and ambush', () => {
   const sim = new Simulator();
   
-  // Add desert effects and JsonAbilities for burrow handling
-  sim.rulebook = [new JsonAbilities(sim), new DesertEffects(sim)];
+  // Add desert effects and Abilities for burrow handling
+  sim.rulebook = [new Abilities(sim), new DesertEffects(sim)];
   
   // Create desert worm
   const worm = {

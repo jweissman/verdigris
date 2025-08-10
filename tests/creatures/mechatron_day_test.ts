@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { CommandHandler } from '../../src/rules/command_handler';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { LightningStorm } from '../../src/rules/lightning_storm';
 import { UnitMovement } from '../../src/rules/unit_movement';
@@ -19,7 +19,7 @@ describe('Mechatron Day - Epic Integration Scenario', () => {
     // Full rulebook for complete simulation
     sim.rulebook = [
       new CommandHandler(sim), 
-      new JsonAbilities(sim), 
+      new Abilities(sim), 
       new EventHandler(sim),
       new LightningStorm(sim),
       new UnitMovement(sim),
@@ -192,7 +192,7 @@ describe('Mechatron Day - Epic Integration Scenario', () => {
   it('should demonstrate Mechatronist tactical override ability', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Create Mechatronist and some constructs to command
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 5, y: 5 } };

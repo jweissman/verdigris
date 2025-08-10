@@ -10,7 +10,7 @@ import Cleanup from "./rules/cleanup";
 import { Jumping } from "./rules/jumping";
 import { Tossing } from "./rules/tossing";
 import { Abilities } from "./rules/abilities";
-import { JsonAbilities } from "./rules/json_abilities";
+import { Abilities } from "./rules/abilities";
 import { EventHandler } from "./rules/event_handler";
 import { CommandHandler, QueuedCommand } from "./rules/command_handler";
 import { HugeUnits } from "./rules/huge_units";
@@ -197,7 +197,7 @@ class Simulator {
     this.queuedCommands = [];
     this.rulebook = [
       new CommandHandler(this), // Process commands first
-      new JsonAbilities(this),
+      new Abilities(this),
       new UnitBehavior(this),
       new UnitMovement(this),
       new HugeUnits(this), // Handle huge unit phantoms after movement
@@ -944,16 +944,15 @@ class Simulator {
     const unit = this.units.find(u => u.id === unitId);
     if (!unit || !unit.abilities[abilityName]) return;
 
-    // Get the JsonAbilities rule from the rulebook
-    const jsonAbilitiesRule = this.rulebook.find(rule => rule.constructor.name === 'JsonAbilities');
-    if (!jsonAbilitiesRule) {
-      console.warn('JsonAbilities rule not found in rulebook');
+    // Get the Abilities rule from the rulebook
+    const abilitiesRule = this.rulebook.find(rule => rule.constructor.name === 'Abilities');
+    if (!abilitiesRule) {
+      console.warn('Abilities rule not found in rulebook');
       return;
     }
 
     // Get the ability definition from JSON
-    const abilities = (jsonAbilitiesRule as any).abilities;
-    const jsonAbility = abilities[abilityName];
+    const jsonAbility = (abilitiesRule as any).ability(abilityName);
     if (!jsonAbility) {
       console.warn(`Ability ${abilityName} not found in JSON definitions`);
       return;
@@ -962,7 +961,7 @@ class Simulator {
     // Process the ability effects directly
     const primaryTarget = target || unit;
     for (const effect of jsonAbility.effects) {
-      (jsonAbilitiesRule as any).processEffectAsCommand(effect, unit, primaryTarget);
+      (abilitiesRule as any).processEffectAsCommand(effect, unit, primaryTarget);
     }
 
     // Update cooldown
@@ -1009,8 +1008,8 @@ class Simulator {
         break;
       
       default:
-        // For other abilities, try to use JsonAbilities
-        const jsonAbilitiesRule = this.rulebook.find(r => r.constructor.name === 'JsonAbilities');
+        // For other abilities, try to use Abilities
+        const jsonAbilitiesRule = this.rulebook.find(r => r.constructor.name === 'Abilities');
         if (jsonAbilitiesRule) {
           // Reset cooldown
           if (!unit.lastAbilityTick) unit.lastAbilityTick = {};
@@ -1019,7 +1018,7 @@ class Simulator {
           // Store target in unit meta temporarily
           unit.meta._testTarget = target;
           
-          // Run JsonAbilities
+          // Run Abilities
           jsonAbilitiesRule.apply();
           
           // Clean up

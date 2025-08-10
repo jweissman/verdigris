@@ -4,56 +4,91 @@
  */
 // import abilitiesJson from '../../data/abilities.json';
 
-export interface JsonAbilityEffect {
+// Type for values that can be constant or dynamic
+export type ValueExpression = 
+  | number 
+  | string 
+  | boolean
+  | { $random?: number[] | string[] }
+  | { $conditional?: { if: string; then: any; else: any } }
+  | { $calculate?: string }
+  | { x?: ValueExpression; y?: ValueExpression } // For position-like values
+  | ValueExpression[]; // For arrays
+
+export interface AbilityEffect {
   type: string;
-  target?: string;
+  
+  // Common targeting/positioning
+  target?: ValueExpression;
+  origin?: ValueExpression;
+  pos?: ValueExpression;
+  
+  // Effect parameters
+  amount?: ValueExpression;
+  radius?: ValueExpression;
+  damage?: ValueExpression;
   aspect?: string;
-  amount?: number | { $conditional?: any; $random?: number[]; $calculate?: string };
-  radius?: number;
-  condition?: string;
-  meta?: Record<string, any>;
-  origin?: string;
-  id?: string;
-  pos?: string;
-  vel?: any;
-  damage?: number;
-  team?: string;
+  duration?: ValueExpression;
+  
+  // Projectile-specific
   projectileType?: string;
-  duration?: number;
+  vel?: ValueExpression;
   progress?: number;
   z?: number;
   aoeRadius?: number;
+  
+  // Summon/deploy specific
+  unit?: ValueExpression;
+  constructType?: ValueExpression;
+  intendedProtectee?: string;
+  posture?: string;
+  
+  // Weather/environment
   weatherType?: string;
-  intensity?: number;
-  direction?: string;
-  range?: number;
-  width?: number;
-  effects?: JsonAbilityEffect[];
+  intensity?: ValueExpression;
+  
+  // Combat/movement
+  direction?: ValueExpression;
+  distance?: ValueExpression;
+  height?: ValueExpression;
+  range?: ValueExpression;
+  width?: ValueExpression;
+  force?: ValueExpression;
+  
+  // Visual/particles
   particleType?: string;
-  count?: number;
-  spread?: number;
+  count?: ValueExpression;
+  spread?: ValueExpression;
+  color?: string;
+  size?: ValueExpression;
+  
+  // Nested effects and metadata
+  effects?: AbilityEffect[];
+  condition?: string;
+  meta?: Record<string, any>;
+  
+  // Other common fields
+  id?: string;
+  team?: string;
+  
+  // Buff/debuff specific
+  buff?: Record<string, any>;
+  debuff?: Record<string, any>;
+  
+  // Line/area effects
+  start?: ValueExpression;
+  end?: ValueExpression;
 }
 
-export interface JsonAbility {
+export interface Ability {
   name: string;
   cooldown: number;
   config?: Record<string, any>;
   target?: string;
   trigger?: string;
-  effects: JsonAbilityEffect[];
+  effects: AbilityEffect[];
 }
 
 export interface JsonAbilitySet {
-  [abilityId: string]: JsonAbility;
+  [abilityId: string]: Ability;
 }
-
-// export class JsonAbilitiesLoader {
-//   static load(): JsonAbilitySet {
-//     return abilitiesJson as JsonAbilitySet;
-//   }
-
-//   static get(abilityId: string): JsonAbility | null {
-//     const abilities = this.load();
-//     return abilities[abilityId] || null;
-//   }
-// }

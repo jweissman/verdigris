@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { EventHandler } from '../../src/rules/event_handler';
 import { Perdurance } from '../../src/rules/perdurance';
@@ -10,7 +10,7 @@ import { StatusEffects } from '../../src/rules/status_effects';
 describe('Construct Abilities', () => {
   it('should trigger clanker explosion when enemy gets close', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Add clanker
     const clanker = { ...Encyclopaedia.unit('clanker'), pos: { x: 5, y: 5 } };
@@ -48,7 +48,7 @@ describe('Construct Abilities', () => {
 
   it('should trigger freezebot chill aura periodically', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new StatusEffects(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new StatusEffects(sim), new EventHandler(sim)];
     
     // Add freezebot
     const freezebot = { ...Encyclopaedia.unit('freezebot'), pos: { x: 5, y: 5 } };
@@ -77,7 +77,7 @@ describe('Construct Abilities', () => {
 
   it('should trigger spiker chain whip on nearby enemies', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Add spiker
     const spiker = { ...Encyclopaedia.unit('spiker'), pos: { x: 5, y: 5 } };
@@ -107,7 +107,7 @@ describe('Construct Abilities', () => {
 
   it('should trigger zapper on highest HP enemy', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Add zapper
     const zapper = { ...Encyclopaedia.unit('zapper'), pos: { x: 5, y: 5 } };

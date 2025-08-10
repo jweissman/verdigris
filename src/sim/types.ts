@@ -16,17 +16,17 @@ export type UnitPosture = 'wait' // wander or wait
 
 type UnitID = string;
 
-export interface Ability {
-  name: string;
-  cooldown: number; // in ticks
-  trigger?: string; // condition for the ability to fire, e.g., 'true', 'hp < 0.5'
-  range?: number; // optional range for abilities
-  target?: string; // e.g. 'enemies.nearest()' or 'self'
-  config?: {
-    [key: string]: any; // Additional configuration options for the ability
-  }
-  effect: (unit: Unit, target?: Unit | Vec2, sim?: any) => void; // Effect function
-}
+// export interface Ability {
+//   name: string;
+//   cooldown: number; // in ticks
+//   trigger?: string; // condition for the ability to fire, e.g., 'true', 'hp < 0.5'
+//   range?: number; // optional range for abilities
+//   target?: string; // e.g. 'enemies.nearest()' or 'self'
+//   config?: {
+//     [key: string]: any; // Additional configuration options for the ability
+//   }
+//   effect: (unit: Unit, target?: Unit | Vec2, sim?: any) => void; // Effect function
+// }
 
 export interface Unit {
   id: UnitID;
@@ -42,7 +42,8 @@ export interface Unit {
   maxHp: number;
   mass: number;
   tags?: string[];
-  abilities: { [name: string]: Ability };
+  abilities: Array<string>;
+  //{ [name: string]: Ability };
   lastAbilityTick?: { [name: string]: number };
   meta: {
     jumping?: boolean; // Whether the unit is currently jumping

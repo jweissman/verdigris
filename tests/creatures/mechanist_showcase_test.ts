@@ -2,9 +2,9 @@ import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { CommandHandler } from '../../src/rules/command_handler';
-import { JsonAbilities } from '../../src/rules/json_abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { LightningStorm } from '../../src/rules/lightning_storm';
+import { Abilities } from '../../src/rules/abilities';
 
 describe('Mechanist Showcase', () => {
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe('Mechanist Showcase', () => {
     const sim = new Simulator();
     sim.rulebook = [
       new CommandHandler(sim), 
-      new JsonAbilities(sim), 
+      new Abilities(sim), 
       new EventHandler(sim),
       new LightningStorm(sim)
     ];

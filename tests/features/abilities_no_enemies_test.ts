@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { JsonAbilities } from '../../src/rules/json_abilities';
+import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
 
@@ -9,7 +9,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should allow deployment commands even without enemies present', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Deploy toymaker with NO enemies on field
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 20, y: 10 } };
@@ -32,7 +32,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test supportive abilities work without combat targets', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
     
     // Create Mechatron with shield recharge ability
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 15, y: 10 } };
@@ -60,7 +60,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test area effect abilities can trigger in empty areas', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
     
     // Create Mechatron in empty field
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 20, y: 15 } };
@@ -104,7 +104,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should verify toymaker deployment limits work during solo play', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Create toymaker in peaceful field
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 15, y: 15 } };
@@ -135,7 +135,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test environmental abilities work without combat context', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new JsonAbilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
     
     // Create rainmaker for environmental effects
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 20, y: 20 } };
