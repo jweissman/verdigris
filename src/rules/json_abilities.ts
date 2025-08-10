@@ -715,31 +715,35 @@ export class JsonAbilities extends Rule {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
+    // Find the actual unit in the sim
+    const actualTarget = this.sim.units.find(u => u.id === target.id);
+    if (!actualTarget) return;
+
     // Check if this is tameMegabeast ability which requires mass >= 10
-    if (caster.abilities?.tameMegabeast && target.mass < 10) {
-      console.log(`${caster.id} cannot tame ${target.id} - target mass ${target.mass} is too low (requires >= 10)`);
+    if (caster.abilities?.tameMegabeast && actualTarget.mass < 10) {
+      console.log(`${caster.id} cannot tame ${actualTarget.id} - target mass ${actualTarget.mass} is too low (requires >= 10)`);
       return;
     }
 
     // Track original team and taming info
-    if (!target.meta) target.meta = {};
-    if (!target.meta.originalTeam) {
-      target.meta.originalTeam = target.team;
+    if (!actualTarget.meta) actualTarget.meta = {};
+    if (!actualTarget.meta.originalTeam) {
+      actualTarget.meta.originalTeam = actualTarget.team;
     }
-    target.meta.tamed = true;
-    target.meta.tamedBy = caster.id;
+    actualTarget.meta.tamed = true;
+    actualTarget.meta.tamedBy = caster.id;
     
-    // Change target's team to caster's team
-    target.team = caster.team;
-    console.log(`${caster.id} tamed ${target.id}!`);
+    // Change target's team to caster's team  
+    actualTarget.team = caster.team;
+    console.log(`${caster.id} tamed ${actualTarget.id}!`);
     
     // Add taming particles
     for (let i = 0; i < 5; i++) {
       this.sim.particles.push({
         id: `tame_${caster.id}_${this.sim.ticks}_${i}`,
         pos: { 
-          x: target.pos.x + (Math.random() - 0.5) * 2, 
-          y: target.pos.y + (Math.random() - 0.5) * 2 
+          x: actualTarget.pos.x + (Math.random() - 0.5) * 2, 
+          y: actualTarget.pos.y + (Math.random() - 0.5) * 2 
         },
         vel: { x: 0, y: -0.1 },
         ttl: 20,

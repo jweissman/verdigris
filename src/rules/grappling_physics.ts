@@ -78,6 +78,21 @@ export class GrapplingPhysics extends Rule {
             grappler.meta.grapplingTarget = hitUnit.id;
           }
           
+          // Check if target is segmented and damage segments
+          if (hitUnit.segments && Array.isArray(hitUnit.segments)) {
+            // Damage the first segment when grappled
+            if (hitUnit.segments[0] && hitUnit.segments[0].hp > 0) {
+              const damage = 5; // Base grapple damage to segments
+              hitUnit.segments[0].hp = Math.max(0, hitUnit.segments[0].hp - damage);
+              console.log(`Grapple damaged segment ${hitUnit.segments[0].id}: ${damage} damage`);
+              
+              // Pin the damaged segment
+              if (!hitUnit.segments[0].meta) hitUnit.segments[0].meta = {};
+              hitUnit.segments[0].meta.pinned = true;
+              hitUnit.segments[0].meta.pinDuration = 30;
+            }
+          }
+          
           // Check if target is massive and should be pinned
           const targetMass = hitUnit.mass || 1;
           if (targetMass > 30) {

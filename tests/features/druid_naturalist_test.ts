@@ -113,11 +113,14 @@ describe('Druid and Naturalist Forest Abilities', () => {
         sim.forceAbility(naturalist.id, 'tameMegabeast', megabeast);
       }
       
+      // Get the actual megabeast from sim
+      const simMegabeast = sim.units.find(u => u.id === 'megabeast1');
+      
       // Megabeast should be tamed
-      expect(megabeast.team).toBe(naturalist.team);
-      expect(megabeast.meta?.tamed).toBe(true);
-      expect(megabeast.meta?.tamedBy).toBe('naturalist1');
-      expect(megabeast.meta?.originalTeam).toBe('hostile');
+      expect(simMegabeast?.team).toBe('friendly');
+      expect(simMegabeast?.meta?.tamed).toBe(true);
+      expect(simMegabeast?.meta?.tamedBy).toBe('naturalist1');
+      expect(simMegabeast?.meta?.originalTeam).toBe('hostile');
       
       // Should have taming particles
       const tameParticles = sim.particles.filter(p => p.type === 'tame');
@@ -250,8 +253,13 @@ describe('Druid and Naturalist Forest Abilities', () => {
       
       sim.step();
       
+      // Get actual units from sim, not local references
+      const simWorm = sim.units.find(u => u.id === 'worm1');
+      const simDruid = sim.units.find(u => u.id === 'druid1');
+      const simNaturalist = sim.units.find(u => u.id === 'naturalist1');
+      
       // Should have tamed worm on friendly team
-      expect(giantWorm.team).toBe('friendly');
+      expect(simWorm?.team).toBe('friendly');
       
       // Should have summoned creature
       const summoned = sim.units.find(u => u.meta?.summoned);
@@ -262,15 +270,13 @@ describe('Druid and Naturalist Forest Abilities', () => {
       const friendlyUnits = sim.units.filter(u => u.team === 'friendly');
       
       // Verify we have the expected units
-      const hasDruid = friendlyUnits.some(u => u.sprite === 'druid');
-      const hasNaturalist = friendlyUnits.some(u => u.sprite === 'naturalist');
-      const hasTamedWorm = friendlyUnits.some(u => u.sprite === 'giant-sandworm' && u.meta?.tamed);
-      const hasSummoned = friendlyUnits.some(u => u.meta?.summoned);
+      expect(simDruid?.team).toBe('friendly');
+      expect(simNaturalist?.team).toBe('friendly');
+      expect(simWorm?.team).toBe('friendly');
+      expect(summoned?.team).toBe('friendly');
       
-      expect(hasDruid).toBe(true);
-      expect(hasNaturalist).toBe(true);
-      expect(hasTamedWorm).toBe(true);
-      expect(hasSummoned).toBe(true);
+      // Should have at least 4 friendly units
+      expect(friendlyUnits.length).toBeGreaterThanOrEqual(4);
     });
   });
 });
