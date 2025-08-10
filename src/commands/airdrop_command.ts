@@ -1,16 +1,27 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
+/**
+ * AirdropCommand - drops a unit from high altitude
+ * Params:
+ *   unitType: string - Type of unit to drop
+ *   x?: number - X position (defaults to center)
+ *   y?: number - Y position (defaults to center)
+ */
 export class AirdropCommand extends Command {
-  execute(unitId: string | null, unitType: string, x?: string, y?: string) {
+  execute(unitId: string | null, params: CommandParams): void {
+    const unitType = params.unitType as string;
+    const x = params.x as number | undefined;
+    const y = params.y as number | undefined;
+    
     console.log(`🚁 Airdrop command: Dropping ${unitType} at ${x || 'center'}, ${y || 'center'}`);
     
     // Determine drop position
     let dropX: number, dropY: number;
     
-    if (x && y) {
-      dropX = parseInt(x);
-      dropY = parseInt(y);
+    if (x !== undefined && y !== undefined) {
+      dropX = x;
+      dropY = y;
     } else {
       // Default to center of field for dramatic effect
       dropX = Math.floor(this.sim.fieldWidth / 2);

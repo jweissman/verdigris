@@ -1,17 +1,30 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
+/**
+ * Deploy command - deploys a unit at specified position
+ * Params:
+ *   unitType: string - Type of unit to deploy
+ *   x?: number - X position (optional, auto-calculates if not provided)
+ *   y?: number - Y position (optional, auto-calculates if not provided)
+ *   team?: string - Team affiliation (optional)
+ */
 export class Deploy extends Command {
-  execute(unitId: string | null, unitType: string, x?: string, y?: string, team?: string) {
+  execute(unitId: string | null, params: CommandParams): void {
+    const unitType = params.unitType as string;
+    const x = params.x as number | undefined;
+    const y = params.y as number | undefined;
+    const team = params.team as string | undefined;
+    
     // console.log(`Deploy command: ${unitType} at ${x || 'auto'}, ${y || 'auto'} for team ${team || 'friendly'}`);
     
     // Determine deployment position
     let deployX: number, deployY: number;
     
-    if (x && y) {
+    if (x !== undefined && y !== undefined) {
       // Manual position specified
-      deployX = parseInt(x);
-      deployY = parseInt(y);
+      deployX = x;
+      deployY = y;
     } else if (unitId) {
       // Deploy near the unit that issued the command (toymaker)
       const deployerUnit = this.sim.units.find(u => u.id === unitId);

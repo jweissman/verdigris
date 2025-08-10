@@ -56,7 +56,7 @@ describe('JsonAbilities', () => {
     expect(sim.queuedCommands.length).toBe(1);
     expect(sim.queuedCommands[0].type).toBe('projectile');
     expect(sim.queuedCommands[0].unitId).toBe('archer1');
-    expect(sim.queuedCommands[0].args[0]).toBe('bullet'); // projectile type from JSON
+    expect(sim.queuedCommands[0].params.projectileType).toBe('bullet'); // projectile type from JSON
   });
 
   it('should queue heal command for heal ability', () => {
@@ -91,8 +91,9 @@ describe('JsonAbilities', () => {
     expect(sim.queuedCommands.length).toBe(1);
     expect(sim.queuedCommands[0].type).toBe('heal');
     expect(sim.queuedCommands[0].unitId).toBe('healer1');
-    expect(sim.queuedCommands[0].args[0]).toBe('wounded1'); // target id (weakest ally)
-    expect(sim.queuedCommands[0].args[1]).toBe('5'); // heal amount
+    // Check params instead of args for new format
+    expect(sim.queuedCommands[0].params?.targetId).toBe('wounded1'); // target id (weakest ally)
+    expect(sim.queuedCommands[0].params?.amount).toBe(5); // heal amount
   });
 
   it('should respect cooldowns', () => {

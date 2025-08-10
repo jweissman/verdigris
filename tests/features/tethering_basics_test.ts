@@ -58,11 +58,14 @@ describe('Tethering Basics - Step by Step', () => {
     sim.rulebook.push(new GrapplingPhysics(sim));
     
     // Fire grapple at heavy unit using simulator
-    sim.forceAbility(grappler.id, 'grapplingHook', immovableUnit.pos);
+    sim.forceAbility(grappler.id, 'grapplingHook', immovableUnit);
     sim.step(); // Process the command to create projectile
     
     // Simulate projectile travel and collision
     for (let i = 0; i < 20; i++) {
+      // Find the grapple projectile
+      const grapplesBeforeMove = sim.projectiles.filter(p => p.type === 'grapple');
+      
       // Move projectiles toward their targets
       sim.projectiles.forEach(p => {
         if (p.type === 'grapple' && p.target) {
@@ -82,6 +85,12 @@ describe('Tethering Basics - Step by Step', () => {
       });
       
       sim.step();
+      
+      // Break early if grapple hit
+      const heavyUnit = sim.units.find(u => u.id === 'heavy-1');
+      if (heavyUnit?.meta?.grappled) {
+        break;
+      }
     }
     
     // Check if heavy unit is grappled - check the actual unit in sim, not the original reference

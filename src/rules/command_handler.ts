@@ -16,7 +16,7 @@ import { JumpCommand } from "../commands/jump";
 
 export type QueuedCommand = {
   type: string;
-  args: string[];
+  params: Record<string, any>; // Named parameters dictionary
   unitId?: string; // Optional for system commands
   tick?: number;
 };
@@ -79,9 +79,17 @@ export class CommandHandler extends Rule {
       
       const command = this.commands.get(queuedCommand.type);
       if (command) {
-        // console.log(`Executing command: ${queuedCommand.type} with args:`, queuedCommand.args);
-        // Pass unitId if it exists, otherwise pass null for system commands
-        command.execute(queuedCommand.unitId || null, ...queuedCommand.args);
+        // Handle both new params format and legacy args format
+        if (queuedCommand.params) {
+          // New format - pass params directly
+          command.execute(queuedCommand.unitId || null, queuedCommand.params);
+        } else if (queuedCommand.args) {
+          // Legacy format - convert args to params based on command type
+          const params = this.convertArgsToParams(queuedCommand.type, queuedCommand.args);
+          command.execute(queuedCommand.unitId || null, params);
+        } else {
+          console.warn(`Command ${queuedCommand.type} has neither params nor args`);
+        }
       } else if (queuedCommand.type && queuedCommand.type !== '') {
         // Only warn for non-empty command types
         console.warn(`Unknown command type: ${queuedCommand.type}`);
@@ -90,5 +98,124 @@ export class CommandHandler extends Rule {
 
     // Keep scheduled commands for later
     this.sim.queuedCommands = commandsToKeep;
+  }
+  
+  // Convert legacy args to params based on command type
+  private convertArgsToParams(commandType: string, args: any[]): Record<string, any> {
+    // Map command types to convert legacy args to params
+    switch (commandType) {
+      case 'projectile':
+        // args: [type, startX, startY, targetX?, targetY?, damage?, radius?, team?]
+        return {
+          projectileType: args[0],
+          x: parseFloat(args[1]),
+          y: parseFloat(args[2]),
+          targetX: args[3] ? parseFloat(args[3]) : undefined,
+          targetY: args[4] ? parseFloat(args[4]) : undefined,
+          damage: args[5] ? parseInt(args[5]) : undefined,
+          radius: args[6] ? parseFloat(args[6]) : undefined,
+          team: args[7]
+        };
+        
+      case 'toss':
+        // args can be [direction, force?, distance?] or [targetId, distance]
+        if (typeof args[0] === 'object' && args[0].x !== undefined) {
+          // Direction-based toss
+          return {
+            direction: args[0],
+            force: args[1] || 5,
+            distance: args[2] || 3
+          };
+        } else {
+          // Target-based toss (from abilities)
+          return {
+            targetId: args[0],
+            distance: parseInt(args[1]) || 5
+          };
+        }
+        
+      case 'weather':
+        // args: [weatherType, duration?, intensity?]
+        return {
+          weatherType: args[0],
+          duration: args[1] ? parseInt(args[1]) : undefined,
+          intensity: args[2] ? parseFloat(args[2]) : undefined
+        };
+        
+      case 'airdrop':
+      case 'drop':
+        // args: [unitType, x, y]
+        return {
+          unitType: args[0],
+          x: parseFloat(args[1]),
+          y: parseFloat(args[2])
+        };
+        
+      case 'deploy':
+      case 'spawn':
+        // args: [unitType, x?, y?]
+        return {
+          unitType: args[0],
+          x: args[1] ? parseFloat(args[1]) : undefined,
+          y: args[2] ? parseFloat(args[2]) : undefined
+        };
+        
+      case 'temperature':
+      case 'temp':
+        // args can be: [amount] for global, or [x, y, amount, radius?] for local
+        if (args.length === 1) {
+          // Global temperature setting
+          return {
+            amount: parseFloat(args[0])
+          };
+        } else {
+          // Local temperature at position
+          return {
+            x: parseFloat(args[0]),
+            y: parseFloat(args[1]),
+            amount: parseFloat(args[2]),
+            radius: args[3] ? parseFloat(args[3]) : 3
+          };
+        }
+        
+      case 'lightning':
+      case 'bolt':
+        // args: [x?, y?]
+        return {
+          x: args[0] ? parseFloat(args[0]) : undefined,
+          y: args[1] ? parseFloat(args[1]) : undefined
+        };
+        
+      case 'jump':
+        // args: [targetX, targetY, height?, damage?, radius?]
+        return {
+          targetX: parseFloat(args[0]),
+          targetY: parseFloat(args[1]),
+          height: args[2] ? parseFloat(args[2]) : 5,
+          damage: args[3] ? parseFloat(args[3]) : 5,
+          radius: args[4] ? parseFloat(args[4]) : 3
+        };
+        
+      case 'damage':
+        // args: [targetId, amount, aspect?]
+        return {
+          targetId: args[0],
+          amount: parseInt(args[1]) || 0,
+          aspect: args[2] || 'physical'
+        };
+        
+      case 'heal':
+        // args: [targetId, amount, aspect?]
+        return {
+          targetId: args[0],
+          amount: parseInt(args[1]) || 0,
+          aspect: args[2] || 'healing'
+        };
+        
+      default:
+        // For unknown commands, return empty params
+        console.warn(`Unknown command type ${commandType} - cannot convert args to params`);
+        return {};
+    }
   }
 }

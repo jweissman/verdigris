@@ -1,5 +1,9 @@
 import { Simulator } from "../simulator";
 
+export interface CommandParams {
+  [key: string]: any;
+}
+
 export abstract class Command {
   protected sim: Simulator;
 
@@ -7,5 +11,5 @@ export abstract class Command {
     this.sim = sim;
   }
 
-  abstract execute(unitId: string, ...args: any[]): void;
+  abstract execute(unitId: string | null, params: CommandParams): void;
 }

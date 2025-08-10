@@ -1,11 +1,22 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 
+/**
+ * ChangeWeather command - changes weather conditions
+ * Params:
+ *   weatherType: string - Type of weather (rain, snow, winter, clear, etc.)
+ *   duration?: number - Duration in ticks (default 80)
+ *   intensity?: number - Intensity 0-1 (default 0.8)
+ */
 export class ChangeWeather extends Command {
-  execute(_unitId: string | null, weatherType: string, duration?: string, intensity?: string) {
+  execute(_unitId: string | null, params: CommandParams): void {
+    const weatherType = params.weatherType as string;
+    const duration = params.duration as number | undefined;
+    const intensity = params.intensity as number | undefined;
+    
     // console.log(`Weather command: ${weatherType} for ${duration || 'default'} duration`);
     
-    const durationValue = duration ? parseInt(duration) : 80; // Default 10 seconds at 8fps
-    const intensityValue = intensity ? parseFloat(intensity) : 0.8;
+    const durationValue = duration ?? 80; // Default 10 seconds at 8fps
+    const intensityValue = intensity ?? 0.8;
     
     switch (weatherType) {
       case 'rain':

@@ -2,7 +2,7 @@
  * Loads ability definitions from JSON files
  * Provides a data-oriented alternative to hardcoded abilities
  */
-import abilitiesJson from '../../data/abilities.json';
+// import abilitiesJson from '../../data/abilities.json';
 
 export interface JsonAbilityEffect {
   type: string;
@@ -47,13 +47,13 @@ export interface JsonAbilitySet {
   [abilityId: string]: JsonAbility;
 }
 
-export class JsonAbilitiesLoader {
-  static load(): JsonAbilitySet {
-    return abilitiesJson as JsonAbilitySet;
-  }
+// export class JsonAbilitiesLoader {
+//   static load(): JsonAbilitySet {
+//     return abilitiesJson as JsonAbilitySet;
+//   }
 
-  static get(abilityId: string): JsonAbility | null {
-    const abilities = this.load();
-    return abilities[abilityId] || null;
-  }
-}
+//   static get(abilityId: string): JsonAbility | null {
+//     const abilities = this.load();
+//     return abilities[abilityId] || null;
+//   }
+// }

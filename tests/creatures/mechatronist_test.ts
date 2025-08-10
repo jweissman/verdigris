@@ -66,7 +66,11 @@ describe('Mechatronist Deployment System', () => {
         airdropCalled = true;
         
         const airdropCmd = sim.queuedCommands.find(cmd => cmd.type === 'airdrop')!;
-        expect(airdropCmd.args).toEqual(['mechatron', '10', '5']); // Tactical midpoint
+        expect(airdropCmd.params).toEqual({
+          unitType: 'mechatron',
+          x: 10,
+          y: 5
+        }); // Tactical midpoint
         break;
       }
       

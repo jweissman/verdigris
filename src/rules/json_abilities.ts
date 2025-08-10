@@ -1,6 +1,7 @@
 import DSL from './dsl';
 import { Rule } from './rule';
-import { JsonAbilitiesLoader, JsonAbility, JsonAbilityEffect } from './json_abilities_loader';
+import { JsonAbility, JsonAbilityEffect } from './json_abilities_loader';
+import abilities from '../../data/abilities.json';
 
 /**
  * Alternative to the hardcoded Abilities rule
@@ -11,7 +12,7 @@ export class JsonAbilities extends Rule {
 
   constructor(sim: any) {
     super(sim);
-    this.abilities = JsonAbilitiesLoader.load();
+    this.abilities = abilities; // JsonAbilitiesLoader.load();
   }
 
   apply = (): void => {
@@ -264,7 +265,11 @@ export class JsonAbilities extends Rule {
 
     this.sim.queuedCommands.push({
       type: 'damage',
-      args: [target.id, amount.toString(), aspect],
+      params: {
+        targetId: target.id,
+        amount: amount,
+        aspect: aspect
+      },
       unitId: caster.id
     });
   }
@@ -278,7 +283,11 @@ export class JsonAbilities extends Rule {
 
     this.sim.queuedCommands.push({
       type: 'heal',
-      args: [target.id, amount.toString(), aspect],
+      params: {
+        targetId: target.id,
+        amount: amount,
+        aspect: aspect
+      },
       unitId: caster.id
     });
   }
@@ -294,7 +303,13 @@ export class JsonAbilities extends Rule {
 
     this.sim.queuedCommands.push({
       type: 'aoe',
-      args: [pos.x.toString(), pos.y.toString(), radius.toString(), amount.toString(), aspect],
+      params: {
+        x: pos.x,
+        y: pos.y,
+        radius: radius,
+        damage: amount,
+        type: aspect
+      },
       unitId: caster.id
     });
   }
@@ -308,7 +323,14 @@ export class JsonAbilities extends Rule {
     const damage = this.resolveValue(effect.damage, caster, primaryTarget) || 0;
     const radius = this.resolveValue(effect.radius, caster, primaryTarget) || 1;
 
-    const args = [projectileType, startPos.x.toString(), startPos.y.toString()];
+    const params: any = {
+      x: startPos.x,
+      y: startPos.y,
+      projectileType: projectileType,
+      damage: damage,
+      radius: radius,
+      team: caster.team
+    };
 
     // Add target position if specified
     if (effect.target) {
@@ -316,22 +338,19 @@ export class JsonAbilities extends Rule {
       if (target) {
         const targetPos = target.pos || target;
         if (targetPos && typeof targetPos.x === 'number' && typeof targetPos.y === 'number') {
-          args.push(targetPos.x.toString(), targetPos.y.toString());
+          params.targetX = targetPos.x;
+          params.targetY = targetPos.y;
         }
       }
     } else if (primaryTarget && primaryTarget.pos) {
       // Use primary target if no specific target given
-      args.push(primaryTarget.pos.x.toString(), primaryTarget.pos.y.toString());
+      params.targetX = primaryTarget.pos.x;
+      params.targetY = primaryTarget.pos.y;
     }
-
-    // Always add damage, radius, and team
-    args.push(damage.toString());
-    args.push(radius.toString());
-    args.push(caster.team);
 
     this.sim.queuedCommands.push({
       type: 'projectile',
-      args: args,
+      params: params,
       unitId: caster.id
     });
   }
@@ -343,7 +362,11 @@ export class JsonAbilities extends Rule {
 
     this.sim.queuedCommands.push({
       type: 'weather',
-      args: [weatherType, duration.toString(), intensity.toString()],
+      params: {
+        weatherType: weatherType,
+        duration: duration,
+        intensity: intensity
+      },
       unitId: caster.id
     });
   }
@@ -351,15 +374,16 @@ export class JsonAbilities extends Rule {
   private queueLightningCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     
-    const args = [];
+    const params: any = {};
     if (target) {
       const pos = target.pos || target;
-      args.push(pos.x.toString(), pos.y.toString());
+      params.x = pos.x;
+      params.y = pos.y;
     }
 
     this.sim.queuedCommands.push({
       type: 'lightning',
-      args: args,
+      params: params,
       unitId: caster.id
     });
   }
@@ -375,7 +399,13 @@ export class JsonAbilities extends Rule {
 
     this.sim.queuedCommands.push({
       type: 'jump',
-      args: [pos.x.toString(), pos.y.toString(), height.toString(), damage.toString(), radius.toString()],
+      params: {
+        targetX: pos.x,
+        targetY: pos.y,
+        height: height,
+        damage: damage,
+        radius: radius
+      },
       unitId: caster.id
     });
   }
@@ -391,19 +421,26 @@ export class JsonAbilities extends Rule {
     // Use temperature command if available
     this.sim.queuedCommands.push({
       type: 'temperature',
-      args: [pos.x.toString(), pos.y.toString(), amount.toString(), radius.toString()],
+      params: {
+        x: pos.x,
+        y: pos.y,
+        amount: amount,
+        radius: radius
+      },
       unitId: caster.id
     });
   }
 
   private queueDeployCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
-    const constructType = this.resolveValue(effect.constructType, caster, primaryTarget) || 'clanker';
+    const constructType = this.resolveValue((effect as any).constructType, caster, primaryTarget) || 'clanker';
 
     // Queue deploy command without position to let it calculate tactical placement
     // The deploy command will find the midpoint between deployer and nearest enemy
     this.sim.queuedCommands.push({
       type: 'deploy',
-      args: [constructType],
+      params: {
+        unitType: constructType
+      },
       unitId: caster.id
     });
 
@@ -423,7 +460,10 @@ export class JsonAbilities extends Rule {
     const pos = target.pos || target;
     this.sim.queuedCommands.push({
       type: 'grapple',
-      args: [pos.x.toString(), pos.y.toString()],
+      params: {
+        x: pos.x,
+        y: pos.y
+      },
       unitId: caster.id
     });
   }
@@ -438,7 +478,10 @@ export class JsonAbilities extends Rule {
 
     this.sim.queuedCommands.push({
       type: 'pin',
-      args: [pos.x.toString(), pos.y.toString()],
+      params: {
+        x: pos.x,
+        y: pos.y
+      },
       unitId: caster.id
     });
   }
@@ -468,11 +511,15 @@ export class JsonAbilities extends Rule {
       }
     }
     
-    const unitType = effect.unit || 'mechatron';
+    const unitType = (effect as any).unit || 'mechatron';
 
     this.sim.queuedCommands.push({
       type: 'airdrop',
-      args: [unitType, pos.x.toString(), pos.y.toString()],
+      params: {
+        unitType: unitType,
+        x: pos.x,
+        y: pos.y
+      },
       unitId: caster.id
     });
   }
@@ -527,11 +574,14 @@ export class JsonAbilities extends Rule {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
-    const distance = this.resolveValue(effect.distance, caster, target) || 5;
+    const distance = this.resolveValue((effect as any).distance, caster, target) || 5;
 
     this.sim.queuedCommands.push({
       type: 'toss',
-      args: [target.id, distance.toString()],
+      params: {
+        targetId: target.id,
+        distance: distance
+      },
       unitId: caster.id
     });
   }
@@ -615,19 +665,32 @@ export class JsonAbilities extends Rule {
 
   private queueLineAoECommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {
     // Line AoE from start to end
-    const start = this.resolveTarget(effect.start || 'self.pos', caster, primaryTarget);
-    const end = this.resolveTarget(effect.end || 'target', caster, primaryTarget);
+    const start = this.resolveTarget((effect as any).start || 'self.pos', caster, primaryTarget);
+    const end = this.resolveTarget((effect as any).end || 'target', caster, primaryTarget);
     if (!start || !end) return;
 
     const amount = this.resolveValue(effect.amount, caster, primaryTarget);
     const aspect = effect.aspect || 'physical';
 
-    // Queue line damage command
-    this.sim.queuedCommands.push({
-      type: 'line_damage',
-      args: [start.x.toString(), start.y.toString(), end.x.toString(), end.y.toString(), amount.toString(), aspect],
-      unitId: caster.id
-    });
+    // For now, implement as multiple AoE effects along the line
+    const steps = 5;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = start.x + (end.x - start.x) * t;
+      const y = start.y + (end.y - start.y) * t;
+      
+      this.sim.queuedCommands.push({
+        type: 'aoe',
+        params: {
+          x: x,
+          y: y,
+          radius: 1,
+          damage: amount,
+          type: aspect
+        },
+        unitId: caster.id
+      });
+    }
   }
 
   private queueAreaBuffCommand(effect: JsonAbilityEffect, caster: any, primaryTarget: any): void {

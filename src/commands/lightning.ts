@@ -1,8 +1,14 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 import { LightningStorm } from '../rules/lightning_storm';
 
+/**
+ * Lightning command - creates a lightning strike
+ * Params:
+ *   x?: number - X position for strike (optional, random if not provided)
+ *   y?: number - Y position for strike (optional, random if not provided)
+ */
 export class Lightning extends Command {
-  execute(unitId: string | null, x?: string, y?: string) {
+  execute(unitId: string | null, params: CommandParams): void {
     const lightningRule = this.sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     
     if (!lightningRule) {
@@ -15,10 +21,13 @@ export class Lightning extends Command {
       LightningStorm.createLightningStorm(this.sim);
     }
 
+    const x = params.x as number | undefined;
+    const y = params.y as number | undefined;
+    
     let targetPos;
-    if (x && y) {
+    if (x !== undefined && y !== undefined) {
       // Strike at specific position
-      targetPos = { x: parseInt(x), y: parseInt(y) };
+      targetPos = { x, y };
     }
     // Otherwise strike at random position (default behavior)
 

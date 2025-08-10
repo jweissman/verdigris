@@ -1,22 +1,29 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 
+/**
+ * Pin command - reinforces grapple to fully pin target
+ * Params:
+ *   x: number - Target X position (can also use targetX)
+ *   y: number - Target Y position (can also use targetY)
+ */
 export class Pin extends Command {
   name = "pin";
   description = "Reinforce grapple to fully pin target";
   usage = "pin <x> <y> - Reinforce grapple at position to create full pin";
 
-  execute(unitId: string | null, ...args: string[]): void {
-    if (args.length < 2) {
-      console.error("Pin command requires at least x and y coordinates");
+  execute(unitId: string | null, params: CommandParams): void {
+    // Support both 'x'/'y' and 'targetX'/'targetY' param names
+    const targetX = (params.x ?? params.targetX) as number;
+    const targetY = (params.y ?? params.targetY) as number;
+    
+    if (targetX === undefined || targetY === undefined) {
+      console.error("Pin command requires x and y coordinates");
       console.log("Usage:", this.usage);
       return;
     }
-
-    const targetX = parseInt(args[0]);
-    const targetY = parseInt(args[1]);
     const grapplerID = unitId;
 
-    if (isNaN(targetX) || isNaN(targetY)) {
+    if (typeof targetX !== 'number' || typeof targetY !== 'number' || isNaN(targetX) || isNaN(targetY)) {
       console.error("Invalid coordinates for pin command");
       return;
     }

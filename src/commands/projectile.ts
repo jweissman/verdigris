@@ -1,35 +1,48 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 
 /**
  * Projectile command - creates a projectile
- * Usage: projectile <type> <startX> <startY> [targetX] [targetY] [damage] [radius] [team]
+ * Params:
+ *   x: number - Starting X position
+ *   y: number - Starting Y position
+ *   projectileType: string - Type of projectile (bullet, bomb, etc.)
+ *   damage?: number - Damage amount
+ *   targetX?: number - Target X position
+ *   targetY?: number - Target Y position
+ *   radius?: number - Projectile radius
+ *   team?: string - Team affiliation
  */
 export class Projectile extends Command {
-  execute(unitId: string, type: string, startX: string, startY: string, 
-          targetX?: string, targetY?: string, damage?: string, radius?: string, team?: string) {
+  execute(unitId: string | null, params: CommandParams): void {
     
-    const startPos = { x: parseFloat(startX), y: parseFloat(startY) };
-    const projectileDamage = damage ? parseInt(damage) : 0;
-    const projectileRadius = radius ? parseFloat(radius) : 1;
+    const x = params.x as number;
+    const y = params.y as number;
+    const projectileType = params.projectileType as string || 'bullet';
+    const damage = params.damage as number || 0;
+    const targetX = params.targetX as number | undefined;
+    const targetY = params.targetY as number | undefined;
+    const radius = params.radius as number || 1;
+    const team = params.team as string | undefined;
     
-    const caster = this.sim.units.find(u => u.id === unitId);
+    const startPos = { x, y };
+    const caster = unitId ? this.sim.units.find(u => u.id === unitId) : null;
     const projectileTeam = team || caster?.team || 'neutral';
 
     const projectile: any = {
       id: `projectile_${unitId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       pos: startPos,
       vel: { x: 0, y: 0 },
-      radius: projectileRadius,
-      damage: projectileDamage,
+      radius: radius,
+      damage: damage,
       team: projectileTeam,
-      type: type
+      type: projectileType
     };
 
     // If target is specified
-    if (targetX && targetY) {
-      const targetPos = { x: parseFloat(targetX), y: parseFloat(targetY) };
+    if (targetX !== undefined && targetY !== undefined) {
+      const targetPos = { x: targetX, y: targetY };
       
-      if (type === 'bomb') {
+      if (projectileType === 'bomb') {
         // Bomb-style projectile with arc motion
         projectile.target = targetPos;
         projectile.origin = startPos;
@@ -51,6 +64,6 @@ export class Projectile extends Command {
     }
 
     this.sim.projectiles.push(projectile);
-    console.log(`🏹 ${unitId} fires ${type} projectile from (${startX}, ${startY})`);
+    console.log(`🏹 ${unitId} fires ${projectileType} projectile from (${x}, ${y})`);
   }
 }

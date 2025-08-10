@@ -1,32 +1,61 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 
+/**
+ * Temperature command - sets temperature at a position or globally
+ * Params:
+ *   x?: number - X position (if not provided, sets globally)
+ *   y?: number - Y position (if not provided, sets globally)
+ *   amount?: number - Temperature value or change
+ *   radius?: number - Radius of effect (default 3)
+ */
 export class Temperature extends Command {
   name = "temperature";
   description = "Set the temperature across the battlefield";
   usage = "temperature <degrees> - Set temperature in Celsius";
 
-  execute(_unitId: string | null, ...args: any[]): void {
-    const temp = args[0] ? parseFloat(args[0]) : 20;
+  execute(_unitId: string | null, params: CommandParams): void {
+    const x = params.x as number | undefined;
+    const y = params.y as number | undefined;
+    const amount = (params.amount as number) ?? 20;
+    const radius = (params.radius as number) ?? 3;
 
-    if (isNaN(temp)) {
+    if (typeof amount !== 'number' || isNaN(amount)) {
       console.error("Invalid temperature value");
       return;
     }
 
-    // console.log(`🌡️ Setting temperature to ${temp}°C`);
-    
-    // Set global temperature
-    // NOTE: Should actually set the scalar field baseline temperature?
-    this.sim.temperature = temp;
+    if (x !== undefined && y !== undefined) {
+      // Set temperature at specific position with radius
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist <= radius) {
+            const px = Math.round(x + dx);
+            const py = Math.round(y + dy);
+            if (px >= 0 && px < this.sim.fieldWidth && py >= 0 && py < this.sim.fieldHeight) {
+              const falloff = 1 - (dist / radius);
+              const tempChange = amount * falloff;
+              const currentTemp = this.sim.temperatureField.get(px, py);
+              this.sim.temperatureField.set(px, py, currentTemp + tempChange);
+            }
+          }
+        }
+      }
+      // console.log(`🌡️ Setting temperature at (${x}, ${y}) with radius ${radius}`);
+    } else {
+      // Set global temperature
+      // console.log(`🌡️ Setting global temperature to ${amount}°C`);
+      this.sim.temperature = amount;
 
-    // Set temperature across the field
-    for (let x = 0; x < this.sim.fieldWidth; x++) {
-      for (let y = 0; y < this.sim.fieldHeight; y++) {
-        // Add some variation for realism
-        const variation = (Math.random() - 0.5) * 4; // ±2°C variation
-        const finalTemp = temp + variation;
-        
-        this.sim.temperatureField.set(x, y, finalTemp);
+      // Set temperature across the field
+      for (let fx = 0; fx < this.sim.fieldWidth; fx++) {
+        for (let fy = 0; fy < this.sim.fieldHeight; fy++) {
+          // Add some variation for realism
+          const variation = (Math.random() - 0.5) * 4; // ±2°C variation
+          const finalTemp = amount + variation;
+          
+          this.sim.temperatureField.set(fx, fy, finalTemp);
+        }
       }
     }
   }

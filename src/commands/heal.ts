@@ -1,19 +1,25 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 
 /**
  * Heal command - heals a target unit
- * Usage: heal <targetId> <amount> [aspect]
+ * Params:
+ *   targetId: string - ID of the unit to heal
+ *   amount: number - Amount of healing
+ *   aspect?: string - Type of healing (defaults to 'healing')
  */
 export class Heal extends Command {
-  execute(unitId: string, targetId: string, amount: string, aspect: string = 'healing') {
+  execute(unitId: string | null, params: CommandParams): void {
+    const targetId = params.targetId as string;
+    const amount = params.amount as number;
+    const aspect = (params.aspect as string) || 'healing';
+    
     const target = this.sim.units.find(u => u.id === targetId);
     if (!target) {
       console.warn(`Heal command: target ${targetId} not found`);
       return;
     }
 
-    const healAmount = parseInt(amount);
-    if (isNaN(healAmount)) {
+    if (typeof amount !== 'number' || isNaN(amount)) {
       console.warn(`Heal command: invalid amount ${amount}`);
       return;
     }
@@ -24,10 +30,10 @@ export class Heal extends Command {
       target: targetId,
       meta: {
         aspect: aspect,
-        amount: healAmount
+        amount: amount
       }
     });
 
-    console.log(`✨ ${unitId} heals ${targetId} for ${healAmount} points`);
+    console.log(`✨ ${unitId} heals ${targetId} for ${amount} points`);
   }
 }

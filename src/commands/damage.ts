@@ -1,26 +1,29 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 
 /**
  * Damage command - deals damage to a target unit
- * Usage: damage <targetId> <amount> [aspect] [originX] [originY]
+ * Params:
+ *   targetId: string - ID of the unit to damage
+ *   amount: number - Amount of damage to deal
+ *   aspect?: string - Type of damage (physical, radiant, fire, etc.)
+ *   origin?: {x: number, y: number} - Origin point of damage for directional effects
  */
 export class Damage extends Command {
-  execute(unitId: string, targetId: string, amount: string, aspect: string = 'physical', originX?: string, originY?: string) {
+  execute(unitId: string | null, params: CommandParams): void {
+    const targetId = params.targetId as string;
+    const amount = params.amount as number;
+    const aspect = (params.aspect as string) || 'physical';
+    const origin = params.origin as {x: number, y: number} | undefined;
+    
     const target = this.sim.units.find(u => u.id === targetId);
     if (!target) {
       console.warn(`Damage command: target ${targetId} not found`);
       return;
     }
 
-    const damageAmount = parseInt(amount);
-    if (isNaN(damageAmount)) {
+    if (typeof amount !== 'number' || isNaN(amount)) {
       console.warn(`Damage command: invalid amount ${amount}`);
       return;
-    }
-
-    let origin = null;
-    if (originX && originY) {
-      origin = { x: parseInt(originX), y: parseInt(originY) };
     }
 
     this.sim.queuedEvents.push({
@@ -29,11 +32,11 @@ export class Damage extends Command {
       target: targetId,
       meta: {
         aspect: aspect,
-        amount: damageAmount,
+        amount: amount,
         origin: origin
       }
     });
 
-    console.log(`💥 ${unitId} deals ${damageAmount} ${aspect} damage to ${targetId}`);
+    console.log(`💥 ${unitId} deals ${amount} ${aspect} damage to ${targetId}`);
   }
 }

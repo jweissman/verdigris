@@ -68,7 +68,11 @@ describe('Unified Command System', () => {
     expect(sim.queuedCommands.length).toBeGreaterThanOrEqual(1);
     const weatherCommand = sim.queuedCommands.find(c => c.type === 'weather');
     expect(weatherCommand).toBeTruthy();
-    expect(weatherCommand.args).toEqual(['rain', '80', '0.8']);
+    expect(weatherCommand.params).toEqual({
+      weatherType: 'rain',
+      duration: 80,
+      intensity: 0.8
+    });
     expect(weatherCommand.unitId).toBe(rainmaker.id);
     
     // Process the command

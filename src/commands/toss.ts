@@ -1,12 +1,48 @@
-import { Command } from "../rules/command";
+import { Command, CommandParams } from "../rules/command";
 import { Unit } from "../sim/types";
 
+/**
+ * Toss command - tosses a unit in a direction
+ * Params:
+ *   targetId?: string - ID of the unit to toss (for abilities)
+ *   direction?: {x: number, y: number} - Direction to toss (for direct command)
+ *   force?: number - Force of the toss (default 5)
+ *   distance?: number - Distance to toss (default 3)
+ */
 export class Toss extends Command {
-  execute(unitId: string, direction: {x: number, y: number}, force: number = 5, distance: number = 3): void {
-    const unit = this.sim.units.find(u => u.id === unitId);
-    if (!unit) {
-      // console.warn(`Unit ${unitId} not found for toss command`);
+  execute(unitId: string | null, params: CommandParams): void {
+    // Support both targetId (from abilities) and unitId (direct toss)
+    const targetId = (params.targetId as string) || unitId;
+    if (!targetId) {
+      console.warn(`No target specified for toss command`);
       return;
+    }
+    
+    const unit = this.sim.units.find(u => u.id === targetId);
+    if (!unit) {
+      // console.warn(`Unit ${targetId} not found for toss command`);
+      return;
+    }
+    
+    // Get direction - either explicit or calculate from positions
+    let direction = params.direction as {x: number, y: number} | undefined;
+    const force = (params.force as number) ?? 5;
+    const distance = (params.distance as number) ?? 3;
+    
+    // If no direction provided, calculate from caster to target
+    if (!direction && unitId && targetId !== unitId) {
+      const caster = this.sim.units.find(u => u.id === unitId);
+      if (caster) {
+        const dx = unit.pos.x - caster.pos.x;
+        const dy = unit.pos.y - caster.pos.y;
+        const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+        direction = { x: dx / mag, y: dy / mag };
+      }
+    }
+    
+    // Default to eastward if still no direction
+    if (!direction) {
+      direction = { x: 1, y: 0 };
     }
 
     if (unit.state === 'dead') {
@@ -37,7 +73,7 @@ export class Toss extends Command {
     unit.meta.tossForce = force;
     unit.meta.z = 0; // Start at ground level
 
-    // console.log(`🤾 Tossing ${unitId} from (${unit.pos.x},${unit.pos.y}) to (${clampedTargetX},${clampedTargetY}) with force ${force}`);
+    // console.log(`🤾 Tossing ${targetId} from (${unit.pos.x},${unit.pos.y}) to (${clampedTargetX},${clampedTargetY}) with force ${force}`);
 
     // console.log("Handled toss", unit.meta);
   }
