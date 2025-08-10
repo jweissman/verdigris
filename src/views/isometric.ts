@@ -1,9 +1,9 @@
 import { Projectile, Unit } from "../sim/types";
 import View from "./view";
-import { TextRenderer } from "./text_renderer";
+// Temporarily removed TextRenderer until MWE is working
 
 export default class Isometric extends View {
-  private textRenderer: TextRenderer;
+  // private textRenderer: TextRenderer;
   
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -14,7 +14,8 @@ export default class Isometric extends View {
     backgrounds: Map<string, HTMLImageElement> = new Map()
   ) {
     super(ctx, sim, width, height, sprites, backgrounds);
-    this.textRenderer = new TextRenderer(ctx);
+    // this.textRenderer = new TextRenderer();
+    // this.textRenderer.setContext(ctx);
   }
   
   show() {
@@ -413,7 +414,8 @@ export default class Isometric extends View {
   }
 
   private renderSpeechBubbles() {
-    if (!this.textRenderer.fontsReady) return;
+    // if (!this.textRenderer.fontsReady) return;
+    return; // Disabled until text renderer is fixed
     
     for (const unit of this.sim.units) {
       let bubbleText: string | null = null;
@@ -469,11 +471,12 @@ export default class Isometric extends View {
       // Draw the bubble if we have text
       if (bubbleText) {
         const pos = this.toIsometric(unit.pos.x, unit.pos.y);
-        this.textRenderer.drawSpeechBubble(
+        this.textRenderer.drawBubble(
           bubbleText,
           pos.x,
-          pos.y - 20, // Above the unit
-          true // Use tiny font
+          pos.y - 20,
+          { type: 'speech' },
+          'tiny'
         );
       }
       
@@ -488,12 +491,11 @@ export default class Isometric extends View {
       if (damageEvent && damageEvent.meta?.amount && damageEvent.tick) {
         const pos = this.toIsometric(unit.pos.x, unit.pos.y);
         const floatOffset = (10 - (this.sim.ticks - damageEvent.tick)) * 2;
-        this.textRenderer.drawStatusText(
-          `-${damageEvent.meta.amount}`,
+        this.textRenderer.drawDamageNumber(
+          damageEvent.meta.amount,
           pos.x - 8,
-          pos.y - 10,
-          '#FF0000',
-          floatOffset
+          pos.y - 10 - floatOffset,
+          '#FF0000'
         );
       }
     }
