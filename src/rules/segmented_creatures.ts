@@ -77,12 +77,19 @@ export class SegmentedCreatures extends Rule {
       }
 
       if (segmentPos) {
+        // Determine sprite based on parent's custom sprite settings
+        let segmentSprite = creature.sprite;
+        if (creature.meta.useCustomSegmentSprites) {
+          const baseSprite = creature.sprite.replace('-head', '');
+          segmentSprite = `${baseSprite}-${segmentType}`;
+        }
+        
         const segment: Unit = {
           id: `${creature.id}_segment_${i}`,
           pos: segmentPos,
           intendedMove: { x: 0, y: 0 },
           team: creature.team,
-          sprite: creature.sprite, // Use parent's sprite (big-worm for giant-sandworm)
+          sprite: segmentSprite,
           state: "idle",
           hp: Math.floor(creature.hp * 0.7), // Segments have less HP than head
           maxHp: Math.floor(creature.maxHp * 0.7),
@@ -107,11 +114,23 @@ export class SegmentedCreatures extends Rule {
     }
   }
 
-  private getSegmentSprite(segmentType: 'head' | 'body' | 'tail'): string {
+  private getSegmentSprite(segmentType: 'head' | 'body' | 'tail', parentCreature?: Unit): string {
+    // Check if parent uses custom segment sprites
+    if (parentCreature?.meta?.useCustomSegmentSprites) {
+      const baseSprite = parentCreature.sprite.replace('-head', '');
+      switch (segmentType) {
+        case 'head': return `${baseSprite}-head`;
+        case 'body': return `${baseSprite}-body`;
+        case 'tail': return `${baseSprite}-tail`;
+        default: return `${baseSprite}-body`;
+      }
+    }
+    
+    // Default behavior for other segmented creatures
     switch (segmentType) {
-      case 'head': return 'worm'; // Head uses worm sprite
-      case 'body': return 'worm'; // Body uses worm sprite (could be different frame)
-      case 'tail': return 'worm'; // Tail uses worm sprite (could be different frame)
+      case 'head': return 'worm';
+      case 'body': return 'worm';
+      case 'tail': return 'worm';
       default: return 'worm';
     }
   }

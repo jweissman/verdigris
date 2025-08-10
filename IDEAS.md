@@ -1,13 +1,25 @@
+- Single Cell Lab
+  - Test weather particles (leaves, snowflakes, raindrops)
+  - Trigger cell effects (lightning, fire, explosion)
+
+- Data-oriented Abilities
+  - We need to parses abilities from file (and implement any new commands that imples)
+  - We have sketched abilities.json already but would need to implement an alternate Abilities rule to test
+
 - Font Atlas
   - **stenciled-16x16.png** - Already implemented for larger text
   - **teeny-4x4.png** - Minimal alphabet for space-constrained UI
   - Text rendering system for UI overlays and command feedback
 
+- Legibility
+  - Combat attack animation (Frame 3) should be transient / used only for 1-2 frames while damage is actually being dealt
+  - Return to idle immediately afterward
+  - We could also make use of Dead/Prone (Frame 4) for involtunary throw ('toss' command)
+
 - UI Elements
   - Show unit name/type on mouse hover
   - Visual feedback showing what you've typed (requires font atlas)
   - Visual icons for grappled, frozen, etc.
-
 
 - Performance
   - Double-buffer the world more cleanly/directly

@@ -603,6 +603,159 @@ export default class Encyclopaedia {
       }
     },
 
+    tameMegabeast: {
+      name: 'Tame Megabeast',
+      cooldown: 120,
+      config: {
+        range: 8,
+        minMass: 10, // Only works on large creatures
+        duration: 100 // Tame effect lasts for ~12 seconds
+      },
+      target: 'closest.enemy()',
+      trigger: 'closest.enemy()?.mass >= 10',
+      effect: (unit, target, sim) => {
+        if (!target) return;
+        
+        // Find the target unit - target could be a unit object or just have an id
+        const targetUnit = 'id' in target ? sim.units.find(u => u.id === target.id) : target;
+        if (!targetUnit || targetUnit.mass < 10) return;
+        
+        // Temporarily convert the megabeast to friendly team
+        targetUnit.meta.originalTeam = targetUnit.team;
+        targetUnit.team = unit.team;
+        targetUnit.meta.tamed = true;
+        targetUnit.meta.tamedBy = unit.id;
+        targetUnit.meta.tameDuration = 100;
+        
+        // Visual feedback - taming particles
+        for (let i = 0; i < 12; i++) {
+          sim.particles.push({
+            pos: { x: targetUnit.pos.x * 8 + 4, y: targetUnit.pos.y * 8 + 4 },
+            vel: { 
+              x: Math.cos(i * Math.PI / 6) * 2, 
+              y: Math.sin(i * Math.PI / 6) * 2 
+            },
+            radius: 3,
+            color: '#FFD700',
+            lifetime: 30,
+            type: 'tame'
+          });
+        }
+      }
+    },
+
+    calmAnimals: {
+      name: 'Calm Animals',
+      cooldown: 60,
+      config: {
+        range: 6,
+        duration: 40
+      },
+      target: 'self.pos',
+      trigger: 'true',
+      effect: (unit, target, sim) => {
+        // Find all beasts in range
+        const beasts = sim.units.filter(u => 
+          u.tags?.includes('beast') &&
+          Math.abs(u.pos.x - unit.pos.x) <= 6 &&
+          Math.abs(u.pos.y - unit.pos.y) <= 6
+        );
+        
+        beasts.forEach(beast => {
+          // Make beasts non-hostile temporarily
+          if (!beast.meta) beast.meta = {};
+          beast.meta.calmed = true;
+          beast.meta.calmDuration = 40;
+          beast.intendedMove = { x: 0, y: 0 };
+          
+          // Peaceful particles
+          sim.particles.push({
+            pos: { x: beast.pos.x * 8 + 4, y: beast.pos.y * 8 - 4 },
+            vel: { x: 0, y: -0.3 },
+            radius: 2,
+            color: '#87CEEB',
+            lifetime: 20,
+            type: 'calm'
+          });
+        });
+      }
+    },
+
+    summonForestCreature: {
+      name: 'Summon Forest Creature',
+      cooldown: 80,
+      config: {
+        range: 5,
+        creatures: ['squirrel', 'bear', 'owl', 'bird', 'deer', 'rabbit', 'fox', 'mesoworm']
+      },
+      target: 'self.pos',
+      trigger: 'distance(closest.enemy()?.pos) < 10',
+      effect: (unit, target, sim) => {
+        // Randomly select a forest creature to summon
+        const forestCreatures = ['squirrel', 'bear', 'owl', 'bird', 'deer', 'rabbit', 'fox'];
+        // Small chance for rare creatures
+        if (Math.random() < 0.15) {
+          forestCreatures.push('mesoworm');
+        }
+        const creatureType = forestCreatures[Math.floor(Math.random() * forestCreatures.length)];
+        
+        // Find a valid spawn position near the druid
+        let spawnPos = null;
+        const attempts = [
+          { x: unit.pos.x + 1, y: unit.pos.y },
+          { x: unit.pos.x - 1, y: unit.pos.y },
+          { x: unit.pos.x, y: unit.pos.y + 1 },
+          { x: unit.pos.x, y: unit.pos.y - 1 },
+          { x: unit.pos.x + 1, y: unit.pos.y + 1 },
+          { x: unit.pos.x - 1, y: unit.pos.y - 1 }
+        ];
+        
+        for (const pos of attempts) {
+          if (pos.x >= 0 && pos.x < sim.fieldWidth && 
+              pos.y >= 0 && pos.y < sim.fieldHeight &&
+              !sim.units.some(u => u.pos.x === pos.x && u.pos.y === pos.y)) {
+            spawnPos = pos;
+            break;
+          }
+        }
+        
+        if (spawnPos) {
+          // Queue spawn event
+          sim.queuedEvents.push({
+            kind: 'spawn',
+            source: unit.id,
+            target: spawnPos,
+            meta: {
+              unit: { 
+                ...Encyclopaedia.unit(creatureType), 
+                team: unit.team,
+                meta: {
+                  ...Encyclopaedia.unit(creatureType).meta,
+                  summoned: true,
+                  summonedBy: unit.id
+                }
+              }
+            }
+          });
+          
+          // Visual feedback - nature magic particles
+          for (let i = 0; i < 8; i++) {
+            sim.particles.push({
+              pos: { x: spawnPos.x * 8 + 4, y: spawnPos.y * 8 + 4 },
+              vel: { 
+                x: (Math.random() - 0.5) * 2, 
+                y: (Math.random() - 0.5) * 2 
+              },
+              radius: 2,
+              color: '#00FF00',
+              lifetime: 20,
+              type: 'nature'
+            });
+          }
+        }
+      }
+    },
+
     tacticalOverride: {
       name: 'Tactical Override',
       cooldown: 60, // 7.5 seconds
@@ -1713,6 +1866,123 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       }
     },
 
+    // Additional forest creatures
+    deer: {
+      intendedMove: { x: 0, y: 0 },
+      team: "neutral",
+      sprite: "deer",
+      state: "idle" as UnitState,
+      hp: 20,
+      maxHp: 20,
+      dmg: 2,
+      mass: 1.5,
+      tags: ['forest', 'beast', 'peaceful'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        moveSpeed: 1.2, // Fast runner
+        fleeDistance: 5, // Runs from threats
+        peaceful: true
+      }
+    },
+
+    rabbit: {
+      intendedMove: { x: 0, y: 0 },
+      team: "neutral",
+      sprite: "rabbit",
+      state: "idle" as UnitState,
+      hp: 8,
+      maxHp: 8,
+      dmg: 1,
+      mass: 0.3,
+      tags: ['forest', 'beast', 'small', 'peaceful'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        moveSpeed: 1.5, // Very fast
+        jumpRange: 3,
+        fleeDistance: 6,
+        peaceful: true
+      }
+    },
+
+    fox: {
+      intendedMove: { x: 0, y: 0 },
+      team: "neutral",
+      sprite: "fox",
+      state: "idle" as UnitState,
+      hp: 15,
+      maxHp: 15,
+      dmg: 4,
+      mass: 0.8,
+      tags: ['forest', 'beast', 'hunter', 'clever'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        moveSpeed: 1.1,
+        stealthy: true, // Harder to detect
+        huntSmallCreatures: true // Will hunt rabbits, birds
+      }
+    },
+
+    wolf: {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "wolf",
+      state: "idle" as UnitState,
+      hp: 30,
+      maxHp: 30,
+      dmg: 8,
+      mass: 2,
+      tags: ['forest', 'beast', 'predator', 'pack'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        packHunter: true, // Gets stronger near other wolves
+        howl: true // Can call other wolves
+      }
+    },
+
+    badger: {
+      intendedMove: { x: 0, y: 0 },
+      team: "neutral",
+      sprite: "badger",
+      state: "idle" as UnitState,
+      hp: 25,
+      maxHp: 25,
+      dmg: 6,
+      mass: 1.8,
+      tags: ['forest', 'beast', 'burrower', 'defensive'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        canBurrow: true,
+        defensive: true, // Higher defense when threatened
+        territorial: true // Attacks if approached
+      }
+    },
+
+    naturalist: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "naturalist",
+      state: "idle" as UnitState,
+      hp: 30,
+      maxHp: 30,
+      dmg: 3,
+      mass: 1,
+      tags: ['forest', 'support', 'beast-tamer'],
+      abilities: {
+        tameMegabeast: Encyclopaedia.abilities.tameMegabeast,
+        calmAnimals: Encyclopaedia.abilities.calmAnimals
+      },
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        forestAdapted: true,
+        beastAffinity: true // Beasts are less likely to attack
+      }
+    },
+
     // Desert day units
     "worm-hunter": {
       intendedMove: { x: 0, y: 0 },
@@ -1805,6 +2075,27 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         segmentCount: 4, // 4 body segments - medium size
         canBurrow: true,
         sandAdapted: true
+      }
+    },
+
+    // Medium-sized mesoworm with custom sprites for each segment
+    mesoworm: {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "mesoworm-head",
+      state: "idle" as UnitState,
+      hp: 35,
+      maxHp: 35,
+      mass: 2.5,
+      dmg: 5,
+      tags: ['forest', 'beast', 'segmented'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        segmented: true,
+        segmentCount: 2, // 2 segments: body and tail
+        useCustomSegmentSprites: true, // Use mesoworm-body and mesoworm-tail
+        moveSpeed: 0.8 // Slightly slower than normal
       }
     },
 
@@ -2230,6 +2521,7 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       mass: 1,
       tags: ['forest', 'magic', 'nature'],
       abilities: {
+        summonForestCreature: Encyclopaedia.abilities.summonForestCreature,
         entangle: {
           name: "entangle",
           energy: 5,
