@@ -29,7 +29,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
       
       // Trigger the summon ability
       if (druid.abilities.summonForestCreature) {
-        druid.abilities.summonForestCreature.effect(druid, druid.pos, sim);
+        sim.forceAbility(druid.id, 'summonForestCreature', druid.pos);
       }
       
       // Process the queued spawn event
@@ -71,7 +71,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
       
       // Use entangle
       if (druid.abilities.entangle) {
-        druid.abilities.entangle.effect(druid, enemy.pos, sim);
+        sim.forceAbility(druid.id, 'entangle', enemy);
       }
       
       // Enemy should be pinned
@@ -110,7 +110,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
       
       // Tame the megabeast
       if (naturalist.abilities.tameMegabeast) {
-        naturalist.abilities.tameMegabeast.effect(naturalist, megabeast, sim);
+        sim.forceAbility(naturalist.id, 'tameMegabeast', megabeast);
       }
       
       // Megabeast should be tamed
@@ -156,7 +156,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
       
       // Use calm animals
       if (naturalist.abilities.calmAnimals) {
-        naturalist.abilities.calmAnimals.effect(naturalist, naturalist.pos, sim);
+        sim.forceAbility(naturalist.id, 'calmAnimals', naturalist.pos);
       }
       
       // Find the actual units in sim to check
@@ -201,7 +201,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
       
       // Try to tame the squirrel
       if (naturalist.abilities.tameMegabeast) {
-        naturalist.abilities.tameMegabeast.effect(naturalist, squirrel, sim);
+        sim.forceAbility(naturalist.id, 'tameMegabeast', squirrel);
       }
       
       // Squirrel should NOT be tamed (too small)
@@ -240,12 +240,12 @@ describe('Druid and Naturalist Forest Abilities', () => {
       
       // Naturalist tames the megabeast
       if (naturalist.abilities.tameMegabeast) {
-        naturalist.abilities.tameMegabeast.effect(naturalist, giantWorm, sim);
+        sim.forceAbility(naturalist.id, 'tameMegabeast', giantWorm);
       }
       
       // Druid summons helpers
       if (druid.abilities.summonForestCreature) {
-        druid.abilities.summonForestCreature.effect(druid, druid.pos, sim);
+        sim.forceAbility(druid.id, 'summonForestCreature', druid.pos);
       }
       
       sim.step();
@@ -256,10 +256,21 @@ describe('Druid and Naturalist Forest Abilities', () => {
       // Should have summoned creature
       const summoned = sim.units.find(u => u.meta?.summoned);
       expect(summoned).toBeDefined();
+      expect(summoned?.team).toBe('friendly');
       
       // All units should be on same team now
       const friendlyUnits = sim.units.filter(u => u.team === 'friendly');
-      expect(friendlyUnits.length).toBeGreaterThanOrEqual(4); // druid, naturalist, worm, summoned
+      
+      // Verify we have the expected units
+      const hasDruid = friendlyUnits.some(u => u.sprite === 'druid');
+      const hasNaturalist = friendlyUnits.some(u => u.sprite === 'naturalist');
+      const hasTamedWorm = friendlyUnits.some(u => u.sprite === 'giant-sandworm' && u.meta?.tamed);
+      const hasSummoned = friendlyUnits.some(u => u.meta?.summoned);
+      
+      expect(hasDruid).toBe(true);
+      expect(hasNaturalist).toBe(true);
+      expect(hasTamedWorm).toBe(true);
+      expect(hasSummoned).toBe(true);
     });
   });
 });

@@ -8,7 +8,7 @@ describe("Ability System Integration", () => {
     
     expect(priest.abilities).toBeDefined();
     expect(priest.abilities.radiant).toBeDefined();
-    expect(priest.abilities.radiant.name).toBe('Radiant Light');
+    expect(priest.abilities.radiant.name).toBe('Radiant Strike');
     expect(priest.abilities.radiant.cooldown).toBe(30);
   });
 
@@ -27,7 +27,7 @@ describe("Ability System Integration", () => {
     expect(rainmaker.abilities).toBeDefined();
     expect(rainmaker.abilities.makeRain).toBeDefined();
     expect(rainmaker.abilities.makeRain.name).toBe('Make Rain');
-    expect(rainmaker.abilities.makeRain.cooldown).toBe(2); // User changed this
+    expect(rainmaker.abilities.makeRain.cooldown).toBe(200); // From JSON definition
   });
 
   it("should verify big-worm has breatheFire ability", () => {

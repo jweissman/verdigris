@@ -6,7 +6,7 @@ import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { EventHandler } from '../../src/rules/event_handler';
-import { Abilities } from '../../src/rules/abilities';
+import { JsonAbilities } from '../../src/rules/json_abilities';
 
 describe('Desert Day Scene', () => {
   it('should load desert-day scene with all units', () => {
@@ -19,7 +19,7 @@ describe('Desert Day Scene', () => {
       new DesertEffects(sim),
       new GrapplingPhysics(sim),
       new SegmentedCreatures(sim),
-      new Abilities(sim),
+      new JsonAbilities(sim),
       new EventHandler(sim)
     ];
     
@@ -127,7 +127,7 @@ describe('Desert Day Scene', () => {
     
     sim.rulebook = [
       new GrapplingPhysics(sim),
-      new Abilities(sim),
+      new JsonAbilities(sim),
       new EventHandler(sim)
     ];
     
@@ -163,7 +163,7 @@ describe('Desert Day Scene', () => {
     const loader = new SceneLoader(sim);
     
     sim.rulebook = [
-      new Abilities(sim),
+      new JsonAbilities(sim),
       new EventHandler(sim)
     ];
     

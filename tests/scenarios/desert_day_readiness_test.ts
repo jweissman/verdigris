@@ -62,10 +62,25 @@ describe('Desert Day Visual Readiness Checklist', () => {
 
   it('Grappling hook projectiles work', () => {
     const { sim } = setupDesertScene();
-    const grappler = sim.units.find(u => u.sprite === 'grappler');
-    if (grappler) {
+    
+    // Find a grappler that hasn't used their hook yet
+    const grappler = sim.units.find(u => 
+      u.sprite === 'grappler' && 
+      (!u.lastAbilityTick || !u.lastAbilityTick.grapplingHook || 
+       sim.ticks - u.lastAbilityTick.grapplingHook > 30)
+    );
+    
+    if (grappler && grappler.abilities.grapplingHook) {
       const target = { x: grappler.pos.x + 5, y: grappler.pos.y };
+      
+      // Clear the projectiles array to make sure we're only counting new ones
+      sim.projectiles = [];
+      
+      // Use the compatibility .effect() method
       grappler.abilities.grapplingHook.effect(grappler, target, sim);
+      
+      // Process the queued command
+      sim.step();
       
       const grapples = sim.projectiles.filter(p => p.type === 'grapple');
       expect(grapples.length).toBeGreaterThan(0);

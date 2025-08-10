@@ -2,8 +2,9 @@ import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { CommandHandler } from '../../src/rules/command_handler';
-import { Abilities } from '../../src/rules/abilities';
+import { JsonAbilities } from '../../src/rules/json_abilities';
 import { EventHandler } from '../../src/rules/event_handler';
+import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 
 describe('Mechanist Support Units', () => {
   beforeEach(() => {
@@ -39,7 +40,7 @@ describe('Mechanist Support Units', () => {
 
   it('should test Builder reinforcement abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     // Create builder and a construct to reinforce
@@ -72,7 +73,7 @@ describe('Mechanist Support Units', () => {
 
   it('should test Fueler power surge ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     // Create fueler and mechanical units to boost
@@ -112,7 +113,7 @@ describe('Mechanist Support Units', () => {
 
   it('should test Mechanic emergency repair ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     // Create mechanic and damaged units
@@ -156,7 +157,7 @@ describe('Mechanist Support Units', () => {
 
   it('should test Engineer shield generator ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     // Create engineer and nearby enemy to trigger shield
@@ -190,7 +191,7 @@ describe('Mechanist Support Units', () => {
 
   it('should test Engineer system hack ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     // Create engineer and enemy to hack
@@ -227,7 +228,7 @@ describe('Mechanist Support Units', () => {
 
   it('should test Welder dual abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     const welder = { ...Encyclopaedia.unit('welder'), pos: { x: 5, y: 5 } };
@@ -266,7 +267,7 @@ describe('Mechanist Support Units', () => {
 
   it('should test Assembler advanced construction abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     const assembler = { ...Encyclopaedia.unit('assembler'), pos: { x: 5, y: 5 } };
@@ -312,7 +313,7 @@ describe('Mechanist Support Units', () => {
 
   it('should verify mechanist synergy with constructs', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     // Create a diverse mechanist support team
@@ -342,6 +343,11 @@ describe('Mechanist Support Units', () => {
     simConstruct1.meta.stunned = true;
     
     let synergisticActions = 0;
+    
+    // Add effect compatibility
+    addEffectsToUnit(simMechanic, sim);
+    addEffectsToUnit(simBuilder, sim);
+    addEffectsToUnit(simFueler, sim);
     
     // Test repair synergy
     if (simMechanic.abilities.emergencyRepair?.effect) {

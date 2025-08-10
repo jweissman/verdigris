@@ -193,14 +193,16 @@ describe('Woodland Creatures', () => {
       
       // Trigger summons multiple times to test variety
       const summonedTypes = new Set();
+      const initialUnitCount = sim.units.length;
+      
       for (let i = 0; i < 20; i++) {
-        sim.queuedEvents = []; // Clear queue
-        summonAbility.effect(druid, druid.pos, sim);
+        sim.forceAbility(druid.id, 'summonForestCreature', druid.pos);
         
-        if (sim.queuedEvents.length > 0) {
-          const spawnEvent = sim.queuedEvents[0];
-          if (spawnEvent.meta?.unit) {
-            summonedTypes.add(spawnEvent.meta.unit.sprite);
+        // Check for newly summoned units
+        const newUnits = sim.units.slice(initialUnitCount);
+        for (const unit of newUnits) {
+          if (unit.meta?.summoned && unit.meta?.summonedBy === druid.id) {
+            summonedTypes.add(unit.sprite);
           }
         }
       }

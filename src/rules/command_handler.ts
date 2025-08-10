@@ -8,6 +8,11 @@ import { Lightning } from "../commands/lightning";
 import { Grapple } from "../commands/grapple";
 import { Pin } from "../commands/pin";
 import { Temperature } from "../commands/temperature";
+import { Damage } from "../commands/damage";
+import { Heal } from "../commands/heal";
+import { AoE } from "../commands/aoe";
+import { Projectile } from "../commands/projectile";
+import { JumpCommand } from "../commands/jump";
 
 export type QueuedCommand = {
   type: string;
@@ -35,6 +40,12 @@ export class CommandHandler extends Rule {
     this.commands.set('pin', new Pin(sim));
     this.commands.set('temperature', new Temperature(sim));
     this.commands.set('temp', new Temperature(sim)); // Alias
+    // JSON Abilities commands
+    this.commands.set('damage', new Damage(sim));
+    this.commands.set('heal', new Heal(sim));
+    this.commands.set('aoe', new AoE(sim));
+    this.commands.set('projectile', new Projectile(sim));
+    this.commands.set('jump', new JumpCommand(sim));
   }
 
   apply = () => {

@@ -10,6 +10,7 @@ import Cleanup from "./rules/cleanup";
 import { Jumping } from "./rules/jumping";
 import { Tossing } from "./rules/tossing";
 import { Abilities } from "./rules/abilities";
+import { JsonAbilities } from "./rules/json_abilities";
 import { EventHandler } from "./rules/event_handler";
 import { CommandHandler, QueuedCommand } from "./rules/command_handler";
 import { HugeUnits } from "./rules/huge_units";
@@ -196,7 +197,7 @@ class Simulator {
     this.queuedCommands = [];
     this.rulebook = [
       new CommandHandler(this), // Process commands first
-      new Abilities(this),
+      new JsonAbilities(this),
       new UnitBehavior(this),
       new UnitMovement(this),
       new HugeUnits(this), // Handle huge unit phantoms after movement
@@ -935,6 +936,95 @@ class Simulator {
           unit.hp -= config.damage;
         }
       }
+    }
+  }
+
+  // Helper method for tests to force ability activation
+  forceAbility(unitId: string, abilityName: string, target?: any): void {
+    const unit = this.units.find(u => u.id === unitId);
+    if (!unit || !unit.abilities[abilityName]) return;
+
+    // Get the JsonAbilities rule from the rulebook
+    const jsonAbilitiesRule = this.rulebook.find(rule => rule.constructor.name === 'JsonAbilities');
+    if (!jsonAbilitiesRule) {
+      console.warn('JsonAbilities rule not found in rulebook');
+      return;
+    }
+
+    // Get the ability definition from JSON
+    const abilities = (jsonAbilitiesRule as any).abilities;
+    const jsonAbility = abilities[abilityName];
+    if (!jsonAbility) {
+      console.warn(`Ability ${abilityName} not found in JSON definitions`);
+      return;
+    }
+
+    // Process the ability effects directly
+    const primaryTarget = target || unit;
+    for (const effect of jsonAbility.effects) {
+      (jsonAbilitiesRule as any).processEffectAsCommand(effect, unit, primaryTarget);
+    }
+
+    // Update cooldown
+    if (!unit.lastAbilityTick) unit.lastAbilityTick = {};
+    unit.lastAbilityTick[abilityName] = this.ticks;
+    
+    console.log(`🎯 ${unitId} forced to use ability: ${jsonAbility.name}`);
+  }
+
+  // Legacy forceAbility implementation (to be removed)
+  _legacyForceAbility(unitId: string, abilityName: string, target?: any): void {
+    const unit = this.units.find(u => u.id === unitId);
+    if (!unit || !unit.abilities[abilityName]) return;
+
+    // Initialize queued commands if needed
+    if (!this.queuedCommands) this.queuedCommands = [];
+
+    // Queue the appropriate command based on ability name
+    switch (abilityName) {
+      case 'grapplingHook':
+        const grappleTarget = target || { x: unit.pos.x + 5, y: unit.pos.y };
+        this.queuedCommands.push({
+          type: 'grapple',
+          args: [grappleTarget.x.toString(), grappleTarget.y.toString()],
+          unitId: unit.id
+        });
+        break;
+      
+      case 'makeRain':
+        this.queuedCommands.push({
+          type: 'weather',
+          args: ['rain', '80', '0.8'],
+          unitId: unit.id
+        });
+        break;
+      
+      case 'deployBot':
+        const deployTarget = target || { x: unit.pos.x + 3, y: unit.pos.y };
+        this.queuedCommands.push({
+          type: 'deploy',
+          args: ['clanker', deployTarget.x.toString(), deployTarget.y.toString()],
+          unitId: unit.id
+        });
+        break;
+      
+      default:
+        // For other abilities, try to use JsonAbilities
+        const jsonAbilitiesRule = this.rulebook.find(r => r.constructor.name === 'JsonAbilities');
+        if (jsonAbilitiesRule) {
+          // Reset cooldown
+          if (!unit.lastAbilityTick) unit.lastAbilityTick = {};
+          unit.lastAbilityTick[abilityName] = -9999;
+          
+          // Store target in unit meta temporarily
+          unit.meta._testTarget = target;
+          
+          // Run JsonAbilities
+          jsonAbilitiesRule.apply();
+          
+          // Clean up
+          delete unit.meta._testTarget;
+        }
     }
   }
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { Abilities } from '../../src/rules/abilities';
+import { JsonAbilities } from '../../src/rules/json_abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
 
@@ -26,7 +26,7 @@ describe('Toymaker System', () => {
     const sim = new Simulator();
     
     // Use minimal rulebook for focused testing
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     // Add toymaker
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
@@ -91,7 +91,7 @@ describe('Toymaker System', () => {
 
   it('should place deployed constructs between toymaker and target', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     // Set up specific positions for predictable deployment
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 2, y: 5 } };

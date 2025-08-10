@@ -43,8 +43,8 @@ export class GrapplingPhysics extends Rule {
       );
 
       if (hitUnit) {
-        // Create grapple line
-        const grapplerID = (grapple as any).grapplerID || 'unknown';
+        // Create grapple line - check both sourceId and grapplerID for compatibility
+        const grapplerID = (grapple as any).sourceId || (grapple as any).grapplerID || 'unknown';
         const grappler = this.sim.units.find(u => u.id === grapplerID);
         
         // Use grapple origin if grappler not found
@@ -71,6 +71,12 @@ export class GrapplingPhysics extends Rule {
           hitUnit.meta.grappledBy = grapplerID;
           hitUnit.meta.grappledDuration = (grapple as any).pinDuration || 60;
           hitUnit.meta.tetherPoint = grapplerPos;
+          
+          // Also update grappler's metadata
+          if (grappler) {
+            if (!grappler.meta) grappler.meta = {};
+            grappler.meta.grapplingTarget = hitUnit.id;
+          }
           
           // Check if target is massive and should be pinned
           const targetMass = hitUnit.mass || 1;

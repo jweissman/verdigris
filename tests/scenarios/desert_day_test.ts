@@ -3,7 +3,9 @@ import { Simulator } from '../../src/simulator';
 import { DesertEffects } from '../../src/rules/desert_effects';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
+import { JsonAbilities } from '../../src/rules/json_abilities';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
+import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 
 describe('Desert Day Features', () => {
   it('desert units - grappler can fire grappling hook', () => {
@@ -31,6 +33,11 @@ describe('Desert Day Features', () => {
   // Fire grappling hook
   const grapplerUnit = sim.units.find(u => u.sprite === 'grappler' && u.tags?.includes('grappler'));
   expect(grapplerUnit).toBeTruthy();
+  
+  // Add effect compatibility for test
+  if (grapplerUnit) {
+    addEffectsToUnit(grapplerUnit, sim);
+  }
   
   if (grapplerUnit?.abilities.grapplingHook) {
     grapplerUnit.abilities.grapplingHook.effect(grapplerUnit, enemy.pos, sim);
@@ -98,6 +105,9 @@ it('desert units - waterbearer can heal and detect spies', () => {
   sim.addUnit(spy);
   
   // Use detect ability
+  if (waterbearerUnit) {
+    addEffectsToUnit(waterbearerUnit, sim);
+  }
   if (waterbearerUnit?.abilities.detectSpies) {
     waterbearerUnit.abilities.detectSpies.effect(waterbearerUnit, waterbearerUnit.pos, sim);
   }
@@ -133,6 +143,9 @@ it('desert units - skirmisher has dual knife attack', () => {
   sim.addUnit(enemy);
   
   // Use dual knife dance
+  if (skirmisherUnit) {
+    addEffectsToUnit(skirmisherUnit, sim);
+  }
   if (skirmisherUnit?.abilities.dualKnifeDance) {
     skirmisherUnit.abilities.dualKnifeDance.effect(skirmisherUnit, enemy.pos, sim);
   }
@@ -268,8 +281,8 @@ it('segmented creatures - grappling affects segments', () => {
 it('desert worm can burrow and ambush', () => {
   const sim = new Simulator();
   
-  // Add desert effects for burrow handling
-  sim.rulebook = [new DesertEffects(sim)];
+  // Add desert effects and JsonAbilities for burrow handling
+  sim.rulebook = [new JsonAbilities(sim), new DesertEffects(sim)];
   
   // Create desert worm
   const worm = {
@@ -289,6 +302,9 @@ it('desert worm can burrow and ambush', () => {
   const wormUnit = sim.units.find(u => u.id === worm.id);
   
   // Use burrow ability
+  if (wormUnit) {
+    addEffectsToUnit(wormUnit, sim);
+  }
   if (wormUnit?.abilities.burrowAmbush) {
     wormUnit.abilities.burrowAmbush.effect(wormUnit, enemy.pos, sim);
   }

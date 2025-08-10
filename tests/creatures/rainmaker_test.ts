@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Simulator } from "../../src/simulator";
 import Encyclopaedia from "../../src/dmg/encyclopaedia";
+import { addEffectsToUnit } from "../../src/test_helpers/ability_compat";
 
 describe("Rainmaker Integration", () => {
   it("should trigger rain when rainmaker uses makeRain ability", () => {
@@ -13,12 +14,12 @@ describe("Rainmaker Integration", () => {
     expect(sim.weather.current).toBe('clear');
     expect(sim.weather.duration).toBe(0);
     
-    // Manually trigger the rain ability
+    // Manually trigger the rain ability using simulator method
     const makeRainAbility = rainmaker.abilities.makeRain;
     expect(makeRainAbility).toBeDefined();
     
-    // Execute the ability effect directly
-    makeRainAbility.effect(rainmaker, undefined, sim);
+    // Execute the ability directly through simulator
+    sim.forceAbility(rainmaker.id, 'makeRain');
     
     // Process the queued command
     sim.step();

@@ -55,22 +55,46 @@ export class Grapple extends Command {
       return;
     }
 
-    // Check cooldown
-    const lastUsed = grappler.lastAbilityTick?.grapplingHook || 0;
-    const cooldown = grappler.abilities.grapplingHook.cooldown || 25;
-    const ticksSinceLastUse = this.sim.ticks - lastUsed;
+    // Check cooldown (skip if this was explicitly queued by the unit)
+    if (unitId !== grapplerID) {
+      const lastUsed = grappler.lastAbilityTick?.grapplingHook || 0;
+      const cooldown = grappler.abilities.grapplingHook.cooldown || 25;
+      const ticksSinceLastUse = this.sim.ticks - lastUsed;
 
-    if (ticksSinceLastUse < cooldown) {
-      const remainingCooldown = cooldown - ticksSinceLastUse;
-      console.error(`Grappling hook is on cooldown for ${remainingCooldown} more ticks`);
-      return;
+      if (ticksSinceLastUse < cooldown) {
+        const remainingCooldown = cooldown - ticksSinceLastUse;
+        console.error(`Grappling hook is on cooldown for ${remainingCooldown} more ticks`);
+        return;
+      }
     }
 
     console.log(`🪝 ${grappler.id} fires grappling hook at (${targetX}, ${targetY})`);
 
-    // Execute the grappling hook ability
+    // Create the grapple projectile directly
     const targetPos = { x: targetX, y: targetY };
-    grappler.abilities.grapplingHook.effect(grappler, targetPos, this.sim);
+    
+    // Calculate velocity towards target
+    const dx = targetPos.x - grappler.pos.x;
+    const dy = targetPos.y - grappler.pos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const speed = 2;
+    const vel = {
+      x: (dx / dist) * speed,
+      y: (dy / dist) * speed
+    };
+
+    // Create grapple projectile
+    this.sim.projectiles.push({
+      id: `grapple_${grappler.id}_${this.sim.ticks}`,
+      pos: { ...grappler.pos },
+      vel,
+      radius: 1,
+      damage: 0,
+      team: grappler.team,
+      type: 'grapple',
+      sourceId: grappler.id,
+      target: targetPos
+    });
 
     // Update ability cooldown
     if (!grappler.lastAbilityTick) {

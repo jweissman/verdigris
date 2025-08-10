@@ -2,99 +2,116 @@ import { Unit, Vec2 } from "../sim/types";
 import { Simulator } from "../simulator";
 
 export default class DSL {
-  static noun = (
-    unit: Unit,
-    sim: Simulator,
-    sort: {(a: Unit, b: Unit): number} | null = null,
-    filter: (unit: Unit) => boolean = (u) => true,
-  ) => {
-    return {
-      ally: () => {
-        let allies = sim.getRealUnits().filter(u => u.team === unit.team && u.state !== 'dead' && u.id !== unit.id)
-          .filter(filter);
-        if (allies.length === 0) return null;
-        if (sort) {
-          allies.sort(sort);
-        }
-        return allies[0];
-      },
-      enemy: () => {
-        let enemies = sim.getRealUnits().filter(u => u.team !== unit.team && u.state !== 'dead')
-          .filter(filter);
-        if (enemies.length === 0) return null;
-        if (sort) {
-          enemies.sort(sort);
-        }
-        return enemies[0];
-      }
-    }
-  };
 
   static evaluate(expression: string, subject: Unit, sim: Simulator): any {
+    // Core unit getters
+    let allies = () => sim.getRealUnits().filter(u => u.team === subject.team && u.state !== 'dead' && u.id !== subject.id);
+    let enemies = () => sim.getRealUnits().filter(u => u.team !== subject.team && u.state !== 'dead');
+    let all = () => sim.getRealUnits().filter(u => u.state !== 'dead');
+    
+    // Distance utility
+    let distance = (target: Vec2 | Unit | null) => {
+      if (!target) return Infinity;
+      const pos = (target as Unit).pos || (target as Vec2);
+      return Math.sqrt(
+        Math.pow(subject.pos.x - pos.x, 2) +
+        Math.pow(subject.pos.y - pos.y, 2)
+      );
+    };
+    
+    // Sort comparators
+    let byDistance = (a: Unit, b: Unit) => distance(a) - distance(b);
+    let byHealth = (a: Unit, b: Unit) => a.hp - b.hp;
+    let byMaxHealth = (a: Unit, b: Unit) => b.hp - a.hp;
+    let byHealthPercent = (a: Unit, b: Unit) => (a.hp / a.maxHp) - (b.hp / b.maxHp);
+    
+    // Filters
+    let wounded = (u: Unit) => u.hp < u.maxHp;
+    let within_range = (range: number) => (u: Unit) => distance(u) <= range;
+    
+    // Compositional selectors
+    let closest = {
+      ally: () => allies().sort(byDistance)[0] || null,
+      enemy: () => enemies().sort(byDistance)[0] || null
+    };
+    
+    let weakest = {
+      ally: () => allies().sort(byHealth)[0] || null,
+      enemy: () => enemies().sort(byHealth)[0] || null
+    };
+    
+    let strongest = {
+      ally: () => allies().sort(byMaxHealth)[0] || null,
+      enemy: () => enemies().sort(byMaxHealth)[0] || null
+    };
+    
+    let healthiest = {
+      ally: () => allies().sort((a, b) => byHealthPercent(b, a))[0] || null,
+      enemy: () => enemies().sort((a, b) => byHealthPercent(b, a))[0] || null,
+      enemy_in_range: (range: number) => enemies().filter(within_range(range)).sort(byMaxHealth)[0] || null
+    };
+    
+    let nearest = closest; // alias
+    let furthest = {
+      ally: () => allies().sort((a, b) => byDistance(b, a))[0] || null,
+      enemy: () => enemies().sort((a, b) => byDistance(b, a))[0] || null
+    };
+    let farthest = furthest; // alias
+    
+    // Centroid/center functions
+    let centroid = {
+      allies: () => {
+        const units = allies();
+        if (units.length === 0) return null;
+        const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
+        const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
+        return { x: Math.round(x), y: Math.round(y) };
+      },
+      enemies: () => {
+        const units = enemies();
+        if (units.length === 0) return null;
+        const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
+        const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
+        return { x: Math.round(x), y: Math.round(y) };
+      },
+      wounded_allies: () => {
+        const units = allies().filter(wounded);
+        if (units.length === 0) return null;
+        const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
+        const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
+        return { x: Math.round(x), y: Math.round(y) };
+      }
+    };
+    
+    // Random selections
     let random = {
       position: () => ({
         x: Math.round(Math.random() * sim.fieldWidth),
         y: Math.round(Math.random() * sim.fieldHeight)
       }),
       ally: () => {
-        const allies = sim.getRealUnits().filter(u => u.team === subject.team && u.state !== 'dead' && u.id !== subject.id);
-        if (allies.length === 0) return null;
-        return allies[Math.floor(Math.random() * allies.length)];
+        const units = allies();
+        return units.length > 0 ? units[Math.floor(Math.random() * units.length)] : null;
       },
       enemy: () => {
-        const enemies = sim.getRealUnits().filter(u => u.team !== subject.team && u.state !== 'dead');
-        if (enemies.length === 0) return null;
-        return enemies[Math.floor(Math.random() * enemies.length)];
+        const units = enemies();
+        return units.length > 0 ? units[Math.floor(Math.random() * units.length)] : null;
       }
     };
+    
+    // Unit lookup
+    let unit = (id: string) => sim.roster[id] || null;
 
-    let _group = (comparator) => this.noun(subject, sim, comparator);
-
-    let weakest = _group((a, b) => a.hp - b.hp);
-    let strongest = _group((a, b) => b.hp - a.hp);
-    let healthiest = _group((a, b) => (b.hp / b.maxHp) - (a.hp / a.maxHp));
-    let mostInjured = _group((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
-
-    let dist2 = (a: Vec2, b: Vec2) => {
-      return Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2);
-    };
-
-    let nearest = _group((a, b) => {
-      const distA = dist2(a.pos, subject.pos);
-      const distB = dist2(b.pos, subject.pos);
-      return distA - distB;
-    });
-    let closest = nearest;
-
-    let furthest = _group((a, b) => {
-      const distA = dist2(a.pos, subject.pos);
-      const distB = dist2(b.pos, subject.pos);
-      return distB - distA;
-    });
-    let farthest = furthest;
-
-    // let mostMassive = _group((a, b) => b.mass - a.mass);
-    // let leastMassive = _group((a, b) => a.mass - b.mass);
-
-    let distance = (target: Vec2) => {
-      if (!target) return Infinity;
-      return Math.sqrt(
-        Math.pow(subject.pos.x - target.x, 2) +
-        Math.pow(subject.pos.y - target.y, 2)
-      );
-    };
-
-    let unit = (id: string) => {
-      return sim.roster[id] || null;
-    };
-
-    let ret = eval(expression);
-    if (ret === undefined || ret === null) {
-      // console.warn(`DSL evaluation returned undefined for expression: ${expression}`);
+    // Evaluate the expression
+    try {
+      let ret = eval(expression);
+      if (ret === undefined || ret === null) {
+        return null;
+      }
+      return ret;
+    } catch (error) {
+      console.warn(`DSL evaluation error for expression: ${expression}`, error);
       return null;
     }
-
-    // console.debug(`"${expression}" [for subject ${subject.id}] =>`, ret);
-    return ret;
   }
 }

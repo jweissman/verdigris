@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { CommandHandler } from '../../src/rules/command_handler';
-import { Abilities } from '../../src/rules/abilities';
+import { JsonAbilities } from '../../src/rules/json_abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { AirdropPhysics } from '../../src/rules/airdrop_physics';
 
@@ -38,7 +38,7 @@ describe('Mechatronist Deployment System', () => {
 
   it('should call Mechatron airdrop when conditions are met', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new AirdropPhysics(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new AirdropPhysics(sim), new EventHandler(sim)];
     
     
     // Create mechatronist and allies (need 2+ allies for trigger)
@@ -87,7 +87,7 @@ describe('Mechatronist Deployment System', () => {
 
   it('should handle full Mechatronist to Mechatron deployment sequence', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new AirdropPhysics(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new AirdropPhysics(sim), new EventHandler(sim)];
     
     
     // Set up scenario for airdrop
@@ -141,7 +141,7 @@ describe('Mechatronist Deployment System', () => {
 
   it('should verify tactical override boosts nearby mechanists', () => {
     const sim = new Simulator();  
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     
     // Create multiple mechanists for synergy trigger

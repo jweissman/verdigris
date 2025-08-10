@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { Abilities } from '../../src/rules/abilities';
+import { JsonAbilities } from '../../src/rules/json_abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
 
@@ -50,25 +50,26 @@ describe('Unified Command System', () => {
   
   it('should integrate with rainmaker ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)]; // Don't include Abilities to avoid double triggering
-    
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     // Create rainmaker
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 5, y: 5 } };
     sim.addUnit(rainmaker);
     
-    // Find the makeRain ability and trigger it manually
-    const makeRain = rainmaker.abilities.makeRain;
-    if (makeRain && makeRain.effect) {
-      makeRain.effect(rainmaker, null, sim);
-    }
+    // Clear any cooldown
+    if (!rainmaker.lastAbilityTick) rainmaker.lastAbilityTick = {};
+    delete rainmaker.lastAbilityTick.makeRain;
     
-    // Should have queued a weather command
-    expect(sim.queuedCommands.length).toBe(1);
-    expect(sim.queuedCommands[0].type).toBe('weather');
-    expect(sim.queuedCommands[0].args).toEqual(['rain', '80', '0.8']);
-    expect(sim.queuedCommands[0].unitId).toBe(rainmaker.id);
+    // Run JsonAbilities to trigger the ability
+    sim.step();
     
+    // Commands are processed at the start of next step
+    // makeRain has multiple effects, should queue weather and temperature commands
+    expect(sim.queuedCommands.length).toBeGreaterThanOrEqual(1);
+    const weatherCommand = sim.queuedCommands.find(c => c.type === 'weather');
+    expect(weatherCommand).toBeTruthy();
+    expect(weatherCommand.args).toEqual(['rain', '80', '0.8']);
+    expect(weatherCommand.unitId).toBe(rainmaker.id);
     
     // Process the command
     sim.step();
@@ -78,8 +79,7 @@ describe('Unified Command System', () => {
   
   it('should integrate with toymaker ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)]; // Don't include Abilities to avoid double triggering
-    
+    sim.rulebook = [new CommandHandler(sim), new JsonAbilities(sim), new EventHandler(sim)];
     
     // Create toymaker and enemy
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
@@ -90,22 +90,24 @@ describe('Unified Command System', () => {
     
     const unitsBefore = sim.units.length;
     
-    // Find the deployBot ability and trigger it manually
-    const deployBot = toymaker.abilities.deployBot;
-    if (deployBot && deployBot.effect) {
-      deployBot.effect(toymaker, enemy.pos, sim);
-    }
+    // Clear cooldown and usage count
+    if (!toymaker.lastAbilityTick) toymaker.lastAbilityTick = {};
+    delete toymaker.lastAbilityTick.deployBot;
+    if (!toymaker.meta) toymaker.meta = {};
+    toymaker.meta.deployBotUses = 0;
+    
+    // Run JsonAbilities to trigger deployment
+    sim.step();
     
     // Should have queued a deploy command
     expect(sim.queuedCommands.length).toBe(1);
     expect(sim.queuedCommands[0].type).toBe('deploy');
     expect(sim.queuedCommands[0].unitId).toBe(toymaker.id);
     
-    
-    // Process the command - events are processed immediately
+    // Process the command
     sim.step();
     
-    // Unit should be spawned immediately
+    // Unit should be spawned
     expect(sim.units.length).toBe(unitsBefore + 1);
     
     const construct = sim.units[sim.units.length - 1];

@@ -1,3 +1,43 @@
+# Review Points
+
+1. The Core Simulator (src/simulator.ts)
+This file is the heart of the simulation and is generally well-structured with its rule-based system. However, it has several significant issues:
+
+Lack of Determinism: The frequent use of Math.random() for things like particle effects and knockback direction makes the simulation non-deterministic. This is the most critical issue, as it contradicts the design goals and makes testing and replays unreliable.
+Buggy clone() Method: The clone() method performs a shallow copy of the units array. This means cloning a simulation state does not create a truly independent copy, and modifications to the clone will affect the original. This is a major bug.
+Flawed Object Comparison: The delta() and objEq() helper methods for debugging do not correctly compare nested objects, leading them to report properties as "changed" on every tick, creating noisy and unhelpful debug output.
+Redundant Code: The presence of two similar methods, addUnit and create, for adding units to the simulation is confusing and unnecessary.
+
+2. Data Structures & Performance (src/sim/)
+This area reveals a major insight into the project's architectural direction and its current state.
+
+Well-Defined Types: The types.ts file provides clear and comprehensive data structures for units, abilities, and actions.
+Abandoned Performance Refactor: The file double_buffer.ts is entirely commented out. It contains a well-thought-out, high-performance architecture using a Struct of Arrays (UnitArrays) and a SpatialHash for efficient collision detection. This is a huge red flag. It indicates the author was aware of the performance limitations of the current design but abandoned a major refactoring effort. The current simulation, which uses a simple array of objects, will not scale well to a large number of units.
+3. Gameplay Logic (src/rules/)
+
+The rules I inspected were in a very rough state, justifying the author's comments about not trusting them.
+
+knockback.ts:
+Inefficient: It uses a pairwise (O(n^2)) check, which is too slow for real-time physics.
+Non-Deterministic: It uses Math.random() when units overlap.
+Simplistic Physics: It manipulates unit positions directly instead of applying forces or changing velocity, which will lead to jerky movement and conflicts with other physics rules.
+projectile_motion.ts:
+Critically Flawed: The rule completely lacks collision detection. Projectiles will pass straight through their targets without effect.
+Potential Memory Leaks: The logic for removing old projectiles is flawed and will fail to remove certain types, causing them to accumulate in memory forever.
+Brittle Design: It relies on parsing a projectile's ID string to determine its owner, which is a fragile and error-prone method.
+Conclusion
+
+The TypeScript simulation layer is an ambitious and intellectually interesting project, but it is not in a stable or complete state. The core gameplay logic is lagging significantly behind the more advanced architectural concepts.
+
+To move this project forward, I would recommend focusing on stabilizing the foundation before building more on top of it. This would involve:
+
+Implementing a seeded random number generator to ensure determinism.
+Fixing the critical bugs in clone() and delta().
+Completing the core physics rules (ProjectileMotion and Knockback), including projectile collision detection.
+Deciding whether to commit to the high-performance data-oriented architecture sketched out in double_buffer
+
+===
+
 - Single Cell Lab
   - Test weather particles (leaves, snowflakes, raindrops)
   - Trigger cell effects (lightning, fire, explosion)
