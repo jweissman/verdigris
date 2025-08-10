@@ -7,10 +7,16 @@ import squirrel from './scenes/squirrel.battle.txt';
 import chess from './scenes/chesslike.battle.txt';
 import toymaker from './scenes/toymaker.battle.txt';
 import desert from './scenes/desert-day.battle.txt';
+import toymakerChallenge from './scenes/toymaker-challenge.battle.txt';
+import mechatronSolo from './scenes/mechatron-solo.battle.txt';
+import forestTracker from './scenes/forest-tracker.battle.txt';
 import Encyclopaedia from "./dmg/encyclopaedia";
 
 export class SceneLoader {
-  static scenarios = { simple, complex, healing, projectile, squirrel, chess, toymaker, desert };
+  static scenarios = { 
+    simple, complex, healing, projectile, squirrel, chess, toymaker, desert, 
+    toymakerChallenge, mechatronSolo, forestTracker 
+  };
   constructor(private sim: Simulator) {}
 
   loadScene(scenario: string): void {
@@ -120,6 +126,18 @@ export class SceneLoader {
     if (command === 'bg') {
       (this.sim as any).background = args[0] || '';
       (this.sim as any).sceneBackground = args[0] || '';
+      return;
+    }
+    
+    // Handle strip width metadata
+    if (command === 'strip') {
+      (this.sim as any).stripWidth = args[0] || '';
+      return;
+    }
+    
+    // Handle battlefield height metadata
+    if (command === 'height') {
+      (this.sim as any).battleHeight = args[0] || '';
       return;
     }
     

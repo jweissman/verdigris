@@ -99,12 +99,32 @@ export class GrapplingPhysics extends Rule {
       
       const currentDistance = this.calculateDistance(grappler.pos, target.pos);
       const maxDistance = grappleLine.length + 2; // Allow some slack
+      const releaseDistance = 1.5; // Release when dragged within 1.5 cells
+      
+      // Check if target has been dragged close enough to release
+      if (currentDistance < releaseDistance) {
+        // Release the grapple
+        console.log(`Grapple released - target dragged within ${releaseDistance} cells`);
+        this.grappleLines.delete(lineID);
+        
+        // Clear grapple effects from target
+        if (target.meta) {
+          target.meta.grappled = false;
+          target.meta.grappledBy = undefined;
+          target.meta.grappledDuration = 0;
+          target.meta.tetherPoint = undefined;
+          target.meta.movementPenalty = 0;
+          target.meta.pinned = false;
+        }
+        
+        continue; // Skip to next grapple line
+      }
       
       // Check if line is taut
       grappleLine.taut = currentDistance >= grappleLine.length;
       
-      // If distance exceeds maximum, pull units toward each other
-      if (currentDistance > maxDistance) {
+      // Apply taut effects if line is stretched
+      if (grappleLine.taut && currentDistance > releaseDistance) {
         this.applyTautEffects(grappler, target, grappleLine);
       }
 
@@ -138,11 +158,20 @@ export class GrapplingPhysics extends Rule {
     const grapplerPull = targetMass / totalMass * 0.3;
     const targetPull = grapplerMass / totalMass * 0.3;
     
+    // Massive creatures (mass > 30) can't be pulled at all, only pinned
+    const targetIsImmovable = targetMass > 30;
+    
     // Apply constraint forces (pull toward each other)
-    if (target.meta.pinned) {
-      // If target is pinned, only grappler moves
+    if (target.meta.pinned || targetIsImmovable) {
+      // If target is pinned or immovable, only grappler moves
       grappler.pos.x += unitX * grapplerPull * 2;
       grappler.pos.y += unitY * grapplerPull * 2;
+      
+      // Mark the target as effectively pinned if immovable
+      if (targetIsImmovable && !target.meta.pinned) {
+        target.meta.pinned = true;
+        target.meta.movementPenalty = 1.0; // Can't move while grappled
+      }
     } else {
       // Both units are pulled toward each other
       grappler.pos.x += unitX * grapplerPull;

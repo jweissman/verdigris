@@ -111,6 +111,7 @@ class ScenarioViewer {
   renderer;
   isPlaying: boolean = false;
   gameLoop;
+  lastSimTime: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.sim = new Simulator(40, 25);
@@ -125,14 +126,24 @@ class ScenarioViewer {
   }
 
   startGame() {
-    if (this.gameLoop) clearInterval(this.gameLoop);
-    this.gameLoop = setInterval(() => {
-      if (this.isPlaying) {
+    if (this.gameLoop) cancelAnimationFrame(this.gameLoop);
+    
+    const animate = () => {
+      // Simulation runs at 8 FPS
+      const now = Date.now();
+      if (this.isPlaying && now - this.lastSimTime > 125) {
         this.sim.step();
+        this.lastSimTime = now;
         console.log(`Stepped to tick ${this.sim.ticks}`);
       }
+      
+      // Rendering runs at 60 FPS
       this.draw();
-    }, 100); // 10 FPS for easier observation
+      this.gameLoop = requestAnimationFrame(animate);
+    };
+    
+    this.lastSimTime = Date.now();
+    this.gameLoop = requestAnimationFrame(animate);
   }
 
   draw: () => void;

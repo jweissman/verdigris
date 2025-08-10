@@ -1808,14 +1808,34 @@ static bestiary: { [key: string]: Partial<Unit> } = {
       }
     },
 
+    // Regular-sized segmented worm - separates segmented from huge concept
+    "segmented-worm": {
+      intendedMove: { x: 0, y: 0 },
+      team: "hostile",
+      sprite: "worm", // Uses regular worm sprite (16x16)
+      state: "idle" as UnitState,
+      hp: 40,
+      maxHp: 40,
+      mass: 3,
+      tags: ['beast', 'segmented'],
+      abilities: {},
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        segmented: true,
+        segmentCount: 3, // 3 body segments - medium size
+        // No huge flag - this is a regular-sized creature
+        // No special width/height - uses standard 16x16
+      }
+    },
+
     "giant-sandworm": {
       intendedMove: { x: 0, y: 0 },
       team: "hostile",
-      sprite: "worm", // Will use larger sprite or multiple segments
+      sprite: "big-worm", // Use the big-worm sprite
       state: "idle" as UnitState,
       hp: 120,
       maxHp: 120,
-      mass: 12,
+      mass: 50, // Massive creature, can't be pulled only pinned
       tags: ['desert', 'segmented', 'titan', 'burrower'],
       abilities: {},
       meta: {
@@ -1824,7 +1844,9 @@ static bestiary: { [key: string]: Partial<Unit> } = {
         segmentCount: 6, // 6 body segments for massive worm
         canBurrow: true,
         sandAdapted: true,
-        huge: true // Takes up multiple grid cells
+        huge: true, // Takes up multiple grid cells
+        width: 64,  // Each frame is 64x32
+        height: 32
       }
     },
 
@@ -2242,6 +2264,10 @@ static bestiary: { [key: string]: Partial<Unit> } = {
           ...(beast === "desert-worm" ? { 
             sandBlast: this.abilities.sandBlast,
             burrowAmbush: this.abilities.burrowAmbush
+          } : {}),
+          ...(beast === "segmented-worm" ? { 
+            // Regular segmented worm - simple abilities
+            jumps: this.abilities.jumps
           } : {}),
           ...(beast === "giant-sandworm" ? { 
             sandBlast: this.abilities.sandBlast,

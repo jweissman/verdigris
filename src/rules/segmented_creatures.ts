@@ -82,7 +82,7 @@ export class SegmentedCreatures extends Rule {
           pos: segmentPos,
           intendedMove: { x: 0, y: 0 },
           team: creature.team,
-          sprite: this.getSegmentSprite(segmentType),
+          sprite: creature.sprite, // Use parent's sprite (big-worm for giant-sandworm)
           state: "idle",
           hp: Math.floor(creature.hp * 0.7), // Segments have less HP than head
           maxHp: Math.floor(creature.maxHp * 0.7),
@@ -94,7 +94,11 @@ export class SegmentedCreatures extends Rule {
             segmentType,
             segmentIndex: i,
             parentId: creature.id,
-            facing: creature.meta.facing || 'right'
+            facing: creature.meta.facing || 'right',
+            // Inherit huge status and dimensions from parent
+            huge: creature.meta.huge,
+            width: creature.meta.width,
+            height: creature.meta.height
           }
         };
 

@@ -54,7 +54,7 @@ describe("New Sprites Integration", () => {
     // Segments should use worm sprite and have proper metadata
     if (segments.length > 0) {
       const firstSegment = segments[0];
-      expect(firstSegment.sprite).toBe('worm'); // Segments use worm sprite
+      expect(firstSegment.sprite).toBe('big-worm'); // Segments now inherit parent sprite
       expect(firstSegment.meta.segmentType).toBeDefined();
       expect(firstSegment.meta.parentId).toBe(wormId);
     }

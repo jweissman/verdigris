@@ -12,5 +12,6 @@
 .....K..........................
 ---
 bg desert
+strip wide
 temperature 35
 weather sand 200 0.6

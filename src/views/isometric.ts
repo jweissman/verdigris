@@ -1,7 +1,22 @@
 import { Projectile, Unit } from "../sim/types";
 import View from "./view";
+import { TextRenderer } from "./text_renderer";
 
 export default class Isometric extends View {
+  private textRenderer: TextRenderer;
+  
+  constructor(
+    ctx: CanvasRenderingContext2D,
+    sim: any,
+    width: number,
+    height: number,
+    sprites: Map<string, HTMLImageElement>,
+    backgrounds: Map<string, HTMLImageElement> = new Map()
+  ) {
+    super(ctx, sim, width, height, sprites, backgrounds);
+    this.textRenderer = new TextRenderer(ctx);
+  }
+  
   show() {
     this.updateMovementInterpolations();
     this.updateProjectileInterpolations();
@@ -25,6 +40,9 @@ export default class Isometric extends View {
     for (const unit of sortedUnits) {
       this.showUnit(unit);
     }
+    
+    // Draw speech bubbles for units
+    this.renderSpeechBubbles();
     
     // Draw projectiles (from battle view)
     for (const projectile of this.sim.projectiles) {
@@ -76,8 +94,16 @@ export default class Isometric extends View {
   protected baseOffsetY: number = 125;  // Default for battle scenes (battlestrip area)
   
   private getBattleStripOffsets(): { x: number, y: number } {
-    // Adjust battle strip position based on background
-    const bg = this.sim.sceneBackground || this.sim.background;
+    // Check for explicit strip width metadata
+    const stripWidth = (this.sim as any).stripWidth;
+    if (stripWidth === 'wide') {
+      return { x: -40, y: 100 };
+    } else if (stripWidth === 'narrow') {
+      return { x: 0, y: 145 };
+    }
+    
+    // Default positioning based on background
+    const bg = this.sim.sceneBackground || (this.sim as any).background;
     
     switch(bg) {
       case 'mountain':
@@ -87,6 +113,7 @@ export default class Isometric extends View {
         
       case 'desert':
       case 'lake':
+      case 'forest':
         // Wide open battlefield
         return { x: -20, y: 110 };
         
@@ -106,44 +133,42 @@ export default class Isometric extends View {
   
   protected toIsometric(x: number, y: number): { x: number; y: number } {
     const tileWidth = 16;
-    const rowOffset = 3; // Pixels to offset each row for pseudo-isometric depth
+    const rowOffset = 8; // Pixels to offset each row for pseudo-isometric depth
     
     const offsets = this.getBattleStripOffsets();
     
+    // Check for battlefield height compression
+    const battleHeight = (this.sim as any).battleHeight;
+    let verticalSpacing = 3; // Default vertical spacing between rows
+    
+    if (battleHeight === 'compressed') {
+      verticalSpacing = 2; // Tighter vertical spacing
+    } else if (battleHeight === 'half') {
+      verticalSpacing = 1.5; // Very tight for maps with limited vertical space
+    }
+    
     // Simple orthogonal grid with row staggering for depth illusion
     const screenX = x * tileWidth + (y * rowOffset) + offsets.x;
-    const screenY = (y * 3) + offsets.y;
+    const screenY = (y * verticalSpacing) + offsets.y;
     
     return { x: screenX, y: screenY };
   }
 
-  private grid({ dotSize } = { dotSize: 1 }) {
-    // Draw cell outlines for better visibility
-    this.ctx.strokeStyle = "#555";
-    this.ctx.lineWidth = 0.5;
+  private grid() {
+    const cellEffectsSprite = this.sprites.get('cell-effects');
+    if (!cellEffectsSprite) return;
     
+    // Draw white cell sprite for each grid position as the base
     for (let x = 0; x < this.sim.fieldWidth; x++) {
       for (let y = 0; y < this.sim.fieldHeight; y++) {
         const { x: screenX, y: screenY } = this.toIsometric(x, y);
         
-        // Draw subtle cell outline
-        const cellWidth = 16;
-        const cellHeight = 8;
-        
-        this.ctx.beginPath();
-        // Diamond shape for isometric cell
-        this.ctx.moveTo(screenX, screenY - cellHeight/2);
-        this.ctx.lineTo(screenX + cellWidth/2, screenY);
-        this.ctx.lineTo(screenX, screenY + cellHeight/2);
-        this.ctx.lineTo(screenX - cellWidth/2, screenY);
-        this.ctx.closePath();
-        this.ctx.stroke();
-        
-        // Draw center dot
-        this.ctx.beginPath();
-        this.ctx.arc(screenX, screenY, dotSize, 0, 2 * Math.PI);
-        this.ctx.fillStyle = "#888";
-        this.ctx.fill();
+        // Draw white cell (frame 0) as the base grid
+        this.ctx.drawImage(
+          cellEffectsSprite,
+          0, 0, 16, 16,  // Frame 0 is the white cell
+          screenX - 8, screenY - 8, 16, 16
+        );
       }
     }
   }
@@ -203,12 +228,22 @@ export default class Isometric extends View {
     if (sprite) {
       let frameIndex = 0;
         
+      // Check if unit recently dealt damage (show attack frame)
+      const recentAttack = this.sim.processedEvents.find((event: any) => 
+        event.kind === 'damage' && 
+        event.source === unit.id && 
+        event.tick && 
+        (this.sim.ticks - event.tick) < 1 // Only show attack frame for 1 tick
+      );
+      
       if (unit.state === 'dead') {
-        frameIndex = 3;
-      } else if (unit.state === 'attack') {
-        frameIndex = 2;
+        frameIndex = 3; // Frame 3 for dead/stunned
+      } else if (recentAttack || unit.state === 'attack') {
+        frameIndex = 3; // Frame 3 is the attack frame
+      } else if (unit.state === 'walk') {
+        frameIndex = 1 + Math.floor((this.animationTime / 400) % 2); // Frames 1-2 for walking
       } else {
-        frameIndex = Math.floor((this.animationTime / 400) % 2);
+        frameIndex = 0; // Frame 0 for idle
       }
         
       // Check if sprite has multiple frames or is single-frame
@@ -377,6 +412,93 @@ export default class Isometric extends View {
     this.ctx.restore();
   }
 
+  private renderSpeechBubbles() {
+    if (!this.textRenderer.fontsReady) return;
+    
+    for (const unit of this.sim.units) {
+      let bubbleText: string | null = null;
+      
+      // Check for various conditions that trigger speech
+      
+      // Burrow event (desert worm)
+      if (unit.meta.burrowing && unit.meta.burrowProgress === 0) {
+        bubbleText = "WORMSIGN";
+      }
+      
+      // Taking heavy damage
+      const recentDamage = this.sim.processedEvents.find((event: any) => 
+        event.kind === 'damage' && 
+        event.target === unit.id && 
+        event.tick && 
+        (this.sim.ticks - event.tick) < 2 &&
+        event.meta?.amount > 10
+      );
+      if (recentDamage) {
+        bubbleText = "OOF!";
+      }
+      
+      // Healing
+      const recentHeal = this.sim.processedEvents.find((event: any) => 
+        event.kind === 'heal' && 
+        event.target === unit.id && 
+        event.tick && 
+        (this.sim.ticks - event.tick) < 2
+      );
+      if (recentHeal) {
+        bubbleText = "THANKS!";
+      }
+      
+      // Grappled
+      if (unit.meta.grappled && !unit.meta.speechShown) {
+        bubbleText = "HEY!";
+        unit.meta.speechShown = true;
+      }
+      
+      // Frozen
+      if (unit.meta.frozen && !unit.meta.frozenSpeechShown) {
+        bubbleText = "BRRR!";
+        unit.meta.frozenSpeechShown = true;
+      }
+      
+      // On fire
+      if (unit.meta.onFire && !unit.meta.fireSpeechShown) {
+        bubbleText = "HOT!";
+        unit.meta.fireSpeechShown = true;
+      }
+      
+      // Draw the bubble if we have text
+      if (bubbleText) {
+        const pos = this.toIsometric(unit.pos.x, unit.pos.y);
+        this.textRenderer.drawSpeechBubble(
+          bubbleText,
+          pos.x,
+          pos.y - 20, // Above the unit
+          true // Use tiny font
+        );
+      }
+      
+      // Draw damage numbers
+      const damageEvent = this.sim.processedEvents.find((event: any) => 
+        event.kind === 'damage' && 
+        event.target === unit.id && 
+        event.tick && 
+        (this.sim.ticks - event.tick) < 10
+      );
+      
+      if (damageEvent && damageEvent.meta?.amount && damageEvent.tick) {
+        const pos = this.toIsometric(unit.pos.x, unit.pos.y);
+        const floatOffset = (10 - (this.sim.ticks - damageEvent.tick)) * 2;
+        this.textRenderer.drawStatusText(
+          `-${damageEvent.meta.amount}`,
+          pos.x - 8,
+          pos.y - 10,
+          '#FF0000',
+          floatOffset
+        );
+      }
+    }
+  }
+  
   private renderOverlays() {
     for (const unit of this.sim.units) {
       if (unit.state === 'dead') continue;
@@ -502,85 +624,141 @@ export default class Isometric extends View {
     const cellEffectsSprite = this.sprites.get('cell-effects');
     if (!cellEffectsSprite) return;
 
-    // Track which cells have environmental effects
-    const effectiveCells = new Map<string, string>();
+    // Track which cells have effects (priority system - only one effect per cell)
+    const cellEffects = new Map<string, { type: string, priority: number }>();
     
-    // Check temperature effects
-    if (this.sim.temperature) {
-      if (this.sim.temperature > 30) {
-        // Hot cells - show heat shimmer
-        for (let x = 0; x < this.sim.fieldWidth; x++) {
-          for (let y = this.sim.fieldHeight - 2; y < this.sim.fieldHeight; y++) {
-            effectiveCells.set(`${x},${y}`, 'heat');
-          }
+    // Priority levels (higher = more important)
+    const priorities = {
+      explosion: 10,
+      fire: 9,
+      lightning: 8,
+      ice: 7,
+      snow: 6,
+      heat: 5,
+      pressed: 4,
+      black: 2,
+      white: 1
+    };
+    
+    // Helper to set cell effect if higher priority
+    const setCellEffect = (x: number, y: number, type: string) => {
+      const key = `${x},${y}`;
+      const current = cellEffects.get(key);
+      const priority = priorities[type] || 0;
+      if (!current || current.priority < priority) {
+        cellEffects.set(key, { type, priority });
+      }
+    };
+    
+    // Check temperature effects on ground cells
+    // Sample temperature from center of battlefield
+    const centerX = Math.floor(this.sim.fieldWidth / 2);
+    const centerY = Math.floor(this.sim.fieldHeight / 2);
+    const temp = this.sim.getTemperature(centerX, centerY);
+    
+    if (temp > 30) {
+      // Hot cells - show heat shimmer on bottom rows
+      for (let x = 0; x < this.sim.fieldWidth; x++) {
+        for (let y = this.sim.fieldHeight - 2; y < this.sim.fieldHeight; y++) {
+          setCellEffect(x, y, 'heat');
         }
-      } else if (this.sim.temperature < 0) {
-        // Cold cells - show ice
-        for (let x = 0; x < this.sim.fieldWidth; x++) {
-          for (let y = this.sim.fieldHeight - 2; y < this.sim.fieldHeight; y++) {
-            effectiveCells.set(`${x},${y}`, 'ice');
-          }
+      }
+    } else if (temp < 0) {
+      // Cold cells - show ice/snow
+      for (let x = 0; x < this.sim.fieldWidth; x++) {
+        for (let y = this.sim.fieldHeight - 2; y < this.sim.fieldHeight; y++) {
+          setCellEffect(x, y, 'snow');
         }
       }
     }
     
-    // Check for units on fire, frozen, etc
+    // Check for units with status effects
     for (const unit of this.sim.units) {
-      const cellKey = `${Math.floor(unit.pos.x)},${Math.floor(unit.pos.y)}`;
+      const x = Math.floor(unit.pos.x);
+      const y = Math.floor(unit.pos.y);
+      
       if (unit.meta?.onFire) {
-        effectiveCells.set(cellKey, 'fire');
+        setCellEffect(x, y, 'fire');
       } else if (unit.meta?.frozen) {
-        effectiveCells.set(cellKey, 'ice');
+        setCellEffect(x, y, 'ice');
       } else if (unit.meta?.electrified) {
-        effectiveCells.set(cellKey, 'lightning');
+        setCellEffect(x, y, 'lightning');
       }
     }
     
-    // Check particles that landed on cells
-    if (this.sim.particles) {
-      for (const particle of this.sim.particles) {
-        if (particle.landed && particle.targetCell) {
-          const cellKey = `${particle.targetCell.x},${particle.targetCell.y}`;
-          if (particle.type === 'snow') {
-            effectiveCells.set(cellKey, 'snow');
-          } else if (particle.type === 'fire') {
-            effectiveCells.set(cellKey, 'fire');
-          }
-        }
+    // Check recent explosion events
+    const recentExplosions = this.sim.processedEvents?.filter(event =>
+      event.kind === 'aoe' && 
+      event.tick && 
+      (this.sim.ticks - event.tick) < 5
+    ) || [];
+    
+    for (const explosion of recentExplosions) {
+      // AoE events have position in their data
+      const pos = (explosion as any).position || (explosion as any).center;
+      if (pos) {
+        const x = Math.floor(pos.x);
+        const y = Math.floor(pos.y);
+        setCellEffect(x, y, 'explosion');
       }
     }
     
-    // Render effect sprites
+    // Render cell effects with proper sprite mapping
     this.ctx.save();
-    this.ctx.globalAlpha = 0.6;
     
-    for (const [cellKey, effectType] of effectiveCells.entries()) {
+    for (const [cellKey, effect] of cellEffects.entries()) {
       const [x, y] = cellKey.split(',').map(Number);
       const { x: screenX, y: screenY } = this.toIsometric(x, y);
       
-      let spriteX = 0;
-      let spriteY = 0;
+      let frameX = -1;
+      let animationFrames = 1;
+      let frameSpeed = 200;
       
-      // Map effect types to sprite positions (16x16 tiles)
-      switch(effectType) {
-        case 'fire': spriteX = 0; break;
-        case 'explosion': spriteX = 16; break;
-        case 'ice': case 'snow': spriteX = 32; break;
-        case 'lightning': spriteX = 48; break;
-        case 'poison': spriteX = 64; break;
-        case 'heal': spriteX = 80; break;
-        case 'shield': spriteX = 96; break;
-        case 'heat': spriteX = 112; break;
+      // Sprite sheet layout (16x16 tiles, horizontal strip):
+      // 0: white cell, 1: black cell, 2: pressed, 3-9: fire, 10-18: explosion
+      switch(effect.type) {
+        case 'white':
+          frameX = 0;
+          break;
+        case 'black':
+          frameX = 1;
+          break;
+        case 'pressed':
+          frameX = 2;
+          break;
+        case 'fire':
+        case 'heat':
+          animationFrames = 5;
+          frameSpeed = 100;
+          const fireFrame = Math.floor((this.animationTime / frameSpeed) % animationFrames);
+          frameX = 5 + fireFrame; 
+          break;
+        case 'explosion':
+          // Explosion animation frames 11-19 (not 10)
+          animationFrames = 9;
+          frameSpeed = 80;
+          const explFrame = Math.floor((this.animationTime / frameSpeed) % animationFrames);
+          frameX = 11 + explFrame;  // Start at frame 11
+          break;
+        case 'ice':
+        case 'snow':
+          // Use pressed frame for ice/snow (temporary)
+          frameX = 2;
+          this.ctx.globalAlpha = 0.5;
+          break;
+        case 'lightning':
+          // Use fire frame with different tint
+          frameX = 4;
+          break;
       }
       
-      // Animate with time
-      const frame = Math.floor((this.animationTime / 200) % 2);
-      spriteY = frame * 16;
-      
+      // Draw the cell effect sprite
+      if (frameX < 0) continue; // Skip if no valid frame found
+      const spriteSize = 16;
       this.ctx.drawImage(
         cellEffectsSprite,
-        spriteX, spriteY, 16, 16,
-        screenX - 8, screenY - 8, 16, 16
+        frameX * spriteSize, 0, spriteSize, spriteSize,
+        screenX - 8, screenY - 8, spriteSize, spriteSize
       );
     }
     
@@ -598,29 +776,28 @@ export default class Isometric extends View {
         const startPos = this.toIsometric(grappler.pos.x, grappler.pos.y);
         const endPos = this.toIsometric(unit.pos.x, unit.pos.y);
         
-        // Draw rope/tether line
+        // Draw rope/tether line (monochrome black)
         this.ctx.save();
-        this.ctx.strokeStyle = '#8B4513'; // Brown rope color
-        this.ctx.lineWidth = 2;
-        this.ctx.setLineDash([2, 2]); // Dashed line for rope texture
+        this.ctx.strokeStyle = '#000000'; // Black rope
+        this.ctx.lineWidth = 1; // Thin 1px line
         
         this.ctx.beginPath();
         this.ctx.moveTo(startPos.x, startPos.y);
         
         // Add slight sag to the rope for physics feel
         const midX = (startPos.x + endPos.x) / 2;
-        const midY = (startPos.y + endPos.y) / 2 + 5; // Sag downward
+        const midY = (startPos.y + endPos.y) / 2 + 3; // Slight sag
         
         this.ctx.quadraticCurveTo(midX, midY, endPos.x, endPos.y);
         this.ctx.stroke();
         
-        // Draw anchor points
-        this.ctx.fillStyle = '#666';
+        // Draw small anchor points
+        this.ctx.fillStyle = '#000';
         this.ctx.beginPath();
-        this.ctx.arc(startPos.x, startPos.y, 2, 0, 2 * Math.PI);
+        this.ctx.arc(startPos.x, startPos.y, 1, 0, 2 * Math.PI);
         this.ctx.fill();
         this.ctx.beginPath();
-        this.ctx.arc(endPos.x, endPos.y, 2, 0, 2 * Math.PI);
+        this.ctx.arc(endPos.x, endPos.y, 1, 0, 2 * Math.PI);
         this.ctx.fill();
         
         this.ctx.restore();
@@ -640,10 +817,10 @@ export default class Isometric extends View {
       const startPos = this.toIsometric(grappler.pos.x, grappler.pos.y);
       const endPos = this.toIsometric(grapple.pos.x, grapple.pos.y);
       
-      // Draw rope trailing behind projectile
+      // Draw rope trailing behind projectile (monochrome black)
       this.ctx.save();
-      this.ctx.strokeStyle = '#8B4513';
-      this.ctx.lineWidth = 1.5;
+      this.ctx.strokeStyle = '#000000';
+      this.ctx.lineWidth = 1;
       this.ctx.globalAlpha = 0.8;
       
       this.ctx.beginPath();
@@ -668,9 +845,33 @@ export default class Isometric extends View {
   }
 
   private renderParticle(particle: any) {
-    // Particles should have x,y,z in sim coordinates, not pixel coordinates
-    const x = particle.x !== undefined ? particle.x : particle.pos.x;
-    const y = particle.y !== undefined ? particle.y : particle.pos.y;
+    // Handle both sim coordinates and pixel coordinates
+    // Most particles are created with pixel coordinates (x*8, y*8)
+    let x: number, y: number;
+    
+    if (particle.pos) {
+      // Most particles use pos with pixel coordinates (x*8, y*8)
+      // Convert back to sim coordinates
+      x = particle.pos.x / 8;
+      y = particle.pos.y / 8;
+    } else if (particle.x !== undefined && particle.y !== undefined) {
+      // Some particles might use direct x,y
+      // Check if these are pixel or sim coordinates based on magnitude
+      if (particle.x > this.sim.fieldWidth || particle.y > this.sim.fieldHeight) {
+        // Likely pixel coordinates
+        x = particle.x / 8;
+        y = particle.y / 8;
+      } else {
+        // Likely sim coordinates
+        x = particle.x;
+        y = particle.y;
+      }
+    } else {
+      // Fallback
+      x = 0;
+      y = 0;
+    }
+    
     const z = particle.z || 0;
     
     const isoPos = this.toIsometric(x, y);

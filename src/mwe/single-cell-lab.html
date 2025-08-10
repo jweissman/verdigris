@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Cell Lab - Verdigris MWE</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            background: #111;
+            color: #0F0;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            border: 2px solid #0F0;
+            background: #000;
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            cursor: crosshair;
+        }
+        
+        .controls {
+            width: 300px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #0F0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .controls h2 {
+            margin: 0 0 15px 0;
+            color: #0F0;
+            text-shadow: 0 0 10px #0F0;
+            font-size: 18px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 3px;
+        }
+        
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            color: #0A0;
+            font-size: 14px;
+        }
+        
+        .key {
+            display: inline-block;
+            background: #0F0;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .status {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+        }
+        
+        #lab-info {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        
+        #lab-info div {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #0F0;
+            text-shadow: 0 0 20px #0F0;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header p {
+            color: #0A0;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .hint {
+            font-size: 11px;
+            color: #080;
+            font-style: italic;
+            margin-top: 5px;
+        }
+    </style>
+    <script type="module" src="./single_cell_lab.ts"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>🔬 SINGLE CELL LAB</h1>
+        <p>Isolated testing environment for precise cell-level experiments</p>
+    </div>
+    
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="640" height="480"></canvas>
+        </div>
+        
+        <div class="controls">
+            <h2>CONTROL PANEL</h2>
+            
+            <div class="control-group">
+                <h3>📍 Navigation</h3>
+                <div><span class="key">←→↑↓</span> Move cell focus</div>
+                <div><span class="key">Click</span> Select cell</div>
+                <div><span class="key">+/-</span> Zoom in/out</div>
+                <div class="hint">Current cell highlighted in gold</div>
+            </div>
+            
+            <div class="control-group">
+                <h3>🎮 Test Units</h3>
+                <div><span class="key">1</span> Spawn Soldier</div>
+                <div><span class="key">2</span> Spawn Worm</div>
+                <div><span class="key">3</span> Spawn Grappler</div>
+                <div><span class="key">A</span> Test ability</div>
+                <div class="hint">Units spawn at current cell</div>
+            </div>
+            
+            <div class="control-group">
+                <h3>✨ Cell Effects</h3>
+                <div><span class="key">4</span> Fire effect</div>
+                <div><span class="key">5</span> Explosion effect</div>
+                <div><span class="key">6</span> Ice effect</div>
+                <div class="hint">Effects render using sprite frames</div>
+            </div>
+            
+            <div class="control-group">
+                <h3>🌧️ Particles</h3>
+                <div><span class="key">7</span> Rain particle</div>
+                <div><span class="key">8</span> Snow particle</div>
+                <div><span class="key">9</span> Lightning particle</div>
+                <div class="hint">Particles use sim coordinates</div>
+            </div>
+            
+            <div class="control-group">
+                <h3>🎛️ Display</h3>
+                <div><span class="key">G</span> Toggle grid</div>
+                <div><span class="key">P</span> Toggle particles</div>
+                <div><span class="key">E</span> Toggle effects</div>
+                <div><span class="key">Space</span> Pause/Play</div>
+                <div><span class="key">0</span> Clear cell</div>
+            </div>
+            
+            <div class="status">
+                <h3>📊 Status</h3>
+                <div id="lab-info">
+                    <div>Cell: (0, 0)</div>
+                    <div>Zoom: 8x</div>
+                    <div>Grid: ON</div>
+                    <div>Particles: ON</div>
+                    <div>Effects: ON</div>
+                    <div>Unit: none</div>
+                    <div>Effect: none</div>
+                    <div>Particles: 0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
