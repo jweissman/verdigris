@@ -2,10 +2,11 @@ import DSL from './dsl';
 import { Rule } from './rule';
 import { AbilityEffect } from "../types/AbilityEffect";
 import { Ability } from "../types/Ability";
-import abilities from '../../data/abilities.json';
+import * as abilitiesJson from '../../data/abilities.json';
 
 export class Abilities extends Rule {
-  static all: { [key: string]: Ability } = abilities;
+  // @ts-ignore
+  static all: { [key: string]: Ability } = abilitiesJson as any;
 
   constructor(sim: any) {
     super(sim);
@@ -187,13 +188,16 @@ export class Abilities extends Rule {
       case 'entangle':
         this.tangle(effect, caster, primaryTarget);
         break;
+      case 'terrain':
+        this.modifyTerrain(effect, caster, primaryTarget);
+        break;
       default:
         console.warn(`Abilities: Unknown effect type ${effect.type}`);
         throw new Error(`Unknown effect type: ${effect.type}`);
     }
   }
 
-  private resolveTarget(targetExpression: string | number | undefined, caster: any, primaryTarget: any): any {
+  private resolveTarget(targetExpression: string | number | boolean | undefined, caster: any, primaryTarget: any): any {
     if (!targetExpression) return primaryTarget;
     if (targetExpression === 'self') return caster;
     if (targetExpression === 'target') return primaryTarget;
@@ -638,6 +642,55 @@ export class Abilities extends Rule {
     target.meta.onFireDuration = 30;
   }
   
+  private modifyTerrain(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const pos = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
+    if (!pos) return;
+    
+    const terrainType = (effect as any).terrainType;
+    const radius = (effect as any).radius || 1;
+    const duration = effect.duration || 200;
+    
+    // Create trench terrain - modifies the field to provide defensive bonuses
+    if (terrainType === 'trench') {
+      // Mark cells as trenches
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          const x = Math.floor(pos.x + dx);
+          const y = Math.floor(pos.y + dy);
+          
+          // Check if position is valid
+          if (x >= 0 && x < this.sim.fieldWidth && y >= 0 && y < this.sim.fieldHeight) {
+            // Queue a terrain modification event
+            this.sim.queuedEvents.push({
+              kind: 'terrain',
+              source: caster.id,
+              meta: {
+                x,
+                y,
+                terrainType: 'trench',
+                duration,
+                defenseBonus: 0.5, // 50% damage reduction
+                movementPenalty: 0.3 // 30% slower movement
+              }
+            });
+            
+            // Visual feedback - dust particles
+            for (let i = 0; i < 3; i++) {
+              this.sim.particles.push({
+                pos: { x: x + Math.random(), y: y + Math.random() },
+                vel: { x: (Math.random() - 0.5) * 0.2, y: -Math.random() * 0.3 },
+                radius: 0.5 + Math.random() * 0.5,
+                lifetime: 20 + Math.random() * 20,
+                color: '#8B4513', // Brown dust
+                type: 'debris' // Use debris for dust/dirt particles
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
   private tangle(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
     if (!target) return;
@@ -686,7 +739,7 @@ export class Abilities extends Rule {
           if (u.id === caster.id || u.team === caster.team) return false;
           // Simple cone check - could be more sophisticated
           const dist = Math.sqrt(Math.pow(u.pos.x - caster.pos.x, 2) + Math.pow(u.pos.y - caster.pos.y, 2));
-          return dist <= range;
+          return dist <= (typeof range === 'number' ? range : Number(range));
         });
 
         for (const unit of unitsInCone) {
@@ -846,7 +899,7 @@ export class Abilities extends Rule {
     // Reveal hidden/invisible units in radius
     const unitsInArea = this.sim.getRealUnits().filter(u => {
       const dist = Math.sqrt(Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2));
-      return dist <= radius;
+      return dist <= (typeof radius === 'number' ? radius : Number(radius));
     });
 
     for (const unit of unitsInArea) {
@@ -906,10 +959,10 @@ export class Abilities extends Rule {
           y: actualTarget.pos.y + (Math.random() - 0.5) * 2 
         },
         vel: { x: 0, y: -0.1 },
-        ttl: 20,
+        radius: 0.3,
+        lifetime: 20,
         color: '#90EE90', // Light green
-        type: 'tame',
-        size: 0.3
+        type: 'tame'
       });
     }
   }

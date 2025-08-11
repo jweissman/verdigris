@@ -926,6 +926,49 @@ export default class Encyclopaedia {
       meta: {
         facing: 'right' as 'left' | 'right'
       }
+    },
+
+    // Miner - resource gatherer and tunnel creator
+    miner: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "miner",
+      state: "idle" as UnitState,
+      hp: 35,
+      maxHp: 35,
+      dmg: 5,
+      mass: 1.2,
+      tags: ['worker', 'burrower', 'explorer'],
+      abilities: ['digTrench'],
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        canBurrow: true,
+        miningSpeed: 2,
+        oreCarryCapacity: 10,
+        currentOre: 0,
+        tunnelRange: 5
+      }
+    },
+
+    // Mindmender - psychic healer and buff unit
+    mindmender: {
+      intendedMove: { x: 0, y: 0 },
+      team: "friendly",
+      sprite: "mindmender",
+      state: "idle" as UnitState,
+      hp: 28,
+      maxHp: 28,
+      dmg: 2,
+      mass: 0.9,
+      tags: ['psychic', 'support', 'healer'],
+      abilities: ['psychicHeal'],
+      meta: {
+        facing: 'right' as 'left' | 'right',
+        psychicRange: 6,
+        mindShieldDuration: 50,
+        confuseDuration: 30,
+        healAmount: 15
+      }
     }
   }
 
@@ -947,7 +990,7 @@ export default class Encyclopaedia {
         team: 'neutral' as const, // Default team
         ...this.bestiary[beast],
         hp: this.bestiary[beast]?.hp || 10, // Default HP if not specified
-        maxHp: this.bestiary[beast].hp,
+        maxHp: this.bestiary[beast]?.hp || 10,
         abilities: this.bestiary[beast]?.abilities || [],
         sprite: this.bestiary[beast]?.sprite || beast,
         mass: this.bestiary[beast]?.mass || 1,

@@ -26,7 +26,6 @@
       }
     ]
   },
-  
   "jumps": {
     "name": "Hurl Self",
     "cooldown": 100,
@@ -55,7 +54,6 @@
       }
     ]
   },
-
   "ranged": {
     "name": "Sling Shot",
     "cooldown": 6,
@@ -79,7 +77,6 @@
       }
     ]
   },
-
   "bombardier": {
     "name": "Bomb Toss",
     "cooldown": 15,
@@ -110,7 +107,6 @@
       }
     ]
   },
-
   "heal": {
     "name": "Sacred Circle",
     "cooldown": 40,
@@ -131,7 +127,6 @@
       }
     ]
   },
-
   "radiant": {
     "name": "Radiant Strike",
     "cooldown": 30,
@@ -158,7 +153,6 @@
       }
     ]
   },
-
   "fireBlast": {
     "name": "Fire Blast",
     "cooldown": 40,
@@ -196,7 +190,6 @@
       }
     ]
   },
-
   "makeRain": {
     "name": "Make Rain",
     "cooldown": 200,
@@ -226,7 +219,6 @@
       }
     ]
   },
-
   "breatheFire": {
     "name": "Breathe Fire",
     "cooldown": 60,
@@ -265,14 +257,20 @@
       }
     ]
   },
-
   "deployBot": {
     "name": "Deploy Bot",
     "cooldown": 50,
     "maxUses": 5,
     "config": {
       "range": 12,
-      "constructTypes": ["freezebot", "clanker", "spiker", "swarmbot", "roller", "zapper"]
+      "constructTypes": [
+        "freezebot",
+        "clanker",
+        "spiker",
+        "swarmbot",
+        "roller",
+        "zapper"
+      ]
     },
     "target": "closest.enemy()?.pos || self.pos",
     "trigger": "distance(closest.enemy()?.pos) <= 12 || true",
@@ -284,7 +282,6 @@
       }
     ]
   },
-
   "missileBarrage": {
     "name": "Missile Barrage",
     "cooldown": 80,
@@ -313,7 +310,6 @@
       }
     ]
   },
-
   "laserSweep": {
     "name": "Laser Sweep",
     "cooldown": 35,
@@ -362,7 +358,6 @@
       }
     ]
   },
-
   "empPulse": {
     "name": "EMP Pulse",
     "cooldown": 100,
@@ -384,7 +379,6 @@
       }
     ]
   },
-
   "shieldRecharge": {
     "name": "Shield Recharge",
     "cooldown": 120,
@@ -408,7 +402,6 @@
       }
     ]
   },
-
   "callAirdrop": {
     "name": "Call Mechatron Airdrop",
     "cooldown": 120,
@@ -434,7 +427,6 @@
       }
     ]
   },
-
   "tacticalOverride": {
     "name": "Tactical Override",
     "cooldown": 45,
@@ -465,7 +457,6 @@
       }
     ]
   },
-
   "reinforceConstruct": {
     "name": "Reinforce Construct",
     "cooldown": 45,
@@ -497,7 +488,6 @@
       }
     ]
   },
-
   "powerSurge": {
     "name": "Power Surge",
     "cooldown": 40,
@@ -526,7 +516,6 @@
       }
     ]
   },
-
   "emergencyRepair": {
     "name": "Emergency Repair",
     "cooldown": 35,
@@ -544,7 +533,11 @@
       {
         "type": "cleanse",
         "target": "target",
-        "effectsToRemove": ["stunned", "stunDuration", "frozen"]
+        "effectsToRemove": [
+          "stunned",
+          "stunDuration",
+          "frozen"
+        ]
       },
       {
         "type": "particles",
@@ -556,7 +549,6 @@
       }
     ]
   },
-
   "shieldGenerator": {
     "name": "Shield Generator",
     "cooldown": 60,
@@ -578,7 +570,6 @@
       }
     ]
   },
-
   "systemHack": {
     "name": "System Hack",
     "cooldown": 50,
@@ -606,7 +597,6 @@
       }
     ]
   },
-
   "freezeAura": {
     "name": "Chill Aura",
     "cooldown": 15,
@@ -624,7 +614,6 @@
       }
     ]
   },
-
   "explode": {
     "name": "Self Destruct",
     "cooldown": 1,
@@ -647,7 +636,6 @@
       }
     ]
   },
-
   "whipChain": {
     "name": "Chain Whip",
     "cooldown": 20,
@@ -667,7 +655,6 @@
       }
     ]
   },
-
   "chargeAttack": {
     "name": "Roller Charge",
     "cooldown": 30,
@@ -687,7 +674,6 @@
       }
     ]
   },
-
   "zapHighest": {
     "name": "Power Zap",
     "cooldown": 25,
@@ -704,7 +690,6 @@
       }
     ]
   },
-
   "grapplingHook": {
     "name": "Grappling Hook",
     "cooldown": 30,
@@ -720,7 +705,6 @@
       }
     ]
   },
-
   "melee": {
     "name": "Melee Attack",
     "cooldown": 10,
@@ -740,7 +724,6 @@
       }
     ]
   },
-
   "simpleAttack": {
     "name": "Simple Attack",
     "cooldown": 5,
@@ -760,7 +743,6 @@
       }
     ]
   },
-
   "simpleHeal": {
     "name": "Simple Heal",
     "cooldown": 10,
@@ -779,7 +761,6 @@
       }
     ]
   },
-
   "bite": {
     "name": "Bite",
     "cooldown": 8,
@@ -799,7 +780,6 @@
       }
     ]
   },
-
   "stomp": {
     "name": "Stomp",
     "cooldown": 20,
@@ -821,7 +801,6 @@
       }
     ]
   },
-
   "lightning": {
     "name": "Lightning Strike",
     "cooldown": 40,
@@ -845,7 +824,6 @@
       }
     ]
   },
-
   "toss": {
     "name": "Toss",
     "cooldown": 20,
@@ -863,7 +841,6 @@
       }
     ]
   },
-
   "pinDown": {
     "name": "Pin Down",
     "cooldown": 30,
@@ -881,7 +858,6 @@
       }
     ]
   },
-
   "detectSpies": {
     "name": "Detect Spies",
     "cooldown": 40,
@@ -896,7 +872,6 @@
       }
     ]
   },
-
   "dualKnifeDance": {
     "name": "Dual Knife Dance",
     "cooldown": 25,
@@ -920,7 +895,6 @@
       }
     ]
   },
-
   "burrowAmbush": {
     "name": "Burrow Ambush",
     "cooldown": 60,
@@ -940,7 +914,6 @@
       }
     ]
   },
-
   "pinTarget": {
     "name": "Pin Target",
     "cooldown": 30,
@@ -957,12 +930,16 @@
       }
     ]
   },
-
   "summonForestCreature": {
     "name": "Summon Forest Creature",
     "cooldown": 60,
     "config": {
-      "creatures": ["squirrel", "deer", "wolf", "bear"]
+      "creatures": [
+        "squirrel",
+        "deer",
+        "wolf",
+        "bear"
+      ]
     },
     "effects": [
       {
@@ -972,7 +949,6 @@
       }
     ]
   },
-  
   "entangle": {
     "name": "Entangle",
     "cooldown": 40,
@@ -986,7 +962,6 @@
       }
     ]
   },
-
   "tameMegabeast": {
     "name": "Tame Megabeast",
     "cooldown": 80,
@@ -1002,7 +977,6 @@
       }
     ]
   },
-
   "calmAnimals": {
     "name": "Calm Animals",
     "cooldown": 40,
@@ -1014,6 +988,31 @@
         "type": "calm",
         "radius": 5,
         "target": "self.pos"
+      }
+    ]
+  },
+  "psychicHeal": {
+    "name": "Psychic Heal",
+    "cooldown": 40,
+    "trigger": "distance(weakest.ally()?.pos) <= 6",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 15,
+        "target": "weakest.ally()"
+      }
+    ]
+  },
+  "digTrench": {
+    "name": "Dig Trench",
+    "cooldown": 60,
+    "effects": [
+      {
+        "type": "terrain",
+        "terrainType": "trench",
+        "duration": 200,
+        "target": "self.pos",
+        "radius": 2
       }
     ]
   }
