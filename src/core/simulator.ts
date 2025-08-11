@@ -969,7 +969,7 @@ class Simulator {
     }
 
     // Get the ability definition from JSON
-    const jsonAbility = (abilitiesRule as any).ability(abilityName);
+    const jsonAbility = Abilities.all[abilityName];
     if (!jsonAbility) {
       console.warn(`Ability ${abilityName} not found in JSON definitions`);
       return;

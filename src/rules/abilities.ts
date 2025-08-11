@@ -881,7 +881,7 @@ export class Abilities extends Rule {
     if (!actualTarget) return;
 
     // Check if this is tameMegabeast ability which requires mass >= 10
-    if (caster.abilities?.tameMegabeast && actualTarget.mass < 10) {
+    if (caster.abilities?.includes('tameMegabeast') && actualTarget.mass < 10) {
       console.warn(`${caster.id} cannot tame ${actualTarget.id} - target mass ${actualTarget.mass} is too low (requires >= 10)`);
       return;
     }
