@@ -1,5 +1,6 @@
 import { Abilities } from "../rules/abilities";
-import { Unit, UnitState, Vec2 } from "../sim/types";
+import { Unit, UnitState } from "../types/Unit";
+import { Vec2 } from "../types/Vec2";
 import { Simulator } from "../core/simulator";
 // import abilities from "../../data/abilities.json";
 
@@ -15,6 +16,7 @@ export default class Encyclopaedia {
       hp: 10,
       maxHp: 10,
       mass: 4,
+      abilities: ['jumps'],
     },
     farmer: {
       intendedMove: { x: 0, y: 0 },
@@ -44,6 +46,7 @@ export default class Encyclopaedia {
       hp: 20,
       maxHp: 20,
       mass: 1,
+      abilities: ['ranged'],
     },
     bombardier: {
       intendedMove: { x: 0, y: 0 },
@@ -53,6 +56,11 @@ export default class Encyclopaedia {
       hp: 18,
       maxHp: 18,
       mass: 1,
+      abilities: ['bombardier'],
+      tags: ['ranged'],
+      meta: {
+        facing: 'right' as 'left' | 'right'
+      }
     },
     priest: {
       intendedMove: { x: 0, y: 0 },
@@ -60,8 +68,9 @@ export default class Encyclopaedia {
       sprite: "priest",
       state: "idle" as UnitState,
       hp: 20,
+      maxHp: 20,
       mass: 1,
-      abilities: ['heal']
+      abilities: ['heal', 'radiant']
       // {
       //   heal: this.abilities.heal
       // }
@@ -87,9 +96,7 @@ export default class Encyclopaedia {
       maxHp: 5,
       mass: 1,
       tags: ['follower', 'beast', 'forest'],
-      abilities: {
-        jumps: this.abilities.jumps // Mini-squirrels can jump too
-      }
+      abilities: ['jumps']
     },
     megasquirrel: {
       intendedMove: { x: 0, y: 0 },
@@ -100,10 +107,7 @@ export default class Encyclopaedia {
       maxHp: 40,
       mass: 8, // Much heavier than regular units
       tags: ['mythic', 'beast', 'forest'],
-      abilities: {
-        jumps: this.abilities.jumps,
-        // Could add special megasquirrel abilities here
-      },
+      abilities: ['jumps'],
       meta: {
         huge: true, // Mark as multi-cell unit
         facing: 'right' as 'left' | 'right' // Megasquirrels face right by default
@@ -120,9 +124,7 @@ export default class Encyclopaedia {
       maxHp: 80,
       mass: 1,
       tags: ['weather', 'mythic'],
-      abilities: {
-        makeRain: this.abilities.makeRain
-      },
+      abilities: ['makeRain'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -137,7 +139,7 @@ export default class Encyclopaedia {
       maxHp: 25,
       mass: 1, // Lighter than living units
       tags: ['undead', 'black', 'hunt'],
-      abilities: {},
+      abilities: [],
       meta: {
         perdurance: 'undead', // Different healing rules
         facing: 'right' as 'left' | 'right'
@@ -153,9 +155,7 @@ export default class Encyclopaedia {
       maxHp: 20,
       mass: 0.7, // Lighter than regular skeletons
       tags: ['undead', 'black', 'caster'],
-      abilities: {
-        // Could add lightning or magic missile abilities here
-      },
+      abilities: [],
       meta: {
         perdurance: 'undead', // Same as regular skeleton
         facing: 'right' as 'left' | 'right'
@@ -171,7 +171,7 @@ export default class Encyclopaedia {
       maxHp: 30,
       mass: 0.1, // Nearly weightless
       tags: ['undead', 'spectral', 'black'],
-      abilities: {},
+      abilities: [],
       meta: {
         perdurance: 'spectral', // Only damaged by magic/environmental
         facing: 'right' as 'left' | 'right'
@@ -187,9 +187,7 @@ export default class Encyclopaedia {
       maxHp: 60,
       mass: 2, // Heavy and strong
       tags: ['fiend', 'black', 'hunt'],
-      abilities: {
-        fireBlast: this.abilities.fireBlast
-      },
+      abilities: ['fireBlast'],
       meta: {
         perdurance: 'fiendish', // Resistant to physical damage
         facing: 'right' as 'left' | 'right'
@@ -205,9 +203,7 @@ export default class Encyclopaedia {
       maxHp: 35,
       mass: 1.5,
       tags: ['shapeshifter', 'black'],
-      abilities: {
-        jumps: this.abilities.jumps, // Can jump like worms
-      },
+      abilities: ['jumps'],
       meta: {
         segmented: true, // Could be segmented like big worm
         segmentCount: 3, // Smaller than big worm
@@ -223,7 +219,7 @@ export default class Encyclopaedia {
       maxHp: 120,
       mass: 2,
       tags: ['beast', 'black', 'hunt'],
-      abilities: {},
+      abilities: ['breatheFire'],
       meta: {
         huge: true, // Mark as multi-cell unit
         segmented: true,
@@ -242,9 +238,7 @@ export default class Encyclopaedia {
       maxHp: 300,
       mass: 4,
       tags: ['beast', 'desert', 'hunt', 'segmented', 'massive'],
-      abilities: {
-        sandBlast: this.abilities.fireBlast // Repurpose fire blast as sand blast
-      },
+      abilities: ['sandBlast'],
       meta: {
         huge: true,
         segmented: true,
@@ -265,7 +259,7 @@ export default class Encyclopaedia {
       maxHp: 25,
       mass: 0.8,
       tags: ['forest', 'agile', 'gatherer'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         canClimb: true,
@@ -283,7 +277,7 @@ export default class Encyclopaedia {
       maxHp: 30,
       mass: 1,
       tags: ['forest', 'flying', 'hunter', 'nocturnal'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         flying: true,
@@ -302,7 +296,7 @@ export default class Encyclopaedia {
       maxHp: 80,
       mass: 3,
       tags: ['forest', 'tank', 'territorial'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         intimidating: true,
@@ -320,7 +314,7 @@ export default class Encyclopaedia {
       maxHp: 5,
       mass: 0.2,
       tags: ['forest', 'ambient', 'energy', 'flying'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         flying: true,
@@ -339,7 +333,7 @@ export default class Encyclopaedia {
       maxHp: 35,
       mass: 1,
       tags: ['forest', 'hunter', 'specialist'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         tracking: true,
@@ -360,10 +354,7 @@ export default class Encyclopaedia {
       dmg: 8,
       mass: 1,
       tags: ['desert', 'hunter', 'specialist', 'grappler'],
-      abilities: {
-        grapplingHook: this.abilities.grapplingHook,
-        pinTarget: this.abilities.pinTarget
-      },
+      abilities: ['grapplingHook', 'pinTarget'],
       meta: {
         facing: 'right' as 'left' | 'right',
         desertAdapted: true,
@@ -383,7 +374,7 @@ export default class Encyclopaedia {
       dmg: 2,
       mass: 1.5,
       tags: ['forest', 'beast', 'peaceful'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         moveSpeed: 1.2, // Fast runner
@@ -402,7 +393,7 @@ export default class Encyclopaedia {
       dmg: 1,
       mass: 0.3,
       tags: ['forest', 'beast', 'small', 'peaceful'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         moveSpeed: 1.5, // Very fast
@@ -422,7 +413,7 @@ export default class Encyclopaedia {
       dmg: 4,
       mass: 0.8,
       tags: ['forest', 'beast', 'hunter', 'clever'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         moveSpeed: 1.1,
@@ -441,7 +432,7 @@ export default class Encyclopaedia {
       dmg: 8,
       mass: 2,
       tags: ['forest', 'beast', 'predator', 'pack'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         packHunter: true, // Gets stronger near other wolves
@@ -459,7 +450,7 @@ export default class Encyclopaedia {
       dmg: 6,
       mass: 1.8,
       tags: ['forest', 'beast', 'burrower', 'defensive'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         canBurrow: true,
@@ -478,10 +469,7 @@ export default class Encyclopaedia {
       dmg: 3,
       mass: 1,
       tags: ['forest', 'support', 'beast-tamer'],
-      abilities: {
-        tameMegabeast: Encyclopaedia.abilities.tameMegabeast,
-        calmAnimals: Encyclopaedia.abilities.calmAnimals
-      },
+      abilities: ['tameMegabeast', 'calmAnimals'],
       meta: {
         facing: 'right' as 'left' | 'right',
         forestAdapted: true,
@@ -499,7 +487,7 @@ export default class Encyclopaedia {
       maxHp: 25,
       mass: 0.8, // Light and fast
       tags: ['desert', 'hunter', 'agile', 'assassin'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         desertAdapted: true,
@@ -518,7 +506,7 @@ export default class Encyclopaedia {
       maxHp: 30,
       mass: 1,
       tags: ['desert', 'support', 'healer', 'detector'],
-      abilities: {},
+      abilities: ['waterBless', 'detectSpies'],
       meta: {
         facing: 'right' as 'left' | 'right',
         desertAdapted: true,
@@ -536,7 +524,7 @@ export default class Encyclopaedia {
       maxHp: 22,
       mass: 0.9,
       tags: ['desert', 'melee', 'agile', 'duelist'],
-      abilities: {},
+      abilities: ['dualKnifeDance'],
       meta: {
         facing: 'right' as 'left' | 'right',
         desertAdapted: true,
@@ -556,7 +544,7 @@ export default class Encyclopaedia {
       maxHp: 20,
       mass: 2,
       tags: ['desert', 'segmented', 'construct', 'toy'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         segmented: true,
@@ -574,7 +562,7 @@ export default class Encyclopaedia {
       maxHp: 60,
       mass: 6,
       tags: ['desert', 'segmented', 'beast', 'burrower'],
-      abilities: {},
+      abilities: ['sandBlast', 'burrowAmbush'],
       meta: {
         facing: 'right' as 'left' | 'right',
         segmented: true,
@@ -595,7 +583,7 @@ export default class Encyclopaedia {
       mass: 2.5,
       dmg: 5,
       tags: ['forest', 'beast', 'segmented'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         segmented: true,
@@ -615,7 +603,7 @@ export default class Encyclopaedia {
       maxHp: 40,
       mass: 3,
       tags: ['beast', 'segmented'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         segmented: true,
@@ -634,7 +622,7 @@ export default class Encyclopaedia {
       maxHp: 120,
       mass: 50, // Massive creature, can't be pulled only pinned
       tags: ['desert', 'segmented', 'titan', 'burrower'],
-      abilities: {},
+      abilities: [],
       meta: {
         facing: 'right' as 'left' | 'right',
         segmented: true,
@@ -644,25 +632,6 @@ export default class Encyclopaedia {
         huge: true, // Takes up multiple grid cells
         width: 64,  // Each frame is 64x32
         height: 32
-      }
-    },
-
-    "sand-ant": {
-      intendedMove: { x: 0, y: 0 },
-      team: "hostile",
-      sprite: "worm", // Small segmented creature
-      state: "idle" as UnitState,
-      hp: 20,
-      maxHp: 20,
-      mass: 2,
-      tags: ['desert', 'segmented', 'swarm', 'construct'],
-      abilities: {},
-      meta: {
-        facing: 'right' as 'left' | 'right',
-        segmented: true,
-        segmentCount: 2, // Just 2 segments for ant
-        toyConstruct: true, // Mechanical toy ant
-        sandAdapted: true
       }
     },
 
@@ -676,7 +645,7 @@ export default class Encyclopaedia {
       maxHp: 30,
       mass: 1,
       tags: ['mechanical', 'leader', 'engineer'],
-      abilities: {},
+      abilities: ['callAirdrop', 'tacticalOverride'],
       meta: {
         facing: 'right' as 'left' | 'right',
         calledAirdrop: false,
@@ -694,7 +663,7 @@ export default class Encyclopaedia {
       maxHp: 20,
       mass: 1,
       tags: ['mechanical', 'support', 'builder'],
-      abilities: {},
+      abilities: ['reinforceConstruct'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -709,7 +678,7 @@ export default class Encyclopaedia {
       maxHp: 18,
       mass: 1,
       tags: ['mechanical', 'support', 'energy'],
-      abilities: {},
+      abilities: ['powerSurge'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -724,7 +693,7 @@ export default class Encyclopaedia {
       maxHp: 22,
       mass: 1,
       tags: ['mechanical', 'support', 'repair'],
-      abilities: {},
+      abilities: ['emergencyRepair'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -739,7 +708,7 @@ export default class Encyclopaedia {
       maxHp: 25,
       mass: 1,
       tags: ['mechanical', 'support', 'systems'],
-      abilities: {},
+      abilities: ['shieldGenerator', 'systemHack'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -754,7 +723,7 @@ export default class Encyclopaedia {
       maxHp: 24,
       mass: 1,
       tags: ['mechanical', 'support', 'welder'],
-      abilities: {},
+      abilities: ['emergencyRepair', 'reinforceConstruct'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -769,7 +738,7 @@ export default class Encyclopaedia {
       maxHp: 26,
       mass: 1,
       tags: ['mechanical', 'support', 'assembler'],
-      abilities: {},
+      abilities: ['reinforceConstruct', 'powerSurge'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -785,12 +754,7 @@ export default class Encyclopaedia {
       maxHp: 200,
       mass: 5, // Extremely heavy
       tags: ['mechanical', 'huge', 'artillery', 'hunt'],
-      abilities: {
-        missileBarrage: this.abilities.missileBarrage,
-        laserSweep: this.abilities.laserSweep,
-        empPulse: this.abilities.empPulse,
-        shieldRecharge: this.abilities.shieldRecharge
-      },
+      abilities: ['missileBarrage', 'laserSweep', 'empPulse', 'shieldRecharge'],
       meta: {
         huge: true,
         width: 32, // 32 pixels wide
@@ -814,7 +778,7 @@ export default class Encyclopaedia {
       maxHp: 25,
       mass: 1,
       tags: ['mechanical', 'craftor'],
-      abilities: {},
+      abilities: ['deployBot'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -829,6 +793,7 @@ export default class Encyclopaedia {
       maxHp: 8,
       mass: 0.5,
       tags: ['construct', 'ice', 'hunt'],
+      abilities: ['freezeAura'],
       meta: {
         perdurance: 'sturdiness', // Takes max 1 damage per hit
         facing: 'right' as 'left' | 'right'
@@ -844,6 +809,7 @@ export default class Encyclopaedia {
       maxHp: 6,
       mass: 0.8,
       tags: ['construct', 'explosive', 'hunt', 'aggressive'],
+      abilities: ['explode'],
       meta: {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
@@ -859,6 +825,7 @@ export default class Encyclopaedia {
       maxHp: 10,
       mass: 0.6,
       tags: ['construct', 'melee', 'hunt'],
+      abilities: ['whipChain'],
       meta: {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
@@ -874,6 +841,7 @@ export default class Encyclopaedia {
       maxHp: 12,
       mass: 0.3,
       tags: ['construct', 'swarm', 'hunt'],
+      abilities: [],
       meta: {
         perdurance: 'swarm', // Population-based health
         facing: 'right' as 'left' | 'right'
@@ -889,6 +857,7 @@ export default class Encyclopaedia {
       maxHp: 15,
       mass: 1.2,
       tags: ['construct', 'charger', 'hunt'],
+      abilities: ['chargeAttack'],
       meta: {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
@@ -904,113 +873,10 @@ export default class Encyclopaedia {
       maxHp: 8,
       mass: 0.4,
       tags: ['construct', 'electrical', 'hunt'],
+      abilities: ['zapHighest'],
       meta: {
         perdurance: 'sturdiness',
         facing: 'right' as 'left' | 'right'
-      }
-    },
-
-    // Forest Day creatures
-    'forest-squirrel': {
-      intendedMove: { x: 0, y: 0 },
-      team: "friendly",
-      sprite: "squirrel",
-      state: "idle" as UnitState,
-      hp: 12,
-      maxHp: 12,
-      dmg: 3,
-      mass: 0.5,
-      tags: ['forest', 'agile'],
-      abilities: {
-        squirrel: {
-          name: "nut-throw",
-          energy: 3,
-          cooldown: 8,
-          range: 4,
-          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
-            const projectile = {
-              id: `acorn_${unit.id}_${Date.now()}`,
-              pos: { x: unit.pos.x, y: unit.pos.y },
-              vel: { x: (target.x - unit.pos.x) * 0.3, y: (target.y - unit.pos.y) * 0.3 },
-              team: unit.team,
-              damage: 3,
-              radius: 0.5,
-              type: 'projectile'
-            };
-            sim.projectiles.push(projectile as any);
-          }
-        }
-      }
-    },
-
-    owl: {
-      intendedMove: { x: 0, y: 0 },
-      team: "friendly",
-      sprite: "owl",
-      state: "idle" as UnitState,
-      hp: 20,
-      maxHp: 20,
-      dmg: 5,
-      mass: 0.8,
-      tags: ['forest', 'flying', 'nocturnal', 'beast'],
-      abilities: {}
-    },
-
-    bear: {
-      intendedMove: { x: 0, y: 0 },
-      team: "friendly",
-      sprite: "bear",
-      state: "idle" as UnitState,
-      hp: 50,
-      maxHp: 50,
-      dmg: 12,
-      mass: 3,
-      tags: ['forest', 'heavy', 'powerful', 'beast'],
-      abilities: {}
-    },
-
-    bird: {
-      intendedMove: { x: 0, y: 0 },
-      team: "friendly",
-      sprite: "bird",
-      state: "idle" as UnitState,
-      hp: 8,
-      maxHp: 8,
-      dmg: 2,
-      mass: 0.3,
-      tags: ['forest', 'flying', 'small', 'beast'],
-      abilities: {}
-    },
-
-    tracker: {
-      intendedMove: { x: 0, y: 0 },
-      team: "friendly",
-      sprite: "ranger",
-      state: "idle" as UnitState,
-      hp: 25,
-      maxHp: 25,
-      dmg: 6,
-      mass: 1,
-      tags: ['forest', 'scout'],
-      abilities: {
-        ranged: {
-          name: "arrow",
-          energy: 3,
-          cooldown: 10,
-          range: 8,
-          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
-            const projectile = {
-              id: `arrow_${unit.id}_${Date.now()}`,
-              pos: { x: unit.pos.x, y: unit.pos.y },
-              vel: { x: (target.x - unit.pos.x) * 0.4, y: (target.y - unit.pos.y) * 0.4 },
-              team: unit.team,
-              damage: 6,
-              radius: 0.8,
-              type: 'bullet'
-            };
-            sim.projectiles.push(projectile as any);
-          }
-        }
       }
     },
 
@@ -1024,37 +890,7 @@ export default class Encyclopaedia {
       dmg: 4,
       mass: 1,
       tags: ['forest', 'magic', 'nature'],
-      abilities: {
-        summonForestCreature: Encyclopaedia.abilities.summonForestCreature,
-        entangle: {
-          name: "entangle",
-          energy: 5,
-          cooldown: 15,
-          range: 6,
-          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
-            // Find enemy at target position
-            const enemy = sim.units.find(u => 
-              u.team !== unit.team &&
-              Math.abs(u.pos.x - target.x) < 1 &&
-              Math.abs(u.pos.y - target.y) < 1
-            );
-            if (enemy) {
-              if (!enemy.meta) enemy.meta = {};
-              enemy.meta.pinned = true;
-              enemy.meta.pinDuration = 30;
-              // Visual effect
-              sim.particles.push({
-                pos: { x: enemy.pos.x * 8, y: enemy.pos.y * 8 },
-                vel: { x: 0, y: -1 },
-                radius: 3,
-                color: '#228B22',
-                lifetime: 30,
-                type: 'entangle'
-              });
-            }
-          }
-        }
-      },
+      abilities: ['summonForestCreature', 'entangle'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -1070,36 +906,7 @@ export default class Encyclopaedia {
       dmg: 3,
       mass: 1,
       tags: ['forest', 'support', 'nature'],
-      abilities: {
-        regenerate: {
-          name: "regenerate",
-          energy: 4,
-          cooldown: 20,
-          range: 5,
-          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
-            // Heal all nearby friendly units
-            const allies = sim.units.filter(u => 
-              u.team === unit.team &&
-              Math.abs(u.pos.x - unit.pos.x) <= 5 &&
-              Math.abs(u.pos.y - unit.pos.y) <= 5
-            );
-            allies.forEach(ally => {
-              if (ally.hp < ally.maxHp) {
-                ally.hp = Math.min(ally.maxHp, ally.hp + 5);
-                // Visual effect
-                sim.particles.push({
-                  pos: { x: ally.pos.x * 8, y: ally.pos.y * 8 },
-                  vel: { x: 0, y: -0.5 },
-                  radius: 2,
-                  color: '#90EE90',
-                  lifetime: 15,
-                  type: 'heal'
-                });
-              }
-            });
-          }
-        }
-      },
+      abilities: ['regenerate'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -1115,42 +922,7 @@ export default class Encyclopaedia {
       dmg: 6,
       mass: 1,
       tags: ['forest', 'magic', 'chaos'],
-      abilities: {
-        wildBolt: {
-          name: "wild-bolt",
-          energy: 4,
-          cooldown: 8,
-          range: 7,
-          effect: (unit: Partial<Unit>, target: Vec2, sim: Simulator) => {
-            // Random elemental projectile
-            const elements = ['fire', 'ice', 'lightning'];
-            const element = elements[Math.floor(Math.random() * elements.length)];
-            const colors = { fire: '#FF4500', ice: '#00BFFF', lightning: '#FFD700' };
-            
-            const projectile = {
-              id: `wild_bolt_${unit.id}_${Date.now()}`,
-              pos: { x: unit.pos.x, y: unit.pos.y },
-              vel: { x: (target.x - unit.pos.x) * 0.4, y: (target.y - unit.pos.y) * 0.4 },
-              team: unit.team,
-              damage: element === 'lightning' ? 8 : 6,
-              radius: 1,
-              type: 'bullet',
-              element: element
-            };
-            sim.projectiles.push(projectile as any);
-            
-            // Visual effect at launch
-            sim.particles.push({
-              pos: { x: unit.pos.x * 8, y: unit.pos.y * 8 },
-              vel: { x: Math.random() * 2 - 1, y: Math.random() * 2 - 1 },
-              radius: 2,
-              color: colors[element],
-              lifetime: 10,
-              type: 'magic'
-            });
-          }
-        }
-      },
+      abilities: ['wildBolt'],
       meta: {
         facing: 'right' as 'left' | 'right'
       }
@@ -1164,7 +936,7 @@ export default class Encyclopaedia {
     this.counts[seriesName] = count + 1;
     return count || "";
   }
-  static unit(beast: string): Partial<Unit> {
+  static unit(beast: string): Unit {
     let u = {
         id: beast + this.id(beast),
         type: beast,
@@ -1173,87 +945,7 @@ export default class Encyclopaedia {
         state: "idle" as UnitState,
         ...this.bestiary[beast],
         maxHp: this.bestiary[beast].hp,
-        abilities: {
-          ...(this.bestiary[beast]?.abilities || {}), // Preserve abilities defined in bestiary
-          ...(beast === "worm" ? { jumps: this.abilities.jumps } : {}),
-          ...(beast === "ranger" ? { ranged: this.abilities.ranged } : {}),
-          ...(beast === "bombardier" ? { bombardier: this.abilities.bombardier } : {}),
-          ...(beast === "priest" ? { heal: this.abilities.heal, radiant: this.abilities.radiant } : {}),
-          ...(beast === "tamer" ? { heal: this.abilities.squirrel } : {}),
-          ...(beast === "megasquirrel" ? { jumps: this.abilities.jumps } : {}),
-          ...(beast === "mimic-worm" ? { jumps: this.abilities.jumps } : {}),
-          ...(beast === "demon" ? { fireBlast: this.abilities.fireBlast } : {}),
-          ...(beast === "big-worm" ? { breatheFire: this.abilities.breatheFire } : {}),
-          ...(beast === "desert-megaworm" ? { sandBlast: this.abilities.fireBlast } : {}),
-          ...(beast === "grappler" ? { 
-            grapplingHook: this.abilities.grapplingHook,
-            pinTarget: this.abilities.pinTarget 
-          } : {}),
-          ...(beast === "worm-hunter" ? { 
-            runGrappleLine: this.abilities.runGrappleLine,
-            dualKnifeDance: this.abilities.dualKnifeDance
-          } : {}),
-          ...(beast === "waterbearer" ? { 
-            waterBless: this.abilities.waterBless,
-            detectSpies: this.abilities.detectSpies
-          } : {}),
-          ...(beast === "skirmisher" ? { 
-            dualKnifeDance: this.abilities.dualKnifeDance
-          } : {}),
-          ...(beast === "desert-worm" ? { 
-            sandBlast: this.abilities.sandBlast,
-            burrowAmbush: this.abilities.burrowAmbush
-          } : {}),
-          ...(beast === "segmented-worm" ? { 
-            // Regular segmented worm - simple abilities
-            jumps: this.abilities.jumps
-          } : {}),
-          ...(beast === "giant-sandworm" ? { 
-            sandBlast: this.abilities.sandBlast,
-            burrowAmbush: this.abilities.burrowAmbush
-          } : {}),
-          ...(beast === "sand-ant" ? { 
-            // Small segmented toy ant, no special abilities
-          } : {}),
-          ...(beast === "rainmaker" ? { makeRain: this.abilities.makeRain } : {}),
-          ...(beast === "toymaker" ? { deployBot: this.abilities.deployBot } : {}),
-          ...(beast === "freezebot" ? { freezeAura: this.abilities.freezeAura } : {}),
-          ...(beast === "clanker" ? { explode: this.abilities.explode } : {}),
-          ...(beast === "spiker" ? { whipChain: this.abilities.whipChain } : {}),
-          ...(beast === "roller" ? { chargeAttack: this.abilities.chargeAttack } : {}),
-          ...(beast === "zapper" ? { zapHighest: this.abilities.zapHighest } : {}),
-          ...(beast === "mechatronist" ? { 
-            callAirdrop: this.abilities.callAirdrop,
-            tacticalOverride: this.abilities.tacticalOverride
-          } : {}),
-          ...(beast === "builder" ? { 
-            reinforceConstruct: this.abilities.reinforceConstruct
-          } : {}),
-          ...(beast === "fueler" ? { 
-            powerSurge: this.abilities.powerSurge
-          } : {}),
-          ...(beast === "mechanic" ? { 
-            emergencyRepair: this.abilities.emergencyRepair
-          } : {}),
-          ...(beast === "engineer" ? { 
-            shieldGenerator: this.abilities.shieldGenerator,
-            systemHack: this.abilities.systemHack
-          } : {}),
-          ...(beast === "welder" ? { 
-            emergencyRepair: this.abilities.emergencyRepair,
-            reinforceConstruct: this.abilities.reinforceConstruct
-          } : {}),
-          ...(beast === "assembler" ? { 
-            reinforceConstruct: this.abilities.reinforceConstruct,
-            powerSurge: this.abilities.powerSurge
-          } : {}),
-          ...(beast === "mechatron" ? { 
-            missileBarrage: this.abilities.missileBarrage,
-            laserSweep: this.abilities.laserSweep,
-            empPulse: this.abilities.empPulse,
-            shieldRecharge: this.abilities.shieldRecharge
-          } : {})
-        },
+        abilities: this.bestiary[beast]?.abilities || [],
         tags: [
           ...(this.bestiary[beast]?.tags || []), // Include tags from bestiary
           ...(beast === "worm" ? ["swarm"] : []),

@@ -4,28 +4,20 @@ import { AbilityEffect } from "../types/AbilityEffect";
 import { Ability } from "../types/Ability";
 import abilities from '../../data/abilities.json';
 
-/**
- * Alternative to the hardcoded Abilities rule
- * Processes abilities defined in JSON format and converts them to commands
- */
 export class Abilities extends Rule {
-  // private abilities: { [key: string]: Ability } = {};
-  static all: { [key: string]: Ability } = abilities; // Load all abilities from JSON
+  static all: { [key: string]: Ability } = abilities;
 
   constructor(sim: any) {
     super(sim);
-    // this.abilities = abilities; // JsonAbilitiesLoader.load();
   }
 
   ability = (name: string): Ability | undefined => Abilities.all[name];
 
   apply = (): void => {
-    // First, check for units that need to emerge from burrow
     this.sim.units.forEach(unit => {
       if (unit.meta?.burrowed && unit.meta?.burrowStartTick !== undefined && unit.meta?.burrowDuration !== undefined) {
         const ticksBurrowed = this.sim.ticks - unit.meta.burrowStartTick;
         if (ticksBurrowed >= unit.meta.burrowDuration) {
-          // Emerge from burrow
           unit.meta.burrowed = false;
           unit.meta.invisible = false;
           delete unit.meta.burrowStartTick;
@@ -35,17 +27,16 @@ export class Abilities extends Rule {
     });
 
     this.sim.units = this.sim.units.map(unit => {
-      // Process each ability the unit has
-      for (const abilityName in unit.abilities) {
-        // Skip if ability doesn't exist in JSON definitions
+      if (!unit.abilities || !Array.isArray(unit.abilities)) {
+        return unit;
+      }
+      
+      for (const abilityName of unit.abilities) {
         const ability = this.ability(abilityName);
         if (!ability) {
           continue;
         }
 
-        // const jsonAbility = this.abilities[abilityName];
-        
-        // Check cooldown
         let lastTick = unit.lastAbilityTick ? unit.lastAbilityTick[abilityName] : undefined;
         let currentTick = this.sim.ticks;
         let ready = lastTick === undefined || (currentTick - lastTick >= ability.cooldown);
@@ -54,7 +45,6 @@ export class Abilities extends Rule {
           continue;
         }
 
-        // Check trigger condition
         let shouldTrigger = true;
         if (ability.trigger) {
           try {
@@ -100,7 +90,7 @@ export class Abilities extends Rule {
     });
   }
 
-  private processEffectAsCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  processEffectAsCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
     if (!this.sim.queuedCommands) {
       this.sim.queuedCommands = [];
     }
@@ -143,6 +133,7 @@ export class Abilities extends Rule {
         this.airdrop(effect, caster, primaryTarget);
         break;
       case 'buff':
+        // Process buffs immediately so they affect subsequent heals
         this.buff(effect, caster, primaryTarget);
         break;
       case 'summon':
@@ -158,7 +149,7 @@ export class Abilities extends Rule {
         this.ignite(effect, caster, primaryTarget);
         break;
       case 'particles':
-        // NOTE: We probably should handle them actually???
+        this.createParticles(effect, caster, primaryTarget);
         break;
       case 'cone':
         this.coneOfEffect(effect, caster, primaryTarget);
@@ -323,7 +314,8 @@ export class Abilities extends Rule {
         y: pos.y,
         radius: radius,
         damage: amount,
-        type: aspect
+        type: aspect,
+        stunDuration: this.resolveValue((effect as any).stunDuration, caster, target)
       },
       unitId: caster.id
     });
@@ -344,7 +336,8 @@ export class Abilities extends Rule {
       projectileType: projectileType,
       damage: damage,
       radius: radius,
-      team: caster.team
+      team: caster.team,
+      z: this.resolveValue((effect as any).z, caster, primaryTarget)
     };
 
     // Add target position if specified
@@ -538,8 +531,46 @@ export class Abilities extends Rule {
   }
 
   private buff(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    // Buff effects might need special handling for area buffs
-    console.warn('Buff effect not implemented yet');
+    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+    if (!target || !target.id) return;
+    
+    // Apply buff directly to target
+    if (!target.meta) target.meta = {};
+    
+    if (effect.buff) {
+      // Apply buff stats
+      for (const [stat, value] of Object.entries(effect.buff)) {
+        if (typeof value === 'string' && value.startsWith('+')) {
+          const increase = parseInt(value.substring(1));
+          if (stat === 'maxHp') {
+            const oldMaxHp = target.maxHp || 0;
+            const oldHp = target.hp || 0;
+            target.maxHp = oldMaxHp + increase;
+            target.hp = oldHp + increase; // Also increase current HP
+          } else if (stat === 'armor') {
+            target.meta.armor = (target.meta.armor || 0) + increase;
+          } else if (stat === 'dmg') {
+            target.dmg = (target.dmg || 0) + increase;
+          }
+        } else {
+          // Direct assignment for non-numeric buffs
+          target.meta[stat] = value;
+        }
+      }
+    }
+    
+    // Handle stat increases (reinforcement gives HP increase)
+    if ((effect as any).hpIncrease) {
+      const increase = this.resolveValue((effect as any).hpIncrease, caster, target);
+      target.hp = Math.min(target.maxHp, target.hp + increase);
+    }
+    
+    // Handle other buff effects
+    if (effect.amount) {
+      const amount = this.resolveValue(effect.amount, caster, target);
+      // For reinforcement/buff, amount could be HP increase
+      target.hp = Math.min(target.maxHp, target.hp + amount);
+    }
   }
 
   private summon(effect: AbilityEffect, caster: any, primaryTarget: any): void {
@@ -564,7 +595,6 @@ export class Abilities extends Rule {
     };
     
     this.sim.addUnit(summonedUnit);
-    console.log(`${caster.id} summoned ${unitType} at (${summonedUnit.pos.x.toFixed(1)}, ${summonedUnit.pos.y.toFixed(1)})`);
   }
 
   private adjustHumidity(effect: AbilityEffect, caster: any, primaryTarget: any): void {
@@ -667,10 +697,30 @@ export class Abilities extends Rule {
   }
 
   private multiproject(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const count = effect.count || 1;
+    const count = this.resolveValue(effect.count, caster, primaryTarget) || 1;
+    const stagger = this.resolveValue((effect as any).stagger, caster, primaryTarget) || 0;
+    
     for (let i = 0; i < count; i++) {
-      // Create projectile with slight variation
-      const projectileEffect = { ...effect, type: 'projectile' };
+      // Create projectile effect with parameters from the multi-projectile effect
+      const projectileEffect = {
+        type: 'projectile' as const,
+        projectileType: (effect as any).projectileType || 'bullet',
+        pos: (effect as any).pos || 'self.pos',
+        target: effect.target,
+        damage: (effect as any).damage || effect.amount,
+        radius: effect.radius,
+        vel: (effect as any).vel,
+        z: (effect as any).z,
+        duration: (effect as any).duration,
+        spread: (effect as any).spread,
+        origin: (effect as any).origin
+      };
+      
+      // Add slight delay for staggered launch
+      if (stagger > 0 && i > 0) {
+        // For now, just create all at once - could be enhanced with timing
+      }
+      
       this.project(projectileEffect, caster, primaryTarget);
     }
   }
@@ -710,19 +760,48 @@ export class Abilities extends Rule {
     if (!target) return;
 
     const pos = target.pos || target;
-    const radius = effect.radius || 3;
+    const radius = this.resolveValue(effect.radius, caster, target) || 3;
 
-    // Apply buff to all units in area
+    // Apply buff to all units in area, filtering by condition if specified
     const unitsInArea = this.sim.getRealUnits().filter(u => {
       const dist = Math.sqrt(Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2));
-      return dist <= radius;
+      if (dist > radius) return false;
+      
+      // Check condition if specified
+      if (effect.condition && typeof effect.condition === 'string') {
+        try {
+          // Simple condition check for construct/mechanical tags
+          if (effect.condition.includes('construct') && effect.condition.includes('mechanical')) {
+            return u.tags?.includes('construct') || u.tags?.includes('mechanical');
+          }
+          // Ensure unit has tags property for DSL evaluation
+          const unitForEval = { ...u, tags: u.tags || [] };
+          const contextWithTarget = { ...unitForEval, target: { ...u, tags: u.tags || [] } };
+          return DSL.evaluate(effect.condition, contextWithTarget, this.sim);
+        } catch (error) {
+          console.warn(`Failed to evaluate condition '${effect.condition}':`, error);
+          return false;
+        }
+      }
+      
+      return true;
     });
+
 
     for (const unit of unitsInArea) {
       // Apply buff
       if (effect.buff) {
         if (!unit.meta) unit.meta = {};
         Object.assign(unit.meta, effect.buff);
+        
+        // Handle special resetCooldowns buff
+        if (effect.buff.resetCooldowns) {
+          if (unit.lastAbilityTick) {
+            for (const abilityName in unit.lastAbilityTick) {
+              unit.lastAbilityTick[abilityName] = 0;
+            }
+          }
+        }
       }
     }
   }
@@ -796,7 +875,7 @@ export class Abilities extends Rule {
 
     // Check if this is tameMegabeast ability which requires mass >= 10
     if (caster.abilities?.tameMegabeast && actualTarget.mass < 10) {
-      console.log(`${caster.id} cannot tame ${actualTarget.id} - target mass ${actualTarget.mass} is too low (requires >= 10)`);
+      console.warn(`${caster.id} cannot tame ${actualTarget.id} - target mass ${actualTarget.mass} is too low (requires >= 10)`);
       return;
     }
 
@@ -810,7 +889,6 @@ export class Abilities extends Rule {
     
     // Change target's team to caster's team  
     actualTarget.team = caster.team;
-    // console.log(`${caster.id} tamed ${actualTarget.id}!`);
     
     // Add taming particles
     for (let i = 0; i < 5; i++) {
@@ -859,6 +937,34 @@ export class Abilities extends Rule {
         color: '#ADD8E6', // Light blue
         type: 'calm',
         size: 0.4
+      });
+    }
+  }
+
+  private createParticles(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget((effect as any).pos || effect.target || 'self.pos', caster, primaryTarget);
+    if (!target) return;
+
+    const pos = target.pos || target;
+    const color = (effect as any).color || '#FFFFFF';
+    const lifetime = this.resolveValue((effect as any).lifetime, caster, target) || 20;
+    const count = this.resolveValue((effect as any).count, caster, target) || 5;
+
+    // Create multiple particles for visual effect
+    for (let i = 0; i < count; i++) {
+      this.sim.particles.push({
+        pos: { 
+          x: pos.x + (Math.random() - 0.5) * 2, 
+          y: pos.y + (Math.random() - 0.5) * 2 
+        },
+        vel: { 
+          x: (Math.random() - 0.5) * 0.2, 
+          y: (Math.random() - 0.5) * 0.2 
+        },
+        ttl: lifetime + Math.random() * 10,
+        color: color,
+        type: (effect as any).particleType || 'generic',
+        size: 0.3 + Math.random() * 0.2
       });
     }
   }

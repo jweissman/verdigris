@@ -1,4 +1,4 @@
-import { Unit } from "../sim/types";
+import { Unit } from "../types/Unit";
 import View from "./view";
 
 export default class CinematicView extends View {

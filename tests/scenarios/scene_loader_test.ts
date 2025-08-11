@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { SceneLoader } from '../../src/core/scene_loader';
+import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('Scene Loader', () => {
   it('should load simple text format scene', () => {
@@ -82,9 +83,9 @@ w...w`;
     loader.loadFromText(sceneText.trim());
     
     const worm = sim.units[0];
-    expect(worm.abilities.jumps).toBeDefined();
-    expect(worm.abilities.jumps.cooldown).toBe(100);
-    expect(worm.abilities.jumps.config?.impact.radius).toBe(3);
+    expect(worm.abilities.includes('jumps')).toBe(true);
+    expect(Encyclopaedia.abilities.jumps.cooldown).toBe(100);
+    expect(Encyclopaedia.abilities.jumps.config?.impact.radius).toBe(3);
   });
 
   it('should parse metadata commands after --- separator', () => {

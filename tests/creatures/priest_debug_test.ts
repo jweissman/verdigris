@@ -38,6 +38,6 @@ describe("Priest Debug", () => {
     }
     
     // Test passes if we can debug
-    expect(priest.abilities.radiant).toBeDefined();
+    expect(priest.abilities.includes('radiant')).toBe(true);
   });
 });

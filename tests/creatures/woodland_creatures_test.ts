@@ -187,9 +187,8 @@ describe('Woodland Creatures', () => {
       
       sim.addUnit(druid);
       
-      // Get the summon ability config
-      const summonAbility = druid.abilities.summonForestCreature;
-      expect(summonAbility).toBeDefined();
+      // Check druid has summon ability
+      expect(druid.abilities).toContain('summonForestCreature');
       
       // Trigger summons multiple times to test variety
       const summonedTypes = new Set();

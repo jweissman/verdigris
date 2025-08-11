@@ -43,7 +43,7 @@ export class CreatureBrowser {
           hp: unit.hp || 0,
           team: (unit.team || 'hostile') as 'friendly' | 'hostile',
           tags: unit.tags || [],
-          abilities: Object.keys(unit.abilities || {}),
+          abilities: unit.abilities || [],
           isHuge: unit.tags?.includes('huge') || false,
           isMechanical: unit.tags?.includes('mechanical') || false,
           segmentCount: (unit.meta as any)?.segmentCount || 0

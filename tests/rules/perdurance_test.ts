@@ -85,7 +85,7 @@ describe("Perdurance System", () => {
     sim.addUnit(soldier);
     
     // Verify demon has fire blast ability and correct perdurance
-    expect(demon.abilities.fireBlast).toBeDefined();
+    expect(demon.abilities.includes('fireBlast')).toBe(true);
     expect(demon.meta.perdurance).toBe('fiendish');
     
     const initialSoldierHp = soldier.hp;
@@ -203,15 +203,15 @@ describe("Perdurance System", () => {
     
     // Verify all units were created successfully
     expect(sim.units.length).toBeGreaterThanOrEqual(6);
-    expect(rainmaker.abilities.makeRain).toBeDefined();
-    expect(bigWorm.abilities.breatheFire).toBeDefined();
+    expect(rainmaker.abilities.includes('makeRain')).toBe(true);
+    expect(bigWorm.abilities.includes('breatheFire')).toBe(true);
     expect(bigWorm.meta.segmented).toBe(true);
     expect(skeleton.meta.perdurance).toBe('undead');
     expect(ghost.meta.perdurance).toBe('spectral');
     expect(demon.meta.perdurance).toBe('fiendish');
-    expect(demon.abilities.fireBlast).toBeDefined();
+    expect(demon.abilities.includes('fireBlast')).toBe(true);
     expect(mimicWorm.meta.segmented).toBe(true);
-    expect(mimicWorm.abilities.jumps).toBeDefined();
+    expect(mimicWorm.abilities.includes('jumps')).toBe(true);
   });
 
   it('should reduce all damage to 1 for sturdiness perdurance', () => {

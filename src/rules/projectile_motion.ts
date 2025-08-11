@@ -1,5 +1,5 @@
 import { Rule } from "./rule";
-import { Projectile } from "../sim/types";
+import { Projectile } from "../types/Projectile";
 
 export class ProjectileMotion extends Rule {
   apply = () => {

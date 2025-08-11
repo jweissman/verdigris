@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { UnitOperations } from '../../src/UnitOperations';
+import { Abilities } from '../../src/rules/abilities';
 
 describe('Construct Hunting Behavior', () => {
   it('should verify all constructs have hunt tags', () => {
@@ -45,13 +46,14 @@ describe('Construct Hunting Behavior', () => {
   it('should verify deployment limits prevent field overload', () => {
     
     const toymaker = Encyclopaedia.unit('toymaker');
-    const deployAbility = toymaker.abilities.deployBot;
+    expect(toymaker.abilities).toContain('deployBot');
+    const deployAbility = Abilities.all.deployBot;
     
     expect(deployAbility.maxUses).toBe(5);
     
     // Verify other constructs don't have deployment abilities (they're deployed, not deployers)
     const clanker = Encyclopaedia.unit('clanker');
-    expect(clanker.abilities.deployBot).toBeUndefined();
+    expect(clanker.abilities).not.toContain('deployBot');
   });
   
 

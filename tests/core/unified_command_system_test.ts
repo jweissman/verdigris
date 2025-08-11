@@ -56,14 +56,10 @@ describe('Unified Command System', () => {
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 5, y: 5 } };
     sim.addUnit(rainmaker);
     
-    // Clear any cooldown
-    if (!rainmaker.lastAbilityTick) rainmaker.lastAbilityTick = {};
-    delete rainmaker.lastAbilityTick.makeRain;
+    // Force the makeRain ability since it has no automatic trigger
+    sim.forceAbility(rainmaker.id, 'makeRain', rainmaker.pos);
     
-    // Run Abilities to trigger the ability
-    sim.step();
-    
-    // Commands are processed at the start of next step
+    // Commands should be queued immediately after forceAbility
     // makeRain has multiple effects, should queue weather and temperature commands
     expect(sim.queuedCommands.length).toBeGreaterThanOrEqual(1);
     const weatherCommand = sim.queuedCommands.find(c => c.type === 'weather');

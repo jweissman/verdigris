@@ -1,4 +1,5 @@
-import { Action, Vec2 } from "../sim/types";
+import { Action } from "../types/Action";
+import { Vec2 } from "../types/Vec2";
 import { Rule } from "./rule";
 
 export class EventHandler extends Rule {

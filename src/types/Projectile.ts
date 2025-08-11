@@ -8,7 +8,7 @@ export interface Projectile {
   radius: number;
   damage: number;
   team: 'friendly' | 'hostile';
-  type: 'bullet' | 'bomb';
+  type: 'bullet' | 'bomb' | 'grapple';
   // For bomb projectiles with arc motion
   target?: Vec2;
   progress?: number;

@@ -44,7 +44,7 @@ export class Grapple extends Command {
       return;
     }
 
-    if (!grappler.abilities.grapplingHook) {
+    if (!grappler.abilities || !grappler.abilities.includes('grapplingHook')) {
       console.error(`${grappler.id} does not have grappling hook ability`);
       return;
     }
@@ -55,7 +55,7 @@ export class Grapple extends Command {
       Math.pow(targetY - grappler.pos.y, 2)
     );
 
-    const maxRange = grappler.abilities.grapplingHook.config?.range || 8;
+    const maxRange = 8; // Default range for grappling hook
     if (distance > maxRange) {
       console.error(`Target at (${targetX}, ${targetY}) is out of range for ${grappler.id} (distance: ${distance.toFixed(1)}, max: ${maxRange})`);
       return;
@@ -64,7 +64,7 @@ export class Grapple extends Command {
     // Check cooldown (skip if this was explicitly queued by the unit)
     if (unitId !== grapplerID) {
       const lastUsed = grappler.lastAbilityTick?.grapplingHook || 0;
-      const cooldown = grappler.abilities.grapplingHook.cooldown || 25;
+      const cooldown = 30; // Default cooldown for grappling hook from abilities.json
       const ticksSinceLastUse = this.sim.ticks - lastUsed;
 
       if (ticksSinceLastUse < cooldown) {

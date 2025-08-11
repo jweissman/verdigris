@@ -3,11 +3,8 @@ import { Rule } from "./rule";
 export class AreaOfEffect extends Rule {
 
   apply = () => {
-    // note: not sure this is really a great strategy at all? it doesn't seem to reflect projectile logic very well
-
     const effects: Record<string, { hp: number; x: number; y: number }> = {};
     for (const proj of this.sim.projectiles) {
-      // console.log(`AreaOfEffect: Processing projectile ${proj.id} at position (${proj.pos.x}, ${proj.pos.y}) with radius ${proj.radius}`);
       for (const unit of this.sim.getRealUnits()) {
         if (unit.team !== proj.team && unit.state !== 'dead') {
           const dx = unit.pos.x - proj.pos.x;
@@ -25,9 +22,6 @@ export class AreaOfEffect extends Rule {
         }
       }
     }
-
-    // console.log(`AreaOfEffect: Applying effects to ${Object.keys(effects).length} units`);
-    // console.log(`Effects:`, effects);
 
     this.sim.units = this.sim.units.map(unit => {
       if (effects[unit.id]) {

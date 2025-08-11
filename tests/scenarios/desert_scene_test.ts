@@ -140,8 +140,8 @@ describe('Desert Day Scene', () => {
     
     // Check they have grappling abilities
     grapplers.forEach(grappler => {
-      expect(grappler.abilities.grapplingHook).toBeDefined();
-      expect(grappler.abilities.pinTarget).toBeDefined();
+      expect(grappler.abilities.includes('grapplingHook')).toBe(true);
+      expect(grappler.abilities.includes('pinTarget')).toBe(true);
     });
     
     // Manually test grappling hook ability

@@ -108,8 +108,8 @@ describe('Mechanist Showcase', () => {
     sim.addUnit(clanker);
     
     // Test that units exist and have abilities
-    expect(mechatronist.abilities?.callAirdrop).toBeDefined();
-    expect(fueler.abilities?.powerSurge).toBeDefined();
+    expect(mechatronist.abilities).toContain('callAirdrop');
+    expect(fueler.abilities).toContain('powerSurge');
     
     // Run simulation to test interactions
     for (let i = 0; i < 10; i++) {

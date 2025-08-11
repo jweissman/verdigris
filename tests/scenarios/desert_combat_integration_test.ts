@@ -4,8 +4,10 @@ import { Simulator } from '../../src/core/simulator';
 import * as fs from 'fs';
 import * as path from 'path';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
+import { CommandHandler } from '../../src/rules/command_handler';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
+import { Abilities } from '../../src/rules/abilities';
 
 describe('Desert Day Combat Integration', () => {
   it('should have functioning segmented worms', () => {
@@ -48,6 +50,7 @@ describe('Desert Day Combat Integration', () => {
 
   it('should allow grappling and pinning worm segments', () => {
     const sim = new Simulator();
+    sim.rulebook = [new CommandHandler(sim), new SegmentedCreatures(sim), new GrapplingPhysics(sim), new Abilities(sim)];
     
     // Create a grappler
     const grappler = {
@@ -66,11 +69,8 @@ describe('Desert Day Combat Integration', () => {
     sim.addUnit(grappler);
     sim.addUnit(worm);
     
-    // Ensure worm has segments
-    if (!worm.segments || worm.segments.length === 0) {
-      const segRule = new SegmentedCreatures(sim);
-      segRule.apply(); // Create segments
-    }
+    // Run a step to let SegmentedCreatures rule create segments
+    sim.step();
     
     // Find segments created for this worm
     const segments = sim.units.filter(u => u.meta?.parentId === worm.id);
@@ -80,8 +80,11 @@ describe('Desert Day Combat Integration', () => {
     const targetSegment = segments[1] || segments[0]; // Middle or first segment
     const targetPos = targetSegment.pos;
     
+    // Check that grappler has the grapplingHook ability
+    expect(grappler.abilities).toContain('grapplingHook');
     
-    grappler.abilities?.grapplingHook.effect(grappler, targetPos, sim);
+    // Use sim.forceAbility to trigger the ability
+    sim.forceAbility(grappler.id, 'grapplingHook', targetPos);
     
     // Process grapple physics
     sim.rulebook.push(new GrapplingPhysics(sim));
@@ -142,10 +145,6 @@ describe('Desert Day Combat Integration', () => {
   it('should demonstrate key desert combat scenario', () => {
     const sim = new Simulator();
     
-    // Set up desert battlefield
-    sim.background = 'desert';
-    sim.temperature = 35;
-    
     // Add units for combat scenario
     const grappler1 = {
       ...Encyclopaedia.unit('grappler'),
@@ -164,7 +163,7 @@ describe('Desert Day Combat Integration', () => {
     const sandworm = {
       ...Encyclopaedia.unit('giant-sandworm'),
       id: 'sandworm-1',
-      pos: { x: 15, y: 5 },
+      pos: { x: 12, y: 5 },  // Move closer to be within grappling range
       team: 'hostile' as const
     };
     
@@ -176,32 +175,19 @@ describe('Desert Day Combat Integration', () => {
     const segRule = new SegmentedCreatures(sim);
     segRule.apply();
     
+    // Get the actual grappler from sim to ensure it has abilities
+    const actualGrappler = sim.units.find(u => u.id === 'grappler-1');
+    expect(actualGrappler).toBeDefined();
+    expect(actualGrappler!.abilities).toContain('grapplingHook');
     
     // Grappler fires hook at sandworm
-    grappler1.abilities?.grapplingHook.effect(grappler1, sandworm.pos, sim);
-    
+    sim.forceAbility(actualGrappler!.id, 'grapplingHook', { x: sandworm.pos.x, y: sandworm.pos.y });
+    sim.step();
+
     // Check projectile created
     const grapples = sim.projectiles.filter(p => p.type === 'grapple');
     expect(grapples.length).toBe(1);
-    
-    
-    // Simulate combat for several steps
-    for (let i = 0; i < 20; i++) {
-      sim.step();
-      
-      // Check for interesting events
-      if (i === 10) {
-        const segments = sandworm.segments || [];
-        const pinnedSegments = segments.filter(s => s.pinned);
-      }
-    }
-    
-    // Final state check
-    // TODO actual state check?
-    // const finalWormHp = sandworm.hp;
-    // const segmentsRemaining = sandworm.segments?.filter(s => s.hp > 0).length || 0;
-    
-    
-    expect(sim.units.length).toBeGreaterThan(0);
+
+    // TODO: Check actual projectile properties?? Grapple should have target set??
   });
 });

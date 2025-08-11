@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
+import { CommandHandler } from '../../src/rules/command_handler';
 import { DesertEffects } from '../../src/rules/desert_effects';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
@@ -11,8 +12,8 @@ describe('Desert Day Features', () => {
   it('desert units - grappler can fire grappling hook', () => {
   const sim = new Simulator();
   
-  // Add grappling physics rule
-  sim.rulebook = [new GrapplingPhysics(sim)];
+  // Add grappling physics and abilities rules
+  sim.rulebook = [new CommandHandler(sim), new GrapplingPhysics(sim), new Abilities(sim)];
   
   // Create grappler unit
   const grappler = {
@@ -34,13 +35,10 @@ describe('Desert Day Features', () => {
   const grapplerUnit = sim.units.find(u => u.sprite === 'grappler' && u.tags?.includes('grappler'));
   expect(grapplerUnit).toBeTruthy();
   
-  // Add effect compatibility for test
+  // Force the grappling hook ability
   if (grapplerUnit) {
-    addEffectsToUnit(grapplerUnit, sim);
-  }
-  
-  if (grapplerUnit?.abilities.grapplingHook) {
-    grapplerUnit.abilities.grapplingHook.effect(grapplerUnit, enemy.pos, sim);
+    sim.forceAbility(grapplerUnit.id, 'grapplingHook', enemy.pos);
+    sim.step();
   }
   
   // Check that grapple projectile was created

@@ -1,4 +1,5 @@
-import { Projectile, Unit } from "../sim/types";
+import { Projectile } from "../types/Projectile";
+import { Unit } from "../types/Unit";
 import View from "./view";
 // Temporarily removed TextRenderer until MWE is working
 

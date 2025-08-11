@@ -1,5 +1,6 @@
 import { Rule } from "./rule";
-import { Vec2, Unit } from "../sim/types";
+import { Unit } from "../types/Unit";
+import { Vec2 } from "../types/Vec2";
 
 // NOTE: This and all specialized effect modules should just be scalar fields?
 export class DesertEffects extends Rule {

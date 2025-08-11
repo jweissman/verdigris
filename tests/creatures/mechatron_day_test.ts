@@ -18,8 +18,8 @@ describe('Mechatron Day - Epic Integration Scenario', () => {
     const sim = new Simulator();
     // Full rulebook for complete simulation
     sim.rulebook = [
-      new CommandHandler(sim), 
-      new Abilities(sim), 
+      new CommandHandler(sim),
+      new Abilities(sim),
       new EventHandler(sim),
       new LightningStorm(sim),
       new UnitMovement(sim),
@@ -59,7 +59,7 @@ describe('Mechatron Day - Epic Integration Scenario', () => {
       sim.step();
       
       // Verify mechatron unit was deployed via airdrop
-      const mechatronUnits = sim.units.filter(u => 
+      const mechatronUnits = sim.units.filter(u =>
         u.id.includes('mechatron') && u.id !== 'mechatronist'
       );
       
@@ -85,9 +85,9 @@ describe('Mechatron Day - Epic Integration Scenario', () => {
       expect(boostedUnits.length).toBeGreaterThan(0);
       
       // Check for dramatic lightning particle effects
-      const lightningEffects = sim.particles.filter(p => 
-        p.type === 'lightning' || 
-        p.type === 'power_surge' || 
+      const lightningEffects = sim.particles.filter(p =>
+        p.type === 'lightning' ||
+        p.type === 'power_surge' ||
         p.type === 'electric_spark'
       );
       expect(lightningEffects.length).toBeGreaterThan(10);
@@ -112,8 +112,8 @@ describe('Mechatron Day - Epic Integration Scenario', () => {
       mechatronist.abilities.tacticalOverride.effect(mechatronist, mechatronist.pos, sim);
       
       // Verify cooldowns were reset
-      if (deployedMechatron.lastAbilityTick.missileBarrage === 0 && 
-          deployedMechatron.lastAbilityTick.laserSweep === 0) {
+      if (deployedMechatron.lastAbilityTick.missileBarrage === 0 &&
+        deployedMechatron.lastAbilityTick.laserSweep === 0) {
         synergyOperations++;
       }
     }
@@ -214,20 +214,17 @@ describe('Mechatron Day - Epic Integration Scenario', () => {
     construct1.lastAbilityTick = { explode: 45 };
     construct2.lastAbilityTick = { freezeAura: 40 };
     
-    const tacticalOverride = mechatronist.abilities.tacticalOverride;
-    expect(tacticalOverride).toBeDefined();
+    expect(mechatronist.abilities).toContain('tacticalOverride');
     
-    if (tacticalOverride?.effect) {
-      tacticalOverride.effect(mechatronist, mechatronist.pos, sim);
+    // Force the tactical override ability
+    sim.forceAbility(mechatronist.id, 'tacticalOverride', mechatronist.pos);
       
-      // Verify constructs received tactical boost
-      expect(construct1.meta.tacticalBoost).toBe(true);
-      expect(construct2.meta.tacticalBoost).toBe(true);
+    // Verify constructs received tactical boost
+    expect(construct1.meta.tacticalBoost).toBe(true);
+    expect(construct2.meta.tacticalBoost).toBe(true);
       
-      // Should have tactical override particles
-      const commandParticles = sim.particles.filter(p => p.color === '#00FFFF');
-      expect(commandParticles.length).toBeGreaterThan(0);
-      
-    }
+    // Should have tactical override particles
+    const commandParticles = sim.particles.filter(p => p.color === '#00FFFF');
+    expect(commandParticles.length).toBeGreaterThan(0);
   });
 });

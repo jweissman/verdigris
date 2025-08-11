@@ -1,6 +1,6 @@
 import { Rule } from "./rule";
 import { UnitOperations } from "../UnitOperations";
-import { Unit } from "../sim/types";
+import { Unit } from "../types/Unit";
 import { Simulator } from "../core/simulator";
 
 export class UnitMovement extends Rule {

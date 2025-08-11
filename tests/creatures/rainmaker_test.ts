@@ -14,9 +14,8 @@ describe("Rainmaker Integration", () => {
     expect(sim.weather.current).toBe('clear');
     expect(sim.weather.duration).toBe(0);
     
-    // Manually trigger the rain ability using simulator method
-    const makeRainAbility = rainmaker.abilities.makeRain;
-    expect(makeRainAbility).toBeDefined();
+    // Verify rainmaker has the makeRain ability
+    expect(rainmaker.abilities).toContain('makeRain');
     
     // Execute the ability directly through simulator
     sim.forceAbility(rainmaker.id, 'makeRain');

@@ -18,7 +18,7 @@ describe('Abilities Rule', () => {
       hp: 100,
       maxHp: 100,
       mass: 1,
-      abilities: { 'explode': {} }, // Self-destruct ability from JSON
+      abilities: ['explode'], // Self-destruct ability from JSON
       lastAbilityTick: {},
       tags: ['construct']
     };

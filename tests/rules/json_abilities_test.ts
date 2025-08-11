@@ -32,7 +32,7 @@ describe('Abilities', () => {
       state: 'idle',
       hp: 100,
       maxHp: 100,
-      abilities: { ranged: {} }, // Using REAL ability from JSON
+      abilities: ['ranged'], // Using REAL ability from JSON
       lastAbilityTick: {}
     };
 
@@ -67,7 +67,7 @@ describe('Abilities', () => {
       state: 'idle',
       hp: 100,
       maxHp: 100,
-      abilities: { simpleHeal: {} },
+      abilities: ['simpleHeal'],
       lastAbilityTick: {}
     };
 
@@ -103,7 +103,7 @@ describe('Abilities', () => {
       state: 'idle',
       hp: 100,
       maxHp: 100,
-      abilities: { simpleAttack: {} },
+      abilities: ['simpleAttack'],
       lastAbilityTick: { simpleAttack: 0 } // Just used ability
     };
 

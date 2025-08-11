@@ -1,5 +1,5 @@
 import { Command, CommandParams } from "../rules/command";
-import { Unit } from "../sim/types";
+import { Unit } from "../types/Unit";
 
 /**
  * Toss command - tosses a unit in a direction

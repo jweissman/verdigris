@@ -16,7 +16,7 @@ describe('Tethering Basics - Step by Step', () => {
     sim.addUnit(grappler);
     
     // Verify grappler has the ability
-    expect(grappler.abilities.grapplingHook).toBeDefined();
+    expect(grappler.abilities.includes('grapplingHook')).toBe(true);
     
     // Fire grapple using simulator method
     const targetPos = { x: 10, y: 5 };

@@ -1,5 +1,5 @@
 import { Rule } from "./rule";
-import { Unit } from "../sim/types";
+import { Unit } from "../types/Unit";
 
 export class Perdurance extends Rule {
   apply = () => {

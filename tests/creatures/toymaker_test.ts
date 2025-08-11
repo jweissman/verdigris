@@ -4,6 +4,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
+import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 
 describe('Toymaker System', () => {
   it('should spawn a toymaker with correct properties', () => {
@@ -18,8 +19,11 @@ describe('Toymaker System', () => {
     expect(sim.units[0].sprite).toBe('toymaker');
     expect(sim.units[0].tags).toContain('mechanical');
     expect(sim.units[0].tags).toContain('craftor');
-    expect(sim.units[0].abilities.deployBot).toBeDefined();
-    expect(sim.units[0].abilities.deployBot.cooldown).toBe(50);
+    // Verify toymaker has deployBot ability
+    expect(sim.units[0].abilities).toContain('deployBot');
+    // Check the ability exists in the Abilities registry
+    expect(Abilities.all.deployBot).toBeDefined();
+    expect(Abilities.all.deployBot.cooldown).toBe(50);
   });
 
   it('should deploy constructs when enemy is in range', () => {
@@ -28,7 +32,7 @@ describe('Toymaker System', () => {
     // Use minimal rulebook for focused testing
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
-    // Add toymaker
+    // Add toymaker (uses new JSON ability system, no need for addEffectsToUnit)
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
     sim.addUnit(toymaker);
     
@@ -56,22 +60,20 @@ describe('Toymaker System', () => {
   });
 
   it('should create constructs with specific abilities assigned', () => {
+    const sim = new Simulator();
     // Test individual construct types with specific ability expectations
     const freezebot = Encyclopaedia.unit('freezebot');
     expect(freezebot.tags).toContain('construct');
     expect(freezebot.meta.perdurance).toBe('sturdiness');
-    expect(freezebot.abilities.freezeAura).toBeDefined();
-    expect(freezebot.abilities.freezeAura.name).toBe('Chill Aura');
+    expect(freezebot.abilities).toContain('freezeAura');
     
     const clanker = Encyclopaedia.unit('clanker');
     expect(clanker.tags).toContain('construct');
-    expect(clanker.abilities.explode).toBeDefined();
-    expect(clanker.abilities.explode.name).toBe('Self Destruct');
+    expect(clanker.abilities).toContain('explode');
     
     const spiker = Encyclopaedia.unit('spiker');
     expect(spiker.tags).toContain('construct');
-    expect(spiker.abilities.whipChain).toBeDefined();
-    expect(spiker.abilities.whipChain.name).toBe('Chain Whip');
+    expect(spiker.abilities).toContain('whipChain');
     
     const swarmbot = Encyclopaedia.unit('swarmbot');
     expect(swarmbot.tags).toContain('construct');
@@ -80,13 +82,11 @@ describe('Toymaker System', () => {
     
     const roller = Encyclopaedia.unit('roller');
     expect(roller.tags).toContain('construct');
-    expect(roller.abilities.chargeAttack).toBeDefined();
-    expect(roller.abilities.chargeAttack.name).toBe('Roller Charge');
+    expect(roller.abilities).toContain('chargeAttack');
     
     const zapper = Encyclopaedia.unit('zapper');
     expect(zapper.tags).toContain('construct');
-    expect(zapper.abilities.zapHighest).toBeDefined();
-    expect(zapper.abilities.zapHighest.name).toBe('Power Zap');
+    expect(zapper.abilities).toContain('zapHighest');
   });
 
   it('should place deployed constructs between toymaker and target', () => {

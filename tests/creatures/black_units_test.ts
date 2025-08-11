@@ -10,7 +10,7 @@ describe("New Units Integration", () => {
     const rainmaker = sim.units.find(u => u.type === 'rainmaker');
     
     expect(rainmaker.sprite).toBe('rainmaker');
-    expect(rainmaker.abilities.makeRain).toBeDefined();
+    expect(rainmaker.abilities.includes('makeRain')).toBe(true);
     expect(rainmaker.team).toBe('friendly');
     expect(rainmaker.hp).toBe(80);
   });
@@ -25,7 +25,7 @@ describe("New Units Integration", () => {
     expect(bigWorm.sprite).toBe('big-worm'); // Updated to use new sprite
     expect(bigWorm.meta.segmented).toBe(true);
     expect(bigWorm.meta.segmentCount).toBe(5); // Big worm has 5 segments
-    expect(bigWorm.abilities.breatheFire).toBeDefined();
+    expect(bigWorm.abilities.includes('breatheFire')).toBe(true);
     expect(bigWorm.team).toBe('hostile');
     
     // After creating, verify it exists in the roster
@@ -75,7 +75,7 @@ describe("New Units Integration", () => {
     expect(mimicWorm.sprite).toBe('mimic-worm');
     expect(mimicWorm.meta.segmented).toBe(true);
     expect(mimicWorm.meta.segmentCount).toBe(3);
-    expect(mimicWorm.abilities.jumps).toBeDefined();
+    expect(mimicWorm.abilities.includes('jumps')).toBe(true);
   });
 
   it("should create rainmaker from encyclopaedia", () => {
@@ -132,7 +132,7 @@ describe("New Units Integration", () => {
     ghost.pos = { x: 6, y: 5 }; // Adjacent to priest
     sim.addUnit(ghost);
     
-    expect(priest.abilities.radiant).toBeDefined();
+    expect(priest.abilities.includes('radiant')).toBe(true);
     expect(ghost.tags).toContain('spectral');
     
     // The radiant ability should be extra effective against spectral units

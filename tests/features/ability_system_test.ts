@@ -7,36 +7,36 @@ describe("Ability System Integration", () => {
     const priest = Encyclopaedia.unit('priest');
     
     expect(priest.abilities).toBeDefined();
-    expect(priest.abilities.radiant).toBeDefined();
-    expect(priest.abilities.radiant.name).toBe('Radiant Strike');
-    expect(priest.abilities.radiant.cooldown).toBe(30);
+    expect(priest.abilities.includes('radiant')).toBe(true);
+    expect(Encyclopaedia.abilities.radiant.name).toBe('Radiant Strike');
+    expect(Encyclopaedia.abilities.radiant.cooldown).toBe(30);
   });
 
   it("should verify demon has fireBlast ability", () => {
     const demon = Encyclopaedia.unit('demon');
     
     expect(demon.abilities).toBeDefined();
-    expect(demon.abilities.fireBlast).toBeDefined();
-    expect(demon.abilities.fireBlast.name).toBe('Fire Blast');
-    expect(demon.abilities.fireBlast.cooldown).toBe(40);
+    expect(demon.abilities.includes('fireBlast')).toBe(true);
+    expect(Encyclopaedia.abilities.fireBlast.name).toBe('Fire Blast');
+    expect(Encyclopaedia.abilities.fireBlast.cooldown).toBe(40);
   });
 
   it("should verify rainmaker has makeRain ability", () => {
     const rainmaker = Encyclopaedia.unit('rainmaker');
     
     expect(rainmaker.abilities).toBeDefined();
-    expect(rainmaker.abilities.makeRain).toBeDefined();
-    expect(rainmaker.abilities.makeRain.name).toBe('Make Rain');
-    expect(rainmaker.abilities.makeRain.cooldown).toBe(200); // From JSON definition
+    expect(rainmaker.abilities.includes('makeRain')).toBe(true);
+    expect(Encyclopaedia.abilities.makeRain.name).toBe('Make Rain');
+    expect(Encyclopaedia.abilities.makeRain.cooldown).toBe(200); // From JSON definition
   });
 
   it("should verify big-worm has breatheFire ability", () => {
     const bigWorm = Encyclopaedia.unit('big-worm');
     
     expect(bigWorm.abilities).toBeDefined();
-    expect(bigWorm.abilities.breatheFire).toBeDefined();
-    expect(bigWorm.abilities.breatheFire.name).toBe('Breathe Fire');
-    expect(bigWorm.abilities.breatheFire.cooldown).toBe(60);
+    expect(bigWorm.abilities.includes('breatheFire')).toBe(true);
+    expect(Encyclopaedia.abilities.breatheFire.name).toBe('Breathe Fire');
+    expect(Encyclopaedia.abilities.breatheFire.cooldown).toBe(60);
   });
 
   it("should trigger priest radiant ability against ghost", () => {

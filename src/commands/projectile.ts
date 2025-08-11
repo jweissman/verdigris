@@ -23,6 +23,7 @@ export class Projectile extends Command {
     const targetY = params.targetY as number | undefined;
     const radius = params.radius as number || 1;
     const team = params.team as string | undefined;
+    const initialZ = params.z as number | undefined;
     
     const startPos = { x, y };
     const caster = unitId ? this.sim.units.find(u => u.id === unitId) : null;
@@ -48,7 +49,7 @@ export class Projectile extends Command {
         projectile.origin = startPos;
         projectile.progress = 0;
         projectile.duration = 6; // Shorter duration for bombs
-        projectile.z = 0; // Bombs use z-axis for arc
+        projectile.z = initialZ !== undefined ? initialZ : 0; // Use provided z or default to 0
         projectile.aoeRadius = 3; // Default AoE radius for bombs
       } else {
         // Bullet-style projectile with velocity

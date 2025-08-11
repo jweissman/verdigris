@@ -1,7 +1,8 @@
 // TODO: move battlestrip/field view logic out of renderer.ts
 // would also be nice to work out how to pass options to the renderer from the sim (like cinematic mode)
 
-import { Projectile, Unit } from "../sim/types";
+import { Projectile } from "../types/Projectile";
+import { Unit } from "../types/Unit";
 import View from "./view";
 
 export default class Orthographic extends View {

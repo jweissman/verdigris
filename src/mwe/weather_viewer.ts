@@ -252,24 +252,11 @@ export default class SceneWeatherViewer {
     // Set background
     const bgName = this.backgrounds[this.currentBgIndex];
 
-    // Note: this is not how you set the background?
     this.sim.sceneBackground = bgName;
 
     // Render with current view mode
     const currentView = this.views[this.viewModes[this.currentViewIndex]];
-    console.log(`Rendering view: ${this.viewModes[this.currentViewIndex]}`); // with background: ${bgName}`);
-    // if (currentView && currentView.render) {
-    //   currentView.render();
-    // }
-
     currentView.show();
-
-    // Draw UI overlay info
-    // this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    // this.ctx.font = '14px monospace';
-    // this.ctx.fillText(`Units: ${this.sim.units.length}`, this.canvas.width - 150, this.canvas.height - 60);
-    // this.ctx.fillText(`Particles: ${this.sim.particles.length}`, this.canvas.width - 150, this.canvas.height - 40);
-    // this.ctx.fillText(`Tick: ${this.sim.ticks}`, this.canvas.width - 150, this.canvas.height - 20);
   }
 }
 

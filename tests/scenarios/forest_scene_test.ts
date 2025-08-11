@@ -72,19 +72,9 @@ describe('Forest Scene - Cozy Atmosphere', () => {
       sim.step();
     }
     
-    // Check for cozy interactions
-    const squirrels = sim.units.filter(u => 
-      u.sprite === 'forest-squirrel' || u.sprite === 'squirrel'
-    );
-    
-    // Verify squirrels have their nut-throwing ability
-    const squirrelsWithAbilities = squirrels.filter(u => 
-      u.abilities && Object.keys(u.abilities).length > 0
-    );
-    
-    
-    // Check that temperature is comfortable (not extreme)
     expect(sim.temperature).toBeGreaterThan(10);
     expect(sim.temperature).toBeLessThan(25);
+
+    // TODO check for actual elements of meditative atmosphere???
   });
 });

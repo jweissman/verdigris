@@ -1,6 +1,6 @@
 import { Rule } from './rule';
 import type { Simulator } from '../core/simulator';
-import type { Position } from '../sim/types';
+// Position type removed - use Vec2 instead
 
 export class LightningStorm extends Rule {
   private stormIntensity: number = 1;

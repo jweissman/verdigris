@@ -11,7 +11,7 @@ describe("New Sprites Integration", () => {
     expect(bigWorm.sprite).toBe('big-worm'); // Should use new sprite
     expect(bigWorm.meta?.segmented).toBe(true);
     expect(bigWorm.meta?.segmentCount).toBe(5); // Big worm has 5 segments
-    expect(bigWorm.abilities?.breatheFire).toBeDefined();
+    expect(bigWorm.abilities).toContain('breatheFire');
     expect(bigWorm.team).toBe('hostile');
     expect(bigWorm.hp).toBe(120);
   });
@@ -121,7 +121,7 @@ describe("New Sprites Integration", () => {
     // Verify they have unique capabilities
     expect(units[1].tags).toContain('caster');           // skeleton-mage
     expect(units[2].tags).toContain('spectral');         // ghost
-    expect(units[3].abilities.fireBlast).toBeDefined();  // demon has fire
+    expect(units[3].abilities.includes('fireBlast')).toBe(true);  // demon has fire
     expect(units[4].meta.segmented).toBe(true);          // mimic-worm segments
   });
 });

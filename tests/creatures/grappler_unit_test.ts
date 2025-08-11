@@ -11,7 +11,7 @@ describe('Grappler Unit Verification', () => {
     expect(grappler.hp).toBe(35);
     expect(grappler.dmg).toBe(8);
     expect(grappler.abilities).toBeDefined();
-    expect(grappler.abilities.grapplingHook).toBeDefined();
+    expect(grappler.abilities.includes('grapplingHook')).toBe(true);
     
   });
 

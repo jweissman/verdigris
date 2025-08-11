@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
+import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 
 describe('Druid and Naturalist Forest Abilities', () => {
   describe('Druid', () => {
@@ -66,12 +67,13 @@ describe('Druid and Naturalist Forest Abilities', () => {
         team: 'hostile'
       };
       
+      addEffectsToUnit(druid, sim);
       sim.addUnit(druid);
       sim.addUnit(enemy);
       
-      // Use entangle
-      if (druid.abilities.entangle) {
-        sim.forceAbility(druid.id, 'entangle', enemy);
+      // Use entangle - call effect directly
+      if (druid.abilities.entangle && druid.abilities.entangle.effect) {
+        druid.abilities.entangle.effect(druid, enemy, sim);
       }
       
       // Enemy should be pinned
@@ -102,15 +104,16 @@ describe('Druid and Naturalist Forest Abilities', () => {
         team: 'hostile'
       };
       
+      addEffectsToUnit(naturalist, sim);
       sim.addUnit(naturalist);
       sim.addUnit(megabeast);
       
       // Verify megabeast is large enough
       expect(megabeast.mass).toBeGreaterThanOrEqual(10);
       
-      // Tame the megabeast
-      if (naturalist.abilities.tameMegabeast) {
-        sim.forceAbility(naturalist.id, 'tameMegabeast', megabeast);
+      // Tame the megabeast - call effect directly
+      if (naturalist.abilities.tameMegabeast && naturalist.abilities.tameMegabeast.effect) {
+        naturalist.abilities.tameMegabeast.effect(naturalist, megabeast, sim);
       }
       
       // Get the actual megabeast from sim
@@ -153,13 +156,14 @@ describe('Druid and Naturalist Forest Abilities', () => {
         intendedMove: { x: 0, y: -1 }
       };
       
+      addEffectsToUnit(naturalist, sim);
       sim.addUnit(naturalist);
       sim.addUnit(bear);
       sim.addUnit(owl);
       
-      // Use calm animals
-      if (naturalist.abilities.calmAnimals) {
-        sim.forceAbility(naturalist.id, 'calmAnimals', naturalist.pos);
+      // Use calm animals - call effect directly since forceAbility may not work with compat layer
+      if (naturalist.abilities.calmAnimals && naturalist.abilities.calmAnimals.effect) {
+        naturalist.abilities.calmAnimals.effect(naturalist, naturalist.pos, sim);
       }
       
       // Find the actual units in sim to check
@@ -237,18 +241,20 @@ describe('Druid and Naturalist Forest Abilities', () => {
         team: 'hostile'
       };
       
+      addEffectsToUnit(druid, sim);
+      addEffectsToUnit(naturalist, sim);
       sim.addUnit(druid);
       sim.addUnit(naturalist);
       sim.addUnit(giantWorm);
       
-      // Naturalist tames the megabeast
-      if (naturalist.abilities.tameMegabeast) {
-        sim.forceAbility(naturalist.id, 'tameMegabeast', giantWorm);
+      // Naturalist tames the megabeast - call effect directly
+      if (naturalist.abilities.tameMegabeast && naturalist.abilities.tameMegabeast.effect) {
+        naturalist.abilities.tameMegabeast.effect(naturalist, giantWorm, sim);
       }
       
-      // Druid summons helpers
-      if (druid.abilities.summonForestCreature) {
-        sim.forceAbility(druid.id, 'summonForestCreature', druid.pos);
+      // Druid summons helpers - call effect directly
+      if (druid.abilities.summonForestCreature && druid.abilities.summonForestCreature.effect) {
+        druid.abilities.summonForestCreature.effect(druid, druid.pos, sim);
       }
       
       sim.step();

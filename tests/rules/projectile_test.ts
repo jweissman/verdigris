@@ -72,7 +72,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     sceneLoader.loadFromText(rangerTest);
     
     const ranger = sim.units.find(u => u.sprite === 'slinger');
-    expect(ranger?.abilities.ranged).toBeDefined();
+    expect(ranger?.abilities.includes('ranged')).toBe(true);
     
     let foundBullet = false;
     let bullet;
@@ -108,7 +108,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     sceneLoader.loadFromText(bombardierTest);
     
     const bombardier = sim.units.find(u => u.sprite === 'bombardier' && u.abilities.bombardier);
-    expect(bombardier?.abilities.bombardier).toBeDefined();
+    expect(bombardier?.abilities.includes('bombardier')).toBe(true);
     
     let foundBomb = false;
     let bomb;

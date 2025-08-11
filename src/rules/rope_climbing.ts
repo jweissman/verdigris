@@ -1,5 +1,5 @@
 import { Rule } from "./rule";
-import { Unit, Vec2 } from "../sim/types";
+import { Unit, Vec2 } from "../types/";
 
 interface GrappleLine {
   grapplerID: string;

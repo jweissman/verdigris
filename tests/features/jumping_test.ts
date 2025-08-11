@@ -17,7 +17,7 @@ describe('Jumping mechanics', () => {
 
     // Use a unit that has jumps ability
     const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 0, y: 0 } };
-    worm.abilities = { jumps: Encyclopaedia.abilities.jumps };
+    worm.abilities = ['jumps'];
     
     sim.addUnit(worm);
     
@@ -65,7 +65,7 @@ describe('Jumping mechanics', () => {
     ];
 
     const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 8, y: 8 } };
-    worm.abilities = { jumps: Encyclopaedia.abilities.jumps };
+    worm.abilities = ['jumps'];
     
     sim.addUnit(worm);
 

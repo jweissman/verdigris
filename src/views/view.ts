@@ -1,4 +1,4 @@
-import { Simulator } from "../simulator";
+import { Simulator } from "../core/simulator";
 
 interface Interpolation {
   startX: number;

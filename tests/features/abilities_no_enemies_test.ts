@@ -32,7 +32,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test supportive abilities work without combat targets', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Create Mechatron with shield recharge ability
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 15, y: 10 } };
@@ -41,26 +41,26 @@ describe('Abilities Without Nearby Enemies', () => {
     sim.addUnit(mechatron);
     
     
-    // Test shield recharge ability manually (self-targeting supportive ability)
-    const shieldRecharge = mechatron.abilities.shieldRecharge;
-    expect(shieldRecharge).toBeDefined();
-    expect(shieldRecharge.cooldown).toBe(120);
-    expect(shieldRecharge.target).toBe('self.pos');
-    expect(shieldRecharge.trigger).toBe('self.hp < self.maxHp * 0.5');
+    // Test shield recharge ability (self-targeting supportive ability)
+    expect(mechatron.abilities).toContain('shieldRecharge');
+    const shieldRechargeAbility = Abilities.all.shieldRecharge;
+    expect(shieldRechargeAbility).toBeDefined();
+    expect(shieldRechargeAbility.cooldown).toBe(120);
+    expect(shieldRechargeAbility.target).toBe('self.pos');
+    expect(shieldRechargeAbility.trigger).toBe('self.hp < self.maxHp * 0.5');
     
-    // Verify it can be triggered without enemies (ability definition allows it)
-    if (shieldRecharge?.effect) {
-      const initialHp = mechatron.hp;
-      
-      // This should work even with no enemies around since it's self-targeting
-      shieldRecharge.effect(mechatron, mechatron.pos, sim);
-    }
+    // Verify it can be triggered without enemies
+    const initialHp = mechatron.hp;
+    
+    // Force the ability to trigger
+    sim.forceAbility(mechatron.id, 'shieldRecharge', mechatron.pos);
+    sim.step();
   });
   
   it('should test area effect abilities can trigger in empty areas', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Create Mechatron in empty field
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 20, y: 15 } };
@@ -68,19 +68,18 @@ describe('Abilities Without Nearby Enemies', () => {
     
     
     // Test EMP pulse in empty area
-    const empPulse = mechatron.abilities.empPulse;
-    if (empPulse?.effect) {
-      const initialEvents = sim.queuedEvents.length;
-      
-      // Should create AoE effect even with no targets
-      empPulse.effect(mechatron, mechatron.pos, sim);
-      
-      expect(sim.queuedEvents.length).toBe(initialEvents + 1);
-      const empEvent = sim.queuedEvents[sim.queuedEvents.length - 1];
-      expect(empEvent.kind).toBe('aoe');
-      expect(empEvent.meta.aspect).toBe('emp');
-      expect(empEvent.meta.radius).toBe(8);
-    }
+    expect(mechatron.abilities).toContain('empPulse');
+    const initialEvents = sim.queuedEvents.length;
+    
+    // Should create AoE effect even with no targets
+    sim.forceAbility(mechatron.id, 'empPulse', mechatron.pos);
+    sim.step();
+    
+    expect(sim.queuedEvents.length).toBe(initialEvents + 1);
+    const empEvent = sim.queuedEvents[sim.queuedEvents.length - 1];
+    expect(empEvent.kind).toBe('aoe');
+    expect(empEvent.meta.aspect).toBe('emp');
+    expect(empEvent.meta.radius).toBe(8);
     
     // Test missile barrage toward empty coordinates
     const missileBarrage = mechatron.abilities.missileBarrage;
@@ -135,7 +134,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test environmental abilities work without combat context', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
     // Create rainmaker for environmental effects
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 20, y: 20 } };
@@ -143,13 +142,15 @@ describe('Abilities Without Nearby Enemies', () => {
     
     
     // Test that environmental abilities are defined and can trigger
-    const makeRain = rainmaker.abilities.makeRain;
-    expect(makeRain).toBeDefined();
-    expect(makeRain.cooldown).toBe(200);
+    expect(rainmaker.abilities).toContain('makeRain');
+    const makeRainAbility = Abilities.all.makeRain;
+    expect(makeRainAbility).toBeDefined();
+    expect(makeRainAbility.cooldown).toBe(200);
     
-    // Verify ability is configured for environmental effects
-    if (makeRain.config) {
-      expect(makeRain.config.duration).toBe(80); // 10 seconds of rain
-    }
+    // Verify ability creates weather effect
+    const initialWeather = sim.weather.current;
+    sim.forceAbility(rainmaker.id, 'makeRain', rainmaker.pos);
+    sim.step();
+    expect(sim.weather.current).toBe('rain');
   });
 });

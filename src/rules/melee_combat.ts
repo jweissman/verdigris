@@ -1,5 +1,5 @@
 import { Rule } from "./rule";
-import type { Unit, UnitState } from "../sim/types";
+import type { Unit, UnitState } from "../types/Unit";
 
 export class MeleeCombat extends Rule {
   engagements: Map<string, string> = new Map(); // Maps unit IDs to their current combat target ID

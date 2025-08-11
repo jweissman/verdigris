@@ -49,7 +49,7 @@ w.w.w`;
     
     // Check slinger has ranged ability
     // const slinger = slingers[0];
-    // expect(slinger.abilities.ranged).toBeDefined();
+    // expect(slinger.abilities.includes('ranged')).toBe(true);
     // expect(slinger.abilities.ranged.cooldown).toBe(15);
     // expect(slinger.abilities.ranged.config?.range).toBe(8);
   });
@@ -70,7 +70,7 @@ w.w.w`;
     
     expect(priest).toBeDefined();
     expect(farmers.length).toBe(2);
-    // expect(priest?.abilities.heal).toBeDefined();
+    // expect(priest?.abilities.includes('heal')).toBe(true);
   });
 
   it('should handle mass differences for tossing in complex.battle', () => {
@@ -140,7 +140,7 @@ w..w`;
     
     expect(ranger).toBeDefined();
     expect(worm).toBeDefined();
-    expect(ranger?.abilities.ranged).toBeDefined();
+    expect(ranger?.abilities.includes('ranged')).toBe(true);
     
     // Step the simulation a few times to allow abilities to trigger
     expect(sim.projectiles.length).toBe(0); // No projectiles initially

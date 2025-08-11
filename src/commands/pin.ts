@@ -44,7 +44,7 @@ export class Pin extends Command {
       return;
     }
 
-    if (!grappler.abilities.pinTarget) {
+    if (!grappler.abilities || !grappler.abilities.includes('pinTarget')) {
       console.error(`${grappler.id} does not have pin target ability`);
       return;
     }
@@ -75,7 +75,7 @@ export class Pin extends Command {
 
     // Check cooldown
     const lastUsed = grappler.lastAbilityTick?.pinTarget || 0;
-    const cooldown = grappler.abilities.pinTarget.cooldown || 35;
+    const cooldown = 30; // Default cooldown for pinTarget from abilities.json
     const ticksSinceLastUse = this.sim.ticks - lastUsed;
 
     if (ticksSinceLastUse < cooldown) {

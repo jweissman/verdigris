@@ -915,7 +915,7 @@ class Simulator {
   // Helper method for tests to force ability activation
   forceAbility(unitId: string, abilityName: string, target?: any): void {
     const unit = this.units.find(u => u.id === unitId);
-    if (!unit || !unit.abilities[abilityName]) return;
+    if (!unit || !Array.isArray(unit.abilities) || !unit.abilities.includes(abilityName)) return;
 
     // Get the Abilities rule from the rulebook
     const abilitiesRule = this.rulebook.find(rule => rule.constructor.name === 'Abilities');
@@ -934,7 +934,7 @@ class Simulator {
     // Process the ability effects directly
     const primaryTarget = target || unit;
     for (const effect of jsonAbility.effects) {
-      (abilitiesRule as any).processEffectAsCommand(effect, unit, primaryTarget);
+      (abilitiesRule as Abilities).processEffectAsCommand(effect, unit, primaryTarget);
     }
 
     // Update cooldown

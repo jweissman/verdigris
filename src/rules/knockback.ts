@@ -1,5 +1,5 @@
 import { Rule } from "./rule";
-import type { Unit } from "../sim/types";
+import type { Unit } from "../types/Unit";
 
 export class Knockback extends Rule {
   apply = () => this.pairwise((a: Unit, b: Unit) => {

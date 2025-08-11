@@ -55,7 +55,7 @@ describe('Creature Encyclopedia', () => {
     testCases.forEach(test => {
       const unit = Encyclopaedia.unit(test.type);
       test.abilities.forEach(ability => {
-        expect(unit.abilities).toHaveProperty(ability);
+        expect(unit.abilities).toContain(ability);
       });
     });
   });

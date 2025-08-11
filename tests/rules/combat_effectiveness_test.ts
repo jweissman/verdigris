@@ -30,7 +30,7 @@ describe('Combat Effectiveness Integration', () => {
     
     // Deploy toymaker to left side 
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 10 } };
-    toymaker.abilities.deployBot = { ...Encyclopaedia.abilities.deployBot, maxUses: 5 };
+    // Note: maxUses is now handled by the ability system, not individual unit instances
     sim.addUnit(toymaker);
     
     // Test deployment commands
@@ -85,7 +85,7 @@ describe('Combat Effectiveness Integration', () => {
     
     // Spawn construct very close to enemy
     const freezebot = { ...Encyclopaedia.unit('freezebot'), pos: { x: 10, y: 10 } };
-    freezebot.abilities = { freezeRay: Encyclopaedia.abilities.freezeRay };
+    freezebot.abilities = ['freezeRay'];
     sim.addUnit(freezebot);
     
     // Run several simulation steps

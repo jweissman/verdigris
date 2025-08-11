@@ -10,6 +10,7 @@ export type UnitPosture = 'wait'
                         | 'dying'  // Dying animation, can't move
                         | 'guard'  // Guarding a position / hold
                         | 'bully'  // Attempt to occupy the same space as target (pushing them out)
+                        | 'berserk' // Aggressive state with increased damage
 
 type UnitID = string;
 

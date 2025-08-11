@@ -28,8 +28,8 @@ describe('Mechatronist Deployment System', () => {
     expect(mechatronist.tags).toContain('engineer');
     
     // Check abilities
-    expect(mechatronist.abilities).toHaveProperty('callAirdrop');
-    expect(mechatronist.abilities).toHaveProperty('tacticalOverride');
+    expect(mechatronist.abilities).toContain('callAirdrop');
+    expect(mechatronist.abilities).toContain('tacticalOverride');
     
     // Check riding capability
     expect(mechatronist.meta.canRideMechatron).toBe(true);
@@ -136,7 +136,7 @@ describe('Mechatronist Deployment System', () => {
     expect(mechatron).toBeTruthy();
     expect(mechatron!.hp).toBeGreaterThan(180); // May take some landing damage
     expect(mechatron!.tags).toContain('huge');
-    expect(mechatron!.abilities.missileBarrage).toBeDefined();
+    expect(mechatron!.abilities.includes('missileBarrage')).toBe(true);
     
     // Check deployment created impact
     expect(sim.particles.length).toBeGreaterThan(0); // Landing should create dust/debris
@@ -157,20 +157,17 @@ describe('Mechatronist Deployment System', () => {
     sim.addUnit(ally1);
     sim.addUnit(ally2);
     
-    // Force tactical override trigger
-    const override = commander.abilities.tacticalOverride;
-    if (override.effect) {
-      override.effect(commander, commander.pos, sim);
-      
-      // Check that allies received tactical boost
-      expect(ally1.meta.tacticalBoost).toBe(true);
-      expect(ally2.meta.tacticalBoost).toBe(true);
-      expect(ally1.meta.tacticalBoostDuration).toBe(40);
-      
-      // Check energy particle was created
-      const energyParticles = sim.particles.filter(p => p.type === 'energy');
-      expect(energyParticles.length).toBeGreaterThan(0);
-      
-    }
+    // Force tactical override using sim.forceAbility
+    sim.forceAbility(commander.id, 'tacticalOverride', commander.pos);
+    sim.step(); // Process the ability
+    
+    // Check that allies received tactical boost
+    expect(ally1.meta.tacticalBoost).toBe(true);
+    expect(ally2.meta.tacticalBoost).toBe(true);
+    expect(ally1.meta.tacticalBoostDuration).toBe(40);
+    
+    // Check energy particle was created
+    const energyParticles = sim.particles.filter(p => p.type === 'energy');
+    expect(energyParticles.length).toBeGreaterThan(0);
   });
 });
