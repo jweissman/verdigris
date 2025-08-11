@@ -35,9 +35,9 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
 
     // Activate environmental effects to test field overlay rendering in compact space
     sim.queuedCommands = [
-      { type: 'weather', args: ['winter'] },
-      { type: 'lightning', args: ['10', '10'] },
-      { type: 'lightning', args: ['20', '15'] }
+      { type: 'weather', params: { weatherType: 'winter' } },
+      { type: 'lightning', params: { x: 10, y: 10 } },
+      { type: 'lightning', params: { x: 20, y: 15 } }
     ];
     sim.step();
     

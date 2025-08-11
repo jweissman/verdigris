@@ -22,6 +22,7 @@ import { LightningStorm } from "../rules/lightning_storm";
 import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import { Particle } from "../types/Particle";
+import { Action } from "../types/Action";
 
 class ScalarField {
   private grid: number[][];
@@ -140,6 +141,7 @@ class Simulator {
   // Environmental states
   winterActive?: boolean;
   lightningActive?: boolean;
+  sandstormActive?: boolean;
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
@@ -161,12 +163,41 @@ class Simulator {
   }
 
   parseCommand(inputString: string) {
-    let [ type, ...args ] = inputString.split(' ');
-    const command: QueuedCommand = {
-      args,
-      type
-    };
-    this.queuedCommands.push(command);
+    const parts = inputString.split(' ');
+    const type = parts[0];
+    const params: Record<string, any> = {};
+    
+    // Parse command-specific parameters directly
+    switch (type) {
+      case 'weather':
+        params.weatherType = parts[1];
+        if (parts[2]) params.duration = parseInt(parts[2]);
+        if (parts[3]) params.intensity = parseFloat(parts[3]);
+        break;
+      case 'deploy':
+      case 'spawn':
+        params.unitType = parts[1];
+        if (parts[2]) params.x = parseFloat(parts[2]);
+        if (parts[3]) params.y = parseFloat(parts[3]);
+        break;
+      case 'airdrop':
+      case 'drop':
+        params.unitType = parts[1];
+        params.x = parseFloat(parts[2]);
+        params.y = parseFloat(parts[3]);
+        break;
+      case 'lightning':
+      case 'bolt':
+        if (parts[1]) params.x = parseFloat(parts[1]);
+        if (parts[2]) params.y = parseFloat(parts[2]);
+        break;
+      case 'temperature':
+      case 'temp':
+        params.amount = parts[1] ? parseFloat(parts[1]) : 20;
+        break;
+    }
+    
+    this.queuedCommands.push({ type, params });
   }
 
   paused: boolean = false;
@@ -220,7 +251,7 @@ class Simulator {
       sprite: unit.sprite || 'default',
       state: unit.state || 'idle',
       mass: unit.mass || 1,
-      abilities: unit.abilities || {},
+      abilities: unit.abilities || [],
       meta: unit.meta || {}
     };
     this.units.push(u);
@@ -956,7 +987,7 @@ class Simulator {
         const grappleTarget = target || { x: unit.pos.x + 5, y: unit.pos.y };
         this.queuedCommands.push({
           type: 'grapple',
-          args: [grappleTarget.x.toString(), grappleTarget.y.toString()],
+          params: { x: grappleTarget.x, y: grappleTarget.y },
           unitId: unit.id
         });
         break;
@@ -964,7 +995,7 @@ class Simulator {
       case 'makeRain':
         this.queuedCommands.push({
           type: 'weather',
-          args: ['rain', '80', '0.8'],
+          params: { weatherType: 'rain', duration: 80, intensity: 0.8 },
           unitId: unit.id
         });
         break;
@@ -973,7 +1004,7 @@ class Simulator {
         const deployTarget = target || { x: unit.pos.x + 3, y: unit.pos.y };
         this.queuedCommands.push({
           type: 'deploy',
-          args: ['clanker', deployTarget.x.toString(), deployTarget.y.toString()],
+          params: { unitType: 'clanker', x: deployTarget.x, y: deployTarget.y },
           unitId: unit.id
         });
         break;

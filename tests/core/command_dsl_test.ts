@@ -9,7 +9,7 @@ describe('Command DSL', () => {
     // Queue temperature command
     sim.queuedCommands = [{
       type: 'temperature',
-      args: ['30']
+      params: { amount: 30 }
     }];
     
     // Process command
@@ -28,7 +28,7 @@ describe('Command DSL', () => {
     // Queue weather command
     sim.queuedCommands = [{
       type: 'weather',
-      args: ['rain', '100', '0.8']
+      params: { weatherType: 'rain', duration: 100, intensity: 0.8 }
     }];
     
     // Process command
@@ -45,7 +45,7 @@ describe('Command DSL', () => {
     // Queue sandstorm weather
     sim.queuedCommands = [{
       type: 'weather',
-      args: ['sand', '150', '0.7']
+      params: { weatherType: 'sand', duration: 150, intensity: 0.7 }
     }];
     
     // Process command
@@ -97,7 +97,7 @@ describe('Command DSL', () => {
     // Queue lightning command
     sim.queuedCommands = [{
       type: 'lightning',
-      args: ['10', '10']
+      params: { x: 10, y: 10 }
     }];
     
     // Process command
@@ -115,7 +115,7 @@ describe('Command DSL', () => {
     // Queue deploy command
     sim.queuedCommands = [{
       type: 'deploy',
-      args: ['soldier', '5', '5']
+      params: { unitType: 'soldier', x: 5, y: 5 }
     }];
     
     // Process command
@@ -136,7 +136,7 @@ describe('Command DSL', () => {
     // Test 'temp' alias for 'temperature'
     sim.queuedCommands = [{
       type: 'temp',
-      args: ['25']
+      params: { amount: 25 }
     }];
     
     sim.step();
@@ -148,7 +148,7 @@ describe('Command DSL', () => {
     // Test 'bolt' alias for 'lightning'
     sim.queuedCommands = [{
       type: 'bolt',
-      args: ['8', '8']
+      params: { x: 8, y: 8 }
     }];
     
     const particleCount = sim.particles.length;

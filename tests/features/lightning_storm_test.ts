@@ -213,24 +213,33 @@ describe('Lightning Storm Environmental System', () => {
     LightningStorm.createLightningStorm(sim);
     expect(sim.lightningActive).toBe(true);
     
-    // Let it run for a bit
+    // Let it run for a bit and count strikes
+    let strikeCount = 0;
     for (let tick = 0; tick < 20; tick++) {
+      const beforeStep = sim.particles.filter(p => p.type === 'lightning').length;
       sim.step();
+      const afterStep = sim.particles.filter(p => p.type === 'lightning').length;
+      if (afterStep > beforeStep) {
+        strikeCount++;
+      }
     }
+    expect(strikeCount).toBeGreaterThan(0); // Some strikes occurred during storm
     
     // End storm
     LightningStorm.endLightningStorm(sim);
     expect(sim.lightningActive).toBe(false);
     
-    // No new lightning strikes should occur
-    const particlesBefore = sim.particles.filter(p => p.type === 'lightning').length;
-    
+    // No new lightning strikes should occur after storm ends
+    let newStrikesAfterEnd = 0;
     for (let tick = 0; tick < 20; tick++) {
+      const beforeStep = sim.particles.filter(p => p.type === 'lightning').length;
       sim.step();
+      const afterStep = sim.particles.filter(p => p.type === 'lightning').length;
+      if (afterStep > beforeStep) {
+        newStrikesAfterEnd++;
+      }
     }
-    
-    const particlesAfter = sim.particles.filter(p => p.type === 'lightning').length;
-    expect(particlesAfter).toBe(particlesBefore); // No new lightning particles
+    expect(newStrikesAfterEnd).toBe(0); // No new strikes after storm ended
     
   });
 });

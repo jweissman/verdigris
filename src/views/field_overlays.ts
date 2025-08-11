@@ -89,8 +89,8 @@ export class FieldOverlays {
     const recentStrikes = this.sim.processedEvents?.filter(event =>
       event.kind === 'aoe' &&
       event.meta.aspect === 'emp' &&
-      event.tick &&
-      (this.sim.ticks - event.tick) < 30 // 30 tick fade time
+      event.meta.tick &&
+      (this.sim.ticks - event.meta.tick) < 30 // 30 tick fade time
     ) || [];
 
     this.ctx.save();

@@ -43,7 +43,7 @@ export function addEffectToAbility(abilityName: string, ability: any, sim: any):
           const deployPos = target?.pos || target || { x: caster.pos.x + 3, y: caster.pos.y };
           simulator.queuedCommands.push({
             type: 'deploy',
-            args: ['clanker', deployPos.x.toString(), deployPos.y.toString()],
+            params: { unitType: 'clanker', x: deployPos.x, y: deployPos.y },
             unitId: caster.id
           });
           break;
@@ -51,7 +51,7 @@ export function addEffectToAbility(abilityName: string, ability: any, sim: any):
         case 'makeRain':
           simulator.queuedCommands.push({
             type: 'weather',
-            args: ['rain', '80', '0.8'],
+            params: { weatherType: 'rain', duration: 80, intensity: 0.8 },
             unitId: caster.id
           });
           break;

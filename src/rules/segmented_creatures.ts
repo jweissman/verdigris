@@ -12,27 +12,42 @@ export class SegmentedCreatures extends Rule {
   private pathHistory: Map<string, Vec2[]> = new Map(); // Track movement history for snake-like following
 
   apply = () => {
+    // console.log("SegmentedCreatures: Starting apply");
     // Find segmented creatures that need segment setup
     const segmentedCreatures = this.sim.units.filter(unit => 
       unit.meta.segmented && !this.hasSegments(unit)
     );
+    // console.log(`SegmentedCreatures: Found ${segmentedCreatures.length} creatures needing segments`);
 
     // Create segments for new segmented creatures
-    for (const creature of segmentedCreatures) {
+    for (let i = 0; i < segmentedCreatures.length; i++) {
+      const creature = segmentedCreatures[i];
+      // console.log(`SegmentedCreatures: Creating segments for creature ${i}/${segmentedCreatures.length}: ${creature.id}`);
+      if (i > 100) {
+        console.error("SegmentedCreatures: Too many creatures, possible infinite loop!");
+        throw new Error("SegmentedCreatures infinite loop detected");
+      }
       this.createSegments(creature);
     }
 
     // Update segment positions with snake-like movement
     this.updateSegmentPositions();
+    // console.log("SegmentedCreatures: Finished updating segment positions");
 
+    // console.log("SegmentedCreatures: About to handle segment damage");
     // Handle segment damage propagation
     this.handleSegmentDamage();
+    // console.log("SegmentedCreatures: Finished handling segment damage");
 
+    // console.log("SegmentedCreatures: About to handle segment grappling");
     // Handle grappling interactions with segments
     this.handleSegmentGrappling();
+    // console.log("SegmentedCreatures: Finished handling segment grappling");
 
+    // console.log("SegmentedCreatures: About to cleanup orphaned segments");
     // Clean up orphaned segments
     this.cleanupOrphanedSegments();
+    // console.log("SegmentedCreatures: Finished cleanup orphaned segments");
   }
 
   private hasSegments(creature: Unit): boolean {
@@ -43,7 +58,12 @@ export class SegmentedCreatures extends Rule {
 
   private createSegments(creature: Unit) {
     const segmentCount = creature.meta.segmentCount || 4; // Default to 4 segments
-    // console.log(`Creating ${segmentCount} segments for segmented creature: ${creature.id}`);
+    // console.log(`SegmentedCreatures.createSegments: Creating ${segmentCount} segments for ${creature.id}`);
+    
+    if (segmentCount > 50) {
+      console.error(`SegmentedCreatures: Segment count too high: ${segmentCount}`);
+      throw new Error("Too many segments requested");
+    }
     
     // Initialize path history with creature's starting position
     const initialPath = Array(segmentCount + 2).fill(creature.pos);
@@ -51,6 +71,11 @@ export class SegmentedCreatures extends Rule {
     
     // Create segments behind the head
     for (let i = 1; i <= segmentCount; i++) {
+      // console.log(`SegmentedCreatures.createSegments: Creating segment ${i}/${segmentCount}`);
+      if (i > 100) {
+        console.error("SegmentedCreatures: Infinite loop in segment creation!");
+        throw new Error("Infinite loop in createSegments");
+      }
       // Try multiple positions to find a valid spot
       let segmentPos = null;
       const attempts = [
@@ -95,7 +120,7 @@ export class SegmentedCreatures extends Rule {
           hp: Math.floor(creature.hp * 0.7), // Segments have less HP than head
           maxHp: Math.floor(creature.maxHp * 0.7),
           mass: creature.mass,
-          abilities: {},
+          abilities: [],
           tags: ['segment', 'noncombatant'],
           meta: {
             segment: true,
@@ -139,6 +164,7 @@ export class SegmentedCreatures extends Rule {
   private updateSegmentPositions() {
     const segmentGroups = this.getSegmentGroups();
     
+    // Fixed: Use proper iteration over Map entries
     for (const [parentId, segments] of segmentGroups) {
       const parent = this.sim.units.find(u => u.id === parentId);
       if (!parent || !parent.meta.segmented) continue;

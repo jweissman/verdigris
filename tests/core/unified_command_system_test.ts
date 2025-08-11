@@ -16,7 +16,7 @@ describe('Unified Command System', () => {
     
     expect(sim.queuedCommands.length).toBe(1);
     expect(sim.queuedCommands[0].type).toBe('weather');
-    expect(sim.queuedCommands[0].args).toEqual(['rain', '100', '0.9']);
+    expect(sim.queuedCommands[0].params).toEqual({ weatherType: 'rain', duration: 100, intensity: 0.9 });
     
     
     // Process commands
@@ -34,7 +34,7 @@ describe('Unified Command System', () => {
     const unitsBefore = sim.units.length;
     
     // Test direct deployment command
-    sim.parseCommand('deploy clanker 10 10 friendly');
+    sim.parseCommand('deploy clanker 10 10');
     
     expect(sim.queuedCommands.length).toBe(1);
     

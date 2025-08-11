@@ -5,6 +5,7 @@ export interface Action {
   source?: string;
   target?: string | Vec2;
   meta?: {
+    tick?: number;
     aspect?: string;
     radius?: number;
     amount?: number;

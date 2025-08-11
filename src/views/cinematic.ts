@@ -1,3 +1,4 @@
+import { Abilities } from "../rules/abilities";
 import { Unit } from "../types/Unit";
 import View from "./view";
 
@@ -175,8 +176,8 @@ export default class CinematicView extends View {
     const recentDamage = this.sim.processedEvents.find(event => 
       event.kind === 'damage' && 
       event.target === unit.id && 
-      event.tick && 
-      (this.sim.ticks - event.tick) < 2
+      event.meta.tick && 
+      (this.sim.ticks - event.meta.tick) < 2
     );
     
     if (recentDamage && Math.floor(this.animationTime / 100) % 2 === 0) {
@@ -282,8 +283,8 @@ export default class CinematicView extends View {
     }
 
     // Draw ability progress bars
-    if (unit.abilities && unit.abilities.jumps) {
-      const ability = unit.abilities.jumps;
+    if (unit.abilities && unit.abilities.includes('jumps') && unit.meta.jumping) {
+      const ability = Abilities.all.jumps;
       const duration = ability.config?.jumpDuration || 10;
       const progress = unit.meta.jumpProgress || 0;
       const progressRatio = (progress / duration) || 0;
@@ -602,8 +603,8 @@ export default class CinematicView extends View {
     // Query simulator for recent AoE events
     const recentAoEEvents = this.sim.processedEvents.filter(event => 
       event.kind === 'aoe' && 
-      event.tick && 
-      (this.sim.ticks - event.tick) < 10 // Show for 10 ticks
+      event.meta.tick && 
+      (this.sim.ticks - event.meta.tick) < 10 // Show for 10 ticks
     );
 
     for (const event of recentAoEEvents) {
@@ -611,7 +612,7 @@ export default class CinematicView extends View {
       
       const pos = event.target as {x: number, y: number};
       const radius = event.meta.radius || 3;
-      const age = event.tick ? (this.sim.ticks - event.tick) : 0;
+      const age = event.meta.tick ? (this.sim.ticks - event.meta.tick) : 0;
       const maxAge = 10;
       
       // Fade out over time

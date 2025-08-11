@@ -54,7 +54,7 @@ describe('Mechatron Airdrop System', () => {
     // Command should be queued
     expect(sim.queuedCommands.length).toBe(1);
     expect(sim.queuedCommands[0].type).toBe('airdrop');
-    expect(sim.queuedCommands[0].args).toEqual(['mechatron', '50', '50']);
+    expect(sim.queuedCommands[0].params).toEqual({ unitType: 'mechatron', x: 50, y: 50 });
     
     // Process the command
     sim.step();

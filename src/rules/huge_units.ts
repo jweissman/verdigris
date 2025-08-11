@@ -48,7 +48,7 @@ export class HugeUnits extends Rule {
           hp: 9999, // High HP to prevent accidental death
           maxHp: 9999,
           mass: hugeUnit.mass, // Same mass as parent to push things effectively
-          abilities: {},
+          abilities: [],
           tags: ['phantom', 'noncombatant'], // Mark as non-combatant
           meta: {
             phantom: true,

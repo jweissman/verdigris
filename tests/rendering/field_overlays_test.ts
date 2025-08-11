@@ -55,8 +55,8 @@ describe('Field Overlays - Environmental Visualization', () => {
 
     // Trigger lightning strikes at specific locations
     sim.queuedCommands = [
-      { type: 'lightning', args: ['10', '10'] },
-      { type: 'lightning', args: ['15', '15'] }
+      { type: 'lightning', params: { x: 10, y: 10 } },
+      { type: 'lightning', params: { x: 15, y: 15 } }
     ];
     
     // Process the lightning strikes
@@ -82,7 +82,7 @@ describe('Field Overlays - Environmental Visualization', () => {
     sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
     
     // Trigger winter weather
-    sim.queuedCommands = [{ type: 'weather', args: ['winter'] }];
+    sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'winter' } }];
     sim.step();
     
     // Verify weather state changed
@@ -91,12 +91,12 @@ describe('Field Overlays - Environmental Visualization', () => {
     }
 
     // Test rain weather for humidity
-    sim.queuedCommands = [{ type: 'weather', args: ['rain'] }];
+    sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'rain' } }];
     sim.step();
     
     
     // Clear weather
-    sim.queuedCommands = [{ type: 'weather', args: ['clear'] }];
+    sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'clear' } }];
     sim.step();
     
   });

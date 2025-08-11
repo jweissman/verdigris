@@ -27,12 +27,9 @@ export class EventHandler extends Rule {
       return;
     }
 
-    // console.log("Handle ", this.sim.queuedEvents.length, " queued events");
-    // Process events and apply effects
     for (const event of this.sim.queuedEvents) {
-      // console.log(`Processing event: ${event.kind} from ${event.source} to ${event.target}`);
-      // Mark event with current tick
-      event.tick = this.sim.ticks;
+      if (!event.meta) event.meta = {};
+      event.meta.tick = this.sim.ticks;
       
       switch (event.kind) {
         case 'aoe':
@@ -54,17 +51,13 @@ export class EventHandler extends Rule {
           console.warn(`Unknown event kind: ${event.kind}`);
       }
       
-      // Store processed event
       this.sim.processedEvents.push(event);
-
-      // Display translation
-      // console.debug(`- ${this.glossary(event)}`);
     }
     
     // Keep only recent processed events (last 60 ticks for example)
     const maxHistoryTicks = 60;
     this.sim.processedEvents = this.sim.processedEvents.filter(e => 
-      e.tick && (this.sim.ticks - e.tick) < maxHistoryTicks
+      e.meta?.tick && (this.sim.ticks - e.meta.tick) < maxHistoryTicks
     );
     
     // Clear events after processing
@@ -78,25 +71,9 @@ export class EventHandler extends Rule {
     }
 
     this.sim.addUnit({
-      ...event.meta.unit, // Use unit properties from event
+      ...event.meta.unit,
       pos: { x: event.target.x, y: event.target.y },
     });
-        //   ...Freehold.unit('squirrel'),
-        //   // id: `squirrel_${Date.now()}`,
-        //   pos: { x: unit.pos.x - 4, y: unit.pos.y },
-        //   // intendedMove: { x: 1, y: 0 },
-        //   team: unit.team,
-        //   // posture: 'guard',
-        //   // intendedProtectee: unit.id,
-        //   // sprite: 'squirrel',
-        //   // state: 'idle',
-        //   // hp: 5,
-        //   // maxHp: 5,
-        //   // mass: 1,
-        //   // tags: ['wander'],
-        //   // abilities: {},
-        //   // meta: {}
-        // });
   }
 
   private handleAreaOfEffect(event: Action) {
@@ -108,9 +85,8 @@ export class EventHandler extends Rule {
     target.x = Math.round(target.x);
     target.y = Math.round(target.y);
 
-    let sourceUnit = this.sim.units.find(unit => unit.id === event.source); // || this.sim.unitAt(event.source);
+    let sourceUnit = this.sim.units.find(unit => unit.id === event.source);
 
-    // Determine if this is healing, damage, or EMP based on aspect
     const isHealing = event.meta.aspect === 'heal';
     const isEmp = event.meta.aspect === 'emp';
     
@@ -120,34 +96,25 @@ export class EventHandler extends Rule {
       const inRange = Math.sqrt(dx * dx + dy * dy) <= (event.meta.radius || 5);
       
       if (isHealing) {
-        // Healing affects same team members only
         return inRange && unit.team === sourceUnit?.team && unit.hp < unit.maxHp;
       } else if (isEmp) {
-        // EMP affects all units, but mechanical units are immune if mechanicalImmune is true
         const mechanicalImmune = event.meta.mechanicalImmune && unit.tags?.includes('mechanical');
         return inRange && !mechanicalImmune;
       } else {
-        // Damage affects enemy team members only
         return inRange && unit.team !== sourceUnit?.team;
       }
     });
 
     for (const unit of affectedUnits) {
-      const effectType = isHealing ? 'healing' : (isEmp ? 'emp' : 'damage');
-      // console.log(`* ${unit.id} is affected by ${effectType} AoE from ${event.source} at (${target.x}, ${target.y})`);
-      
       const distance = Math.sqrt(
         Math.pow(unit.pos.x - target.x, 2) +
         Math.pow(unit.pos.y - target.y, 2)
       );
       
       if (isEmp) {
-        // Apply EMP stun effect directly
         unit.meta.stunned = true;
         unit.meta.stunDuration = event.meta.stunDuration || 20;
-        console.log(`⚡ ${unit.id} is stunned by EMP for ${unit.meta.stunDuration} ticks`);
         
-        // Create EMP visual effect on stunned unit
         this.sim.particles.push({
           pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
           vel: { x: 0, y: -0.3 },
@@ -157,7 +124,6 @@ export class EventHandler extends Rule {
           type: 'electric_spark'
         });
       } else {
-        // Queue appropriate event (heal or damage)
         this.sim.queuedEvents.push({
           kind: isHealing ? 'heal' : 'damage',
           source: event.source,
@@ -171,12 +137,9 @@ export class EventHandler extends Rule {
         });
       }
 
-      // Check if source is much more massive and should toss the target (only for damage, not healing)
       if (!isHealing && sourceUnit && unit.mass < sourceUnit.mass) {
         const massRatio = sourceUnit.mass / unit.mass;
         if (massRatio >= 2) { // Source is at least 2x more massive
-        // if (sourceUnit.mass > unit.mass) {
-          // Calculate toss direction (away from source)
           const dx = unit.pos.x - target.x;
           const dy = unit.pos.y - target.y;
           const magnitude = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -185,12 +148,10 @@ export class EventHandler extends Rule {
           const tossForce = Math.min(8, Math.floor(massRatio * 2)); // Cap force at 8
           const tossDistance = Math.min(5, Math.floor(massRatio)); // Cap distance at 5
           
-          // console.log(`🤾 Queueing toss command: ${unit.id} (mass ${unit.mass}) tossed by ${sourceUnit.id} (mass ${sourceUnit.mass}), ratio ${massRatio.toFixed(1)}`);
-          
           this.sim.queuedCommands.push({
             type: 'toss',
             unitId: unit.id,
-            args: [direction, tossForce, tossDistance]
+            params: { direction, tossForce, tossDistance }
           });
         }
       }
@@ -216,7 +177,6 @@ export class EventHandler extends Rule {
     }
     
     if (targetUnit.hp <= 0) {
-      // console.log(`Unit ${targetUnit.id} has died`);
       targetUnit.state = 'dead';
     }
 

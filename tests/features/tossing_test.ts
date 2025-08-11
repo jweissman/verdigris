@@ -29,7 +29,7 @@ describe('Tossing mechanics', () => {
     sim.queuedCommands.push({
       type: 'toss',
       unitId: 'target',
-      args: [{ x: 1, y: 0 }, 5, 3] // direction, force, distance
+      params: { direction: { x: 1, y: 0 }, force: 5, distance: 3 }
     });
 
     sim.tick();
@@ -65,7 +65,7 @@ describe('Tossing mechanics', () => {
     sim.queuedCommands.push({
       type: 'toss',
       unitId: 'target',
-      args: [{ x: 1, y: 1 }, 4, 2] // diagonal toss
+      params: { direction: { x: 1, y: 1 }, force: 4, distance: 2 }
     });
 
     sim.tick(); // Process command
@@ -109,7 +109,7 @@ describe('Tossing mechanics', () => {
     sim.queuedCommands.push({
       type: 'toss',
       unitId: 'target',
-      args: [{ x: 1, y: 0 }, 6, 4] // eastward toss
+      params: { direction: { x: 1, y: 0 }, force: 6, distance: 4 }
     });
 
     sim.tick(); // Process command
@@ -149,7 +149,7 @@ describe('Tossing mechanics', () => {
     sim.queuedCommands.push({
       type: 'toss',
       unitId: 'target',
-      args: [{ x: 1, y: 1 }, 8, 5] // Would go to (13, 13) but should clamp
+      params: { direction: { x: 1, y: 1 }, force: 8, distance: 5 }
     });
 
     sim.tick();
@@ -182,7 +182,7 @@ describe('Tossing mechanics', () => {
     sim.queuedCommands.push({
       type: 'toss',
       unitId: 'target',
-      args: [{ x: 1, y: 0 }, 5, 3]
+      params: { direction: { x: 1, y: 0 }, force: 5, distance: 3 }
     });
 
     sim.tick();
@@ -215,7 +215,7 @@ describe('Tossing mechanics', () => {
     sim.queuedCommands.push({
       type: 'toss',
       unitId: 'target',
-      args: [{ x: 1, y: 0 }, 8, 3] // High force (8)
+      params: { direction: { x: 1, y: 0 }, force: 8, distance: 3 }
     });
 
     sim.tick(); // Process command

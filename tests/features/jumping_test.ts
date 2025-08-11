@@ -89,7 +89,7 @@ describe('Jumping mechanics', () => {
     // Queue jump command directly to test landing damage
     sim.queuedCommands = [{
       type: 'jump',
-      args: ['10', '8', '5', '5', '3'], // x, y, height, damage, radius
+      params: { targetX: 10, targetY: 8, height: 5, damage: 5, radius: 3 },
       unitId: worm.id
     }];
 

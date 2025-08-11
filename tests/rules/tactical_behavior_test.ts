@@ -5,7 +5,6 @@ import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { UnitMovement } from '../../src/rules/unit_movement';
-import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 
 describe('Tactical Behavior Improvements', () => {
   it('should make constructs hunt enemies aggressively', () => {
@@ -121,16 +120,8 @@ describe('Tactical Behavior Improvements', () => {
     const initialUnits = sim.units.length;
     expect(initialUnits).toBe(1); // Just the toymaker
     
-    // Manually trigger deployment with no enemies
-    addEffectsToUnit(toymaker, sim); // Add compatibility for .effect() method
-    const deployBot = toymaker.abilities.deployBot;
-    if (deployBot && deployBot.effect) {
-      // The trigger should allow deployment even without enemies: 'distance(closest.enemy()?.pos) <= 12 || true'
-      const shouldTrigger = true; // Always true due to || true
-      expect(shouldTrigger).toBe(true);
-      
-      deployBot.effect(toymaker, toymaker.pos, sim);
-    }
+    // Manually trigger deployment with no enemies using modern abilities system
+    sim.forceAbility(toymaker.id, 'deployBot', toymaker.pos);
     
     sim.step(); // Process commands and events
     

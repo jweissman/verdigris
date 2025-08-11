@@ -933,7 +933,6 @@ export class Abilities extends Rule {
       unit.meta.calmed = true;
       unit.meta.aggressive = false;
       unit.intendedMove = { x: 0, y: 0 }; // Stop movement
-      // console.log(`${unit.id} has been calmed`);
       
       // Add calm particles
       this.sim.particles.push({

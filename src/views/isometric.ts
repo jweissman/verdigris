@@ -1,3 +1,4 @@
+import { Abilities } from "../rules/abilities";
 import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import View from "./view";
@@ -42,9 +43,6 @@ export default class Isometric extends View {
     for (const unit of sortedUnits) {
       this.showUnit(unit);
     }
-    
-    // Draw speech bubbles for units
-    this.renderSpeechBubbles();
     
     // Draw projectiles (from battle view)
     for (const projectile of this.sim.projectiles) {
@@ -180,13 +178,11 @@ export default class Isometric extends View {
       return;
     }
 
-    // Removed debug logging - coordinate issue resolved
-
     const recentDamage = this.sim.processedEvents.find(event => 
       event.kind === 'damage' && 
       event.target === unit.id && 
-      event.tick && 
-      (this.sim.ticks - event.tick) < 2
+      event.meta.tick && 
+      (this.sim.ticks - event.meta.tick) < 2
     );
     
     if (recentDamage && Math.floor(this.animationTime / 100) % 2 === 0) {
@@ -215,14 +211,9 @@ export default class Isometric extends View {
     }
     
     const { x: screenX, y: screenY } = this.toIsometric(renderX, renderY);
-    
-    // Add coordinate logging for small canvas debugging
-    // if (isSmallCanvas) {
-    //   console.log(`      📍 toIsometric(${renderX}, ${renderY}) -> screen(${screenX}, ${screenY})`);
-    // }
-    
+
     const pixelX = screenX - spriteWidth / 2;
-    const pixelY = screenY - spriteHeight / 2; // Center vertically instead of bottom-align
+    const pixelY = screenY - spriteHeight / 2;
 
     let realPixelY = pixelY;
       
@@ -234,8 +225,8 @@ export default class Isometric extends View {
       const recentAttack = this.sim.processedEvents.find((event: any) => 
         event.kind === 'damage' && 
         event.source === unit.id && 
-        event.tick && 
-        (this.sim.ticks - event.tick) < 1 // Only show attack frame for 1 tick
+        event.meta.tick && 
+        (this.sim.ticks - event.meta.tick) < 1 // Only show attack frame for 1 tick
       );
       
       if (unit.state === 'dead') {
@@ -296,8 +287,8 @@ export default class Isometric extends View {
       this.drawBar("hit points", pixelX, realPixelY - 4, spriteWidth, 2, hpRatio);
     }
 
-    if (unit.abilities && unit.abilities.jumps) {
-      const ability = unit.abilities.jumps;
+    if (unit.abilities && unit.abilities.includes('jumps') && unit.meta.jumping) {
+      const ability = Abilities.all.jumps;
       const duration = ability.config?.jumpDuration || 10;
       const progress = unit.meta.jumpProgress || 0;
       const progressRatio = (progress / duration) || 0;
@@ -414,94 +405,6 @@ export default class Isometric extends View {
     this.ctx.restore();
   }
 
-  private renderSpeechBubbles() {
-    // if (!this.textRenderer.fontsReady) return;
-    return; // Disabled until text renderer is fixed
-    
-    for (const unit of this.sim.units) {
-      let bubbleText: string | null = null;
-      
-      // Check for various conditions that trigger speech
-      
-      // Burrow event (desert worm)
-      if (unit.meta.burrowing && unit.meta.burrowProgress === 0) {
-        bubbleText = "WORMSIGN";
-      }
-      
-      // Taking heavy damage
-      const recentDamage = this.sim.processedEvents.find((event: any) => 
-        event.kind === 'damage' && 
-        event.target === unit.id && 
-        event.tick && 
-        (this.sim.ticks - event.tick) < 2 &&
-        event.meta?.amount > 10
-      );
-      if (recentDamage) {
-        bubbleText = "OOF!";
-      }
-      
-      // Healing
-      const recentHeal = this.sim.processedEvents.find((event: any) => 
-        event.kind === 'heal' && 
-        event.target === unit.id && 
-        event.tick && 
-        (this.sim.ticks - event.tick) < 2
-      );
-      if (recentHeal) {
-        bubbleText = "THANKS!";
-      }
-      
-      // Grappled
-      if (unit.meta.grappled && !unit.meta.speechShown) {
-        bubbleText = "HEY!";
-        unit.meta.speechShown = true;
-      }
-      
-      // Frozen
-      if (unit.meta.frozen && !unit.meta.frozenSpeechShown) {
-        bubbleText = "BRRR!";
-        unit.meta.frozenSpeechShown = true;
-      }
-      
-      // On fire
-      if (unit.meta.onFire && !unit.meta.fireSpeechShown) {
-        bubbleText = "HOT!";
-        unit.meta.fireSpeechShown = true;
-      }
-      
-      // Draw the bubble if we have text
-      if (bubbleText) {
-        const pos = this.toIsometric(unit.pos.x, unit.pos.y);
-        this.textRenderer.drawBubble(
-          bubbleText,
-          pos.x,
-          pos.y - 20,
-          { type: 'speech' },
-          'tiny'
-        );
-      }
-      
-      // Draw damage numbers
-      const damageEvent = this.sim.processedEvents.find((event: any) => 
-        event.kind === 'damage' && 
-        event.target === unit.id && 
-        event.tick && 
-        (this.sim.ticks - event.tick) < 10
-      );
-      
-      if (damageEvent && damageEvent.meta?.amount && damageEvent.tick) {
-        const pos = this.toIsometric(unit.pos.x, unit.pos.y);
-        const floatOffset = (10 - (this.sim.ticks - damageEvent.tick)) * 2;
-        this.textRenderer.drawDamageNumber(
-          damageEvent.meta.amount,
-          pos.x - 8,
-          pos.y - 10 - floatOffset,
-          '#FF0000'
-        );
-      }
-    }
-  }
-  
   private renderOverlays() {
     for (const unit of this.sim.units) {
       if (unit.state === 'dead') continue;
@@ -592,8 +495,8 @@ export default class Isometric extends View {
   private renderAoEEffects() {
     const recentAoEEvents = this.sim.processedEvents.filter(event => 
       event.kind === 'aoe' && 
-      event.tick && 
-      (this.sim.ticks - event.tick) < 10
+      event.meta.tick && 
+      (this.sim.ticks - event.meta.tick) < 10
     );
 
     for (const event of recentAoEEvents) {
@@ -601,7 +504,7 @@ export default class Isometric extends View {
       
       const pos = event.target as {x: number, y: number};
       const radius = event.meta.radius || 3;
-      const age = event.tick ? (this.sim.ticks - event.tick) : 0;
+      const age = event.meta.tick ? (this.sim.ticks - event.meta.tick) : 0;
       const maxAge = 10;
       
       const alpha = Math.max(0, 1 - (age / maxAge));
@@ -692,8 +595,8 @@ export default class Isometric extends View {
     // Check recent explosion events
     const recentExplosions = this.sim.processedEvents?.filter(event =>
       event.kind === 'aoe' && 
-      event.tick && 
-      (this.sim.ticks - event.tick) < 5
+      event.meta.tick && 
+      (this.sim.ticks - event.meta.tick) < 5
     ) || [];
     
     for (const explosion of recentExplosions) {
@@ -709,7 +612,11 @@ export default class Isometric extends View {
     // Render cell effects with proper sprite mapping
     this.ctx.save();
     
-    for (const [cellKey, effect] of cellEffects.entries()) {
+    let fx = cellEffects.entries();
+    // for (const [cellKey, effect] of cellEffects.entries()) {
+    // for (const [cellKey, effect] of fx) {
+    for (let entry = fx.next(); !entry.done; entry = fx.next()) {
+      const [cellKey, effect] = entry.value;
       const [x, y] = cellKey.split(',').map(Number);
       const { x: screenX, y: screenY } = this.toIsometric(x, y);
       

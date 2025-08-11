@@ -1,5 +1,6 @@
 import { Rule } from './rule';
 import type { Simulator } from '../core/simulator';
+import { Vec2 } from '../types/Vec2';
 // Position type removed - use Vec2 instead
 
 export class LightningStorm extends Rule {
@@ -15,9 +16,9 @@ export class LightningStorm extends Rule {
     if (!this.simulator.lightningActive) return;
 
     // Generate lightning strikes periodically
-    if (this.simulator.tick - this.lastStrikeTime >= this.strikeCooldown) {
+    if (this.simulator.ticks - this.lastStrikeTime >= this.strikeCooldown) {
       this.generateLightningStrike();
-      this.lastStrikeTime = this.simulator.tick;
+      this.lastStrikeTime = this.simulator.ticks;
       
       // Vary the cooldown for dramatic effect (6-12 ticks)
       this.strikeCooldown = 6 + Math.random() * 6;
@@ -27,7 +28,7 @@ export class LightningStorm extends Rule {
     this.updateLightningEffects();
   }
 
-  public generateLightningStrike(targetPos?: Position): void {
+  public generateLightningStrike(targetPos?: Vec2): void {
     // Use specified position or pick random strike location
     const strikePos = targetPos || {
       x: Math.floor(Math.random() * this.simulator.fieldWidth),
@@ -49,7 +50,7 @@ export class LightningStorm extends Rule {
     this.createAtmosphericEffects(strikePos);
   }
 
-  private createLightningVisuals(pos: Position): void {
+  private createLightningVisuals(pos: Vec2): void {
     const pixelX = pos.x * 8 + 4;
     const pixelY = pos.y * 8 + 4;
 
@@ -101,7 +102,7 @@ export class LightningStorm extends Rule {
     }
   }
 
-  private createEmpBurst(pos: Position): void {
+  private createEmpBurst(pos: Vec2): void {
     // Create EMP AoE that affects non-mechanical units
     this.simulator.queuedEvents.push({
       kind: 'aoe',
@@ -119,7 +120,7 @@ export class LightningStorm extends Rule {
     console.log(`  ⚡ EMP burst affects 3-cell radius around strike`);
   }
 
-  private boostMechanicalUnits(pos: Position): void {
+  private boostMechanicalUnits(pos: Vec2): void {
     // Find all mechanical units within range for power boost
     const mechanicalUnits = this.simulator.units.filter(unit =>
       unit.tags?.includes('mechanical') &&
@@ -136,7 +137,8 @@ export class LightningStorm extends Rule {
       // Reduce all ability cooldowns by 50%
       if (unit.lastAbilityTick) {
         Object.keys(unit.lastAbilityTick).forEach(abilityName => {
-          const ticksSinceUse = this.simulator.tick - (unit.lastAbilityTick![abilityName] || 0);
+          let t: number = (this.simulator.ticks || 0);
+          const ticksSinceUse = t - (unit.lastAbilityTick![abilityName] || 0);
           const boostAmount = Math.floor(ticksSinceUse * 0.5);
           unit.lastAbilityTick![abilityName] = Math.max(0, 
             (unit.lastAbilityTick![abilityName] || 0) - boostAmount
@@ -166,7 +168,7 @@ export class LightningStorm extends Rule {
     }
   }
 
-  private createAtmosphericEffects(pos: Position): void {
+  private createAtmosphericEffects(pos: Vec2): void {
     const pixelX = pos.x * 8 + 4;
     const pixelY = pos.y * 8 + 4;
 

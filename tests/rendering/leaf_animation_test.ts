@@ -8,7 +8,7 @@ describe('Leaf Animation System', () => {
     // Queue leaves weather command
     sim.queuedCommands = [{
       type: 'weather',
-      args: ['leaves', '50', '0.3']
+      params: { weatherType: 'leaves', duration: 50, intensity: 0.3 }
     }];
     
     sim.step();
@@ -80,7 +80,7 @@ describe('Leaf Animation System', () => {
     // Create leaves weather with intensity
     sim.queuedCommands = [{
       type: 'weather',
-      args: ['leaves', '30', '0.5'] // 30 intensity, 0.5 opacity
+      params: { weatherType: 'leaves', duration: 30, intensity: 0.5 }
     }];
     
     sim.step();

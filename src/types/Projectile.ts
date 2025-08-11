@@ -9,6 +9,7 @@ export interface Projectile {
   damage: number;
   team: 'friendly' | 'hostile';
   type: 'bullet' | 'bomb' | 'grapple';
+  sourceId?: string; // ID of unit that created the projectile
   // For bomb projectiles with arc motion
   target?: Vec2;
   progress?: number;

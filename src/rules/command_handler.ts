@@ -79,17 +79,7 @@ export class CommandHandler extends Rule {
       
       const command = this.commands.get(queuedCommand.type);
       if (command) {
-        // Handle both new params format and legacy args format
-        if (queuedCommand.params) {
-          // New format - pass params directly
-          command.execute(queuedCommand.unitId || null, queuedCommand.params);
-        } else if (queuedCommand.args) {
-          // Legacy format - convert args to params based on command type
-          const params = this.convertArgsToParams(queuedCommand.type, queuedCommand.args);
-          command.execute(queuedCommand.unitId || null, params);
-        } else {
-          console.warn(`Command ${queuedCommand.type} has neither params nor args`);
-        }
+        command.execute(queuedCommand.unitId || null, queuedCommand.params);
       } else if (queuedCommand.type && queuedCommand.type !== '') {
         // Only warn for non-empty command types
         console.warn(`Unknown command type: ${queuedCommand.type}`);

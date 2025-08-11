@@ -65,12 +65,11 @@ export default class View {
       }
     }
     
-    // Update existing interpolations
-    for (const [unitId, interp] of this.unitInterpolations.entries()) {
+    let entries = Array.from(this.unitInterpolations.entries());
+    for (const [unitId, interp] of entries) {
       interp.progress += deltaTime / interp.duration;
       
       if (interp.progress >= 1) {
-        // Interpolation complete, remove it
         this.unitInterpolations.delete(unitId);
       }
     }
@@ -79,13 +78,11 @@ export default class View {
   protected updateProjectileInterpolations() {
     const deltaTime = 16; // ~16ms per frame at 60fps
     
-    // Check for new or moved projectiles
     for (const projectile of this.sim.projectiles) {
       const prevPos = this.previousProjectilePositions.get(projectile.id);
       const currentZ = projectile.z || 0;
       
       if (!prevPos) {
-        // First time seeing this projectile, just record position
         this.previousProjectilePositions.set(projectile.id, { 
           x: projectile.pos.x, 
           y: projectile.pos.y, 
@@ -122,15 +119,17 @@ export default class View {
     
     // Clean up interpolations for removed projectiles
     const activeProjectileIds = new Set(this.sim.projectiles.map(p => p.id));
-    for (const projectileId of this.projectileInterpolations.keys()) {
-      if (!activeProjectileIds.has(projectileId)) {
-        this.projectileInterpolations.delete(projectileId);
-        this.previousProjectilePositions.delete(projectileId);
+    const keys = Array.from(this.projectileInterpolations.keys());
+    for (const key of keys) {
+      if (!activeProjectileIds.has(key)) {
+        this.projectileInterpolations.delete(key);
+        this.previousProjectilePositions.delete(key);
       }
     }
     
     // Update existing interpolations
-    for (const [projectileId, interp] of this.projectileInterpolations.entries()) {
+    const entries = Array.from(this.projectileInterpolations.entries());
+    for (const [projectileId, interp] of entries) {
       interp.progress += deltaTime / interp.duration;
       
       if (interp.progress >= 1) {

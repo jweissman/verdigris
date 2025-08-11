@@ -1,6 +1,7 @@
 // TODO: move battlestrip/field view logic out of renderer.ts
 // would also be nice to work out how to pass options to the renderer from the sim (like cinematic mode)
 
+import { Abilities } from "../rules/abilities";
 import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import View from "./view";
@@ -56,8 +57,8 @@ export default class Orthographic extends View {
     const recentDamage = this.sim.processedEvents.find(event => 
       event.kind === 'damage' && 
       event.target === unit.id && 
-      event.tick && 
-      (this.sim.ticks - event.tick) < 2 // Blink for 8 ticks
+      event.meta.tick && 
+      (this.sim.ticks - event.meta.tick) < 2 // Blink for 8 ticks
     );
     
     // Skip rendering on alternating ticks if recently damaged
@@ -172,8 +173,10 @@ export default class Orthographic extends View {
     }
 
     // Draw ability progress bar if applicable
-    if (unit.abilities && unit.abilities.jumps) {
-      const ability = unit.abilities.jumps;
+    // NOTE: this should be generalized to any ability with a progress indicator??
+    if (unit.abilities && unit.abilities.includes('jumps') && unit.meta.jumping) {
+      // const ability = unit.abilities.jumps;
+      const ability = Abilities.all.jumps;
       // jump progress 
       const duration = ability.config?.jumpDuration || 10; // Default duration if not specified
       const progress = unit.meta.jumpProgress || 0;
@@ -460,8 +463,8 @@ export default class Orthographic extends View {
     // Query simulator for recent AoE events
     const recentAoEEvents = this.sim.processedEvents.filter(event => 
       event.kind === 'aoe' && 
-      event.tick && 
-      (this.sim.ticks - event.tick) < 10 // Show for 10 ticks
+      event.meta.tick && 
+      (this.sim.ticks - event.meta.tick) < 10 // Show for 10 ticks
     );
 
     for (const event of recentAoEEvents) {
@@ -469,7 +472,7 @@ export default class Orthographic extends View {
       
       const pos = event.target as {x: number, y: number};
       const radius = event.meta.radius || 3;
-      const age = event.tick ? (this.sim.ticks - event.tick) : 0;
+      const age = event.meta.tick ? (this.sim.ticks - event.meta.tick) : 0;
       const maxAge = 10;
       
       // Fade out over time

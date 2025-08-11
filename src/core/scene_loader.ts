@@ -35,8 +35,10 @@ export class SceneLoader {
   }
 
   loadFromText(sceneText: string): void {
+    // console.log("SceneLoader: Starting loadFromText");
     try {
       this.loadSimpleFormat(sceneText);
+      // console.log("SceneLoader: Finished loadSimpleFormat");
     } catch (e) {
       console.error("Failed to load scene:", e);
       throw new Error("Invalid scene format");
@@ -71,6 +73,7 @@ export class SceneLoader {
     this.sim.reset();
     const lines = sceneText.trim().split('\n');
     let inMetadata = false;
+    // console.log("SceneLoader: Processing lines", lines.length);
     
     for (let y = 0; y < lines.length; y++) {
       const line = lines[y];
@@ -97,17 +100,27 @@ export class SceneLoader {
           this.createUnit(template, x, y);
         }
       }
+
+      // console.log(`SceneLoader: Processed line ${y + 1}/${lines.length}`);
     }
     
     // Process queued commands immediately
+    // console.log("SceneLoader: About to process queued commands");
     if (this.sim.queuedCommands && this.sim.queuedCommands.length > 0) {
+      // console.log(`SceneLoader: Processing ${this.sim.queuedCommands.length} queued commands`);
       const commandHandler = new CommandHandler(this.sim);
       commandHandler.apply();
+      // console.log("SceneLoader: Finished processing commands");
     }
     
     // Initialize segmented creatures immediately after loading
+    // console.log("SceneLoader: About to initialize segmented creatures");
     const segmentedRule = new SegmentedCreatures(this.sim);
     segmentedRule.apply();
+    // console.log("SceneLoader: Finished initializing segmented creatures");
+
+
+    // console.debug("SceneLoader: Scene loaded successfully");
   }
   
   private parseMetadata(line: string): void {
@@ -136,15 +149,20 @@ export class SceneLoader {
       return;
     }
     
-    // Everything else goes through the command queue
+    // Everything else goes through the command queue - but only actual commands, not metadata
     if (!this.sim.queuedCommands) {
       this.sim.queuedCommands = [];
     }
     
-    this.sim.queuedCommands.push({
-      type: command,
-      args: args
-    });
+    // Only queue actual commands, not unrecognized metadata
+    // For now, use parseCommand for known command types
+    const knownCommands = ['weather', 'deploy', 'spawn', 'airdrop', 'drop', 'lightning', 'bolt', 'temperature', 'temp', 'grapple', 'pin'];
+    if (knownCommands.includes(command)) {
+      this.sim.parseCommand(`${command} ${args.join(' ')}`);
+    } else {
+      // Log unrecognized commands but don't fail - they might be custom metadata
+      console.warn(`Scene loader: Unrecognized command '${command}' - ignoring`);
+    }
   }
 
   private createUnit(unitName: string, x: number, y: number): void {

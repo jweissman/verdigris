@@ -18,7 +18,7 @@ export interface Unit {
   id: UnitID;
   pos: Vec2;
   intendedMove: Vec2;
-  team: 'friendly' | 'hostile';
+  team: 'friendly' | 'hostile' | 'neutral';
   sprite: string;
   state: UnitState;
   posture?: UnitPosture;
@@ -27,6 +27,8 @@ export interface Unit {
   hp: number;
   maxHp: number;
   mass: number;
+  dmg?: number; // Base damage for the unit
+  type?: string; // Unit type identifier
   tags?: string[];
   abilities: Array<string>;
   lastAbilityTick?: { [name: string]: number };

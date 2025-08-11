@@ -15,7 +15,7 @@ describe('Lightning Command', () => {
     ];
 
     // Test random lightning strike
-    sim.queuedCommands = [{ type: 'lightning', args: [] }];
+    sim.queuedCommands = [{ type: 'lightning', params: {} }];
     sim.step();
     
     // Should have activated lightning storm
@@ -30,7 +30,7 @@ describe('Lightning Command', () => {
     
     // Test targeted lightning strike
     const beforeParticles = sim.particles.length;
-    sim.queuedCommands = [{ type: 'bolt', args: ['10', '10'] }];
+    sim.queuedCommands = [{ type: 'bolt', params: { x: 10, y: 10 } }];
     sim.step();
     
     const afterParticles = sim.particles.length;
@@ -39,7 +39,7 @@ describe('Lightning Command', () => {
     
     // Test alias command
     const beforeAlias = sim.particles.length;
-    sim.queuedCommands = [{ type: 'lightning', args: ['5', '5'] }];
+    sim.queuedCommands = [{ type: 'lightning', params: { x: 5, y: 5 } }];
     sim.step();
     
     const afterAlias = sim.particles.length;

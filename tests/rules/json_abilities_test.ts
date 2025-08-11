@@ -131,7 +131,7 @@ describe('Abilities', () => {
     // Create a simple damage command to test the pipeline
     sim.queuedCommands.push({
       type: 'damage',
-      args: ['enemy1', '10', 'physical'],
+      params: { targetId: 'enemy1', amount: 10, aspect: 'physical' },
       unitId: 'archer1'
     });
 

@@ -1,5 +1,6 @@
 import { Rule } from './rule';
 import { Unit } from '../types/Unit';
+import { Abilities } from './abilities';
 
 export class Jumping extends Rule {
   apply(): void {
@@ -14,7 +15,7 @@ export class Jumping extends Rule {
 
   private updateJump(unit: Unit): void {
     // console.log(`[Jumping] Updating jump for ${unit.id} at tick ${this.sim.ticks}. Progress: ${unit.meta.jumpProgress}`);
-    const jumpDuration = unit.abilities?.jumps?.config?.duration || 10; // ticks
+    const jumpDuration = Abilities.all.jumps.config?.duration || 10; // ticks
     unit.meta.jumpProgress = (unit.meta.jumpProgress || 0) + 1;
 
     // console.log(`[Jumping] Jump progress for ${unit.id}: ${unit.meta.jumpProgress}/${jumpDuration}`);
@@ -33,8 +34,8 @@ export class Jumping extends Rule {
           source: unit.id,
           target: unit.pos,
           meta: {
-            radius: unit.abilities.jump?.config?.impact.radius || 3,
-            amount: unit.abilities.jump?.config?.impact.damage || 5,
+            radius: Abilities.all.jump.config?.impact.radius || 3,
+            amount: Abilities.all.jump.config?.impact.damage || 5,
           }
         });
         // this.sim.areaDamage({
@@ -46,10 +47,12 @@ export class Jumping extends Rule {
       // }
     } else {
       const progress = unit.meta.jumpProgress / jumpDuration;
-      const maxHeight = unit.abilities.jump?.config?.height || 5; // Default height if not specified
+      const maxHeight = Abilities.all.jump?.config?.height || 5; // Default height if not specified
+        //unit.abilities.jump?.config?.height || 5; // Default height if not specified
       unit.meta.z = (maxHeight * Math.sin(progress * Math.PI) || 0) * 2; // Adjust height based on progress
 
-      // we _do_ need some way to track the unit's planar movement during the jump
+      // we _do_ need some way to trac:e!
+      // k the unit's planar movement during the jump
       let origin = unit.meta.jumpOrigin || { x: unit.pos.x, y: unit.pos.y };
       let target = unit.meta.jumpTarget || { x: unit.intendedMove.x, y: unit.intendedMove.y };
 

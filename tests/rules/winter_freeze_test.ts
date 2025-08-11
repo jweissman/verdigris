@@ -42,7 +42,7 @@ describe('Winter Snow Freeze Interactions', () => {
     }
 
     // Activate winter weather
-    sim.queuedCommands = [{ type: 'weather', args: ['winter'] }];
+    sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'winter' } }];
     sim.step();
     
 
@@ -92,7 +92,7 @@ describe('Winter Snow Freeze Interactions', () => {
     sim.rulebook = [new CommandHandler(sim), new WinterEffects(sim)];
     
     // Activate winter weather
-    sim.queuedCommands = [{ type: 'weather', args: ['winter'] }];
+    sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'winter' } }];
     sim.step();
     
     // Check temperature field was affected by winter
@@ -139,8 +139,8 @@ describe('Winter Snow Freeze Interactions', () => {
     
     // Activate winter + lightning combo
     sim.queuedCommands = [
-      { type: 'weather', args: ['winter'] },
-      { type: 'lightning', args: ['9', '9'] } // Strike near units
+      { type: 'weather', params: { weatherType: 'winter' } },
+      { type: 'lightning', params: { x: 9, y: 9 } } // Strike near units
     ];
     sim.step();
     
