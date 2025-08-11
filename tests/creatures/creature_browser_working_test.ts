@@ -26,20 +26,6 @@ describe('Creature Browser - Core Functionality Working', () => {
     expect(mechatron?.sprite).toBe('mechatron');
     expect(mechatron?.isHuge).toBe(true);
     expect(mechatron?.isMechanical).toBe(true);
-    
-    console.log(`✅ Creature Browser Data Ready:`);
-    console.log(`   - Total: ${all.length} creatures`);
-    console.log(`   - Huge: ${huge.length} (${huge.map(c => c.type).join(', ')})`);
-    console.log(`   - Mechanical: ${mechanical.length}`);
-    console.log(`   - Desert creatures ready for sprite testing`);
-    
-    if (mechatron) {
-      console.log(`   - Mechatron: ${mechatron.sprite}, HP=${mechatron.hp}, huge=${mechatron.isHuge}`);
-    }
-    
-    if (desertMegaworm) {
-      console.log(`   - Desert Megaworm: ${desertMegaworm.sprite}, segments=${desertMegaworm.segmentCount}`);
-    }
   });
 
   it('should work in browser environment with real sprites', () => {

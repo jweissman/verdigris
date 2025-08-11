@@ -6,7 +6,6 @@ import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 import { Abilities } from '../../src/rules/abilities';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 
 describe('Desert Day Features', () => {
   it('desert units - grappler can fire grappling hook', () => {
@@ -102,13 +101,9 @@ it('desert units - waterbearer can heal and detect spies', () => {
   };
   sim.addUnit(spy);
   
-  // Use detect ability
-  if (waterbearerUnit) {
-    addEffectsToUnit(waterbearerUnit, sim);
-  }
-  if (waterbearerUnit?.abilities.detectSpies) {
-    waterbearerUnit.abilities.detectSpies.effect(waterbearerUnit, waterbearerUnit.pos, sim);
-  }
+  // Use detect ability through the abilities system
+  sim.rulebook = [new Abilities(sim)];
+  sim.step(); // Let abilities system detect and reveal the spy
   
   // Check spy was revealed
   const spyUnit = sim.units.find(u => u.id === spy.id);
@@ -140,12 +135,15 @@ it('desert units - skirmisher has dual knife attack', () => {
   };
   sim.addUnit(enemy);
   
-  // Use dual knife dance
-  if (skirmisherUnit) {
-    addEffectsToUnit(skirmisherUnit, sim);
-  }
-  if (skirmisherUnit?.abilities.dualKnifeDance) {
-    skirmisherUnit.abilities.dualKnifeDance.effect(skirmisherUnit, enemy.pos, sim);
+  // Use dual knife dance through abilities system
+  sim.rulebook = [new CommandHandler(sim), new Abilities(sim)];
+  
+  // Run simulation to let skirmisher attack
+  for (let i = 0; i < 5; i++) {
+    sim.step();
+    // Check if damage events were created
+    const damageEvents = sim.queuedEvents.filter(e => e.kind === 'damage' && e.source === skirmisherUnit?.id);
+    if (damageEvents.length >= 2) break;
   }
   
   // Should queue 2 damage events
@@ -299,13 +297,13 @@ it('desert worm can burrow and ambush', () => {
   
   const wormUnit = sim.units.find(u => u.id === worm.id);
   
-  // Use burrow ability
-  if (wormUnit) {
-    addEffectsToUnit(wormUnit, sim);
-  }
-  if (wormUnit?.abilities.burrowAmbush) {
-    wormUnit.abilities.burrowAmbush.effect(wormUnit, enemy.pos, sim);
-  }
+  // Use burrow ability through command system
+  sim.queuedCommands.push({
+    type: 'burrow',
+    unitId: worm.id,
+    params: { targetX: enemy.pos.x, targetY: enemy.pos.y }
+  });
+  sim.step(); // Process burrow command
   
   // Check worm is burrowed
   expect(wormUnit?.meta.burrowed).toBeTruthy();

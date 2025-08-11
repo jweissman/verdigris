@@ -193,7 +193,7 @@ export class Abilities extends Rule {
     }
   }
 
-  private resolveTarget(targetExpression: string | undefined, caster: any, primaryTarget: any): any {
+  private resolveTarget(targetExpression: string | number | undefined, caster: any, primaryTarget: any): any {
     if (!targetExpression) return primaryTarget;
     if (targetExpression === 'self') return caster;
     if (targetExpression === 'target') return primaryTarget;
@@ -201,7 +201,7 @@ export class Abilities extends Rule {
     if (targetExpression === 'target.pos') return primaryTarget.pos || primaryTarget;
     
     try {
-      return DSL.evaluate(targetExpression, caster, this.sim);
+      return DSL.evaluate(targetExpression.toString(), caster, this.sim);
     } catch (error) {
       console.warn(`Failed to resolve target '${targetExpression}':`, error);
       return null;
@@ -919,7 +919,7 @@ export class Abilities extends Rule {
     if (!target) return;
 
     const pos = target.pos || target;
-    const radius = effect.radius || 5;
+    const radius = this.resolveValue(effect.radius, caster, primaryTarget) || 5;
 
     // Calm all beasts/animals in radius - check for animal tag or beast-like sprites
     const beastSprites = ['bear', 'owl', 'wolf', 'fox', 'deer', 'rabbit', 'squirrel', 'bird'];
@@ -942,7 +942,9 @@ export class Abilities extends Rule {
         ttl: 30,
         color: '#ADD8E6', // Light blue
         type: 'calm',
-        size: 0.4
+        size: 0.4,
+        radius: 1,
+        lifetime: 30
       });
     }
   }
@@ -970,7 +972,9 @@ export class Abilities extends Rule {
         ttl: lifetime + Math.random() * 10,
         color: color,
         type: (effect as any).particleType || 'generic',
-        size: 0.3 + Math.random() * 0.2
+        size: 0.3 + Math.random() * 0.2,
+        radius: 1,
+        lifetime
       });
     }
   }

@@ -38,6 +38,11 @@ Deciding whether to commit to the high-performance data-oriented architecture sk
 
 ===
 
+- Settlement Phase
+  - Command handler should immediately process all events triggered
+  - But since these may trigger commands we may need to stay in a settlement cycle for some period of time
+  - We could set a hard timer on this but need to be careful with that I think...
+
 - Single Cell Lab
   - Test weather particles (leaves, snowflakes, raindrops)
   - Trigger cell effects (lightning, fire, explosion)
@@ -45,6 +50,7 @@ Deciding whether to commit to the high-performance data-oriented architecture sk
 - Data-oriented Abilities
   - We need to parses abilities from file (and implement any new commands that imples)
   - We have sketched abilities.json already but would need to implement an alternate Abilities rule to test
+  - We have migrated mostly over but could do creatures from JSON too!
 
 - Font Atlas
   - **stenciled-16x16.png** - Already implemented for larger text

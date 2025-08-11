@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
+import { Abilities } from '../../src/rules/abilities';
+import { CommandHandler } from '../../src/rules/command_handler';
+import { Unit } from '../../src/types/Unit';
 
 describe('Druid and Naturalist Forest Abilities', () => {
   describe('Druid', () => {
@@ -16,7 +18,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
       };
       
       // Create an enemy to trigger the ability
-      const enemy = {
+      const enemy: Unit = {
         ...Encyclopaedia.unit('skeleton'),
         id: 'enemy1',
         pos: { x: 15, y: 10 },
@@ -29,7 +31,8 @@ describe('Druid and Naturalist Forest Abilities', () => {
       const initialUnitCount = sim.units.length;
       
       // Trigger the summon ability
-      if (druid.abilities.summonForestCreature) {
+      expect(druid.abilities.includes('summonForestCreature')).toBe(true);
+      if (druid.abilities.includes('summonForestCreature')) {
         sim.forceAbility(druid.id, 'summonForestCreature', druid.pos);
       }
       
@@ -60,20 +63,28 @@ describe('Druid and Naturalist Forest Abilities', () => {
         pos: { x: 10, y: 10 }
       };
       
-      const enemy = {
+      const enemy: Unit = {
         ...Encyclopaedia.unit('skeleton'),
         id: 'enemy1',
         pos: { x: 12, y: 10 },
         team: 'hostile'
       };
       
-      addEffectsToUnit(druid, sim);
       sim.addUnit(druid);
       sim.addUnit(enemy);
       
-      // Use entangle - call effect directly
-      if (druid.abilities.entangle && druid.abilities.entangle.effect) {
-        druid.abilities.entangle.effect(druid, enemy, sim);
+      // Setup abilities system
+      sim.rulebook = [new CommandHandler(sim), new Abilities(sim)];
+      
+      // Druids use entangle when enemies are nearby
+      // Make sure enemy is close enough (entangle has range)
+      enemy.pos = { x: druid.pos.x + 1, y: druid.pos.y };
+      
+      // Run simulation to let the abilities system trigger
+      for (let i = 0; i < 10; i++) {
+        sim.step();
+        // Check if enemy got entangled
+        if (enemy.meta?.pinned) break;
       }
       
       // Enemy should be pinned
@@ -97,23 +108,29 @@ describe('Druid and Naturalist Forest Abilities', () => {
       };
       
       // Create a megabeast (giant sandworm)
-      const megabeast = {
+      const megabeast: Unit = {
         ...Encyclopaedia.unit('giant-sandworm'),
         id: 'megabeast1',
-        pos: { x: 15, y: 10 },
-        team: 'hostile'
+        pos: { x: naturalist.pos.x + 2, y: naturalist.pos.y }, // Within range
+        team: 'hostile',
+        tags: ['megabeast', 'titan'] // Ensure it has megabeast tag
       };
       
-      addEffectsToUnit(naturalist, sim);
       sim.addUnit(naturalist);
       sim.addUnit(megabeast);
+      
+      // Setup abilities system
+      sim.rulebook = [new CommandHandler(sim), new Abilities(sim)];
       
       // Verify megabeast is large enough
       expect(megabeast.mass).toBeGreaterThanOrEqual(10);
       
-      // Tame the megabeast - call effect directly
-      if (naturalist.abilities.tameMegabeast && naturalist.abilities.tameMegabeast.effect) {
-        naturalist.abilities.tameMegabeast.effect(naturalist, megabeast, sim);
+      // Run simulation to let naturalist tame the megabeast
+      for (let i = 0; i < 10; i++) {
+        sim.step();
+        // Check if megabeast was tamed
+        const simMegabeast = sim.units.find(u => u.id === 'megabeast1');
+        if (simMegabeast?.team === 'friendly') break;
       }
       
       // Get the actual megabeast from sim
@@ -139,31 +156,39 @@ describe('Druid and Naturalist Forest Abilities', () => {
         pos: { x: 10, y: 10 }
       };
       
-      // Create some beasts
+      // Create some beasts close to naturalist
       const bear = {
         ...Encyclopaedia.unit('bear'),
         id: 'bear1',
-        pos: { x: 12, y: 10 },
+        pos: { x: naturalist.pos.x + 1, y: naturalist.pos.y }, // Very close
         team: 'hostile',
-        intendedMove: { x: -1, y: 0 } // Moving toward naturalist
+        intendedMove: { x: -1, y: 0 }, // Moving toward naturalist
+        tags: ['animal', 'beast', 'forest'] // Ensure proper tags
       };
       
       const owl = {
         ...Encyclopaedia.unit('owl'),
         id: 'owl1',
-        pos: { x: 9, y: 11 },
+        pos: { x: naturalist.pos.x, y: naturalist.pos.y + 1 }, // Adjacent
         team: 'hostile',
-        intendedMove: { x: 0, y: -1 }
+        intendedMove: { x: 0, y: -1 },
+        tags: ['animal', 'beast', 'flying', 'forest']
       };
       
-      addEffectsToUnit(naturalist, sim);
       sim.addUnit(naturalist);
       sim.addUnit(bear);
       sim.addUnit(owl);
       
-      // Use calm animals - call effect directly since forceAbility may not work with compat layer
-      if (naturalist.abilities.calmAnimals && naturalist.abilities.calmAnimals.effect) {
-        naturalist.abilities.calmAnimals.effect(naturalist, naturalist.pos, sim);
+      // Setup abilities system
+      sim.rulebook = [new CommandHandler(sim), new Abilities(sim)];
+      
+      // Run simulation to let naturalist calm animals
+      for (let i = 0; i < 5; i++) {
+        sim.step();
+        // Check if animals were calmed
+        const simBear = sim.units.find(u => u.id === 'bear1');
+        const simOwl = sim.units.find(u => u.id === 'owl1');
+        if (simBear?.meta?.calmed && simOwl?.meta?.calmed) break;
       }
       
       // Find the actual units in sim to check
@@ -233,31 +258,29 @@ describe('Druid and Naturalist Forest Abilities', () => {
         pos: { x: 7, y: 10 }
       };
       
-      // Add a hostile megabeast
+      // Add a hostile megabeast closer to naturalist
       const giantWorm = {
         ...Encyclopaedia.unit('giant-sandworm'),
         id: 'worm1',
-        pos: { x: 15, y: 10 },
-        team: 'hostile'
+        pos: { x: naturalist.pos.x + 2, y: naturalist.pos.y }, // Within taming range
+        team: 'hostile',
+        tags: ['megabeast', 'titan', 'desert'] // Ensure megabeast tag
       };
       
-      addEffectsToUnit(druid, sim);
-      addEffectsToUnit(naturalist, sim);
+      // Setup abilities system
+      sim.rulebook = [new CommandHandler(sim), new Abilities(sim)];
       sim.addUnit(druid);
       sim.addUnit(naturalist);
       sim.addUnit(giantWorm);
       
-      // Naturalist tames the megabeast - call effect directly
-      if (naturalist.abilities.tameMegabeast && naturalist.abilities.tameMegabeast.effect) {
-        naturalist.abilities.tameMegabeast.effect(naturalist, giantWorm, sim);
+      // Run simulation to let abilities trigger
+      // Naturalist should tame the megabeast when it's in range
+      for (let i = 0; i < 20; i++) {
+        sim.step();
+        // Check if worm was tamed
+        const worm = sim.units.find(u => u.id === 'worm1');
+        if (worm?.team === 'friendly') break;
       }
-      
-      // Druid summons helpers - call effect directly
-      if (druid.abilities.summonForestCreature && druid.abilities.summonForestCreature.effect) {
-        druid.abilities.summonForestCreature.effect(druid, druid.pos, sim);
-      }
-      
-      sim.step();
       
       // Get actual units from sim, not local references
       const simWorm = sim.units.find(u => u.id === 'worm1');

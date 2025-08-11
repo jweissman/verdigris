@@ -936,6 +936,7 @@ export default class Encyclopaedia {
     this.counts[seriesName] = count + 1;
     return count || "";
   }
+
   static unit(beast: string): Unit {
     let u = {
         id: beast + this.id(beast),
@@ -943,9 +944,15 @@ export default class Encyclopaedia {
         pos: { x: 0, y: 0 }, // Default position, will be overridden when placing
         intendedMove: { x: 0, y: 0 },
         state: "idle" as UnitState,
+        team: 'neutral' as const, // Default team
         ...this.bestiary[beast],
+        hp: this.bestiary[beast]?.hp || 10, // Default HP if not specified
         maxHp: this.bestiary[beast].hp,
         abilities: this.bestiary[beast]?.abilities || [],
+        sprite: this.bestiary[beast]?.sprite || beast,
+        mass: this.bestiary[beast]?.mass || 1,
+        dmg: this.bestiary[beast]?.dmg || 1, // Default
+        meta: this.bestiary[beast]?.meta || {},
         tags: [
           ...(this.bestiary[beast]?.tags || []), // Include tags from bestiary
           ...(beast === "worm" ? ["swarm"] : []),
@@ -953,8 +960,6 @@ export default class Encyclopaedia {
           ...(beast === "squirrel" ? ["hunt"] : []),
           ...(beast === "farmer" ? ["hunt"] : []),
           ...(beast === "soldier" ? ["hunt"] : []),
-          // ...(beast === "ranger" ? ["ranged"] : []),
-          // ...(beast === "priest" ? ["heal"] : [])
         ]
       };
 
@@ -962,6 +967,7 @@ export default class Encyclopaedia {
     if (!u.meta) {
       u.meta = {};
     }
+
     return u;
   }
 }
