@@ -12,6 +12,7 @@ export class EventHandler extends Rule {
       },
       damage: e => `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage (now at ${targetUnit?.hp} hp)`,
       heal: e => `${e.source} healed ${e.target} for ${e.meta.amount} (now at ${targetUnit?.hp} hp)`,
+      terrain: e => `${e.source} modified terrain at (${e.target?.x}, ${e.target?.y}): ${e.meta?.terrainType}`,
     })
     if (!tx.hasOwnProperty(event.kind)) {
       // console.warn(`No translation for event kind: ${event.kind}`);
@@ -46,6 +47,9 @@ export class EventHandler extends Rule {
           break;
         case 'spawn':
           this.handleSpawn(event);
+          break;
+        case 'terrain':
+          this.handleTerrain(event);
           break;
         default:
           console.warn(`Unknown event kind: ${event.kind}`);
@@ -195,5 +199,40 @@ export class EventHandler extends Rule {
 
   private handleKnockback(event: any) {
     // Implement knockback logic here
+  }
+  
+  private handleTerrain(event: Action) {
+    // Handle terrain modification events
+    const terrainType = event.meta?.terrainType;
+    const position = event.target as Vec2;
+    
+    if (!position || typeof position !== 'object' || !('x' in position && 'y' in position)) {
+      console.warn(`Invalid position for terrain event: ${event.target}`);
+      return;
+    }
+    
+    // Apply terrain effects
+    if (terrainType === 'trench') {
+      // Add defensive bonus to units in this position
+      const defenseBonus = event.meta?.defenseBonus || 0.5;
+      const movementPenalty = event.meta?.movementPenalty || 0.3;
+      
+      // Find units at this position and apply effects
+      const unitsAtPosition = this.sim.units.filter(u => 
+        Math.abs(u.pos.x - position.x) < 1 && 
+        Math.abs(u.pos.y - position.y) < 1
+      );
+      
+      for (const unit of unitsAtPosition) {
+        // Store terrain effects in unit metadata
+        unit.meta = unit.meta || {};
+        unit.meta.terrainDefenseBonus = defenseBonus;
+        unit.meta.terrainMovementPenalty = movementPenalty;
+      }
+      
+      // TODO: Store terrain modifications in a persistent map/grid
+      // For now, just log that the terrain was modified
+      console.log(`Trench dug at (${position.x}, ${position.y}) with defense bonus ${defenseBonus}`);
+    }
   }
 }

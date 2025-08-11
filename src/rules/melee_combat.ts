@@ -30,20 +30,38 @@ export class MeleeCombat extends Rule {
     });
   }
   
-  melee = () => this.pairwise((a: Unit, b: Unit) => {
-    if (this.engagements.has(a.id)) return; // Already engaged
-    // if (this.lastAttacks.has(a.id) && this.sim.ticks - this.lastAttacks.get(a.id)! < (10)) return; // Still on cooldown
-    if (a.meta?.jumping || b.meta?.jumping) return;
-    // Skip combat for noncombatant units
-    if (a.tags?.includes('noncombatant') || b.tags?.includes('noncombatant')) return;
-    if (a.team !== b.team && a.hp > 0 && b.hp > 0) {
-      const dx = a.pos.x - b.pos.x;
-      const dy = a.pos.y - b.pos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 1.5) {
-        a.intendedMove = { x: 0, y: 0 }; // Stop to fight
-        this.hit(a, b);
+  melee = () => {
+    // Use spatial hash for efficient collision detection
+    const meleeRange = 1.5;
+    
+    for (const unit of this.sim.units) {
+      if (this.engagements.has(unit.id)) continue; // Already engaged
+      if (unit.hp <= 0) continue;
+      if (unit.meta?.jumping) continue;
+      if (unit.tags?.includes('noncombatant')) continue;
+      
+      // Query nearby units using spatial hash
+      const nearbyUnits = this.sim.getUnitsNear(unit.pos.x, unit.pos.y, meleeRange);
+      
+      for (const target of nearbyUnits) {
+        if (target.id === unit.id) continue;
+        if (this.engagements.has(unit.id)) break; // Stop if we found a target
+        if (target.hp <= 0) continue;
+        if (target.meta?.jumping) continue;
+        if (target.tags?.includes('noncombatant')) continue;
+        
+        if (unit.team !== target.team) {
+          const dx = unit.pos.x - target.pos.x;
+          const dy = unit.pos.y - target.pos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < meleeRange) {
+            unit.intendedMove = { x: 0, y: 0 }; // Stop to fight
+            this.hit(unit, target);
+            break; // Only engage one target at a time
+          }
+        }
       }
     }
-  });
+  };
 }

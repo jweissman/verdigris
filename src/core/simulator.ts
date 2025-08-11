@@ -23,6 +23,7 @@ import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import { Particle } from "../types/Particle";
 import { Action } from "../types/Action";
+import { DoubleBuffer, SpatialHash } from "../sim/double_buffer";
 
 class ScalarField {
   private grid: number[][];
@@ -118,7 +119,14 @@ class Simulator {
   fieldWidth: number;
   fieldHeight: number;
 
-  units: Unit[];
+  // Double-buffered state for units (not yet active)
+  private unitBuffer: DoubleBuffer<Unit[]> | null = null;
+  private spatialHash: SpatialHash;
+  private dirtyUnits: Set<string> = new Set();
+  
+  // Direct access to units (double-buffering will be phased in gradually)
+  units: Unit[] = [];
+  
   projectiles: Projectile[];
   rulebook: Rule[];
   queuedEvents: Action[] = [];
@@ -146,6 +154,10 @@ class Simulator {
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
     this.fieldHeight = fieldHeight;
+    
+    // Initialize spatial hash for collision detection
+    this.spatialHash = new SpatialHash(4); // 4x4 grid cells
+    this.dirtyUnits = new Set();
     
     // Initialize scalar fields
     this.temperatureField = new ScalarField(fieldWidth, fieldHeight, 20); // Base temperature ~20°C
@@ -255,14 +267,59 @@ class Simulator {
       meta: unit.meta || {}
     };
     this.units.push(u);
-    // return this;
+    this.dirtyUnits.add(u.id); // Mark as dirty for rendering
     return u;
   }
 
   create(unit: Unit) {
     const newUnit = { ...unit, id: unit.id || `unit_${Date.now()}` };
     this.units.push(newUnit);
+    this.dirtyUnits.add(newUnit.id); // Mark as dirty for rendering
     return newUnit;
+  }
+  
+  // Mark a unit as modified (needs re-rendering)
+  markDirty(unitId: string) {
+    this.dirtyUnits.add(unitId);
+  }
+  
+  // Get units near a position using spatial hash
+  getUnitsNear(x: number, y: number, radius: number = 2): Unit[] {
+    if (!this.spatialHash) {
+      // Fallback to O(n) search if spatial hash not initialized
+      return this.units.filter(u => {
+        const dx = u.pos.x - x;
+        const dy = u.pos.y - y;
+        return Math.sqrt(dx * dx + dy * dy) <= radius;
+      });
+    }
+    
+    const nearbyIds = this.spatialHash.query(x, y, radius);
+    const nearbyUnits: Unit[] = [];
+    
+    for (const id of nearbyIds) {
+      const unit = this.units.find(u => u.id === id);
+      if (unit) {
+        const dx = unit.pos.x - x;
+        const dy = unit.pos.y - y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= radius) {
+          nearbyUnits.push(unit);
+        }
+      }
+    }
+    
+    return nearbyUnits;
+  }
+  
+  // Check if any units are dirty (need re-rendering)
+  hasDirtyUnits(): boolean {
+    return this.dirtyUnits.size > 0;
+  }
+  
+  // Get list of dirty unit IDs
+  getDirtyUnits(): Set<string> {
+    return new Set(this.dirtyUnits);
   }
 
   get roster() {
@@ -284,7 +341,19 @@ class Simulator {
 
     let t0 = performance.now();
     this.ticks++;
+    
+    // Clear dirty tracking from last frame
+    this.dirtyUnits.clear();
+    
+    // Rebuild spatial hash for collision detection
+    this.spatialHash.clear();
+    this.units.forEach(unit => {
+      this.spatialHash.insert(unit.id, unit.pos.x, unit.pos.y);
+    });
+    
+    // Store reference for debugging
     let lastUnits = [...this.units];
+    
     for (const rule of this.rulebook) {
       let tr0 = performance.now();
       rule.execute();
@@ -301,6 +370,7 @@ class Simulator {
         meta: u.meta ? { ...u.meta } : {}
       }));
     }
+    
     let t1 = performance.now();
     let elapsed = t1 - t0;
     if (elapsed > 30) {

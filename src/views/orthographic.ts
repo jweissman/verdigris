@@ -5,9 +5,23 @@ import { Abilities } from "../rules/abilities";
 import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import View from "./view";
+import { UnitRenderer } from "../rendering/unit_renderer";
 
 export default class Orthographic extends View {
   // animationTime: number = 0;
+  private unitRenderer: UnitRenderer;
+  
+  constructor(
+    ctx: CanvasRenderingContext2D,
+    sim: any,
+    width: number,
+    height: number,
+    sprites: Map<string, HTMLImageElement>,
+    backgrounds: Map<string, HTMLImageElement> = new Map()
+  ) {
+    super(ctx, sim, width, height, sprites, backgrounds);
+    this.unitRenderer = new UnitRenderer(sim);
+  }
 
   show() {
     this.updateMovementInterpolations();
@@ -48,48 +62,27 @@ export default class Orthographic extends View {
   }
 
   private showUnit(unit: Unit) {
-    // Skip rendering phantom units (they're invisible)
-    if (unit.meta.phantom) {
+    // Use centralized logic for determining if unit should render
+    if (!this.unitRenderer.shouldRenderUnit(unit)) {
+      return;
+    }
+    
+    // Check for damage blinking
+    if (this.unitRenderer.shouldBlinkFromDamage(unit, this.animationTime)) {
       return;
     }
 
-    // Check if unit was recently damaged and should blink
-    const recentDamage = this.sim.processedEvents.find(event => 
-      event.kind === 'damage' && 
-      event.target === unit.id && 
-      event.meta.tick && 
-      (this.sim.ticks - event.meta.tick) < 2 // Blink for 8 ticks
-    );
+    // Get render position from centralized renderer
+    const renderPos = this.unitRenderer.getRenderPosition(unit, this.unitInterpolations);
+    const renderX = renderPos.x;
+    const renderY = renderPos.y;
+    const renderZ = renderPos.z;
     
-    // Skip rendering on alternating ticks if recently damaged
-    if (recentDamage && Math.floor(this.animationTime / 100) % 2 === 0) {
-      return; // Don't render this frame (creates blink effect)
-    }
-
-    // Calculate render position (interpolated if moving)
-    let renderX = unit.pos.x;
-    let renderY = unit.pos.y;
-    let renderZ = unit.meta?.z || 0;
-      
-    const interp = this.unitInterpolations.get(unit.id);
-    if (interp) {
-      // Use smooth interpolation with easing
-      const easeProgress = this.easeInOutQuad(interp.progress);
-      renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
-      renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
-      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
-    }
-      
-    // Handle huge units vs normal units - support custom dimensions
-    const isHuge = unit.meta.huge;
-    let spriteWidth = 16;
-    let spriteHeight = 16;
-    
-    if (isHuge) {
-      // Use custom dimensions if specified, otherwise default to megasquirrel size
-      spriteWidth = unit.meta.width || 64;
-      spriteHeight = unit.meta.height || 32;
-    }
+    // Get sprite dimensions from centralized logic
+    const dimensions = this.unitRenderer.getSpriteDimensions(unit);
+    const spriteWidth = dimensions.width;
+    const spriteHeight = dimensions.height;
+    const isHuge = unit.meta?.huge;
     
     // CRITICAL: Round to integer pixels to prevent blurring
     const gridCenterX = Math.round(renderX * 8) + 4; // Center of grid cell
@@ -103,17 +96,8 @@ export default class Orthographic extends View {
       
     const sprite = this.sprites.get(unit.sprite);
     if (sprite) {
-      // Choose frame based on unit state and animation
-      let frameIndex = 0;
-        
-      if (unit.state === 'dead') {
-        frameIndex = 3; // Frame 4 (index 3) for death
-      } else if (unit.state === 'attack') { //} || this.wasRecentlyAttacking(unit)) {
-        frameIndex = 2; // Frame 3 (index 2) for attack
-      } else {
-        // Idle animation - cycle between frames 0 and 1 every 400ms (slower)
-        frameIndex = Math.floor((this.animationTime / 400) % 2);
-      }
+      // Get animation frame from centralized logic
+      const frameIndex = this.unitRenderer.getAnimationFrame(unit, this.animationTime);
         
       // Frame layout: normal units have 4 frames of 16x16, huge units have 4 frames of 32x64
       const frameX = frameIndex * spriteWidth;
@@ -126,24 +110,14 @@ export default class Orthographic extends View {
 
       realPixelY = Math.round(realPixelY); // Ensure pixelY is an integer
       
-      // Draw ground shadow (larger for huge units)
-      this.ctx.save();
-      this.ctx.fillStyle = '#00000050';
-      this.ctx.beginPath();
-      const shadowWidth = isHuge ? 24 : 6;
-      const shadowHeight = isHuge ? 6 : 3;
-      const shadowOffsetY = isHuge ? -4 : 6; // More offset for huge units
-      const shadowOffsetX = isHuge ? 8 : -2; // More offset for huge units
-      this.ctx.ellipse(gridCenterX + shadowOffsetX, gridCenterY + shadowOffsetY, shadowWidth, shadowHeight, 0, 0, 2 * Math.PI);
-      this.ctx.fill();
-      this.ctx.restore();
+      // Draw ground shadow using centralized logic
+      this.unitRenderer.drawShadow(this.ctx, unit, gridCenterX, gridCenterY);
 
       // Handle sprite flipping based on facing direction
       this.ctx.save();
-      const facing = unit.meta.facing || 'right';
-      const shouldFlip = facing === 'left';
+      const shouldFlip = !this.unitRenderer.shouldFlipSprite(unit);
       
-      if (!shouldFlip) {
+      if (shouldFlip) {
         // Flip horizontally by scaling x by -1 and translating
         this.ctx.scale(-1, 1);
         this.ctx.translate(-pixelX * 2 - spriteWidth, 0);
@@ -161,7 +135,7 @@ export default class Orthographic extends View {
       // Fallback to colored rectangle - keep at 8x8 for grid alignment
       const fallbackX = Math.round(renderX * 8);
       const fallbackY = Math.round(renderY * 8);
-      this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
+      this.ctx.fillStyle = this.unitRenderer.getUnitColor(unit);
       this.ctx.fillRect(fallbackX, fallbackY, 8, 8);
     }
       

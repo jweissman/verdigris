@@ -5,7 +5,7 @@ import { SceneLoader } from '../../src/core/scene_loader';
 describe('Performance Tests', () => {
   const scenarios = ['simple', 'complex', 'healing', 'projectile', 'squirrel'];
   const SIMULATION_STEPS = 50;
-  const EXECUTION_TIME_PER_STEP = 5; // ms per step
+  const EXECUTION_TIME_PER_STEP = 4; // ms per step
   const MAX_EXECUTION_TIME = SIMULATION_STEPS * EXECUTION_TIME_PER_STEP + 10; // xms per step + 10ms buffer
 
   scenarios.forEach(scenario => {

@@ -2,7 +2,24 @@ import { Rule } from "./rule";
 import type { Unit } from "../types/Unit";
 
 export class Knockback extends Rule {
-  apply = () => this.pairwise((a: Unit, b: Unit) => {
+  apply = () => {
+    // Use spatial hash for efficient collision detection
+    const knockbackRange = 1.1;
+    
+    for (const a of this.sim.units) {
+      if (a.state === 'dead' || !a.mass) continue;
+      
+      // Get nearby units that might be knocked back
+      const nearbyUnits = this.sim.getUnitsNear(a.pos.x, a.pos.y, knockbackRange);
+      
+      for (const b of nearbyUnits) {
+        if (b.id === a.id) continue;
+        this.processKnockback(a, b);
+      }
+    }
+  };
+  
+  private processKnockback = (a: Unit, b: Unit) => {
     // Phantom units can push others but should never be pushed themselves
     if (b.meta.phantom) return; // Don't push phantom units (they're part of huge unit body)
     
@@ -60,7 +77,7 @@ export class Knockback extends Rule {
         }
       }
     }
-  });
+  };
 
   private canHugeUnitMoveTo(unit: Unit, newX: number, newY: number, excludeUnit?: Unit): boolean {
     // Check if all body cells of a huge unit can move to the new position
