@@ -13,12 +13,21 @@ import { Heal } from "../commands/heal";
 import { AoE } from "../commands/aoe";
 import { Projectile } from "../commands/projectile";
 import { JumpCommand } from "../commands/jump";
+import { CleanupCommand } from "../commands/cleanup";
+import { RemoveCommand } from "../commands/remove";
+import { MoveCommand } from "../commands/move";
+import { KnockbackCommand } from "../commands/knockback";
+import { UpdateTossCommand } from "../commands/update_toss";
+import { ApplyStatusEffectCommand, UpdateStatusEffectsCommand } from "../commands/status_effect";
+import { MarkDeadCommand } from "../commands/mark_dead";
+import { SetIntendedMoveCommand } from "../commands/set_intended_move";
 
 export type QueuedCommand = {
   type: string;
   params: Record<string, any>; // Named parameters dictionary
   unitId?: string; // Optional for system commands
   tick?: number;
+  id?: string; // Unique ID for deduplication
 };
 
 export class CommandHandler extends Rule {
@@ -46,39 +55,87 @@ export class CommandHandler extends Rule {
     this.commands.set('aoe', new AoE(sim));
     this.commands.set('projectile', new Projectile(sim));
     this.commands.set('jump', new JumpCommand(sim));
+    // System commands
+    this.commands.set('cleanup', new CleanupCommand(sim));
+    this.commands.set('remove', new RemoveCommand(sim));
+    this.commands.set('move', new MoveCommand(sim));
+    this.commands.set('knockback', new KnockbackCommand(sim));
+    this.commands.set('updateToss', new UpdateTossCommand(sim));
+    this.commands.set('applyStatusEffect', new ApplyStatusEffectCommand(sim));
+    this.commands.set('updateStatusEffects', new UpdateStatusEffectsCommand(sim));
+    this.commands.set('markDead', new MarkDeadCommand(sim));
+    this.commands.set('setIntendedMove', new SetIntendedMoveCommand(sim));
   }
 
   apply = () => {
-    if (!this.sim.queuedCommands || this.sim.queuedCommands.length === 0) {
+    // Early exit if nothing to process
+    if (!this.sim.queuedCommands?.length && !this.sim.queuedEvents?.length) {
       return;
     }
-
-    const commandsToProcess = [];
-    const commandsToKeep = [];
     
-    for (const queuedCommand of this.sim.queuedCommands) {
-      if (queuedCommand.tick !== undefined && queuedCommand.tick > this.sim.ticks) {
-        commandsToKeep.push(queuedCommand);
-      } else {
-        commandsToProcess.push(queuedCommand);
-      }
-    }
+    // Keep processing commands and events until there are none left (fixpoint)
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loops
+    const processedCommandIds = new Set<string>(); // Track processed command IDs
     
-    for (const queuedCommand of commandsToProcess) {
-      if (!queuedCommand.type) {
-        console.warn(`Skipping command with undefined/null type:`, queuedCommand);
-        continue;
+    while (iterations < maxIterations) {
+      iterations++;
+      let didWork = false;
+      
+      // Process commands
+      if (this.sim.queuedCommands?.length > 0) {
+        didWork = true;
+        const commandsToProcess = [];
+        const commandsToKeep = [];
+        
+        for (const queuedCommand of this.sim.queuedCommands) {
+          if (queuedCommand.tick !== undefined && queuedCommand.tick > this.sim.ticks) {
+            commandsToKeep.push(queuedCommand);
+          } else {
+            // If command has an ID, check if we've already processed it
+            if (queuedCommand.id && processedCommandIds.has(queuedCommand.id)) {
+              continue; // Skip duplicate
+            }
+            
+            // Mark as processed if it has an ID
+            if (queuedCommand.id) {
+              processedCommandIds.add(queuedCommand.id);
+            }
+            
+            commandsToProcess.push(queuedCommand);
+          }
+        }
+        
+        for (const queuedCommand of commandsToProcess) {
+          if (!queuedCommand.type) continue;
+          
+          const command = this.commands.get(queuedCommand.type);
+          if (command) {
+            command.execute(queuedCommand.unitId || null, queuedCommand.params);
+          }
+        }
+        
+        this.sim.queuedCommands = commandsToKeep;
+        
+        // Commit Transform changes after processing commands
+        const transform = this.sim.getTransform();
+        if (transform) {
+          transform.commit();
+        }
       }
       
-      const command = this.commands.get(queuedCommand.type);
-      if (command) {
-        command.execute(queuedCommand.unitId || null, queuedCommand.params);
-      } else if (queuedCommand.type && queuedCommand.type !== '') {
-        console.warn(`Unknown command type: ${queuedCommand.type}`);
+      // Process events (which may create new commands)
+      if (this.sim.queuedEvents?.length > 0) {
+        didWork = true;
+        const eventHandler = this.sim.rulebook.find(r => r.constructor.name === 'EventHandler');
+        if (eventHandler) {
+          eventHandler.apply();
+        }
       }
+      
+      // If nothing was processed, we're done
+      if (!didWork) break;
     }
-
-    this.sim.queuedCommands = commandsToKeep;
   }
   
   // Convert legacy args to params based on command type

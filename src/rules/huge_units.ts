@@ -110,8 +110,14 @@ export class HugeUnits extends Rule {
     );
 
     // Remove orphaned phantoms
-    for (const phantom of orphanedPhantoms) {
-      this.sim.units = this.sim.units.filter(u => u.id !== phantom.id);
+    if (orphanedPhantoms.length > 0) {
+      const filteredUnits = (this.sim.units as Unit[]).filter(u => 
+        !orphanedPhantoms.some(phantom => phantom.id === u.id)
+      );
+      
+      if (this.sim.applyUnitChanges) {
+        this.sim.applyUnitChanges(filteredUnits);
+      }
     }
   }
 

@@ -3,11 +3,12 @@ import type { Unit } from "../types/Unit";
 
 export abstract class Rule {
   simulator: Simulator;
+  
   constructor(simulator: Simulator) {
     this.simulator = simulator;
   }
 
-  execute() {
+  execute(): void {
     this.apply();
   }
 

@@ -2,6 +2,7 @@ import DSL from './dsl';
 import { Rule } from './rule';
 import { AbilityEffect } from "../types/AbilityEffect";
 import { Ability } from "../types/Ability";
+import { Unit } from "../types/Unit";
 import * as abilitiesJson from '../../data/abilities.json';
 
 export class Abilities extends Rule {
@@ -27,7 +28,7 @@ export class Abilities extends Rule {
       }
     });
 
-    this.sim.units = this.sim.units.map(unit => {
+    const updatedUnits = (this.sim.units as Unit[]).map(unit => {
       if (!unit.abilities || !Array.isArray(unit.abilities)) {
         return unit;
       }
@@ -89,6 +90,11 @@ export class Abilities extends Rule {
       }
       return unit;
     });
+    
+    // Apply changes through simulator
+    if (this.sim.applyUnitChanges) {
+      this.sim.applyUnitChanges(updatedUnits);
+    }
   }
 
   processEffectAsCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {

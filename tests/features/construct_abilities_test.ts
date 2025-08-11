@@ -65,6 +65,12 @@ describe('Construct Abilities', () => {
       
       // Check if enemy has chill status effect
       const enemyUnit = sim.units.find(u => u.id === enemy.id);
+      const freezebotUnit = sim.units.find(u => u.id === freezebot.id);
+      
+      if (i === 0 || i === 15) {
+        console.log(`Step ${i}: freezebot abilities:`, freezebotUnit?.abilities, 'lastAbilityTick:', freezebotUnit?.lastAbilityTick);
+      }
+      
       if (enemyUnit?.meta.chilled) {
         chillTriggered = true;
         expect(enemyUnit.meta.chillIntensity).toBe(0.5); // 50% slow

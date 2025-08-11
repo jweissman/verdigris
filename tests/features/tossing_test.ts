@@ -73,6 +73,7 @@ describe('Tossing mechanics', () => {
 
     // Tick through the toss duration (8 ticks)
     for (let i = 1; i < 8; i++) {
+      sim.tick();
       const tossedUnit = sim.roster.target;
       
       expect(tossedUnit.meta.tossing).toBe(true);
@@ -82,7 +83,6 @@ describe('Tossing mechanics', () => {
       // Position should be interpolating
       expect(tossedUnit.pos.x).toBeGreaterThan(10);
       expect(tossedUnit.pos.y).toBeGreaterThan(10);
-      sim.tick();
     }
   });
 
@@ -279,15 +279,10 @@ describe('Tossing mechanics', () => {
       }
     });
 
-    sim.tick(); // Process AoE event
+    sim.tick(); // Process AoE event (and any resulting toss commands due to fixpoint)
 
-    // Should have generated a toss command for the light unit
-    expect(sim.queuedCommands.length).toBeGreaterThan(0);
-    const tossCommand = sim.queuedCommands.find(c => c.type === 'toss' && c.unitId === 'light');
-    expect(tossCommand).toBeDefined();
-    
-    sim.tick(); // Process toss command
-    
+    // With fixpoint processing, the toss command is immediately processed
+    // So check if the light unit is actually being tossed
     const tossedUnit = sim.roster.light;
     expect(tossedUnit.meta.tossing).toBe(true);
   });
@@ -339,7 +334,8 @@ describe('Tossing mechanics', () => {
 
     sim.tick(); // Process AoE event
 
-    // Should not have generated toss commands
-    expect(sim.queuedCommands?.length || 0).toBe(0);
+    // Should not have generated toss commands (damage commands are ok)
+    const tossCommands = sim.queuedCommands?.filter(c => c.type === 'toss') || [];
+    expect(tossCommands.length).toBe(0);
   });
 });

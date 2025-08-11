@@ -1,9 +1,10 @@
 import { Rule } from "./rule";
+import { Unit } from "../types/Unit";
 
 // This rule interprets posture/tags and sets intendedMove for each unit
 export class UnitBehavior extends Rule {
   apply = () => {
-    this.sim.units = this.sim.units.map(unit => {
+    const updatedUnits = (this.sim.units as Unit[]).map(unit => {
       if (unit.state === 'dead' || unit.hp == 0) return unit;
 
       const find_new_target = () => {
@@ -94,5 +95,10 @@ export class UnitBehavior extends Rule {
       return unit;
 
     });
+    
+    // Apply changes through simulator
+    // if (this.sim.applyUnitChanges) {
+    //   this.sim.applyUnitChanges(updatedUnits);
+    // }
   }
 }

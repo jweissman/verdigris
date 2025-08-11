@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
+import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('End-to-end combat', () => {
+  beforeEach(() => {
+    Encyclopaedia.counts = {}; // Reset unit counters
+  });
   it('giant defeats swarm of small creatures', () => {
     const sim = new Simulator();
     let giant = sim.create({ 
@@ -22,26 +26,29 @@ describe('End-to-end combat', () => {
       tags: ['giant']
     });
 
-    // Add 5 small friendlies
+    // Add 5 small friendlies with hunt behavior
     for (let i = 0; i < 5; i++) {
       sim.addUnit({ 
         id: `minion${i}`, 
         pos: { x: 5 + i, y: 0 }, 
-        intendedMove: { x: -1, y: 0 }, 
+        intendedMove: { x: 0, y: 0 }, 
         team: 'friendly', 
         sprite: 'tiny', 
-        posture: 'pursue', 
         hp: 10, 
         maxHp: 10, 
         mass: 1, 
         state: 'idle', 
-        intendedTarget: giant.id,
-        abilities: []
+        abilities: [],
+        tags: ['hunt'] // Make them hunt the giant
       });
     }
 
-    // Simulate 50 steps (enough for them to meet and fight)
-    for (let t = 0; t < 50; t++) {
+    // Simulate 100 steps (enough for them to meet and fight multiple times)
+    for (let t = 0; t < 100; t++) {
+      if (t === 0 || t === 1 || t === 99) {
+        console.log(`Step ${t}: giant at (${sim.roster.giant?.pos.x},${sim.roster.giant?.pos.y}) hp=${sim.roster.giant?.hp}`);
+        console.log(`  minion0 at (${sim.roster.minion0?.pos.x},${sim.roster.minion0?.pos.y}) hp=${sim.roster.minion0?.hp} intendedMove=(${sim.roster.minion0?.intendedMove.x},${sim.roster.minion0?.intendedMove.y})`);
+      }
       sim.step();
     }
 

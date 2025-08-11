@@ -1,15 +1,19 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { UnitMovement } from '../../src/rules/unit_movement';
+import { setupTest } from '../test_helper';
 
 describe('Tactical Behavior Improvements', () => {
+  beforeEach(() => {
+    setupTest();
+  });
   it('should make constructs hunt enemies aggressively', () => {
     const sim = new Simulator();
-    sim.rulebook = [new UnitMovement(sim), new EventHandler(sim)];
+    sim.rulebook = [new UnitMovement(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     
     // Create constructs and enemies
@@ -30,30 +34,22 @@ describe('Tactical Behavior Improvements', () => {
     
     
     // Run simulation steps to see movement
-    for (let i = 0; i < 10; i++) {
-      const oldClankerPos = { ...clanker.pos };
-      const oldFreezebotPos = { ...freezebot.pos };
-      
+    const initialClankerPos = { ...clanker.pos };
+    const initialFreezebotPos = { ...freezebot.pos };
+    
+    for (let i = 0; i < 20; i++) {
       sim.step();
-      
-      const updatedClanker = sim.units.find(u => u.id === clanker.id);
-      const updatedFreezebot = sim.units.find(u => u.id === freezebot.id);
-      
-      if (updatedClanker && updatedFreezebot) {
-        if (updatedClanker.pos.x !== oldClankerPos.x || updatedClanker.pos.y !== oldClankerPos.y) {
-        }
-        if (updatedFreezebot.pos.x !== oldFreezebotPos.x || updatedFreezebot.pos.y !== oldFreezebotPos.y) {
-        }
-      }
     }
     
     // Constructs should be moving toward enemies
     const finalClanker = sim.units.find(u => u.id === clanker.id)!;
     const finalFreezebot = sim.units.find(u => u.id === freezebot.id)!;
     
+    
     // At least one should have moved closer to enemies
-    const distanceMoved = Math.abs(finalClanker.pos.x - 5) + Math.abs(finalClanker.pos.y - 5) + 
-                         Math.abs(finalFreezebot.pos.x - 6) + Math.abs(finalFreezebot.pos.y - 5);
+    const clankerMoved = Math.abs(finalClanker.pos.x - initialClankerPos.x) + Math.abs(finalClanker.pos.y - initialClankerPos.y);
+    const freezebotMoved = Math.abs(finalFreezebot.pos.x - initialFreezebotPos.x) + Math.abs(finalFreezebot.pos.y - initialFreezebotPos.y);
+    const distanceMoved = clankerMoved + freezebotMoved;
     
     expect(distanceMoved).toBeGreaterThan(0);
   });

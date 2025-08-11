@@ -1,6 +1,7 @@
 import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 import { Rule } from "./rule";
+import { Unit } from "../types/Unit";
 
 // interface SegmentData {
 //   position: Vec2;
@@ -212,11 +213,20 @@ export class SegmentedCreatures extends Rule {
     );
 
     // Remove orphaned segments and their path history
-    for (const segment of orphanedSegments) {
-      this.sim.units = this.sim.units.filter(u => u.id !== segment.id);
+    if (orphanedSegments.length > 0) {
+      const filteredUnits = (this.sim.units as Unit[]).filter(u => 
+        !orphanedSegments.some(segment => segment.id === u.id)
+      );
       
-      if (segment.meta.parentId) {
-        this.pathHistory.delete(segment.meta.parentId);
+      // Clear path history for orphaned segments
+      for (const segment of orphanedSegments) {
+        if (segment.meta.parentId) {
+          this.pathHistory.delete(segment.meta.parentId);
+        }
+      }
+      
+      if (this.sim.applyUnitChanges) {
+        this.sim.applyUnitChanges(filteredUnits);
       }
     }
   }

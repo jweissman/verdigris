@@ -4,13 +4,18 @@ import { Abilities } from './abilities';
 
 export class Jumping extends Rule {
   apply(): void {
-    this.sim.units = this.sim.units.map(unit => {
+    const updatedUnits = (this.sim.units as Unit[]).map(unit => {
       if (unit.meta?.jumping) {
         this.updateJump(unit);
       }
 
       return unit;
     });
+    
+    // Apply changes through simulator
+    if (this.sim.applyUnitChanges) {
+      this.sim.applyUnitChanges(updatedUnits);
+    }
   }
 
   private updateJump(unit: Unit): void {

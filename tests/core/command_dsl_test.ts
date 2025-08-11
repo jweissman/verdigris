@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
+import { CommandHandler } from '../../src/rules/command_handler';
+import { EventHandler } from '../../src/rules/event_handler';
+import { LightningStorm } from '../../src/rules/lightning_storm';
 
 describe('Command DSL', () => {
   it('should handle temperature command', () => {
     const sim = new Simulator();
-    // sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
     
     // Queue temperature command
     sim.queuedCommands = [{
@@ -23,7 +26,7 @@ describe('Command DSL', () => {
 
   it('should handle weather command with rain', () => {
     const sim = new Simulator();
-    // sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
     
     // Queue weather command
     sim.queuedCommands = [{
@@ -40,7 +43,7 @@ describe('Command DSL', () => {
 
   it('should handle weather command with sandstorm', () => {
     const sim = new Simulator();
-    // sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
     
     // Queue sandstorm weather
     sim.queuedCommands = [{
@@ -57,7 +60,7 @@ describe('Command DSL', () => {
 
   it.skip('should handle toss command', () => {
     const sim = new Simulator();
-    // sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
     
     // Add a unit to toss
     const unit = {
@@ -92,7 +95,7 @@ describe('Command DSL', () => {
 
   it('should handle lightning command', () => {
     const sim = new Simulator();
-    // sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     // Queue lightning command
     sim.queuedCommands = [{
@@ -110,7 +113,7 @@ describe('Command DSL', () => {
 
   it('should handle deploy command', () => {
     const sim = new Simulator();
-    // sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
     
     // Queue deploy command
     sim.queuedCommands = [{
@@ -120,7 +123,7 @@ describe('Command DSL', () => {
     
     // Process command
     const initialUnitCount = sim.units.length;
-    sim.step();
+    sim.step(); // CommandHandler will process command → event → spawn
     
     // Should create a new unit
     expect(sim.units.length).toBe(initialUnitCount + 1);
@@ -131,7 +134,7 @@ describe('Command DSL', () => {
 
   it('should handle command aliases', () => {
     const sim = new Simulator();
-    // sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     // Test 'temp' alias for 'temperature'
     sim.queuedCommands = [{

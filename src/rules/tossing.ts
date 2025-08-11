@@ -3,29 +3,29 @@ import { Unit } from '../types/Unit';
 
 export class Tossing extends Rule {
   apply(): void {
-    this.sim.units = this.sim.units.map(unit => {
+    // Process tossing for each unit
+    for (const unit of this.sim.units) {
       if (unit.meta?.tossing) {
-        this.updateToss(unit);
+        this.processToss(unit as Unit);
       }
-
-      return unit;
-    });
+    }
   }
 
-  private updateToss(unit: Unit): void {
+  private processToss(unit: Unit): void {
     const tossDuration = 8; // Fixed duration for toss (faster than jump)
-    unit.meta.tossProgress = (unit.meta.tossProgress || 0) + 1;
+    const tossProgress = (unit.meta.tossProgress || 0) + 1;
 
-    if (unit.meta.tossProgress >= tossDuration) {
-      // Toss completed - land at target
-      unit.meta.tossing = false;
-      unit.meta.z = 0;
-      
-      // Set final position to target
-      if (unit.meta.tossTarget) {
-        unit.pos.x = unit.meta.tossTarget.x;
-        unit.pos.y = unit.meta.tossTarget.y;
-      }
+    if (tossProgress >= tossDuration) {
+      // Toss completed - queue command to land at target
+      this.sim.queuedCommands.push({
+        type: 'updateToss',
+        params: {
+          unitId: unit.id,
+          complete: true,
+          targetX: unit.meta.tossTarget?.x || unit.pos.x,
+          targetY: unit.meta.tossTarget?.y || unit.pos.y
+        }
+      });
 
       // Optional: Apply small AoE damage on landing (like jump)
       if (unit.meta.tossForce && unit.meta.tossForce > 3) {
@@ -40,18 +40,30 @@ export class Tossing extends Rule {
         });
       }
     } else {
-      // Calculate arc physics during toss
-      const progress = unit.meta.tossProgress / tossDuration;
+      // Queue command to update toss progress
+      const progress = tossProgress / tossDuration;
       const origin = unit.meta.tossOrigin || { x: unit.pos.x, y: unit.pos.y };
       const target = unit.meta.tossTarget || { x: unit.pos.x, y: unit.pos.y };
       
-      // Interpolate position
-      unit.pos.x = origin.x + (target.x - origin.x) * progress;
-      unit.pos.y = origin.y + (target.y - origin.y) * progress;
+      // Calculate interpolated position
+      const newX = origin.x + (target.x - origin.x) * progress;
+      const newY = origin.y + (target.y - origin.y) * progress;
       
       // Arc height (involuntary so maybe lower than jump)
       const maxHeight = 3; // Lower arc than jump
-      unit.meta.z = (maxHeight * Math.sin(progress * Math.PI)) * 2;
+      const newZ = (maxHeight * Math.sin(progress * Math.PI)) * 2;
+      
+      this.sim.queuedCommands.push({
+        type: 'updateToss',
+        params: {
+          unitId: unit.id,
+          complete: false,
+          progress: tossProgress,
+          x: newX,
+          y: newY,
+          z: newZ
+        }
+      });
     }
   }
 }

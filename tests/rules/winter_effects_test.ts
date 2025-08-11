@@ -4,6 +4,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { WinterEffects } from '../../src/rules/winter_effects';
 import { Perdurance } from '../../src/rules/perdurance';
 import { EventHandler } from '../../src/rules/event_handler';
+import { CommandHandler } from '../../src/rules/command_handler';
 
 describe('Winter Effects System', () => {
   it('should generate snowfall particles', () => {
@@ -113,7 +114,7 @@ describe('Winter Effects System', () => {
 
   it('should make brittle (frozen) units take double damage', () => {
     const sim = new Simulator();
-    sim.rulebook = [new WinterEffects(sim), new Perdurance(sim), new EventHandler(sim)];
+    sim.rulebook = [new WinterEffects(sim), new Perdurance(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     // Add a construct (has sturdiness perdurance)
     const construct = { ...Encyclopaedia.unit('freezebot'), pos: { x: 10, y: 10 } };

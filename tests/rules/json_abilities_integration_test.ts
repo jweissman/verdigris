@@ -31,7 +31,8 @@ describe('Abilities Integration', () => {
     enemy.pos = { x: 8, y: 4 }; // Distance = 6, should be in range
     enemy.team = 'enemy';
 
-    sim.units = [archer, enemy];
+    sim.addUnit(archer);
+    sim.addUnit(enemy);
 
     // Set up Abilities rule instead of regular Abilities
     const jsonAbilities = new Abilities(sim);
@@ -75,7 +76,9 @@ describe('Abilities Integration', () => {
     const sim = new Simulator();
     sim.fieldWidth = 12;
     sim.fieldHeight = 8;
-    sim.units = [ranger, priest, enemy];
+    sim.addUnit(ranger);
+    sim.addUnit(priest);
+    sim.addUnit(enemy);
     const jsonAbilities = new Abilities(sim);
     const commandHandler = new CommandHandler(sim);
     sim.rulebook = [jsonAbilities, commandHandler];

@@ -1,8 +1,13 @@
 import { Action } from "../types/Action";
 import { Vec2 } from "../types/Vec2";
 import { Rule } from "./rule";
+import { Transform } from "../core/transform";
 
 export class EventHandler extends Rule {
+  constructor(sim: any) {
+    super(sim);
+  }
+  
   glossary = (event: Action) => {
     let targetUnit = this.sim.units.find(unit => unit.id === event.target); // || this.sim.unitAt(event.target);
     let tx = ({
@@ -93,6 +98,7 @@ export class EventHandler extends Rule {
 
     const isHealing = event.meta.aspect === 'heal';
     const isEmp = event.meta.aspect === 'emp';
+    const isChill = event.meta.aspect === 'chill';
     
     const affectedUnits = this.sim.getRealUnits().filter(unit => {
       const dx = unit.pos.x - target.x;
@@ -104,6 +110,8 @@ export class EventHandler extends Rule {
       } else if (isEmp) {
         const mechanicalImmune = event.meta.mechanicalImmune && unit.tags?.includes('mechanical');
         return inRange && !mechanicalImmune;
+      } else if (isChill) {
+        return inRange && unit.team !== sourceUnit?.team; // Chill affects enemies
       } else {
         return inRange && unit.team !== sourceUnit?.team;
       }
@@ -127,6 +135,20 @@ export class EventHandler extends Rule {
           lifetime: 25,
           type: 'electric_spark'
         });
+      } else if (isChill) {
+        // Apply chill status effect
+        unit.meta.chilled = true;
+        unit.meta.chillIntensity = 0.5; // 50% slow
+        unit.meta.chillDuration = event.meta.duration || 30;
+        
+        // Visual effect
+        this.sim.particles.push({
+          pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+          vel: { x: 0, y: -0.2 },
+          radius: 3,
+          color: '#88CCFF',
+          lifetime: 20
+        } as any);
       } else {
         this.sim.queuedEvents.push({
           kind: isHealing ? 'heal' : 'damage',
@@ -163,42 +185,40 @@ export class EventHandler extends Rule {
   }
 
   private handleDamage(event: Action) {
-    let targetUnit = this.sim.units.find(unit => unit.id === event.target); // || this.sim.unitAt(event.target);
-    if (!targetUnit) {
-      console.warn(`Target unit ${event.target} not found for damage event from ${event.source}`);
-      return;
-    }
-
-    targetUnit.hp -= event.meta.amount || 10;
-    
-    // Mark impact frame for precise attack animation timing (frame 3)
-    targetUnit.meta.impactFrame = this.sim.ticks;
-    
-    // Also mark the attacker for impact frame if they exist
-    let attackerUnit = this.sim.units.find(unit => unit.id === event.source);
-    if (attackerUnit) {
-      attackerUnit.meta.impactFrame = this.sim.ticks;
-    }
-    
-    if (targetUnit.hp <= 0) {
-      targetUnit.state = 'dead';
-    }
+    // Instead of directly mutating, queue a damage command
+    this.sim.queuedCommands.push({
+      type: 'damage',
+      params: {
+        targetId: event.target,
+        amount: event.meta.amount || 10,
+        sourceId: event.source,
+        aspect: event.meta.aspect
+      }
+    });
   }
 
   private handleHeal(event: Action) {
-    let targetUnit = this.sim.units.find(unit => unit.id === event.target);
-    if (!targetUnit) {
-      console.warn(`Target unit ${event.target} not found for heal event from ${event.source}`);
-      return;
-    }
-
-    const healAmount = event.meta.amount || 5;
-    const oldHp = targetUnit.hp;
-    targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
+    // Queue heal command instead of direct mutation
+    this.sim.queuedCommands.push({
+      type: 'heal',
+      params: {
+        targetId: event.target,
+        amount: event.meta.amount || 5,
+        sourceId: event.source,
+        aspect: event.meta.aspect || 'healing'
+      }
+    });
   }
 
   private handleKnockback(event: any) {
-    // Implement knockback logic here
+    // Queue knockback command
+    this.sim.queuedCommands.push({
+      type: 'knockback',
+      params: {
+        targetId: event.target,
+        force: event.meta?.force || { x: 0, y: 0 }
+      }
+    });
   }
   
   private handleTerrain(event: Action) {

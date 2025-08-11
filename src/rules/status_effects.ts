@@ -20,17 +20,18 @@ export class StatusEffects extends Rule {
     });
 
     // Update existing status effects on all units
-    this.sim.units = this.sim.units.map(unit => {
-      if (unit.meta.statusEffects) {
-        unit.meta.statusEffects = unit.meta.statusEffects
-          .map(effect => ({ ...effect, duration: effect.duration - 1 }))
-          .filter(effect => effect.duration > 0);
-
-        // Apply status effect mechanics
-        this.applyStatusEffectMechanics(unit);
+    // TODO: Convert to commands for status effect updates
+    for (const unit of this.sim.units) {
+      if (unit.meta.statusEffects && unit.meta.statusEffects.length > 0) {
+        // Queue command to update status effects
+        this.sim.queuedCommands.push({
+          type: 'updateStatusEffects',
+          params: {
+            unitId: unit.id
+          }
+        });
       }
-      return unit;
-    });
+    }
   }
 
   private applyChill(event: any): void {
@@ -46,22 +47,19 @@ export class StatusEffects extends Rule {
     });
 
     affectedUnits.forEach(unit => {
-      if (!unit.meta.statusEffects) {
-        unit.meta.statusEffects = [];
-      }
-
-      // Add or refresh chill effect
-      const existingChill = unit.meta.statusEffects.find(effect => effect.type === 'chill');
-      if (existingChill) {
-        existingChill.duration = Math.max(existingChill.duration, 30); // Refresh duration
-      } else {
-        unit.meta.statusEffects.push({
-          type: 'chill',
-          duration: 30, // 3.75 seconds at 8fps
-          intensity: 0.5, // 50% movement speed reduction
-          source: event.source
-        });
-      }
+      // Queue command to apply chill effect
+      this.sim.queuedCommands.push({
+        type: 'applyStatusEffect',
+        params: {
+          unitId: unit.id,
+          effect: {
+            type: 'chill',
+            duration: 30, // 3.75 seconds at 8fps
+            intensity: 0.5, // 50% movement speed reduction
+            source: event.source
+          }
+        }
+      });
     });
   }
 

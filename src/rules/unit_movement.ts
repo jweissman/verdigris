@@ -6,9 +6,16 @@ import { Simulator } from "../core/simulator";
 export class UnitMovement extends Rule {
   static wanderRate: number = 0.15; // Slower, more deliberate movement
   apply = () => {
-    this.sim.units = this.sim.units.map(unit => {
+    // TODO: Convert to commands
+    // For now, just process movement intents
+    for (let unit of this.sim.units) {
       if (unit.hp <= 0) {
-        return { ...unit, state: 'dead' };
+        // Queue command to mark as dead
+        this.sim.queuedCommands.push({
+          type: 'markDead',
+          params: { unitId: unit.id }
+        });
+        continue;
       }
 
 
@@ -17,15 +24,29 @@ export class UnitMovement extends Rule {
         if (unit.tags) {
           // Hunt behavior
           if (unit.tags.includes('hunt')) {
-            unit = UnitOperations.hunt(unit, this.sim);
+            const huntedUnit = UnitOperations.hunt(unit, this.sim);
+            // Directly queue move command if hunt produced movement
+            if (huntedUnit.intendedMove.x !== 0 || huntedUnit.intendedMove.y !== 0) {
+              this.sim.queuedCommands.push({
+                type: 'move',
+                params: {
+                  unitId: unit.id,
+                  dx: huntedUnit.intendedMove.x,
+                  dy: huntedUnit.intendedMove.y
+                }
+              });
+              continue; // Skip the normal movement processing
+            }
           }
           // Swarm behavior (worms group together)
           else if (unit.tags.includes('swarm')) {
-            unit = UnitOperations.swarm(unit, this.sim);
+            const swarmedUnit = UnitOperations.swarm(unit, this.sim);
+            unit.intendedMove = swarmedUnit.intendedMove;
           }
           // Default wanderer behavior
           else if (unit.tags.includes('wander')) {
-            unit = UnitOperations.wander(unit);
+            const wanderedUnit = UnitOperations.wander(unit);
+            unit.intendedMove = wanderedUnit.intendedMove;
           }
 
           else if (unit.tags.includes('follower')) {
@@ -48,25 +69,40 @@ export class UnitMovement extends Rule {
               unit.intendedMove = { x: (dx / mag), y: (dy / mag) };
             } else {
               // No friends, just wander
-              unit = UnitOperations.wander(unit);
+              const wanderedUnit = UnitOperations.wander(unit);
+              unit.intendedMove = wanderedUnit.intendedMove;
             }
           }
         }
       }
 
-      // For huge units, validate the entire movement before applying
-      if (unit.meta.huge && (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0)) {
-        if (this.canHugeUnitMove(unit, unit.intendedMove.x, unit.intendedMove.y)) {
-          unit = UnitOperations.move(unit, 1, this.sim);
+      // Queue move command if unit has intended movement
+      if (unit.intendedMove && (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0)) {
+        // For huge units, validate the movement first
+        if (unit.meta.huge) {
+          if (this.canHugeUnitMove(unit, unit.intendedMove.x, unit.intendedMove.y)) {
+            this.sim.queuedCommands.push({
+              type: 'move',
+              params: {
+                unitId: unit.id,
+                dx: unit.intendedMove.x,
+                dy: unit.intendedMove.y
+              }
+            });
+          }
         } else {
-          // Can't move, clear intended move
-          unit.intendedMove = { x: 0, y: 0 };
+          // Regular unit movement
+          this.sim.queuedCommands.push({
+            type: 'move',
+            params: {
+              unitId: unit.id,
+              dx: unit.intendedMove.x,
+              dy: unit.intendedMove.y
+            }
+          });
         }
-      } else {
-        unit = UnitOperations.move(unit, 1, this.sim);
       }
-      return unit;
-    });
+    }
 
     UnitMovement.resolveCollisions(this.sim);
   }
@@ -128,7 +164,7 @@ export class UnitMovement extends Rule {
           }
           return 0;
         });
-        // Move the lighter units out of the way
+        // Queue moves to push lighter units out of the way
         for (let i = 1; i < unitsAtPos.length; i++) {
           const unit = unitsAtPos[i];
           let halt = false;
@@ -137,9 +173,15 @@ export class UnitMovement extends Rule {
             for (let dy = -1; dy <= 1; dy++) {
               if (dx === 0 && dy === 0) continue; // Skip no movement
               if (sim.validMove(unit, dx, dy)) {
-                unit.pos.x += dx;
-                unit.pos.y += dy;
-
+                // Queue a move command instead of direct mutation
+                sim.queuedCommands.push({
+                  type: 'move',
+                  params: {
+                    unitId: unit.id,
+                    dx: dx,
+                    dy: dy
+                  }
+                });
                 halt = true; // Stop trying to move this unit
                 break;
               }

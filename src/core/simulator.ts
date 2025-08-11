@@ -24,6 +24,8 @@ import { Unit } from "../types/Unit";
 import { Particle } from "../types/Particle";
 import { Action } from "../types/Action";
 import { DoubleBuffer, SpatialHash } from "../sim/double_buffer";
+import { PerformanceProfiler } from "./performance_profiler";
+import { Transform } from "./transform";
 
 class ScalarField {
   private grid: number[][];
@@ -124,8 +126,30 @@ class Simulator {
   private spatialHash: SpatialHash;
   private dirtyUnits: Set<string> = new Set();
   
-  // Direct access to units (double-buffering will be phased in gradually)
-  units: Unit[] = [];
+  // Units are now private - access through getters/setters
+  private _units: Unit[] = [];
+  
+  // Public access - READ ONLY (enforces proper architecture)
+  get units(): ReadonlyArray<Unit> {
+    return this._units;
+  }
+  
+  // Get mutable units (only for Transform)
+  getUnitsForTransform(): Unit[] {
+    return this._units;
+  }
+  
+  // Private setter (only Transform should use this)
+  setUnitsFromTransform(units: Unit[]): void {
+    this._units = units;
+    // Update spatial hash when units change
+    if (this.spatialHash) {
+      this.spatialHash.clear();
+      for (const unit of units) {
+        this.spatialHash.insert(unit.id, unit.pos.x, unit.pos.y);
+      }
+    }
+  }
   
   projectiles: Projectile[];
   rulebook: Rule[];
@@ -150,6 +174,24 @@ class Simulator {
   winterActive?: boolean;
   lightningActive?: boolean;
   sandstormActive?: boolean;
+  
+  // Performance profiling
+  profiler?: PerformanceProfiler;
+  enableProfiling: boolean = false;
+  
+  // Transform for controlled mutations
+  private transform: Transform;
+  
+  // Factory methods for rules that need Transform
+  createCommandHandler() {
+    return new CommandHandler(this, this.transform);
+  }
+  
+  createEventHandler() {
+    return new EventHandler(this, this.transform);
+  }
+
+  getTransform() { return this.transform; }
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
@@ -158,6 +200,9 @@ class Simulator {
     // Initialize spatial hash for collision detection
     this.spatialHash = new SpatialHash(4); // 4x4 grid cells
     this.dirtyUnits = new Set();
+    
+    // Initialize transform for controlled mutations
+    this.transform = new Transform(this);
     
     // Initialize scalar fields
     this.temperatureField = new ScalarField(fieldWidth, fieldHeight, 20); // Base temperature ~20°C
@@ -218,12 +263,11 @@ class Simulator {
   }
 
   reset() {
-    this.units = [];
+    this._units = [];
     this.projectiles = [];
     this.processedEvents = [];
     this.queuedCommands = [];
     this.rulebook = [
-      new CommandHandler(this), // Process commands first
       new Abilities(this),
       new UnitBehavior(this),
       new UnitMovement(this),
@@ -246,34 +290,36 @@ class Simulator {
       new WinterEffects(this), // Handle environmental winter effects
       new DesertEffects(this), // Handle desert heat shimmer and environmental effects
       new Perdurance(this), // Process damage resistance before events are handled
-      new EventHandler(this), // Process events last
-      new Cleanup(this)
+      new EventHandler(this), // Convert events to commands
+      new Cleanup(this),
+      new CommandHandler(this) // Process ALL commands at the end
     ];
   }
 
   addUnit(unit: Partial<Unit>): Unit {
+    const hp = unit.hp === undefined ? 100 : unit.hp;
     let u = {
       ...unit,
       id: unit.id || `unit_${Date.now()}`,
-      hp: unit.hp === undefined ? 100 : unit.hp,
+      hp: hp,
       team: unit.team || 'friendly',
       pos: unit.pos || { x: 1, y: 1 },
       intendedMove: unit.intendedMove || { x: 0, y: 0 },
       maxHp: unit.maxHp || unit.hp || 100,
       sprite: unit.sprite || 'default',
-      state: unit.state || 'idle',
+      state: unit.state || (hp <= 0 ? 'dead' : 'idle'),
       mass: unit.mass || 1,
       abilities: unit.abilities || [],
       meta: unit.meta || {}
     };
-    this.units.push(u);
+    this._units.push(u);
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
     return u;
   }
 
   create(unit: Unit) {
     const newUnit = { ...unit, id: unit.id || `unit_${Date.now()}` };
-    this.units.push(newUnit);
+    this._units.push(newUnit);
     this.dirtyUnits.add(newUnit.id); // Mark as dirty for rendering
     return newUnit;
   }
@@ -321,9 +367,26 @@ class Simulator {
   getDirtyUnits(): Set<string> {
     return new Set(this.dirtyUnits);
   }
+  
 
   get roster() {
     return Object.fromEntries(this.units.map(unit => [unit.id, unit]));
+  }
+  
+  startProfiling() {
+    this.enableProfiling = true;
+    this.profiler = new PerformanceProfiler();
+  }
+  
+  stopProfiling() {
+    if (this.profiler) {
+      this.profiler.printReport();
+    }
+    this.enableProfiling = false;
+  }
+  
+  getProfilingReport() {
+    return this.profiler?.getReport() || [];
   }
 
   tick() { this.step(true); }
@@ -355,16 +418,27 @@ class Simulator {
     let lastUnits = [...this.units];
     
     for (const rule of this.rulebook) {
+      const ruleName = rule.constructor.name;
+      
+      if (this.enableProfiling && this.profiler) {
+        this.profiler.startTimer(ruleName);
+      }
+      
       let tr0 = performance.now();
       rule.execute();
       let tr1 = performance.now();
+      
+      if (this.enableProfiling && this.profiler) {
+        this.profiler.endTimer();
+      }
+      
       let elapsed = tr1 - tr0;
       if (elapsed > 10) {
-        console.warn(`- Rule ${rule.constructor.name} executed in ${tr1 - tr0}ms`);
+        console.warn(`- Rule ${ruleName} executed in ${elapsed}ms`);
       }
 
       // Debugging: print unit changes
-      this._debugUnits(lastUnits, rule.constructor.name);
+      this._debugUnits(lastUnits, ruleName);
       lastUnits = this.units.map(u => ({ 
         ...u,
         meta: u.meta ? { ...u.meta } : {}
@@ -814,7 +888,7 @@ class Simulator {
 
   clone() {
     const newSimulator = new Simulator();
-    newSimulator.units = this.units.map(unit => ({ ...unit }));
+    newSimulator._units = this._units.map(unit => ({ ...unit }));
     return newSimulator;
   }
 

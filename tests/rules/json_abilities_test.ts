@@ -45,8 +45,8 @@ describe('Abilities', () => {
       maxHp: 100
     };
 
-    (sim as any).units = [archer, enemy];
-    (sim as any).getRealUnits = () => (sim as any).units.filter(u => u.state !== 'dead');
+    sim.addUnit(archer);
+    sim.addUnit(enemy);
 
     // Apply JSON abilities rule
     abilities.apply();
@@ -80,8 +80,8 @@ describe('Abilities', () => {
       maxHp: 100
     };
 
-    (sim as any).units = [healer, wounded];
-    (sim as any).getRealUnits = () => (sim as any).units.filter(u => u.state !== 'dead');
+    sim.addUnit(healer);
+    sim.addUnit(wounded);
 
     // Apply JSON abilities rule
     abilities.apply();
@@ -116,8 +116,8 @@ describe('Abilities', () => {
       maxHp: 100
     };
 
-    (sim as any).units = [archer, enemy];
-    (sim as any).getRealUnits = () => (sim as any).units.filter(u => u.state !== 'dead');
+    sim.addUnit(archer);
+    sim.addUnit(enemy);
     sim.ticks = 3; // Only 3 ticks passed, but cooldown is 6
 
     // Apply JSON abilities rule
@@ -144,15 +144,13 @@ describe('Abilities', () => {
       maxHp: 100
     };
 
-    (sim as any).units = [enemy];
+    sim.addUnit(enemy);
 
     // Process commands
     commandHandler.apply();
 
-    // Should have queued a damage event
-    expect(sim.queuedEvents.length).toBe(1);
-    expect(sim.queuedEvents[0].kind).toBe('damage');
-    expect(sim.queuedEvents[0].target).toBe('enemy1');
-    expect(sim.queuedEvents[0].meta.amount).toBe(10);
+    // Should have applied damage to the enemy
+    const damagedEnemy = sim.units.find(u => u.id === 'enemy1');
+    expect(damagedEnemy?.hp).toBe(90); // 100 - 10 damage
   });
 });

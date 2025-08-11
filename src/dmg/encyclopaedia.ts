@@ -995,7 +995,7 @@ export default class Encyclopaedia {
         sprite: this.bestiary[beast]?.sprite || beast,
         mass: this.bestiary[beast]?.mass || 1,
         dmg: this.bestiary[beast]?.dmg || 1, // Default
-        meta: this.bestiary[beast]?.meta || {},
+        meta: { ...(this.bestiary[beast]?.meta || {}) }, // Deep clone meta to avoid shared state
         tags: [
           ...(this.bestiary[beast]?.tags || []), // Include tags from bestiary
           ...(beast === "worm" ? ["swarm"] : []),

@@ -1,4 +1,5 @@
 import { Command, CommandParams } from "../rules/command";
+import { Transform } from "../core/transform";
 
 /**
  * Heal command - heals a target unit
@@ -13,25 +14,22 @@ export class Heal extends Command {
     const amount = params.amount as number;
     const aspect = (params.aspect as string) || 'healing';
     
-    const target = this.sim.units.find(u => u.id === targetId);
-    if (!target) {
-      console.warn(`Heal command: target ${targetId} not found`);
-      return;
-    }
-
     if (typeof amount !== 'number' || isNaN(amount)) {
       console.warn(`Heal command: invalid amount ${amount}`);
       return;
     }
 
-    this.sim.queuedEvents.push({
-      kind: 'heal',
-      source: unitId,
-      target: targetId,
-      meta: {
-        aspect: aspect,
-        amount: amount
+    // Apply heal directly using Transform
+    const transform = this.sim.getTransform();
+    transform.mapUnits(unit => {
+      if (unit.id === targetId) {
+        const newHp = Math.min(unit.hp + amount, unit.maxHp);
+        return {
+          ...unit,
+          hp: newHp
+        };
       }
+      return unit;
     });
   }
 }

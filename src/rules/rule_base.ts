@@ -1,13 +1,17 @@
 import type { Simulator } from "../simulator";
 import type { Unit } from "../types/";
+import { Transaction } from "../core/transaction";
 
 export abstract class Rule {
   simulator: Simulator;
+  protected tx: Transaction | null = null;
+  
   constructor(simulator: Simulator) {
     this.simulator = simulator;
   }
 
-  execute() {
+  execute(tx?: Transaction) {
+    this.tx = tx || null;
     this.apply();
   }
 

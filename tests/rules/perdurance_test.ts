@@ -1,10 +1,15 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, beforeEach } from "bun:test";
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from "../../src/dmg/encyclopaedia";
 import { Perdurance } from "../../src/rules/perdurance";
 import { EventHandler } from "../../src/rules/event_handler";
+import { CommandHandler } from "../../src/rules/command_handler";
+import { setupTest } from '../test_helper';
 
 describe("Perdurance System", () => {
+  beforeEach(() => {
+    setupTest();
+  });
   it("should allow ghosts to resist physical damage", () => {
     const sim = new Simulator(10, 10);
     
@@ -225,7 +230,7 @@ describe("Perdurance System", () => {
 
   it('should reduce all damage to 1 for sturdiness perdurance', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Perdurance(sim), new EventHandler(sim)];
+    sim.rulebook = [new Perdurance(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     // Add construct with sturdiness
     const construct = { ...Encyclopaedia.unit('freezebot'), pos: { x: 5, y: 5 } };
@@ -243,17 +248,23 @@ describe("Perdurance System", () => {
     });
     
     const initialHp = construct.hp;
+    console.log('Construct ID:', construct.id, 'Initial HP:', initialHp, 'Perdurance:', construct.meta?.perdurance);
+    console.log('Events before step:', sim.queuedEvents.length);
+    console.log('Commands before step:', sim.queuedCommands.length);
     
     // Process the event
     sim.step();
+    console.log('Events after step:', sim.queuedEvents.length);
+    console.log('Commands after step:', sim.queuedCommands.length);
     
     const constructUnit = sim.units.find(u => u.id === construct.id);
+    console.log('After damage - HP:', constructUnit?.hp, 'Expected:', initialHp - 1);
     expect(constructUnit?.hp).toBe(initialHp - 1); // Damage capped to 1
   });
 
   it('should handle swarm perdurance differently', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Perdurance(sim), new EventHandler(sim)];
+    sim.rulebook = [new Perdurance(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     // Add swarmbot with population-based health
     const swarmbot = { ...Encyclopaedia.unit('swarmbot'), pos: { x: 5, y: 5 } };
@@ -282,7 +293,7 @@ describe("Perdurance System", () => {
 
   it('should allow multiple small hits to defeat sturdiness constructs', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Perdurance(sim), new EventHandler(sim)];
+    sim.rulebook = [new Perdurance(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     // Add construct with 8 HP and sturdiness
     const construct = { ...Encyclopaedia.unit('freezebot'), pos: { x: 5, y: 5 } };
@@ -301,12 +312,11 @@ describe("Perdurance System", () => {
       });
     }
     
-    // Process all events
-    for (let i = 0; i < 8; i++) {
-      sim.step();
-    }
+    // Process all events (they'll all be handled in one step due to fixpoint)
+    sim.step();
     
     const constructUnit = sim.units.find(u => u.id === construct.id);
+    console.log(`Construct HP after 8 damage events: ${constructUnit?.hp}`);
     expect(constructUnit?.hp).toBe(0); // Should be defeated by chip damage
   });
 });
