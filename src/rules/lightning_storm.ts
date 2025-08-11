@@ -35,18 +35,9 @@ export class LightningStorm extends Rule {
       y: Math.floor(Math.random() * this.simulator.fieldHeight)
     };
 
-    console.log(`⚡ Lightning strikes at (${strikePos.x}, ${strikePos.y})!`);
-
-    // Create dramatic lightning visual effect
     this.createLightningVisuals(strikePos);
-
-    // EMP effect that stuns non-mechanical units
     this.createEmpBurst(strikePos);
-
-    // Power boost for mechanical units (especially mechanists)
     this.boostMechanicalUnits(strikePos);
-
-    // Environmental particle effects
     this.createAtmosphericEffects(strikePos);
   }
 
@@ -103,7 +94,6 @@ export class LightningStorm extends Rule {
   }
 
   private createEmpBurst(pos: Vec2): void {
-    // Create EMP AoE that affects non-mechanical units
     this.simulator.queuedEvents.push({
       kind: 'aoe',
       source: 'lightning',
@@ -116,8 +106,6 @@ export class LightningStorm extends Rule {
         mechanicalImmune: true // Mechanical units are immune
       }
     });
-
-    console.log(`  ⚡ EMP burst affects 3-cell radius around strike`);
   }
 
   private boostMechanicalUnits(pos: Vec2): void {
@@ -149,7 +137,6 @@ export class LightningStorm extends Rule {
       // Extra boost for mechanist units
       if (unit.tags?.includes('leader') || unit.tags?.includes('engineer')) {
         unit.meta.lightningBoostDuration = 90; // Extended boost for leaders
-        console.log(`  ⚡ ${unit.id} receives lightning supercharge!`);
         
         // Visual effect on boosted mechanists
         this.simulator.particles.push({
@@ -162,10 +149,6 @@ export class LightningStorm extends Rule {
         });
       }
     });
-
-    if (mechanicalUnits.length > 0) {
-      console.log(`  ⚡ ${mechanicalUnits.length} mechanical units receive power boost`);
-    }
   }
 
   private createAtmosphericEffects(pos: Vec2): void {
@@ -222,7 +205,6 @@ export class LightningStorm extends Rule {
   // Static method to start a lightning storm
   static createLightningStorm(sim: Simulator): void {
     sim.lightningActive = true;
-    console.log('⚡ Lightning storm begins! The air crackles with electricity...');
     
     // Add storm ambiance particles
     for (let i = 0; i < 8; i++) {
@@ -242,6 +224,5 @@ export class LightningStorm extends Rule {
 
   static endLightningStorm(sim: Simulator): void {
     sim.lightningActive = false;
-    console.log('⚡ Lightning storm subsides...');
   }
 }

@@ -12,17 +12,11 @@ export class SegmentedCreatures extends Rule {
   private pathHistory: Map<string, Vec2[]> = new Map(); // Track movement history for snake-like following
 
   apply = () => {
-    // console.log("SegmentedCreatures: Starting apply");
-    // Find segmented creatures that need segment setup
     const segmentedCreatures = this.sim.units.filter(unit => 
       unit.meta.segmented && !this.hasSegments(unit)
     );
-    // console.log(`SegmentedCreatures: Found ${segmentedCreatures.length} creatures needing segments`);
-
-    // Create segments for new segmented creatures
     for (let i = 0; i < segmentedCreatures.length; i++) {
       const creature = segmentedCreatures[i];
-      // console.log(`SegmentedCreatures: Creating segments for creature ${i}/${segmentedCreatures.length}: ${creature.id}`);
       if (i > 100) {
         console.error("SegmentedCreatures: Too many creatures, possible infinite loop!");
         throw new Error("SegmentedCreatures infinite loop detected");
@@ -30,24 +24,10 @@ export class SegmentedCreatures extends Rule {
       this.createSegments(creature);
     }
 
-    // Update segment positions with snake-like movement
     this.updateSegmentPositions();
-    // console.log("SegmentedCreatures: Finished updating segment positions");
-
-    // console.log("SegmentedCreatures: About to handle segment damage");
-    // Handle segment damage propagation
     this.handleSegmentDamage();
-    // console.log("SegmentedCreatures: Finished handling segment damage");
-
-    // console.log("SegmentedCreatures: About to handle segment grappling");
-    // Handle grappling interactions with segments
     this.handleSegmentGrappling();
-    // console.log("SegmentedCreatures: Finished handling segment grappling");
-
-    // console.log("SegmentedCreatures: About to cleanup orphaned segments");
-    // Clean up orphaned segments
     this.cleanupOrphanedSegments();
-    // console.log("SegmentedCreatures: Finished cleanup orphaned segments");
   }
 
   private hasSegments(creature: Unit): boolean {
@@ -58,7 +38,6 @@ export class SegmentedCreatures extends Rule {
 
   private createSegments(creature: Unit) {
     const segmentCount = creature.meta.segmentCount || 4; // Default to 4 segments
-    // console.log(`SegmentedCreatures.createSegments: Creating ${segmentCount} segments for ${creature.id}`);
     
     if (segmentCount > 50) {
       console.error(`SegmentedCreatures: Segment count too high: ${segmentCount}`);
@@ -71,7 +50,6 @@ export class SegmentedCreatures extends Rule {
     
     // Create segments behind the head
     for (let i = 1; i <= segmentCount; i++) {
-      // console.log(`SegmentedCreatures.createSegments: Creating segment ${i}/${segmentCount}`);
       if (i > 100) {
         console.error("SegmentedCreatures: Infinite loop in segment creation!");
         throw new Error("Infinite loop in createSegments");
@@ -235,7 +213,6 @@ export class SegmentedCreatures extends Rule {
 
     // Remove orphaned segments and their path history
     for (const segment of orphanedSegments) {
-      // console.log(`Removing orphaned segment: ${segment.id}`);
       this.sim.units = this.sim.units.filter(u => u.id !== segment.id);
       
       if (segment.meta.parentId) {
@@ -253,7 +230,6 @@ export class SegmentedCreatures extends Rule {
           // Transfer 50% of segment damage to head
           const transferDamage = Math.floor(segment.meta.damageTaken * 0.5);
           if (transferDamage > 0) {
-            // console.log(`Segment ${segment.id} transfers ${transferDamage} damage to head ${parent.id}`);
             parent.hp -= transferDamage;
             
             // Visual feedback - pain particles
@@ -279,7 +255,6 @@ export class SegmentedCreatures extends Rule {
         );
         
         adjacentSegments.forEach(adj => {
-          // console.log(`Segment destruction damages adjacent segment ${adj.id}`);
           adj.hp -= 5;
         });
       }
@@ -310,7 +285,6 @@ export class SegmentedCreatures extends Rule {
           
           // If head segment is pinned, entire creature is immobilized
           if (segment.meta.segmentIndex === 1 && segment.meta.pinned) {
-            // console.log(`Head segment pinned - entire creature immobilized!`);
             parent.meta.stunned = true;
             parent.intendedMove = { x: 0, y: 0 };
           }

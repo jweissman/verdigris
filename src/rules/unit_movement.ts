@@ -105,7 +105,6 @@ export class UnitMovement extends Rule {
     ];
   }
   static resolveCollisions(sim: Simulator) {
-    // console.log(`[UnitMovement] Resolving collisions...`);
     // if any units are now on the same square, we want to push the lighter one out
     const positions: { [key: string]: Unit[] } = {};
     for (const unit of sim.units) {
@@ -113,11 +112,9 @@ export class UnitMovement extends Rule {
       if (!positions[posKey]) positions[posKey] = [];
       positions[posKey].push(unit);
     }
-    // console.log(`[UnitMovement] Found ${Object.keys(positions).length} unique positions with units.`);
     for (const posKey in positions) {
       const unitsAtPos = positions[posKey];
       if (unitsAtPos.length > 1) {
-        // console.log(`[UnitMovement] Multiple units at ${posKey}: ${unitsAtPos.map(u => u.id).join(', ')}`);
         // Sort by mass, then by hp
         unitsAtPos.sort((a, b) => {
           if (a.mass !== b.mass) {
@@ -139,18 +136,15 @@ export class UnitMovement extends Rule {
             if (halt) break;
             for (let dy = -1; dy <= 1; dy++) {
               if (dx === 0 && dy === 0) continue; // Skip no movement
-              // console.log(`[UnitMovement] Attempting to move unit ${unit.id} by (${dx}, ${dy})`);
               if (sim.validMove(unit, dx, dy)) {
                 unit.pos.x += dx;
                 unit.pos.y += dy;
 
-                // console.log(`[UnitMovement] Successfully moved unit ${unit.id} to (${unit.pos.x}, ${unit.pos.y})`);
                 halt = true; // Stop trying to move this unit
                 break;
               }
             }
           }
-          // console.log(`[UnitMovement] Final position of unit ${unit.id} is (${unit.pos.x}, ${unit.pos.y})`);
         }
       }
     }

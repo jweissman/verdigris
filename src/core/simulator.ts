@@ -133,7 +133,7 @@ class Simulator {
   
   // Weather system
   weather: {
-    current: 'clear' | 'rain' | 'storm' | 'snow' | 'lightning';
+    current: 'clear' | 'rain' | 'storm' | 'snow' | 'lightning' | 'sandstorm' | 'leaves';
     duration: number; // ticks remaining for current weather
     intensity: number; // 0-1 scale
   };
@@ -509,6 +509,19 @@ class Simulator {
     }
   }
   
+  // Getter for average temperature
+  get temperature(): number {
+    let total = 0;
+    let count = 0;
+    for (let x = 0; x < this.fieldWidth; x++) {
+      for (let y = 0; y < this.fieldHeight; y++) {
+        total += this.temperatureField.get(x, y);
+        count++;
+      }
+    }
+    return count > 0 ? Math.round(total / count) : 20;
+  }
+
   // Utility methods for field access
   getTemperature(x: number, y: number): number {
     return this.temperatureField.get(x, y);
@@ -601,7 +614,7 @@ class Simulator {
   }
   
   // Weather control methods
-  setWeather(type: 'clear' | 'rain' | 'storm', duration: number = 80, intensity: number = 0.7): void {
+  setWeather(type: 'clear' | 'rain' | 'storm' | 'sandstorm' | 'leaves', duration: number = 80, intensity: number = 0.7): void {
     this.weather.current = type;
     this.weather.duration = duration;
     this.weather.intensity = intensity;

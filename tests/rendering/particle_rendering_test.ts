@@ -90,8 +90,12 @@ describe('Granular Cell-Based Particle Rendering', () => {
     const sim = new Simulator(32, 24);
     const winterEffects = new WinterEffects(sim);
     
-    // Set cold temperature
-    sim.temperature = -5;
+    // Set cold temperature using temperature field
+    for (let x = 0; x < sim.fieldWidth; x++) {
+      for (let y = 0; y < sim.fieldHeight; y++) {
+        sim.temperatureField.set(x, y, -5);
+      }
+    }
     
     // Manually create a snow particle at a specific cell
     const snowCell = { x: 8, y: 6 };

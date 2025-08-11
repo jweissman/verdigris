@@ -5,6 +5,7 @@ import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { Abilities } from '../../src/rules/abilities';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { ProjectileMotion } from '../../src/rules/projectile_motion';
+import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 
 describe('Grappling Mechanics - Core Physics', () => {
   it('should create a grapple projectile when grappler fires hook', () => {
@@ -85,7 +86,13 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should damage and pin segments when grappling segmented creature', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
+    sim.rulebook = [
+      new SegmentedCreatures(sim), // Add segmented creatures rule first
+      new CommandHandler(sim), 
+      new Abilities(sim), 
+      new ProjectileMotion(sim), 
+      new GrapplingPhysics(sim)
+    ];
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
@@ -94,41 +101,51 @@ describe('Grappling Mechanics - Core Physics', () => {
       lastAbilityTick: {}
     };
     
-    // Create segmented worm with segments
+    // Create segmented worm properly
     const worm = {
       ...Encyclopaedia.unit('big-worm'),
       id: 'worm-1',
       pos: { x: 8, y: 5 },
       team: 'hostile' as const,
-      meta: { segmented: true },
-      segments: [
-        { id: 'segment-1', hp: 20, maxHp: 20, pos: { x: 9, y: 5 } },
-        { id: 'segment-2', hp: 20, maxHp: 20, pos: { x: 10, y: 5 } }
-      ]
+      meta: { 
+        segmented: true,
+        segmentCount: 2
+      }
     };
     
     sim.addUnit(grappler);
     sim.addUnit(worm);
     
-    const initialSegmentHp = worm.segments[0].hp;
+    // Let SegmentedCreatures create the segments
+    sim.step();
     
-    // Fire grapple using Abilities
-    sim.step(); // Abilities queues the grapple command
-    sim.step(); // CommandHandler processes the grapple command
+    // Find the first segment that was created
+    const segment1 = sim.units.find(u => 
+      u.meta?.segment && 
+      u.meta?.parentId === 'worm-1' && 
+      u.meta?.segmentIndex === 1
+    );
     
-    // Process grapple hit
+    expect(segment1).toBeDefined();
+    const initialSegmentHp = segment1!.hp;
+    
+    // Fire grapple using command
+    sim.queuedCommands.push({
+      type: 'grapple',
+      unitId: 'grappler-1',
+      params: { targetX: worm.pos.x, targetY: worm.pos.y }
+    });
+    
+    // Process grapple
     for (let i = 0; i < 20; i++) {
       sim.step();
-      
-      // Check if segment was damaged
-      const w = sim.units.find(u => u.id === 'worm-1');
-      if (w?.segments && w.segments[0].hp < initialSegmentHp) {
-        break;
-      }
     }
     
-    const finalWorm = sim.units.find(u => u.id === 'worm-1');
-    expect(finalWorm?.segments?.[0].hp).toBeLessThan(initialSegmentHp);
+    // Check if segment was damaged
+    const finalSegment = sim.units.find(u => u.id === segment1!.id);
+    expect(finalSegment).toBeDefined();
+    expect(finalSegment!.hp).toBeLessThan(initialSegmentHp);
+    expect(finalSegment!.meta?.pinned).toBe(true);
   });
 
   it('should limit grappler to maximum simultaneous grapples', () => {

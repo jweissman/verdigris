@@ -75,7 +75,6 @@ export class UnitBehavior extends Rule {
 
         case 'bully': // try to occupy _same space_ as target
           if (target) {
-            // console.log(`[UnitBehavior] ${unit.id} in bully posture, moving to occupy target ${target.id} at (${target.pos.x}, ${target.pos.y})`);
             unit.intendedMove = {
               x: target.pos.x === unit.pos.x ? 0 : (target.pos.x > unit.pos.x ? 1 : -1),
               y: target.pos.y === unit.pos.y ? 0 : (target.pos.y > unit.pos.y ? 1 : -1)

@@ -42,8 +42,7 @@ export class Temperature extends Command {
         }
       }
     } else {
-      this.sim.temperature = amount;
-
+      // Set global temperature
       for (let fx = 0; fx < this.sim.fieldWidth; fx++) {
         for (let fy = 0; fy < this.sim.fieldHeight; fy++) {
           // Add some variation for realism

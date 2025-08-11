@@ -56,9 +56,7 @@ export class CommandHandler extends Rule {
     const commandsToProcess = [];
     const commandsToKeep = [];
     
-    // Separate commands that should run now vs later
     for (const queuedCommand of this.sim.queuedCommands) {
-      // Check if command is scheduled for a future tick
       if (queuedCommand.tick !== undefined && queuedCommand.tick > this.sim.ticks) {
         commandsToKeep.push(queuedCommand);
       } else {
@@ -66,12 +64,7 @@ export class CommandHandler extends Rule {
       }
     }
     
-    // if (commandsToProcess.length > 0) {
-    //   console.log("CommandHandler: Processing", commandsToProcess.length, "queued commands");
-    // }
-    
     for (const queuedCommand of commandsToProcess) {
-      // Skip commands with undefined or null type
       if (!queuedCommand.type) {
         console.warn(`Skipping command with undefined/null type:`, queuedCommand);
         continue;
@@ -81,12 +74,10 @@ export class CommandHandler extends Rule {
       if (command) {
         command.execute(queuedCommand.unitId || null, queuedCommand.params);
       } else if (queuedCommand.type && queuedCommand.type !== '') {
-        // Only warn for non-empty command types
         console.warn(`Unknown command type: ${queuedCommand.type}`);
       }
     }
 
-    // Keep scheduled commands for later
     this.sim.queuedCommands = commandsToKeep;
   }
   

@@ -940,7 +940,7 @@ export default class Encyclopaedia {
     let u = {
         id: beast + this.id(beast),
         type: beast,
-        // pos: { x, y },
+        pos: { x: 0, y: 0 }, // Default position, will be overridden when placing
         intendedMove: { x: 0, y: 0 },
         state: "idle" as UnitState,
         ...this.bestiary[beast],

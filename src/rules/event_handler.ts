@@ -179,12 +179,6 @@ export class EventHandler extends Rule {
     if (targetUnit.hp <= 0) {
       targetUnit.state = 'dead';
     }
-
-    // console.log("Reloading unit state after damage event");
-    // let targetAgain = this.sim.units.find(unit => unit.id === event.target);
-    // if (targetAgain) {
-    //   console.log(`  ${targetAgain.id}: (${targetAgain.pos.x},${targetAgain.pos.y})`, JSON.stringify(targetAgain));
-    // }
   }
 
   private handleHeal(event: Action) {
@@ -197,8 +191,6 @@ export class EventHandler extends Rule {
     const healAmount = event.meta.amount || 5;
     const oldHp = targetUnit.hp;
     targetUnit.hp = Math.min(targetUnit.maxHp, targetUnit.hp + healAmount);
-    
-    console.log(`✨ ${event.source} healed ${targetUnit.id} for ${healAmount} (${oldHp} → ${targetUnit.hp} hp)`);
   }
 
   private handleKnockback(event: any) {

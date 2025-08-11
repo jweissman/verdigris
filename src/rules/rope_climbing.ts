@@ -242,8 +242,6 @@ export class RopeClimbing extends Rule {
   }
   
   private detachFromLine(unit: Unit) {
-    // console.log(`${unit.id} detaches from grapple line`);
-    
     delete unit.meta.climbingLine;
     delete unit.meta.lineStart;
     delete unit.meta.lineEnd;
@@ -270,8 +268,6 @@ export class RopeClimbing extends Rule {
     );
     
     if (enemy) {
-      // console.log(`${unit.id} strikes ${enemy.id} after climbing rope!`);
-      
       // Deal damage (assassin strike)
       const damage = 15;
       enemy.hp -= damage;

@@ -20,8 +20,8 @@ export class ProjectileMotion extends Rule {
     }).filter(proj => {
       // Remove projectiles that are out of bounds or completed
       if (proj.type === 'bullet') {
-        return proj.pos.x >= 0 && proj.pos.x < this.sim.fieldWidth && 
-               proj.pos.y >= 0 && proj.pos.y < this.sim.fieldHeight;
+        return proj.pos.x >= 0 && proj.pos.x < this.sim.fieldWidth &&
+          proj.pos.y >= 0 && proj.pos.y < this.sim.fieldHeight;
       } else if (proj.type === 'bomb') {
         return (proj.progress || 0) <= (proj.duration || 12);
       } else if (proj.type === 'grapple') {
@@ -54,14 +54,10 @@ export class ProjectileMotion extends Rule {
     const t = progress / duration; // 0 to 1
 
     if (progress > duration) {
-    // if (t >= 1) {
-      // Bomb has landed - trigger AoE explosion
-      // console.log(`💥 Bomb ${proj.id} exploding at (${proj.target.x}, ${proj.target.y})`);
-      
       if (proj.aoeRadius && proj.aoeRadius > 0) {
-        // Extract the unit ID from the projectile ID (e.g., "bomb_bombardier1_123" -> "bombardier1")
+        // NOTE: we should be able to get the source unit ID _more directly than this_
         const sourceUnitId = proj.id.split('_')[1] || 'unknown';
-        
+
         this.sim.queuedEvents.push({
           kind: 'aoe',
           source: sourceUnitId,
@@ -87,10 +83,10 @@ export class ProjectileMotion extends Rule {
     // Arc motion interpolation (same as jumping)
     const dx = proj.target.x - proj.origin.x;
     const dy = proj.target.y - proj.origin.y;
-    
+
     const x = proj.origin.x + dx * t;
     const y = proj.origin.y + dy * t;
-    
+
     // Parabolic arc for z-axis (height peaks at middle of flight)
     const distance = Math.sqrt(dx * dx + dy * dy);
     const baseHeight = 12; // Increased base height for more dramatic arcs

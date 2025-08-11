@@ -59,7 +59,6 @@ export class WinterEffects extends Rule {
           particle.landed = true;
           particle.vel.y = 0;
           particle.pos.y = this.sim.fieldHeight - 1;
-          // console.log(`❄️ Snowflake landed at cell (${Math.floor(particle.pos.x)}, ${Math.floor(particle.pos.y)})`);
         }
         
         // Check collision with units (freeze them!)
@@ -75,7 +74,6 @@ export class WinterEffects extends Rule {
         
         unitsInCell.forEach(unit => {
           if (!unit.meta.frozen && !unit.meta.recentlySnowed) {
-            // console.log(`❄️ Snowflake hits ${unit.id}! Instant freeze!`);
             unit.meta.frozen = true;
             unit.meta.frozenDuration = 60; // Longer freeze duration (7.5 seconds at 8fps)
             unit.meta.brittle = true;
@@ -132,7 +130,6 @@ export class WinterEffects extends Rule {
   private applyFreezingEffects(unit: Unit): void {
     // Units at 0°C or below become frozen
     if (!unit.meta.frozen) {
-      // console.log(`${unit.id} is frozen solid!`);
       unit.meta.frozen = true;
       unit.meta.frozenDuration = 40; // ~5 seconds at 8fps
       
@@ -172,7 +169,6 @@ export class WinterEffects extends Rule {
         const temp = this.sim.temperatureField.get(unit.pos.x, unit.pos.y);
         const thawThreshold = unit.meta.snowFrozen ? 20 : 0; // Snow-frozen units need much warmer temps to thaw
         if (temp > thawThreshold || unit.meta.frozenDuration <= 0) {
-          // console.log(`${unit.id} thaws out! (temp: ${temp}°, threshold: ${thawThreshold}°)`);
           unit.meta.frozen = false;
           unit.meta.brittle = false;
           unit.meta.stunned = false;
@@ -196,7 +192,6 @@ export class WinterEffects extends Rule {
     
     // Add winter weather flag
     sim.winterActive = true;
-    // console.log('Winter storm begins! Temperature drops dramatically across the battlefield.');
   }
 
   static endWinterStorm(sim: any): void {
@@ -209,6 +204,5 @@ export class WinterEffects extends Rule {
     }
     
     sim.winterActive = false;
-    // console.log('Winter storm subsides. The battlefield warms.');
   }
 }

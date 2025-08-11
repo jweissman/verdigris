@@ -72,7 +72,7 @@ export class ChangeWeather extends Command {
         }
         
         // Also trigger desert effects rule if available
-        let desertRule = this.sim.rules?.find(r => r.constructor.name === 'DesertEffects');
+        let desertRule = this.sim.rulebook?.find(r => r.constructor.name === 'DesertEffects');
         if (desertRule && (desertRule as any).triggerSandstorm) {
           (desertRule as any).triggerSandstorm(durationValue, intensityValue);
         }
@@ -96,11 +96,8 @@ export class ChangeWeather extends Command {
             vel: { x: Math.random() * 0.2 - 0.1, y: 0.1 + Math.random() * 0.1 },
             z: 5 + Math.random() * 10,
             lifetime: 100 + Math.random() * 100,
-            meta: {
-              swayAmplitude: 0.5 + Math.random() * 0.5,
-              swayFrequency: 0.05 + Math.random() * 0.05,
-              swayPhase: Math.random() * Math.PI * 2
-            }
+            radius: 1,
+            color: '#8B4513'
           });
         }
         this.sim.weather.current = 'leaves';

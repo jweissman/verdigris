@@ -90,15 +90,27 @@ export class Pin extends Command {
       Math.pow(targetY - grappler.pos.y, 2)
     );
 
-    const maxRange = grappler.abilities.pinTarget.config?.range || 8;
+    const maxRange = 8; // Default pin range
     if (distance > maxRange) {
       console.error(`Target at (${targetX}, ${targetY}) is out of range for pin (distance: ${distance.toFixed(1)}, max: ${maxRange})`);
       return;
     }
 
-    // Execute the pin target ability
-    const targetPos = { x: targetX, y: targetY };
-    grappler.abilities.pinTarget.effect(grappler, targetPos, this.sim);
+    // Pin the target directly
+    target.meta.pinned = true;
+    target.meta.pinDuration = 50; // Duration in ticks
+    
+    // Create pin visual effect
+    for (let i = 0; i < 8; i++) {
+      this.sim.particles.push({
+        pos: { x: targetX * 8 + 4, y: targetY * 8 + 4 },
+        vel: { x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2 },
+        radius: 0.5 + Math.random() * 0.5,
+        lifetime: 20 + Math.random() * 10,
+        color: '#FF6600',
+        type: 'pin'
+      });
+    }
 
     // Update ability cooldown
     if (!grappler.lastAbilityTick) {

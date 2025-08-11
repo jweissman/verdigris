@@ -10,7 +10,6 @@ export class Perdurance extends Rule {
         if (target) {
           // Check if damage should be blocked completely
           if (this.shouldBlockDamage(target, event.meta.aspect)) {
-            // console.log(`${target.id} (${target.meta.perdurance}) resists ${event.meta.aspect} damage`);
             return null; // Block this damage event
           }
           // Modify damage amount based on perdurance type
@@ -34,10 +33,8 @@ export class Perdurance extends Rule {
     switch (perdurance) {
       case 'sturdiness':
         // Cap all damage to maximum 1 (resistant to burst, weak to chip)
-        const originalAmount = modifiedEvent.meta.amount;
         if (modifiedEvent.meta.amount > 1) {
           modifiedEvent.meta.amount = 1;
-          // console.log(`[Perdurance] Sturdiness: reduced damage from ${originalAmount} to 1`);
         }
         break;
       
@@ -49,7 +46,6 @@ export class Perdurance extends Rule {
     
     // Handle brittle (frozen) units - take double damage
     if (target.meta.brittle) {
-      // console.log(`${target.id} is brittle, taking double damage!`);
       modifiedEvent.meta.amount *= 2;
     }
     

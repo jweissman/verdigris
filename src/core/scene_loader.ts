@@ -35,10 +35,8 @@ export class SceneLoader {
   }
 
   loadFromText(sceneText: string): void {
-    // console.log("SceneLoader: Starting loadFromText");
     try {
       this.loadSimpleFormat(sceneText);
-      // console.log("SceneLoader: Finished loadSimpleFormat");
     } catch (e) {
       console.error("Failed to load scene:", e);
       throw new Error("Invalid scene format");

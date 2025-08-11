@@ -61,7 +61,6 @@ export class StatusEffects extends Rule {
           intensity: 0.5, // 50% movement speed reduction
           source: event.source
         });
-        // console.log(`${unit.id} is chilled!`);
       }
     });
   }

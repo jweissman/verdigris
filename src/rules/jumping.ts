@@ -14,45 +14,27 @@ export class Jumping extends Rule {
   }
 
   private updateJump(unit: Unit): void {
-    // console.log(`[Jumping] Updating jump for ${unit.id} at tick ${this.sim.ticks}. Progress: ${unit.meta.jumpProgress}`);
     const jumpDuration = Abilities.all.jumps.config?.duration || 10; // ticks
     unit.meta.jumpProgress = (unit.meta.jumpProgress || 0) + 1;
 
-    // console.log(`[Jumping] Jump progress for ${unit.id}: ${unit.meta.jumpProgress}/${jumpDuration}`);
-
     if (unit.meta.jumpProgress >= jumpDuration) {
-      // console.log(`[Jumping] Jump completed for ${unit.id}. Resetting jump state.`);
       unit.meta.jumping = false;
       unit.meta.z = 0;
 
-      // Apply AoE damage on landing
-      // console.log(`[Jumping] Applying AoE damage for ${unit.id} on landing.`);
-      // if (unit.abilities.jump?.config?.impact) {
-        // console.log(`[Jumping] Queuing AoE event for ${unit.id}`);
-        this.sim.queuedEvents.push({
-          kind: 'aoe',
-          source: unit.id,
-          target: unit.pos,
-          meta: {
-            radius: Abilities.all.jump.config?.impact.radius || 3,
-            amount: Abilities.all.jump.config?.impact.damage || 5,
-          }
-        });
-        // this.sim.areaDamage({
-        //   pos: unit.pos,
-        //   radius: unit.abilities.jump.config.impact.radius,
-        //   damage: unit.abilities.jump.config.impact.damage,
-        //   team: unit.team,
-        // });
-      // }
+      this.sim.queuedEvents.push({
+        kind: 'aoe',
+        source: unit.id,
+        target: unit.pos,
+        meta: {
+          radius: Abilities.all.jump.config?.impact.radius || 3,
+          amount: Abilities.all.jump.config?.impact.damage || 5,
+        }
+      });
     } else {
       const progress = unit.meta.jumpProgress / jumpDuration;
-      const maxHeight = Abilities.all.jump?.config?.height || 5; // Default height if not specified
-        //unit.abilities.jump?.config?.height || 5; // Default height if not specified
-      unit.meta.z = (maxHeight * Math.sin(progress * Math.PI) || 0) * 2; // Adjust height based on progress
+      const maxHeight = Abilities.all.jump?.config?.height || 5;
+      unit.meta.z = (maxHeight * Math.sin(progress * Math.PI) || 0) * 2;
 
-      // we _do_ need some way to trac:e!
-      // k the unit's planar movement during the jump
       let origin = unit.meta.jumpOrigin || { x: unit.pos.x, y: unit.pos.y };
       let target = unit.meta.jumpTarget || { x: unit.intendedMove.x, y: unit.intendedMove.y };
 

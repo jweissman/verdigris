@@ -27,8 +27,6 @@ export class HugeUnits extends Rule {
   }
 
   private createPhantoms(hugeUnit: Unit) {
-    // console.log(`Creating phantoms for huge unit: ${hugeUnit.id}`);
-    
     // Create 3 phantom units behind the megasquirrel (1x4 footprint)
     for (let i = 1; i <= 3; i++) {
       const phantomPos = {
@@ -77,7 +75,6 @@ export class HugeUnits extends Rule {
 
         // Only move if position changed
         if (phantom.pos.x !== expectedPos.x || phantom.pos.y !== expectedPos.y) {
-          // console.log(`Updating phantom ${phantom.id} from (${phantom.pos.x},${phantom.pos.y}) to (${expectedPos.x},${expectedPos.y})`);
           phantom.pos = expectedPos;
         }
       });
@@ -114,7 +111,6 @@ export class HugeUnits extends Rule {
 
     // Remove orphaned phantoms
     for (const phantom of orphanedPhantoms) {
-      console.log(`Removing orphaned phantom: ${phantom.id}`);
       this.sim.units = this.sim.units.filter(u => u.id !== phantom.id);
     }
   }

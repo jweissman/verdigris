@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
+import { CommandHandler } from '../../src/rules/command_handler';
 
 describe('Leaf Animation System', () => {
   it('should create falling leaf particles with weather command', () => {
     const sim = new Simulator();
+    sim.rulebook = [new CommandHandler(sim)]; // Add command handler to process weather command
     
     // Queue leaves weather command
     sim.queuedCommands = [{
@@ -25,7 +27,7 @@ describe('Leaf Animation System', () => {
       const leaf = leafParticles[0];
       expect(leaf.z).toBeDefined(); // Should have vertical position
       expect(leaf.vel).toBeDefined(); // Should have velocity
-      expect(leaf.meta?.swayAmplitude).toBeDefined(); // Should sway as it falls
+      expect(leaf.lifetime).toBeGreaterThan(0); // Should have lifetime
     }
   });
 

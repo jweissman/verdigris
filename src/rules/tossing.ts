@@ -18,7 +18,6 @@ export class Tossing extends Rule {
 
     if (unit.meta.tossProgress >= tossDuration) {
       // Toss completed - land at target
-      // console.log(`🤾 Toss completed for ${unit.id}. Landing at target.`);
       unit.meta.tossing = false;
       unit.meta.z = 0;
       
@@ -30,7 +29,6 @@ export class Tossing extends Rule {
 
       // Optional: Apply small AoE damage on landing (like jump)
       if (unit.meta.tossForce && unit.meta.tossForce > 3) {
-        // console.log(`🤾 Tossed unit ${unit.id} landing with force - applying minor AoE`);
         this.sim.queuedEvents.push({
           kind: 'aoe',
           source: unit.id,

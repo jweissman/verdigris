@@ -36,7 +36,7 @@ export class AirdropCommand extends Command {
       // Create unit at high altitude first
       const droppedUnit = { 
         ...unit, 
-        team: 'friendly',
+        team: 'friendly' as const,
         pos: { x: dropX, y: dropY },
         meta: {
           ...unit.meta,

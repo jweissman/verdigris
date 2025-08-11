@@ -81,17 +81,20 @@ export class GrapplingPhysics extends Rule {
           }
           
           // Check if target is segmented and damage segments
-          if (hitUnit.segments && Array.isArray(hitUnit.segments)) {
-            // Damage the first segment when grappled
-            if (hitUnit.segments[0] && hitUnit.segments[0].hp > 0) {
+          if (hitUnit.meta?.segmented) {
+            // Find the first segment
+            const firstSegment = this.sim.units.find(u => 
+              u.meta?.segment && u.meta?.parentId === hitUnit.id && u.meta?.segmentIndex === 1
+            );
+            
+            if (firstSegment && firstSegment.hp > 0) {
               const damage = 5; // Base grapple damage to segments
-              hitUnit.segments[0].hp = Math.max(0, hitUnit.segments[0].hp - damage);
-              console.log(`Grapple damaged segment ${hitUnit.segments[0].id}: ${damage} damage`);
+              firstSegment.hp = Math.max(0, firstSegment.hp - damage);
               
               // Pin the damaged segment
-              if (!hitUnit.segments[0].meta) hitUnit.segments[0].meta = {};
-              hitUnit.segments[0].meta.pinned = true;
-              hitUnit.segments[0].meta.pinDuration = 30;
+              if (!firstSegment.meta) firstSegment.meta = {};
+              firstSegment.meta.pinned = true;
+              firstSegment.meta.pinDuration = 30;
             }
           }
           
