@@ -771,13 +771,20 @@ export class Abilities extends Rule {
       if (effect.condition && typeof effect.condition === 'string') {
         try {
           // Simple condition check for construct/mechanical tags
-          if (effect.condition.includes('construct') && effect.condition.includes('mechanical')) {
-            return u.tags?.includes('construct') || u.tags?.includes('mechanical');
+          if (effect.condition.includes('mechanical')) {
+            return u.tags?.includes('mechanical');
+          }
+          if (effect.condition.includes('construct')) {
+            return u.tags?.includes('construct');
           }
           // Ensure unit has tags property for DSL evaluation
-          const unitForEval = { ...u, tags: u.tags || [] };
-          const contextWithTarget = { ...unitForEval, target: { ...u, tags: u.tags || [] } };
-          return DSL.evaluate(effect.condition, contextWithTarget, this.sim);
+          const safeUnit = { ...u, tags: u.tags || [] };
+          const context = {
+            ...safeUnit,
+            target: safeUnit,  // Make target reference the same unit with safe tags
+            self: safeUnit
+          };
+          return DSL.evaluate(effect.condition, context, this.sim);
         } catch (error) {
           console.warn(`Failed to evaluate condition '${effect.condition}':`, error);
           return false;

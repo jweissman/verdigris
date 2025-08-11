@@ -69,14 +69,14 @@ describe('Abilities Without Nearby Enemies', () => {
     
     // Test EMP pulse in empty area
     expect(mechatron.abilities).toContain('empPulse');
-    const initialEvents = sim.queuedEvents.length;
+    const initialProcessedEvents = sim.processedEvents.length;
     
     // Should create AoE effect even with no targets
     sim.forceAbility(mechatron.id, 'empPulse', mechatron.pos);
     sim.step();
     
-    expect(sim.queuedEvents.length).toBe(initialEvents + 1);
-    const empEvent = sim.queuedEvents[sim.queuedEvents.length - 1];
+    expect(sim.processedEvents.length).toBe(initialProcessedEvents + 1);
+    const empEvent = sim.processedEvents[sim.processedEvents.length - 1];
     expect(empEvent.kind).toBe('aoe');
     expect(empEvent.meta.aspect).toBe('emp');
     expect(empEvent.meta.radius).toBe(8);
