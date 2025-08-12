@@ -3,7 +3,7 @@ import { Command } from "./command";
 import { Toss } from "../commands/toss";
 import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
-import { AirdropCommand } from "../commands/airdrop_command";
+import { Airdrop } from "../commands/airdrop";
 import { Lightning } from "../commands/lightning";
 import { Grapple } from "../commands/grapple";
 import { Pin } from "../commands/pin";
@@ -25,7 +25,11 @@ import { MetaCommand } from "../commands/meta";
 import { PullCommand } from "../commands/pull";
 import { BurrowCommand } from "../commands/burrow";
 import { CharmCommand } from "../commands/charm";
-import { AddCommand } from "../commands/add";
+import { SpawnCommand } from "../commands/spawn";
+import { PoseCommand } from "../commands/pose";
+import { TargetCommand } from "../commands/target";
+import { GuardCommand } from "../commands/guard";
+import { FaceCommand } from "../commands/face";
 
 export type QueuedCommand = {
   type: string;
@@ -48,8 +52,8 @@ export class CommandHandler extends Rule {
     this.commands.set('weather', new ChangeWeather(sim, this.transform));
     this.commands.set('deploy', new Deploy(sim, this.transform));
     this.commands.set('spawn', new Deploy(sim, this.transform)); // Alias for deploy
-    this.commands.set('airdrop', new AirdropCommand(sim, this.transform));
-    this.commands.set('drop', new AirdropCommand(sim, this.transform)); // Alias for airdrop
+    this.commands.set('airdrop', new Airdrop(sim, this.transform));
+    this.commands.set('drop', new Airdrop(sim, this.transform)); // Alias for airdrop
     this.commands.set('lightning', new Lightning(sim, this.transform));
     this.commands.set('bolt', new Lightning(sim, this.transform)); // Alias for lightning
     this.commands.set('grapple', new Grapple(sim, this.transform));
@@ -78,7 +82,13 @@ export class CommandHandler extends Rule {
     this.commands.set('burrow', new BurrowCommand(sim, this.transform));
     this.commands.set('charm', new CharmCommand(sim, this.transform));
     this.commands.set('changeTeam', new CharmCommand(sim, this.transform)); // Alias
-    this.commands.set('add', new AddCommand(sim, this.transform));
+    this.commands.set('spawn', new SpawnCommand(sim, this.transform));
+    this.commands.set('add', new SpawnCommand(sim, this.transform)); // Alias for backwards compatibility
+    // Sharp semantic commands
+    this.commands.set('pose', new PoseCommand(sim, this.transform));
+    this.commands.set('target', new TargetCommand(sim, this.transform));
+    this.commands.set('guard', new GuardCommand(sim, this.transform));
+    this.commands.set('face', new FaceCommand(sim, this.transform));
   }
 
   apply = () => {
@@ -120,12 +130,56 @@ export class CommandHandler extends Rule {
           }
         }
         
+        // Track command counts for profiling
+        const commandCounts: { [key: string]: number } = {};
+        
+        // Batch meta commands per unit
+        const metaBatch: { [unitId: string]: any } = {};
+        const otherCommands: any[] = [];
+        
         for (const queuedCommand of commandsToProcess) {
           if (!queuedCommand.type) continue;
           
+          commandCounts[queuedCommand.type] = (commandCounts[queuedCommand.type] || 0) + 1;
+          
+          // Batch meta commands
+          if (queuedCommand.type === 'meta' && queuedCommand.params?.unitId) {
+            const unitId = queuedCommand.params.unitId as string;
+            if (!metaBatch[unitId]) {
+              metaBatch[unitId] = { meta: {}, state: null };
+            }
+            if (queuedCommand.params.meta) {
+              Object.assign(metaBatch[unitId].meta, queuedCommand.params.meta);
+            }
+            if (queuedCommand.params.state) {
+              metaBatch[unitId].state = queuedCommand.params.state;
+            }
+          } else {
+            otherCommands.push(queuedCommand);
+          }
+        }
+        
+        // Process batched meta commands
+        const metaCommand = this.commands.get('meta');
+        if (metaCommand) {
+          for (const [unitId, updates] of Object.entries(metaBatch)) {
+            metaCommand.execute(unitId, updates);
+          }
+        }
+        
+        // Process other commands
+        for (const queuedCommand of otherCommands) {
           const command = this.commands.get(queuedCommand.type);
           if (command) {
             command.execute(queuedCommand.unitId || null, queuedCommand.params);
+          }
+        }
+        
+        // Log command counts if profiling enabled
+        if (this.sim.enableProfiling && Object.keys(commandCounts).length > 0) {
+          const total = Object.values(commandCounts).reduce((a, b) => a + b, 0);
+          if (total > 50) { // Only log if many commands
+            console.log(`[Step ${this.sim.ticks}] Processed ${total} commands:`, JSON.stringify(commandCounts));
           }
         }
         

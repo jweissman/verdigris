@@ -3,7 +3,7 @@ import { Simulator } from '../core/simulator';
 import { Transform } from '../core/transform';
 import { Unit } from '../types/Unit';
 
-export class AddCommand extends Command {
+export class SpawnCommand extends Command {
   private transform: Transform;
   
   constructor(sim: Simulator, transform: Transform) {
@@ -13,7 +13,7 @@ export class AddCommand extends Command {
 
   execute(unitId: string | null, params: CommandParams): void {
     if (!params || !params.unit) {
-      console.warn('AddCommand: No unit provided', params);
+      console.warn('SpawnCommand: No unit provided', params);
       return;
     }
 

@@ -1,41 +1,79 @@
-import { describe, it } from 'bun:test';
+import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { SceneLoader } from '../../src/core/scene_loader';
+import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('Performance Profiling', () => {
-  it('should profile complex scenario to identify bottlenecks', () => {
-    const sim = new Simulator(32, 32);
-    const loader = new SceneLoader(sim);
+  it('should measure time to first update (TTFU)', () => {
+    const measurements = [];
     
-    // Enable profiling
-    sim.startProfiling();
-    
-    // Load complex scenario
-    loader.loadScenario('complex');
-    
-    // Run for 20 steps to get meaningful data
-    for (let i = 0; i < 20; i++) {
+    for (let run = 0; run < 5; run++) {
+      Encyclopaedia.counts = {};
+      
+      // Measure construction time
+      const t0 = performance.now();
+      const sim = new Simulator(32, 24);
+      const t1 = performance.now();
+      
+      // Add some units
+      for (let i = 0; i < 20; i++) {
+        sim.addUnit({
+          id: `unit_${i}`,
+          pos: { x: i % 32, y: Math.floor(i / 32) },
+          intendedMove: { x: 0, y: 0 },
+          team: i % 2 === 0 ? 'friendly' : 'hostile',
+          sprite: 'soldier',
+          state: 'idle',
+          hp: 10,
+          maxHp: 10,
+          mass: 1,
+          abilities: ['melee'],
+          tags: ['hunt'],
+          meta: {}
+        });
+      }
+      const t2 = performance.now();
+      
+      // First step
       sim.step();
+      const t3 = performance.now();
+      
+      // Next 5 steps for steady state
+      const steadyTimes = [];
+      for (let i = 0; i < 5; i++) {
+        const s0 = performance.now();
+        sim.step();
+        const s1 = performance.now();
+        steadyTimes.push(s1 - s0);
+      }
+      
+      measurements.push({
+        construction: t1 - t0,
+        unitSetup: t2 - t1,
+        firstStep: t3 - t2,
+        steadyAvg: steadyTimes.reduce((a, b) => a + b, 0) / steadyTimes.length
+      });
     }
     
-    // Get profiling report
-    const report = sim.getProfilingReport();
+    // Average across runs
+    const avg = {
+      construction: measurements.reduce((a, b) => a + b.construction, 0) / measurements.length,
+      unitSetup: measurements.reduce((a, b) => a + b.unitSetup, 0) / measurements.length,
+      firstStep: measurements.reduce((a, b) => a + b.firstStep, 0) / measurements.length,
+      steadyAvg: measurements.reduce((a, b) => a + b.steadyAvg, 0) / measurements.length
+    };
     
-    // Print report
-    console.log('\n=== Profiling Results ===');
-    const totalTime = report.reduce((sum, r) => sum + r.totalTime, 0);
-    console.log(`Total simulation time: ${totalTime.toFixed(2)}ms`);
-    console.log(`Average per step: ${(totalTime / 20).toFixed(2)}ms\n`);
+    console.log('\n=== Time to First Update (TTFU) ===');
+    console.log(`Simulator construction: ${avg.construction.toFixed(2)}ms`);
+    console.log(`Unit setup (20 units):  ${avg.unitSetup.toFixed(2)}ms`);
+    console.log(`First step:             ${avg.firstStep.toFixed(2)}ms`);
+    console.log(`Steady state avg:       ${avg.steadyAvg.toFixed(2)}ms`);
+    console.log(`---`);
+    console.log(`Total TTFU: ${(avg.construction + avg.unitSetup + avg.firstStep).toFixed(2)}ms`);
+    console.log(`First step overhead: ${(avg.firstStep - avg.steadyAvg).toFixed(2)}ms`);
     
-    // Find the top bottlenecks
-    const topBottlenecks = report.slice(0, 5);
-    console.log('Top 5 bottlenecks:');
-    for (const rule of topBottlenecks) {
-      const percentage = (rule.totalTime / totalTime * 100).toFixed(1);
-      console.log(`  ${rule.ruleName}: ${rule.totalTime.toFixed(2)}ms (${percentage}%)`);
-    }
-    
-    sim.stopProfiling();
+    expect(avg.firstStep).toBeLessThan(5);
+    expect(avg.steadyAvg).toBeLessThan(2);
   });
   
   it('should profile unit movement specifically', () => {

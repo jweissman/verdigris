@@ -17,13 +17,13 @@ export class Pin extends Command {
     const targetY = (params.y ?? params.targetY) as number;
     
     if (targetX === undefined || targetY === undefined) {
-      console.error("Pin command requires x and y coordinates");
+      // Pin command requires coordinates - silently fail
       return;
     }
     const grapplerID = unitId;
 
     if (typeof targetX !== 'number' || typeof targetY !== 'number' || isNaN(targetX) || isNaN(targetY)) {
-      console.error("Invalid coordinates for pin command");
+      // Invalid coordinates - silently fail
       return;
     }
 
@@ -40,12 +40,12 @@ export class Pin extends Command {
     }
 
     if (!grappler) {
-      console.error("No available grappler found for pin command");
+      // No grappler available - silently fail
       return;
     }
 
     if (!grappler.abilities || !grappler.abilities.includes('pinTarget')) {
-      console.error(`${grappler.id} does not have pin target ability`);
+      // Grappler doesn't have pin ability - silently fail
       return;
     }
 
@@ -57,19 +57,19 @@ export class Pin extends Command {
     );
 
     if (!target) {
-      console.error(`No enemy found at position (${targetX}, ${targetY})`);
+      // No enemy at position - silently fail
       return;
     }
 
     // Check if target is grappled
     if (!target.meta.grappled) {
-      console.error(`Target ${target.id} at (${targetX}, ${targetY}) is not grappled - cannot pin`);
+      // Target not grappled - silently fail
       return;
     }
 
     // Check if target is grappled by this grappler
     if (target.meta.grappledBy !== grappler.id) {
-      console.error(`Target ${target.id} is grappled by ${target.meta.grappledBy}, not ${grappler.id}`);
+      // Target grappled by someone else - silently fail
       return;
     }
 
@@ -79,8 +79,7 @@ export class Pin extends Command {
     const ticksSinceLastUse = this.sim.ticks - lastUsed;
 
     if (ticksSinceLastUse < cooldown) {
-      const remainingCooldown = cooldown - ticksSinceLastUse;
-      console.error(`Pin target is on cooldown for ${remainingCooldown} more ticks`);
+      // Ability on cooldown - silently fail
       return;
     }
 
@@ -92,7 +91,7 @@ export class Pin extends Command {
 
     const maxRange = 8; // Default pin range
     if (distance > maxRange) {
-      console.error(`Target at (${targetX}, ${targetY}) is out of range for pin (distance: ${distance.toFixed(1)}, max: ${maxRange})`);
+      // Target out of range - silently fail
       return;
     }
 

@@ -73,9 +73,9 @@ describe('Desert Day Scene', () => {
       u.id?.startsWith('giant-sandworm') && !u.meta.segment && !u.meta.phantom
     );
     
-    // Giant sandworm should have 6 segments
+    // Giant sandworm should have 6 segments (not counting phantom units)
     const giantWormSegments = segments.filter(s => 
-      s.meta.parentId?.startsWith('giant-sandworm')
+      s.meta.parentId?.startsWith('giant-sandworm') && !s.meta.phantom
     );
     
     // The test expects exactly 1 giant sandworm with 6 segments

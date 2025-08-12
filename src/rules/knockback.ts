@@ -10,23 +10,25 @@ export class Knockback extends Rule {
     this.transform = sim.getTransform();
   }
   apply = () => {
-    // Use spatial hash for efficient collision detection
+    // Register knockback checks as a batched intent
     const knockbackRange = 1.1;
     
-    for (const a of this.sim.units) {
-      if (a.state === 'dead' || !a.mass) continue;
+    // The batcher will call our callback for both (a,b) and (b,a)
+    // So processKnockback needs to determine who pushes whom
+    this.pairwise((a, b) => {
+      // Skip dead units or units without mass
+      if (a.state === 'dead' || !a.mass) return;
+      if (b.state === 'dead' || !b.mass) return;
       
-      // Get nearby units that might be knocked back
-      const nearbyUnits = this.sim.getUnitsNear(a.pos.x, a.pos.y, knockbackRange);
-      
-      for (const b of nearbyUnits) {
-        if (b.id === a.id) continue;
-        this.processKnockback(a, b);
-      }
-    }
+      // Process knockback - method will determine who pushes whom
+      this.processKnockback(a, b);
+    }, knockbackRange);
   };
   
   private processKnockback = (a: Unit, b: Unit) => {
+    // Since this gets called for both (a,b) and (b,a), only process when a would push b
+    // This avoids double-processing
+    
     // Phantom units can push others but should never be pushed themselves
     if (b.meta.phantom) return; // Don't push phantom units (they're part of huge unit body)
     
@@ -40,6 +42,7 @@ export class Knockback extends Rule {
       const aEffectiveMass = a.meta.phantom ? a.mass * 5 : (a.meta.huge ? a.mass * 3 : a.mass);
       const bEffectiveMass = b.meta.huge ? b.mass * 3 : b.mass;
       
+      // Only process if a would push b (heavier pushes lighter)
       if (aEffectiveMass > bEffectiveMass) {
         const dx = a.pos.x - b.pos.x;
         const dy = a.pos.y - b.pos.y;

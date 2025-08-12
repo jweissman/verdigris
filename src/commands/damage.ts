@@ -27,33 +27,34 @@ export class Damage extends Command {
       return;
     }
 
-    // Apply damage using Transform
+    // Apply damage using Transform - use updateUnit for efficiency
     const transform = this.sim.getTransform();
-    transform.mapUnits(unit => {
-      if (unit.id === targetId) {
-        // Damage amount has already been modified by Perdurance rule if needed
-        const newHp = Math.max(0, unit.hp - amount); // Clamp HP to minimum 0
-        return {
-          ...unit,
-          hp: newHp,
-          state: newHp <= 0 ? 'dead' : unit.state,
-          meta: {
-            ...unit.meta,
-            impactFrame: this.sim.ticks
-          }
-        };
+    
+    // Damage amount has already been modified by Perdurance rule if needed
+    const newHp = Math.max(0, target.hp - amount); // Clamp HP to minimum 0
+    
+    // Update target unit
+    transform.updateUnit(targetId, {
+      hp: newHp,
+      state: newHp <= 0 ? 'dead' : target.state,
+      meta: {
+        ...target.meta,
+        impactFrame: this.sim.ticks
       }
-      // Mark attacker for impact frame too
-      if (params.sourceId && unit.id === params.sourceId) {
-        return {
-          ...unit,
-          meta: {
-            ...unit.meta,
-            impactFrame: this.sim.ticks
-          }
-        };
-      }
-      return unit;
     });
+    
+    // Mark attacker for impact frame too if specified
+    if (params.sourceId) {
+      const sourceId = params.sourceId as string;
+      const source = this.sim.units.find(u => u.id === sourceId);
+      if (source) {
+        transform.updateUnit(sourceId, {
+          meta: {
+            ...source.meta,
+            impactFrame: this.sim.ticks
+          }
+        });
+      }
+    }
   }
 }

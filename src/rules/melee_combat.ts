@@ -6,6 +6,22 @@ export class MeleeCombat extends Rule {
   engagements: Map<string, string> = new Map(); // Maps unit IDs to their current combat target ID
   lastAttacks: Map<string, number> = new Map(); // Track last attack time for each unit
   apply = () => {
+    // Reset attack states for units that haven't attacked recently
+    for (const unit of this.sim.units) {
+      if (unit.state === 'attack' && unit.meta?.lastAttacked) {
+        const ticksSinceAttack = this.sim.ticks - unit.meta.lastAttacked;
+        if (ticksSinceAttack > 2) { // Reset after 2 ticks of no attacks
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              state: 'idle'
+            }
+          });
+        }
+      }
+    }
+    
     this.engagements = new Map(); // Reset engagements each tick
     this.melee();
   }
@@ -37,41 +53,33 @@ export class MeleeCombat extends Rule {
   }
   
   melee = () => {
-    // Use spatial hash for efficient collision detection
+    // Use batched pairwise checking for efficiency
     const meleeRange = 1.5;
     
-    for (const unit of this.sim.units) {
-      if (this.engagements.has(unit.id)) continue; // Already engaged
-      if (unit.hp <= 0) continue;
-      if (unit.meta?.jumping) continue;
-      if (unit.tags?.includes('noncombatant')) continue;
+    // Register melee combat checks as a batched intent
+    this.pairwise((attacker, target) => {
+      // Skip if attacker already engaged
+      if (this.engagements.has(attacker.id)) return;
       
-      // Query nearby units using spatial hash
-      const nearbyUnits = this.sim.getUnitsNear(unit.pos.x, unit.pos.y, meleeRange);
+      // Skip invalid attackers
+      if (attacker.hp <= 0) return;
+      if (attacker.meta?.jumping) return;
+      if (attacker.tags?.includes('noncombatant')) return;
       
-      for (const target of nearbyUnits) {
-        if (target.id === unit.id) continue;
-        if (this.engagements.has(unit.id)) break; // Stop if we found a target
-        if (target.hp <= 0) continue;
-        if (target.meta?.jumping) continue;
-        if (target.tags?.includes('noncombatant')) continue;
-        
-        if (unit.team !== target.team) {
-          const dx = unit.pos.x - target.pos.x;
-          const dy = unit.pos.y - target.pos.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          if (dist < meleeRange) {
-            // Queue halt command to stop movement
-            this.sim.queuedCommands.push({
-              type: 'halt',
-              params: { unitId: unit.id }
-            });
-            this.hit(unit, target);
-            break; // Only engage one target at a time
-          }
-        }
-      }
-    }
+      // Skip invalid targets
+      if (target.hp <= 0) return;
+      if (target.meta?.jumping) return;
+      if (target.tags?.includes('noncombatant')) return;
+      
+      // Only attack enemies
+      if (attacker.team === target.team) return;
+      
+      // Queue halt command to stop movement
+      this.sim.queuedCommands.push({
+        type: 'halt',
+        params: { unitId: attacker.id }
+      });
+      this.hit(attacker, target);
+    }, meleeRange);
   };
 }

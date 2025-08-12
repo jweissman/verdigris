@@ -191,7 +191,7 @@ export class SceneLoader {
       this.sim.queuedCommands = [];
     }
     this.sim.queuedCommands.push({
-      type: 'add',
+      type: 'spawn',
       params: { unit: unitWithPos }
     });
   }

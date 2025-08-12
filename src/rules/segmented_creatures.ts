@@ -38,7 +38,7 @@ export class SegmentedCreatures extends Rule {
     
     // Also check if add commands are already queued for segments of this creature
     const hasQueuedSegments = this.sim.queuedCommands?.some(cmd => 
-      cmd.type === 'add' && 
+      (cmd.type === 'spawn' || cmd.type === 'add') && 
       cmd.params?.unit?.meta?.segment && 
       cmd.params?.unit?.meta?.parentId === creature.id
     ) || false;
@@ -125,7 +125,7 @@ export class SegmentedCreatures extends Rule {
 
         // Queue add command to create the segment
         this.sim.queuedCommands.push({
-          type: 'add',
+          type: 'spawn',
           params: { unit: segment }
         });
       }

@@ -10,7 +10,7 @@ import { Transform } from "../core/transform";
  *   x?: number - X position (defaults to center)
  *   y?: number - Y position (defaults to center)
  */
-export class AirdropCommand extends Command {
+export class Airdrop extends Command {
   private transform: Transform;
   
   constructor(sim: Simulator, transform: Transform) {

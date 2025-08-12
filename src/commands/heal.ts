@@ -19,17 +19,17 @@ export class Heal extends Command {
       return;
     }
 
-    // Apply heal directly using Transform
+    // Apply heal directly using Transform - use updateUnit for efficiency
     const transform = this.sim.getTransform();
-    transform.mapUnits(unit => {
-      if (unit.id === targetId) {
-        const newHp = Math.min(unit.hp + amount, unit.maxHp);
-        return {
-          ...unit,
-          hp: newHp
-        };
-      }
-      return unit;
+    const target = this.sim.units.find(u => u.id === targetId);
+    if (!target) {
+      console.warn(`Heal command: target ${targetId} not found`);
+      return;
+    }
+    
+    const newHp = Math.min(target.hp + amount, target.maxHp);
+    transform.updateUnit(targetId, {
+      hp: newHp
     });
   }
 }

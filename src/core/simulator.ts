@@ -23,100 +23,16 @@ import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import { Particle } from "../types/Particle";
 import { Action } from "../types/Action";
-import { DoubleBuffer, SpatialHash } from "../sim/double_buffer";
+import { SpatialHash } from "../sim/double_buffer";
 import { PerformanceProfiler } from "./performance_profiler";
 import { Transform } from "./transform";
-
-class ScalarField {
-  private grid: number[][];
-  public readonly width: number;
-  public readonly height: number;
-
-  
-  constructor(width: number, height: number, initialValue: number = 0) {
-    this.width = width;
-    this.height = height;
-    this.grid = Array(height).fill(null).map(() => Array(width).fill(initialValue));
-  }
-  
-  get(x: number, y: number): number {
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return 0;
-    return this.grid[Math.floor(y)][Math.floor(x)];
-  }
-  
-  set(x: number, y: number, value: number): void {
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
-    this.grid[Math.floor(y)][Math.floor(x)] = value;
-  }
-  
-  add(x: number, y: number, delta: number): void {
-    this.set(x, y, this.get(x, y) + delta);
-  }
-  
-  // Smoothly blend a value over an area with falloff
-  addGradient(centerX: number, centerY: number, radius: number, intensity: number): void {
-    const minX = Math.max(0, Math.floor(centerX - radius));
-    const maxX = Math.min(this.width - 1, Math.ceil(centerX + radius));
-    const minY = Math.max(0, Math.floor(centerY - radius));
-    const maxY = Math.min(this.height - 1, Math.ceil(centerY + radius));
-    
-    for (let y = minY; y <= maxY; y++) {
-      for (let x = minX; x <= maxX; x++) {
-        const dx = x - centerX;
-        const dy = y - centerY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance <= radius) {
-          const falloff = 1 - (distance / radius);
-          const contribution = intensity * falloff * falloff; // Quadratic falloff
-          this.add(x, y, contribution);
-        }
-      }
-    }
-  }
-  
-  // Apply diffusion to smooth out the field
-  diffuse(rate: number = 0.1): void {
-    const newGrid = this.grid.map(row => [...row]);
-    
-    for (let y = 1; y < this.height - 1; y++) {
-      for (let x = 1; x < this.width - 1; x++) {
-        const neighbors = [
-          this.grid[y-1][x], this.grid[y+1][x], // vertical
-          this.grid[y][x-1], this.grid[y][x+1]  // horizontal
-        ];
-        const avgChange = neighbors.reduce((sum, val) => sum + val, 0) / 4 - this.grid[y][x];
-        newGrid[y][x] += avgChange * rate;
-      }
-    }
-    
-    this.grid = newGrid;
-  }
-  
-  // Decay all values toward zero
-  decay(rate: number = 0.01): void {
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        this.grid[y][x] *= (1 - rate);
-      }
-    }
-  }
-  
-  // Get the maximum value in the field
-  getMaxValue(): number {
-    let max = 0;
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        max = Math.max(max, Math.abs(this.grid[y][x]));
-      }
-    }
-    return max;
-  }
-}
+import { SpatialQueryBatcher } from "./spatial_queries";
+import { PairwiseBatcher } from "./pairwise_batcher";
+import { GridPartition } from "./grid_partition";
+import { ScalarField } from "./ScalarField";
 
 class Simulator {
   sceneBackground: string = 'winter';  // burning-city';
-  // weather: string = 'clear'; // Default weather
 
   fieldWidth: number;
   fieldHeight: number;
@@ -129,6 +45,18 @@ class Simulator {
   private inFrame: boolean = false; // Track if we're processing a frame
   private spatialHash: SpatialHash;
   private dirtyUnits: Set<string> = new Set();
+  
+  // Position occupancy map for O(1) collision checks
+  private positionMap: Map<string, Set<Unit>> = new Map();
+  
+  // Spatial query batcher for optimized distance/collision checks
+  public spatialQueries: SpatialQueryBatcher;
+  
+  // Pairwise operation batcher - the REAL optimization
+  public pairwiseBatcher: PairwiseBatcher;
+  
+  // Grid partition for O(1) spatial queries
+  private gridPartition: GridPartition;
   
   // Public access - returns current for reading
   get units(): Unit[] {
@@ -228,6 +156,15 @@ class Simulator {
     // Initialize spatial hash for collision detection
     this.spatialHash = new SpatialHash(4); // 4x4 grid cells
     this.dirtyUnits = new Set();
+    
+    // Initialize spatial query batcher
+    this.spatialQueries = new SpatialQueryBatcher();
+    
+    // Initialize pairwise batcher
+    this.pairwiseBatcher = new PairwiseBatcher();
+    
+    // Initialize grid partition for spatial queries (4x4 cells)
+    this.gridPartition = new GridPartition(fieldWidth, fieldHeight, 4);
     
     // Initialize transform for controlled mutations
     this.transform = new Transform(this);
@@ -376,33 +313,19 @@ class Simulator {
     this.dirtyUnits.add(unitId);
   }
   
-  // Get units near a position using spatial hash
+  // Get units near a position using grid partition for O(1) performance
   getUnitsNear(x: number, y: number, radius: number = 2): Unit[] {
-    if (!this.spatialHash) {
-      // Fallback to O(n) search if spatial hash not initialized
-      return this.units.filter(u => {
-        const dx = u.pos.x - x;
-        const dy = u.pos.y - y;
-        return Math.sqrt(dx * dx + dy * dy) <= radius;
-      });
+    // Use grid partition if available (much faster!)
+    if (this.gridPartition) {
+      return this.gridPartition.getNearby(x, y, radius);
     }
     
-    const nearbyIds = this.spatialHash.query(x, y, radius);
-    const nearbyUnits: Unit[] = [];
-    
-    for (const id of nearbyIds) {
-      const unit = this.units.find(u => u.id === id);
-      if (unit) {
-        const dx = unit.pos.x - x;
-        const dy = unit.pos.y - y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist <= radius) {
-          nearbyUnits.push(unit);
-        }
-      }
-    }
-    
-    return nearbyUnits;
+    // Fallback to O(n) search if grid not initialized
+    return this.units.filter(u => {
+      const dx = u.pos.x - x;
+      const dy = u.pos.y - y;
+      return Math.sqrt(dx * dx + dy * dy) <= radius;
+    });
   }
   
   // Check if any units are dirty (need re-rendering)
@@ -458,15 +381,29 @@ class Simulator {
     // BEGIN FRAME - create working copy for double buffering
     this.beginFrame();
     
-    // Rebuild spatial hash for collision detection
+    // Rebuild spatial structures for collision detection
     this.spatialHash.clear();
+    this.positionMap.clear();
+    this.gridPartition.clear();
+    
     this.units.forEach(unit => {
       this.spatialHash.insert(unit.id, unit.pos.x, unit.pos.y);
+      
+      // Add to grid partition for O(1) neighbor queries
+      this.gridPartition.insert(unit);
+      
+      // Build position map for O(1) occupancy checks
+      const positions = this.getHugeUnitBodyPositions(unit);
+      for (const pos of positions) {
+        const key = `${Math.round(pos.x)},${Math.round(pos.y)}`;
+        if (!this.positionMap.has(key)) {
+          this.positionMap.set(key, new Set());
+        }
+        this.positionMap.get(key)!.add(unit);
+      }
     });
     
-    // Store reference for debugging
-    let lastUnits = [...this.units];
-    
+    // Phase 1: Let all rules register their pairwise intents
     for (const rule of this.rulebook) {
       const ruleName = rule.constructor.name;
       
@@ -482,26 +419,44 @@ class Simulator {
         this.profiler.endTimer();
       }
       
-      let elapsed = tr1 - tr0;
-      if (elapsed > 10) {
-        console.warn(`- Rule ${ruleName} executed in ${elapsed}ms`);
+      // Only do expensive logging in development/profiling mode
+      if (this.enableProfiling) {
+        let elapsed = tr1 - tr0;
+        if (elapsed > 1 || this.ticks <= 2) { // Log slow rules or first two ticks
+          console.warn(`[Step ${this.ticks}] Rule ${ruleName} executed in ${elapsed.toFixed(2)}ms`);
+        }
       }
 
-      // Debugging: print unit changes
-      this._debugUnits(lastUnits, ruleName);
-      lastUnits = this.units.map(u => ({ 
-        ...u,
-        meta: u.meta ? { ...u.meta } : {}
-      }));
+      // PERFORMANCE: Removed expensive debug unit tracking that was copying all units every rule!
+      // this._debugUnits(lastUnits, ruleName);
+      // lastUnits = this.units.map(u => ({ ...u, meta: u.meta ? { ...u.meta } : {} }));
+    }
+    
+    // Phase 2: Process ALL pairwise intents in a single pass
+    if (this.pairwiseBatcher) {
+      const stats = this.pairwiseBatcher.getStats();
+      if (stats.intentCount > 0) {
+        let batchStart = performance.now();
+        this.pairwiseBatcher.process(this.units);
+        let batchEnd = performance.now();
+        
+        // Only log if taking too long
+        if (this.enableProfiling && (batchEnd - batchStart) > 1) {
+          console.log(`Batched ${stats.intentCount} pairwise intents from ${stats.rules.length} rules in ${(batchEnd - batchStart).toFixed(2)}ms`);
+        }
+      }
     }
     
     // END FRAME - commit all changes from working copy to current
     this.endFrame();
     
-    let t1 = performance.now();
-    let elapsed = t1 - t0;
-    if (elapsed > 30) {
-      console.warn(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
+    // Only check performance in profiling mode
+    if (this.enableProfiling) {
+      let t1 = performance.now();
+      let elapsed = t1 - t0;
+      if (elapsed > 30) {
+        console.warn(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
+      }
     }
     
     // Update particles
@@ -1005,18 +960,43 @@ class Simulator {
   }
 
   isApparentlyOccupied(x: number, y: number, excludeUnit: Unit | null = null): boolean {
-    // Check if position is occupied in the apparent field
-    // This includes both actual units and virtual occupancy from huge units
+    const roundedX = Math.round(x);
+    const roundedY = Math.round(y);
     
+    // Grid partition not reliable for exact position checks because units can have
+    // body parts that extend beyond their main position. Skip it for now.
+    
+    // Fallback to position map if available
+    if (this.positionMap.size > 0) {
+      const key = `${roundedX},${roundedY}`;
+      const unitsAtPos = this.positionMap.get(key);
+      
+      if (!unitsAtPos || unitsAtPos.size === 0) {
+        return false;
+      }
+      
+      // Check if any unit at this position should block
+      for (const unit of unitsAtPos) {
+        if (unit === excludeUnit) continue;
+        if (this.isOwnPhantom(unit, excludeUnit)) continue;
+        return true; // Position is occupied
+      }
+      
+      return false;
+    }
+    
+    // Final fallback to O(n) search
     for (const unit of this.units) {
       if (unit === excludeUnit) continue;
-      if (this.isOwnPhantom(unit, excludeUnit)) continue;
+      if (unit.state === 'dead') continue;
       
-      // Check if this unit occupies the position (works for both normal and huge units)
-      const occupiedPositions = this.getHugeUnitBodyPositions(unit);
-      for (const pos of occupiedPositions) {
-        if (pos.x === x && pos.y === y) {
-          return true;
+      // Check all positions this unit occupies
+      const positions = this.getHugeUnitBodyPositions(unit);
+      for (const pos of positions) {
+        if (Math.round(pos.x) === roundedX && Math.round(pos.y) === roundedY) {
+          if (!this.isOwnPhantom(unit, excludeUnit)) {
+            return true;
+          }
         }
       }
     }

@@ -42,18 +42,22 @@ export class UnitMovement extends Rule {
           }
           // Follower behavior
           else if (unit.tags.includes('follower')) {
-            // Follow the nearest friendly unit
-            const friends = this.sim.getRealUnits().filter(u => u.team === unit.team && u.state !== 'dead');
-            if (friends.length > 0) {
-              let closest = friends[0];
-              let closestDist = Math.hypot(closest.pos.x - unit.pos.x, closest.pos.y - unit.pos.y);
-              for (const friend of friends) {
-                const dist = Math.hypot(friend.pos.x - unit.pos.x, friend.pos.y - unit.pos.y);
-                if (dist < closestDist) {
-                  closest = friend;
-                  closestDist = dist;
-                }
+            // Follow the nearest friendly unit - optimized to avoid getRealUnits
+            let closest: Unit | null = null;
+            let closestDist = Infinity;
+            
+            for (const u of this.sim.units) {
+              if (u.team !== unit.team || u.state === 'dead' || u.id === unit.id) continue;
+              if (u.meta?.phantom) continue; // Skip phantom units
+              
+              const dist = Math.hypot(u.pos.x - unit.pos.x, u.pos.y - unit.pos.y);
+              if (dist < closestDist) {
+                closest = u;
+                closestDist = dist;
               }
+            }
+            
+            if (closest) {
               // Move towards the closest friendly unit
               const dx = closest.pos.x - unit.pos.x;
               const dy = closest.pos.y - unit.pos.y;

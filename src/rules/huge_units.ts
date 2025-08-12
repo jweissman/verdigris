@@ -56,7 +56,7 @@ export class HugeUnits extends Rule {
 
         // Queue add command to create the phantom
         this.sim.queuedCommands.push({
-          type: 'add',
+          type: 'spawn',
           params: { unit: phantom }
         });
       }

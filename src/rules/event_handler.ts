@@ -92,7 +92,7 @@ export class EventHandler extends Rule {
     
     // Queue add command instead of directly adding
     this.sim.queuedCommands.push({
-      type: 'add',
+      type: 'spawn',
       params: { unit: newUnit }
     });
   }

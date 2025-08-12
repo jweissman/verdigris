@@ -628,7 +628,7 @@ export class Abilities extends Rule {
     
     // Queue add command to create the summoned unit
     this.sim.queuedCommands.push({
-      type: 'add',
+      type: 'spawn',
       params: { unit: summonedUnit }
     });
   }
