@@ -146,8 +146,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
 
   it('should support querying apparent field vs real field', () => {
     const sim = new Simulator(10, 10);
-    // Use minimal rulebook for clean testing
-    sim.rulebook = [sim.rulebook.find(r => r.constructor.name === 'HugeUnits')!];
+    // Use default rulebook which includes HugeUnits and CommandHandler
     
     const megasquirrel: Unit = {
       id: 'mega1', 
@@ -165,6 +164,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
     
     sim.addUnit(megasquirrel);
     sim.step(); // Create phantoms
+    
     
     // Real field should only have 1 unit (the megasquirrel)
     expect(sim.getRealUnits()).toHaveLength(1);

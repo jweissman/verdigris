@@ -69,13 +69,27 @@ export class StatusEffects extends Rule {
     statusEffects.forEach(effect => {
       switch (effect.type) {
         case 'chill':
-          // Reduce movement speed (implemented in unit_movement rule)
-          unit.meta.chilled = true;
-          unit.meta.chillIntensity = effect.intensity;
+          // Queue chill effect
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: {
+                chilled: true,
+                chillIntensity: effect.intensity
+              }
+            }
+          });
           break;
         case 'stun':
-          // Prevent movement and abilities
-          unit.meta.stunned = true;
+          // Queue stun effect
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: { stunned: true }
+            }
+          });
           break;
         case 'burn':
           // Deal damage over time

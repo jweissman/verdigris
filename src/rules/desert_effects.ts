@@ -119,17 +119,22 @@ export class DesertEffects extends Rule {
     if (!unit.meta.desertAdapted && !unit.meta.heatResistant) {
       if (temperature > 40) {
         // Extreme heat causes fatigue
-        if (!unit.meta.statusEffects) {
-          unit.meta.statusEffects = [];
-        }
+        const statusEffects = unit.meta.statusEffects || [];
         
-        const existingHeatStress = unit.meta.statusEffects.find(effect => effect.type === 'heat_stress');
+        const existingHeatStress = statusEffects.find(effect => effect.type === 'heat_stress');
         if (!existingHeatStress) {
-          unit.meta.statusEffects.push({
-            type: 'heat_stress',
-            duration: 30,
-            intensity: 0.2, // 20% performance reduction
-            source: 'desert_heat'
+          // Queue status effect command
+          this.sim.queuedCommands.push({
+            type: 'applyStatusEffect',
+            params: {
+              unitId: unit.id,
+              effect: {
+                type: 'heat_stress',
+                duration: 30,
+                intensity: 0.2, // 20% performance reduction
+                source: 'desert_heat'
+              }
+            }
           });
           
           // Create heat stress visual
@@ -151,17 +156,22 @@ export class DesertEffects extends Rule {
   private applyWarmthBoost(unit: any, temperature: number): void {
     // Desert-adapted units get small bonuses in warm weather
     if (unit.meta.desertAdapted) {
-      if (!unit.meta.statusEffects) {
-        unit.meta.statusEffects = [];
-      }
+      const statusEffects = unit.meta.statusEffects || [];
       
-      const existingBoost = unit.meta.statusEffects.find(effect => effect.type === 'desert_vigor');
+      const existingBoost = statusEffects.find(effect => effect.type === 'desert_vigor');
       if (!existingBoost) {
-        unit.meta.statusEffects.push({
-          type: 'desert_vigor',
-          duration: 40,
-          intensity: 0.1, // 10% performance boost
-          source: 'desert_adaptation'
+        // Queue status effect command
+        this.sim.queuedCommands.push({
+          type: 'applyStatusEffect',
+          params: {
+            unitId: unit.id,
+            effect: {
+              type: 'desert_vigor',
+              duration: 40,
+              intensity: 0.1, // 10% performance boost
+              source: 'desert_adaptation'
+            }
+          }
         });
       }
     }
@@ -252,14 +262,30 @@ export class DesertEffects extends Rule {
       
       // Reduce visibility (accuracy debuff)
       if (!unit.meta.sandBlinded) {
-        unit.meta.sandBlinded = true;
-        unit.meta.accuracy = (unit.meta.accuracy || 1.0) * (1 - this.sandstormIntensity * 0.3);
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              sandBlinded: true,
+              accuracy: (unit.meta.accuracy || 1.0) * (1 - this.sandstormIntensity * 0.3)
+            }
+          }
+        });
       }
       
       // Slow movement slightly
       if (!unit.meta.sandSlowed) {
-        unit.meta.sandSlowed = true;
-        unit.meta.moveSpeedMult = (unit.meta.moveSpeedMult || 1.0) * (1 - this.sandstormIntensity * 0.2);
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              sandSlowed: true,
+              moveSpeedMult: (unit.meta.moveSpeedMult || 1.0) * (1 - this.sandstormIntensity * 0.2)
+            }
+          }
+        });
       }
       
       // Small chance of sand damage
@@ -281,10 +307,20 @@ export class DesertEffects extends Rule {
   private clearSandstormEffects(): void {
     // Remove sandstorm debuffs from all units
     this.sim.units.forEach((unit: Unit) => {
-      delete unit.meta.sandBlinded;
-      delete unit.meta.sandSlowed;
-      unit.meta.accuracy = 1.0;
-      unit.meta.moveSpeedMult = 1.0;
+      if (unit.meta.sandBlinded || unit.meta.sandSlowed) {
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              sandBlinded: false,
+              sandSlowed: false,
+              accuracy: 1.0,
+              moveSpeedMult: 1.0
+            }
+          }
+        });
+      }
     });
     this.sim.sandstormActive = false;
   }
@@ -298,11 +334,17 @@ export class DesertEffects extends Rule {
           
           // Emerge near target
           if (target) {
-            // Move to target position
-            unit.pos = {
-              x: Math.max(0, Math.min(this.sim.fieldWidth - 1, target.x)),
-              y: Math.max(0, Math.min(this.sim.fieldHeight - 1, target.y))
-            };
+            // Queue move command for emerging unit
+            const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, target.x));
+            const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, target.y));
+            this.sim.queuedCommands.push({
+              type: 'move',
+              params: {
+                unitId: unit.id,
+                dx: newX - unit.pos.x,
+                dy: newY - unit.pos.y
+              }
+            });
             
             // Deal ambush damage
             const victim = this.sim.units.find(u => 
@@ -341,11 +383,19 @@ export class DesertEffects extends Rule {
             }
           }
           
-          // Clear burrow state
-          delete unit.meta.burrowed;
-          delete unit.meta.burrowTarget;
-          delete unit.meta.emergeTime;
-          delete unit.meta.invisible;
+          // Clear burrow state via command
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: {
+                burrowed: false,
+                burrowTarget: undefined,
+                emergeTime: undefined,
+                invisible: false
+              }
+            }
+          });
         }
       }
     });

@@ -4,8 +4,8 @@ import { Unit } from "../types/Unit";
 // This rule interprets posture/tags and sets intendedMove for each unit
 export class UnitBehavior extends Rule {
   apply = () => {
-    const updatedUnits = (this.sim.units as Unit[]).map(unit => {
-      if (unit.state === 'dead' || unit.hp == 0) return unit;
+    (this.sim.units as Unit[]).forEach(unit => {
+      if (unit.state === 'dead' || unit.hp == 0) return;
 
       const find_new_target = () => {
         // find closest hostile
@@ -33,72 +33,139 @@ export class UnitBehavior extends Rule {
 
       let targetId = unit.intendedTarget || find_new_target();
       if (!targetId) {
-        unit.posture = 'wait';
-        return unit;
+        // Queue posture update
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { posture: 'wait' }
+          }
+        });
+        return;
       }
       let target = this.sim.creatureById(targetId);
-      unit.intendedTarget = targetId;
+      
+      // Queue target update
+      if (targetId !== unit.intendedTarget) {
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { intendedTarget: targetId }
+          }
+        });
+      }
+      
       if (target && target.state === 'dead') {
-        unit.intendedTarget = undefined;
+        // Clear dead target
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { intendedTarget: undefined }
+          }
+        });
         target = undefined;
       }
 
       let protecteeId = unit.intendedProtectee || find_new_protectee(); // etc
-      if (protecteeId) {
-        unit.intendedProtectee = protecteeId;
+      if (protecteeId && protecteeId !== unit.intendedProtectee) {
+        // Queue protectee update
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { intendedProtectee: protecteeId }
+          }
+        });
       }
       if (unit.posture === 'guard' && !unit.intendedProtectee) {
-        unit.intendedProtectee = find_new_protectee();
+        const newProtectee = find_new_protectee();
+        if (newProtectee) {
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: { intendedProtectee: newProtectee }
+            }
+          });
+        }
       }
-      unit.intendedProtectee = unit.intendedProtectee || unit.intendedTarget;
+      const finalProtectee = protecteeId || unit.intendedTarget;
+      if (finalProtectee !== unit.intendedProtectee) {
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { intendedProtectee: finalProtectee }
+          }
+        });
+      }
 
+      // Calculate intended move based on posture
+      let intendedMove = { x: 0, y: 0 };
+      
       switch (unit.posture) {
-        case 'wait': return { ...unit, intendedMove: { x: 0, y: 0 }, target: undefined };
+        case 'wait': 
+          intendedMove = { x: 0, y: 0 };
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: { target: undefined }
+            }
+          });
+          break;
 
         case 'guard':
           if (unit.intendedProtectee) {
             const protectee = this.sim.creatureById(unit.intendedProtectee);
             if (protectee && protectee.state !== 'dead') {
               // Move towards protectee
-              unit.intendedMove = {
+              intendedMove = {
                 x: protectee.pos.x > unit.pos.x ? 1 : -1,
                 y: protectee.pos.y > unit.pos.y ? 1 : -1
               };
             } else {
               // No valid protectee, just wait
-              unit.intendedMove = { x: 0, y: 0 };
+              intendedMove = { x: 0, y: 0 };
             }
           } else {
             // No protectee, just wait
-            unit.intendedMove = { x: 0, y: 0 };
+            intendedMove = { x: 0, y: 0 };
           }
-          return unit;
+          break;
 
         case 'bully': // try to occupy _same space_ as target
           if (target) {
-            unit.intendedMove = {
+            intendedMove = {
               x: target.pos.x === unit.pos.x ? 0 : (target.pos.x > unit.pos.x ? 1 : -1),
               y: target.pos.y === unit.pos.y ? 0 : (target.pos.y > unit.pos.y ? 1 : -1)
             };
           }
           break;
+          
         case 'pursue':
           if (target) {
-            unit.intendedMove = {
+            intendedMove = {
               x: target.pos.x > unit.pos.x ? 1 : -1,
               y: target.pos.y > unit.pos.y ? 1 : -1
             };
           }
-          return unit;
+          break;
       }
-
-      return unit;
-
+      
+      // Queue move command if intended move is different
+      if (intendedMove.x !== 0 || intendedMove.y !== 0) {
+        this.sim.queuedCommands.push({
+          type: 'move',
+          params: {
+            unitId: unit.id,
+            dx: intendedMove.x,
+            dy: intendedMove.y
+          }
+        });
+      }
     });
-    
-    // Apply changes through simulator
-    // if (this.sim.applyUnitChanges) {
-    //   this.sim.applyUnitChanges(updatedUnits);
-    // }
   }
 }

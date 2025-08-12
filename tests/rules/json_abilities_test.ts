@@ -51,8 +51,8 @@ describe('Abilities', () => {
     // Apply JSON abilities rule
     abilities.apply();
 
-    // Should queue a projectile command
-    expect(sim.queuedCommands.length).toBe(1);
+    // Should queue a projectile command and a cooldown update
+    expect(sim.queuedCommands.length).toBe(2);
     expect(sim.queuedCommands[0].type).toBe('projectile');
     expect(sim.queuedCommands[0].unitId).toBe('archer1');
     expect(sim.queuedCommands[0].params.projectileType).toBe('bullet'); // projectile type from JSON
@@ -86,8 +86,8 @@ describe('Abilities', () => {
     // Apply JSON abilities rule
     abilities.apply();
 
-    // Should queue a heal command
-    expect(sim.queuedCommands.length).toBe(1);
+    // Should queue a heal command and a cooldown update
+    expect(sim.queuedCommands.length).toBe(2);
     expect(sim.queuedCommands[0].type).toBe('heal');
     expect(sim.queuedCommands[0].unitId).toBe('healer1');
     // Check params instead of args for new format

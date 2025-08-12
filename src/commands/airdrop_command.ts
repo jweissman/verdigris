@@ -1,5 +1,7 @@
 import { Command, CommandParams } from "../rules/command";
 import Encyclopaedia from "../dmg/encyclopaedia";
+import { Simulator } from "../core/simulator";
+import { Transform } from "../core/transform";
 
 /**
  * AirdropCommand - drops a unit from high altitude
@@ -9,6 +11,12 @@ import Encyclopaedia from "../dmg/encyclopaedia";
  *   y?: number - Y position (defaults to center)
  */
 export class AirdropCommand extends Command {
+  private transform: Transform;
+  
+  constructor(sim: Simulator, transform: Transform) {
+    super(sim);
+    this.transform = transform;
+  }
   execute(unitId: string | null, params: CommandParams): void {
     const unitType = params.unitType as string;
     const x = params.x as number | undefined;
@@ -47,8 +55,13 @@ export class AirdropCommand extends Command {
         }
       };
       
-      // Add directly to simulation (no spawn event needed)
-      this.sim.addUnit(droppedUnit);
+      // Use transform if available to add unit properly
+      if (this.transform) {
+        this.transform.addUnit(droppedUnit);
+      } else {
+        // Fallback to direct add if no transform
+        this.sim.addUnit(droppedUnit);
+      }
       
       // Add atmospheric entry particle effects
       this.createAtmosphericEntry(dropX, dropY);

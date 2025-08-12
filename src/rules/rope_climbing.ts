@@ -137,22 +137,24 @@ export class RopeClimbing extends Rule {
   }
   
   private attachToGrappleLine(unit: Unit, line: GrappleLine) {
-    // Ensure meta exists
-    if (!unit.meta) unit.meta = {};
-    
-    // Update the unit's meta
-    unit.meta.climbingLine = true;
-    unit.meta.lineStart = { ...line.startPos };
-    unit.meta.lineEnd = { ...line.endPos };
-    unit.meta.climbProgress = 0; // 0 = at start, 1 = at end
-    
     // Determine which end to climb toward (usually toward enemy)
     const target = this.sim.units.find(u => u.id === line.targetID);
-    if (target && target.team !== unit.team) {
-      unit.meta.climbDirection = 1; // Climb toward target
-    } else {
-      unit.meta.climbDirection = -1; // Climb toward grappler
-    }
+    const climbDirection = (target && target.team !== unit.team) ? 1 : -1;
+    
+    // Queue metadata update to mark unit as climbing
+    this.sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: unit.id,
+        meta: {
+          climbingLine: true,
+          lineStart: { ...line.startPos },
+          lineEnd: { ...line.endPos },
+          climbProgress: 0, // 0 = at start, 1 = at end
+          climbDirection
+        }
+      }
+    });
     
     // Visual effect
     this.sim.particles.push({
@@ -195,18 +197,37 @@ export class RopeClimbing extends Rule {
       const newX = unit.meta.lineStart.x + (unit.meta.lineEnd.x - unit.meta.lineStart.x) * t;
       const newY = unit.meta.lineStart.y + (unit.meta.lineEnd.y - unit.meta.lineStart.y) * t;
       
-      unit.pos.x = newX;
-      unit.pos.y = newY;
+      // Queue move command to update position
+      this.sim.queuedCommands.push({
+        type: 'move',
+        params: {
+          unitId: unit.id,
+          dx: newX - unit.pos.x,
+          dy: newY - unit.pos.y
+        }
+      });
       
       // Check if reached ends
       if (unit.meta.climbProgress >= 1) {
-        unit.meta.climbProgress = 1;
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { climbProgress: 1 }
+          }
+        });
         // Reached end, perform attack or action
         this.performClimbAttack(unit, unit.meta.lineEnd);
         this.detachFromLine(unit);
         continue;
       } else if (unit.meta.climbProgress <= 0) {
-        unit.meta.climbProgress = 0;
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { climbProgress: 0 }
+          }
+        });
         // Reached start
         this.detachFromLine(unit);
         continue;
@@ -268,18 +289,31 @@ export class RopeClimbing extends Rule {
     );
     
     if (enemy) {
-      // Deal damage (assassin strike)
-      const damage = 15;
-      enemy.hp -= damage;
+      // Queue damage event
+      this.sim.queuedEvents.push({
+        kind: 'damage',
+        source: unit.id,
+        target: enemy.id,
+        meta: {
+          amount: 15,
+          aspect: 'assassin_strike'
+        }
+      });
       
-      // Knockback
+      // Queue knockback
       const dx = enemy.pos.x - unit.pos.x;
       const dy = enemy.pos.y - unit.pos.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       
       if (dist > 0) {
-        enemy.pos.x += (dx / dist) * 2;
-        enemy.pos.y += (dy / dist) * 2;
+        this.sim.queuedCommands.push({
+          type: 'knockback',
+          params: {
+            unitId: enemy.id,
+            direction: { x: dx / dist, y: dy / dist },
+            force: 2
+          }
+        });
       }
       
       // Visual effect

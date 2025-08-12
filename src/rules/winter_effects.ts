@@ -74,11 +74,20 @@ export class WinterEffects extends Rule {
         
         unitsInCell.forEach(unit => {
           if (!unit.meta.frozen && !unit.meta.recentlySnowed) {
-            unit.meta.frozen = true;
-            unit.meta.frozenDuration = 60; // Longer freeze duration (7.5 seconds at 8fps)
-            unit.meta.brittle = true;
-            unit.meta.recentlySnowed = true; // Prevent multiple snowflakes from hitting same unit
-            unit.meta.snowFrozen = true; // Mark as snow-frozen to prevent immediate thawing
+            // Queue freeze command
+            this.sim.queuedCommands.push({
+              type: 'meta',
+              params: {
+                unitId: unit.id,
+                meta: {
+                  frozen: true,
+                  frozenDuration: 60, // Longer freeze duration (7.5 seconds at 8fps)
+                  brittle: true,
+                  recentlySnowed: true, // Prevent multiple snowflakes from hitting same unit
+                  snowFrozen: true // Mark as snow-frozen to prevent immediate thawing
+                }
+              }
+            });
             
             // Create freeze impact particles for visual feedback
             for (let i = 0; i < 8; i++) {
@@ -106,7 +115,13 @@ export class WinterEffects extends Rule {
       if (particle.type === 'snow') {
         this.sim.units.forEach(unit => {
           if (unit.meta.recentlySnowed) {
-            unit.meta.recentlySnowed = false;
+            this.sim.queuedCommands.push({
+              type: 'meta',
+              params: {
+                unitId: unit.id,
+                meta: { recentlySnowed: false }
+              }
+            });
           }
         });
       }
@@ -130,27 +145,46 @@ export class WinterEffects extends Rule {
   private applyFreezingEffects(unit: Unit): void {
     // Units at 0°C or below become frozen
     if (!unit.meta.frozen) {
-      unit.meta.frozen = true;
-      unit.meta.frozenDuration = 40; // ~5 seconds at 8fps
+      // Queue freeze command
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            frozen: true,
+            frozenDuration: 40, // ~5 seconds at 8fps
+            brittle: true, // Frozen units are brittle - take extra damage
+            stunned: true // Stunned immediately
+          }
+        }
+      });
       
-      // Frozen units are brittle - take extra damage
-      unit.meta.brittle = true;
+      // Also queue halt command to stop movement
+      this.sim.queuedCommands.push({
+        type: 'halt',
+        params: { unitId: unit.id }
+      });
     }
   }
 
   private applyChillEffects(unit: Unit): void {
     // Units in cold (but not freezing) temperatures get chilled
-    if (!unit.meta.statusEffects) {
-      unit.meta.statusEffects = [];
-    }
+    const statusEffects = unit.meta.statusEffects || [];
     
-    const existingChill = unit.meta.statusEffects.find(effect => effect.type === 'chill');
+    const existingChill = statusEffects.find(effect => effect.type === 'chill');
     if (!existingChill) {
-      unit.meta.statusEffects.push({
-        type: 'chill',
-        duration: 20,
-        intensity: 0.3, // 30% movement reduction in cold
-        source: 'winter'
+      // Queue status effect command
+      this.sim.queuedCommands.push({
+        type: 'applyStatusEffect',
+        params: {
+          unitId: unit.id,
+          effect: {
+            type: 'chill',
+            duration: 20,
+            intensity: 0.3, // 30% movement reduction in cold
+            source: 'winter'
+          }
+        }
       });
     }
   }
@@ -158,22 +192,44 @@ export class WinterEffects extends Rule {
   private handleFrozenUnits(): void {
     this.sim.units.forEach(unit => {
       if (unit.meta.frozen) {
-        // Reduce frozen duration
-        unit.meta.frozenDuration = (unit.meta.frozenDuration || 0) - 1;
+        const frozenDuration = (unit.meta.frozenDuration || 0) - 1;
         
-        // Frozen units cannot move or act
-        unit.meta.stunned = true;
-        unit.intendedMove = { x: 0, y: 0 };
+        // Queue updates for frozen state
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { 
+              frozenDuration,
+              stunned: true
+            }
+          }
+        });
+        
+        // Queue halt command to stop movement
+        this.sim.queuedCommands.push({
+          type: 'halt',
+          params: { unitId: unit.id }
+        });
         
         // Check if thawing - snow-frozen units need more time or higher temperature
         const temp = this.sim.temperatureField.get(unit.pos.x, unit.pos.y);
         const thawThreshold = unit.meta.snowFrozen ? 20 : 0; // Snow-frozen units need much warmer temps to thaw
-        if (temp > thawThreshold || unit.meta.frozenDuration <= 0) {
-          unit.meta.frozen = false;
-          unit.meta.brittle = false;
-          unit.meta.stunned = false;
-          unit.meta.snowFrozen = false;
-          delete unit.meta.frozenDuration;
+        if (temp > thawThreshold || frozenDuration <= 0) {
+          // Queue thaw command
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: {
+                frozen: false,
+                brittle: false,
+                stunned: false,
+                snowFrozen: false,
+                frozenDuration: undefined
+              }
+            }
+          });
         }
       }
     });

@@ -34,8 +34,8 @@ export class HugeUnits extends Rule {
         y: hugeUnit.pos.y + i // Phantoms trail behind in Y direction
       };
 
-      // Check if position is valid and not occupied
-      if (this.isValidPosition(phantomPos) && !this.isOccupied(phantomPos)) {
+      // Check if position is valid (phantoms can push units out of the way)
+      if (this.isValidPosition(phantomPos)) {
         const phantom: Unit = {
           id: `${hugeUnit.id}_phantom_${i}`,
           pos: phantomPos,
@@ -54,7 +54,11 @@ export class HugeUnits extends Rule {
           }
         };
 
-        this.sim.addUnit(phantom);
+        // Queue add command to create the phantom
+        this.sim.queuedCommands.push({
+          type: 'add',
+          params: { unit: phantom }
+        });
       }
     }
   }
@@ -75,7 +79,15 @@ export class HugeUnits extends Rule {
 
         // Only move if position changed
         if (phantom.pos.x !== expectedPos.x || phantom.pos.y !== expectedPos.y) {
-          phantom.pos = expectedPos;
+          // Queue command to move phantom
+          this.sim.queuedCommands.push({
+            type: 'move',
+            params: {
+              unitId: phantom.id,
+              dx: expectedPos.x - phantom.pos.x,
+              dy: expectedPos.y - phantom.pos.y
+            }
+          });
         }
       });
     }
@@ -109,15 +121,12 @@ export class HugeUnits extends Rule {
       !this.sim.units.some(parent => parent.id === unit.meta.parentId)
     );
 
-    // Remove orphaned phantoms
-    if (orphanedPhantoms.length > 0) {
-      const filteredUnits = (this.sim.units as Unit[]).filter(u => 
-        !orphanedPhantoms.some(phantom => phantom.id === u.id)
-      );
-      
-      if (this.sim.applyUnitChanges) {
-        this.sim.applyUnitChanges(filteredUnits);
-      }
+    // Queue commands to remove orphaned phantoms
+    for (const phantom of orphanedPhantoms) {
+      this.sim.queuedCommands.push({
+        type: 'remove',
+        params: { unitId: phantom.id }
+      });
     }
   }
 

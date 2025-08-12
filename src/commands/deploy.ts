@@ -53,7 +53,7 @@ export class Deploy extends Command {
     try {
       const unit = Encyclopaedia.unit(unitType);
       
-      // Queue spawn event
+      // Queue spawn event - Commands can queue events
       this.sim.queuedEvents.push({
         kind: 'spawn',
         source: unitId || 'system',

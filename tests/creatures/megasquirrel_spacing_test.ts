@@ -7,7 +7,7 @@ import { Knockback } from '../../src/rules/knockback.ts';
 describe('Megasquirrel Spacing', () => {
   it('should push other units away from phantom feet cells', () => {
     const sim = new Simulator(20, 20);
-    sim.rulebook = [new HugeUnits(sim), new Knockback(sim)];
+    // Use default rulebook which includes HugeUnits, Knockback, and CommandHandler
     
     // Add megasquirrel at (10, 5) - away from edges
     sim.addUnit({
@@ -43,7 +43,7 @@ describe('Megasquirrel Spacing', () => {
   // NOTE: flaky somehow -- we should identify sources of randomness in the simulation and centralize them i think?
   it.skip('should prevent multiple megasquirrels from chaining together', () => {
     const sim = new Simulator(30, 20);
-    sim.rulebook = [new HugeUnits(sim), new Knockback(sim)];
+    // Use default rulebook which includes HugeUnits, Knockback, and CommandHandler
     
     // Add two megasquirrels with overlapping body spaces
     sim.addUnit({
@@ -88,7 +88,7 @@ describe('Megasquirrel Spacing', () => {
   
   it('should allow phantom units to push but not be pushed', () => {
     const sim = new Simulator(20, 20);
-    sim.rulebook = [new HugeUnits(sim), new Knockback(sim)];
+    // Use default rulebook which includes HugeUnits, Knockback, and CommandHandler
     
     // Add megasquirrel
     sim.addUnit({

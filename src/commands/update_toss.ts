@@ -4,9 +4,9 @@ import { Transform } from "../core/transform";
 export class UpdateTossCommand extends Command {
   private transform: Transform;
   
-  constructor(sim: any) {
+  constructor(sim: any, transform?: Transform) {
     super(sim);
-    this.transform = sim.getTransform();
+    this.transform = transform || sim.getTransform();
   }
   
   execute(unitId: string | null, params: Record<string, any>): void {

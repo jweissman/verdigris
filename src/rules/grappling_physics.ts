@@ -68,16 +68,30 @@ export class GrapplingPhysics extends Rule {
           });
 
           // Apply grapple effects to target
-          if (!hitUnit.meta) hitUnit.meta = {};
-          hitUnit.meta.grappled = true;
-          hitUnit.meta.grappledBy = grapplerID;
-          hitUnit.meta.grappledDuration = (grapple as any).pinDuration || 60;
-          hitUnit.meta.tetherPoint = grapplerPos;
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: hitUnit.id,
+              meta: {
+                grappled: true,
+                grappledBy: grapplerID,
+                grappledDuration: (grapple as any).pinDuration || 60,
+                tetherPoint: grapplerPos
+              }
+            }
+          });
           
           // Also update grappler's metadata
           if (grappler) {
-            if (!grappler.meta) grappler.meta = {};
-            grappler.meta.grapplingTarget = hitUnit.id;
+            this.sim.queuedCommands.push({
+              type: 'meta',
+              params: {
+                unitId: grappler.id,
+                meta: {
+                  grapplingTarget: hitUnit.id
+                }
+              }
+            });
           }
           
           // Check if target is segmented and damage segments
@@ -89,12 +103,27 @@ export class GrapplingPhysics extends Rule {
             
             if (firstSegment && firstSegment.hp > 0) {
               const damage = 5; // Base grapple damage to segments
-              firstSegment.hp = Math.max(0, firstSegment.hp - damage);
               
-              // Pin the damaged segment
-              if (!firstSegment.meta) firstSegment.meta = {};
-              firstSegment.meta.pinned = true;
-              firstSegment.meta.pinDuration = 30;
+              // Queue damage command
+              this.sim.queuedCommands.push({
+                type: 'damage',
+                params: {
+                  targetId: firstSegment.id,
+                  amount: damage
+                }
+              });
+              
+              // Queue pin metadata
+              this.sim.queuedCommands.push({
+                type: 'meta',
+                params: {
+                  unitId: firstSegment.id,
+                  meta: {
+                    pinned: true,
+                    pinDuration: 30
+                  }
+                }
+              });
             }
           }
           
@@ -102,11 +131,27 @@ export class GrapplingPhysics extends Rule {
           const targetMass = hitUnit.mass || 1;
           if (targetMass > 30) {
             // Massive creatures can't be pulled, only pinned
-            hitUnit.meta.pinned = true;
-            hitUnit.meta.movementPenalty = 1.0; // 100% movement reduction
+            this.sim.queuedCommands.push({
+              type: 'meta',
+              params: {
+                unitId: hitUnit.id,
+                meta: {
+                  pinned: true,
+                  movementPenalty: 1.0 // 100% movement reduction
+                }
+              }
+            });
           } else {
             // Regular creatures are slowed
-            hitUnit.meta.movementPenalty = 0.5; // 50% slower
+            this.sim.queuedCommands.push({
+              type: 'meta',
+              params: {
+                unitId: hitUnit.id,
+                meta: {
+                  movementPenalty: 0.5 // 50% slower
+                }
+              }
+            });
           }
         }
 
@@ -141,14 +186,20 @@ export class GrapplingPhysics extends Rule {
         this.grappleLines.delete(lineID);
         
         // Clear grapple effects from target
-        if (target.meta) {
-          target.meta.grappled = false;
-          target.meta.grappledBy = undefined;
-          target.meta.grappledDuration = 0;
-          target.meta.tetherPoint = undefined;
-          target.meta.movementPenalty = 0;
-          target.meta.pinned = false;
-        }
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: target.id,
+            meta: {
+              grappled: false,
+              grappledBy: undefined,
+              grappledDuration: 0,
+              tetherPoint: undefined,
+              movementPenalty: 0,
+              pinned: false
+            }
+          }
+        });
         
         continue; // Skip to next grapple line
       }
@@ -156,19 +207,32 @@ export class GrapplingPhysics extends Rule {
       // Check if line is taut
       grappleLine.taut = currentDistance >= grappleLine.length;
       
-      // Ensure meta exists
-      if (!target.meta) target.meta = {};
-      
       // Apply movement penalties based on mass
       const targetMass = target.mass || 1;
       if (targetMass > 30) {
         // Massive creatures are ALWAYS pinned when grappled
-        target.meta.pinned = true;
-        target.meta.movementPenalty = 1.0;
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: target.id,
+            meta: {
+              pinned: true,
+              movementPenalty: 1.0
+            }
+          }
+        });
       } else {
         // Regular creatures are slowed
-        if (!target.meta.movementPenalty) {
-          target.meta.movementPenalty = 0.5;
+        if (!target.meta?.movementPenalty) {
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: target.id,
+              meta: {
+                movementPenalty: 0.5
+              }
+            }
+          });
         }
       }
       
@@ -179,8 +243,16 @@ export class GrapplingPhysics extends Rule {
 
       // Decrement duration
       grappleLine.duration--;
-      if (target.meta.grappledDuration) {
-        target.meta.grappledDuration--;
+      if (target.meta?.grappledDuration) {
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: target.id,
+            meta: {
+              grappledDuration: (target.meta.grappledDuration || 1) - 1
+            }
+          }
+        });
       }
     }
 
@@ -189,50 +261,30 @@ export class GrapplingPhysics extends Rule {
   }
 
   private applyTautEffects(grappler: Unit, target: Unit, _grappleLine: GrappleLine) {
-    const dx = target.pos.x - grappler.pos.x;
-    const dy = target.pos.y - grappler.pos.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance === 0) return;
-    
-    const unitX = dx / distance;
-    const unitY = dy / distance;
-    
-    // Stronger units can pull weaker ones
-    const grapplerMass = grappler.mass || 1;
-    const targetMass = target.mass || 1;
-    const totalMass = grapplerMass + targetMass;
-    
-    // Calculate pull force based on mass ratio
-    const grapplerPull = targetMass / totalMass * 0.3;
-    const targetPull = grapplerMass / totalMass * 0.3;
-    
-    // Massive creatures (mass > 30) can't be pulled at all, only pinned
-    const targetIsImmovable = targetMass > 30;
-    
-    // Apply constraint forces (pull toward each other)
-    if (target.meta.pinned || targetIsImmovable) {
-      // If target is pinned or immovable, only grappler moves
-      grappler.pos.x += unitX * grapplerPull * 2;
-      grappler.pos.y += unitY * grapplerPull * 2;
-      
-      // Mark the target as effectively pinned if immovable
-      if (targetIsImmovable && !target.meta.pinned) {
-        target.meta.pinned = true;
-        target.meta.movementPenalty = 1.0; // Can't move while grappled
+    // Queue a pull command to handle the physics
+    this.sim.queuedCommands.push({
+      type: 'pull',
+      params: {
+        grapplerId: grappler.id,
+        targetId: target.id,
+        force: 0.3
       }
-    } else {
-      // Both units are pulled toward each other
-      grappler.pos.x += unitX * grapplerPull;
-      grappler.pos.y += unitY * grapplerPull;
-      
-      target.pos.x -= unitX * targetPull;
-      target.pos.y -= unitY * targetPull;
-    }
+    });
     
-    // Clamp positions to field boundaries
-    this.clampToField(grappler);
-    this.clampToField(target);
+    // Mark massive units as pinned
+    const targetMass = target.mass || 1;
+    if (targetMass > 30 && !target.meta?.pinned) {
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: target.id,
+          meta: {
+            pinned: true,
+            movementPenalty: 1.0
+          }
+        }
+      });
+    }
   }
 
   private applyPinningEffects() {
@@ -253,19 +305,40 @@ export class GrapplingPhysics extends Rule {
         this.removeGrappleFromUnit(unit);
         if (wasPinned && (unit.mass || 1) > 30) {
           // Restore pinned for massive units as it's a separate status
-          unit.meta.pinned = true;
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: { pinned: true }
+            }
+          });
         }
       }
 
       // Handle fully pinned units
       if (unit.meta.pinned && unit.meta.pinDuration > 0) {
-        unit.meta.stunned = true;
-        unit.intendedMove = { x: 0, y: 0 };
-        unit.meta.pinDuration--;
+        // Queue stun and halt commands
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { 
+              stunned: true,
+              pinDuration: unit.meta.pinDuration - 1
+            }
+          }
+        });
+        this.sim.queuedCommands.push({
+          type: 'halt',
+          params: { unitId: unit.id }
+        });
       } else if (unit.meta.pinned && !unit.meta.pinDuration) {
         // Massive units that are grappled stay pinned (no duration needed)
         if ((unit.mass || 1) > 30 && unit.meta.grappled) {
-          unit.intendedMove = { x: 0, y: 0 };
+          this.sim.queuedCommands.push({
+            type: 'halt',
+            params: { unitId: unit.id }
+          });
         } else {
           // Pin expired for non-massive units
           this.removePinFromUnit(unit);
@@ -329,16 +402,22 @@ export class GrapplingPhysics extends Rule {
   }
 
   private removeGrappleFromUnit(unit: Unit) {
-    delete unit.meta.grappled;
-    delete unit.meta.grappledBy;
-    delete unit.meta.grappledDuration;
-    delete unit.meta.movementPenalty;
+    // Clear grapple metadata directly
+    if (unit.meta) {
+      delete unit.meta.grappled;
+      delete unit.meta.grappledBy;
+      delete unit.meta.grappledDuration;
+      delete unit.meta.movementPenalty;
+    }
   }
 
   private removePinFromUnit(unit: Unit) {
-    delete unit.meta.pinned;
-    delete unit.meta.pinDuration;
-    delete unit.meta.stunned;
+    // Clear pin metadata directly
+    if (unit.meta) {
+      delete unit.meta.pinned;
+      delete unit.meta.pinDuration;
+      delete unit.meta.stunned;
+    }
   }
 
   private calculateDistance(pos1: Vec2, pos2: Vec2): number {
@@ -348,7 +427,11 @@ export class GrapplingPhysics extends Rule {
   }
 
   private clampToField(unit: Unit) {
-    unit.pos.x = Math.max(0, Math.min(this.sim.fieldWidth - 1, unit.pos.x));
-    unit.pos.y = Math.max(0, Math.min(this.sim.fieldHeight - 1, unit.pos.y));
+    const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, unit.pos.x));
+    const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, unit.pos.y));
+    
+    // Directly clamp positions for physics
+    unit.pos.x = newX;
+    unit.pos.y = newY;
   }
 }

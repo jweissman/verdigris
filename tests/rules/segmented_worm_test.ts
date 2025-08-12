@@ -6,8 +6,7 @@ import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 describe('Regular-sized Segmented Worm', () => {
   it('should create a segmented worm that is not huge', () => {
     const sim = new Simulator(32, 24);
-    const segmentedRule = new SegmentedCreatures(sim);
-    sim.rulebook = [segmentedRule];
+    // Use default rulebook which includes SegmentedCreatures and CommandHandler
     
     // Create the regular segmented worm
     const worm = {
@@ -41,8 +40,7 @@ describe('Regular-sized Segmented Worm', () => {
   
   it('should have different behavior from giant-sandworm', () => {
     const sim = new Simulator(32, 24);
-    const segmentedRule = new SegmentedCreatures(sim);
-    sim.rulebook = [segmentedRule];
+    // Use default rulebook
     
     // Create both worms for comparison
     const regularWorm = {
@@ -76,8 +74,7 @@ describe('Regular-sized Segmented Worm', () => {
   
   it('should create segments that follow the head', () => {
     const sim = new Simulator(32, 24);
-    const segmentedRule = new SegmentedCreatures(sim);
-    sim.rulebook = [segmentedRule];
+    // Use default rulebook
     
     const worm = {
       ...Encyclopaedia.unit('segmented-worm'),

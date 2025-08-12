@@ -38,7 +38,7 @@ describe('Mechatronist Deployment System', () => {
 
   it('should call Mechatron airdrop when conditions are met', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new AirdropPhysics(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new AirdropPhysics(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     
     // Create mechatronist and allies (need 2+ allies for trigger)
@@ -91,7 +91,12 @@ describe('Mechatronist Deployment System', () => {
 
   it('should handle full Mechatronist to Mechatron deployment sequence', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new AirdropPhysics(sim), new EventHandler(sim)];
+    // Ensure AirdropPhysics is in the rulebook
+    const hasAirdrop = sim.rulebook.some(r => r instanceof AirdropPhysics);
+    if (!hasAirdrop) {
+      // Insert AirdropPhysics early in the rulebook
+      sim.rulebook.splice(1, 0, new AirdropPhysics(sim));
+    }
     
     
     // Set up scenario for airdrop
@@ -112,23 +117,31 @@ describe('Mechatronist Deployment System', () => {
     for (let tick = 0; tick < 200; tick++) {
       sim.step();
       
-      // Phase 1: Wait for airdrop call
-      if (deploymentPhase === 'waiting' && sim.queuedCommands.some(cmd => cmd.type === 'airdrop')) {
-        deploymentPhase = 'called';
+      
+      // Phase 1: Check if mechatron was added (airdrop processed)
+      if (deploymentPhase === 'waiting') {
+        const mechatronInAir = sim.units.find(u => u.sprite === 'mechatron');
+        if (mechatronInAir) {
+          deploymentPhase = 'called';
+          mechatron = mechatronInAir;
+        }
       }
       
-      // Phase 2: Mechatron appears in air
-      if (deploymentPhase === 'called' && sim.units.length > 4) {
-        mechatron = sim.units.find(u => u.sprite === 'mechatron');
-        if (mechatron && mechatron.meta.dropping) {
+      // Phase 2: Check if dropping
+      if (deploymentPhase === 'called' && mechatron) {
+        if (mechatron.meta?.dropping) {
           deploymentPhase = 'dropping';
         }
       }
       
-      // Phase 3: Mechatron lands
-      if (deploymentPhase === 'dropping' && mechatron && !mechatron.meta.dropping) {
-        deploymentPhase = 'landed';
-        break;
+      // Phase 3: Mechatron lands - need to refetch unit due to double buffering
+      if (deploymentPhase === 'dropping') {
+        const currentMechatron = sim.units.find(u => u.sprite === 'mechatron');
+        if (currentMechatron && !currentMechatron.meta?.dropping) {
+          deploymentPhase = 'landed';
+          mechatron = currentMechatron;
+          break;
+        }
       }
     }
     

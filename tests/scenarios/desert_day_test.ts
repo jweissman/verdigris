@@ -103,7 +103,7 @@ it('desert units - waterbearer can heal and detect spies', () => {
   sim.addUnit(spy);
   
   // Use detect ability through the abilities system
-  sim.rulebook = [new Abilities(sim)];
+  sim.rulebook = [new Abilities(sim), new CommandHandler(sim)];
   sim.step(); // Let abilities system detect and reveal the spy
   
   // Check spy was revealed
@@ -162,8 +162,8 @@ it('desert units - skirmisher has dual knife attack', () => {
 it('segmented creatures - desert worm has segments', () => {
   const sim = new Simulator();
   
-  // Add segmented creatures rule
-  sim.rulebook = [new SegmentedCreatures(sim)];
+  // Use default rulebook which already has SegmentedCreatures and CommandHandler
+  // No need to override
   
   // Create desert worm
   const worm = {
@@ -189,8 +189,7 @@ it('segmented creatures - desert worm has segments', () => {
 it('segmented creatures - giant sandworm is huge with many segments', () => {
   const sim = new Simulator();
   
-  // Add segmented creatures rule
-  sim.rulebook = [new SegmentedCreatures(sim)];
+  // Use default rulebook which already has SegmentedCreatures and CommandHandler
   
   // Create giant sandworm
   const giantWorm = {
@@ -216,7 +215,7 @@ it('sandstorm effect - damages non-desert units', () => {
   
   // Add desert effects rule
   const desertRule = new DesertEffects(sim);
-  sim.rulebook = [desertRule];
+  sim.rulebook = [desertRule, new CommandHandler(sim)];
   
   // Create desert-adapted unit
   const grappler = {
@@ -255,7 +254,7 @@ it('segmented creatures - grappling affects segments', () => {
   const sim = new Simulator();
   
   // Add rules
-  sim.rulebook = [new SegmentedCreatures(sim), new GrapplingPhysics(sim)];
+  sim.rulebook = [new SegmentedCreatures(sim), new GrapplingPhysics(sim), new CommandHandler(sim)];
   
   // Create segmented worm
   const worm = {
@@ -267,14 +266,25 @@ it('segmented creatures - grappling affects segments', () => {
   // Step to create segments
   sim.step();
   
-  // Grapple a segment
+  // Grapple a segment via command
   const segment = sim.units.find(u => u.meta.segment && u.meta.segmentIndex === 2);
   if (segment) {
-    segment.meta.grappled = true;
-    segment.meta.grappledBy = 'test_grappler';
+    sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: segment.id,
+        meta: {
+          grappled: true,
+          grappledBy: 'test_grappler'
+        }
+      }
+    });
   }
   
-  // Step to apply effects
+  // Step to apply the meta command
+  sim.step();
+  
+  // Step again for SegmentedCreatures to see the grappled state
   sim.step();
   
   // Check that parent is slowed
@@ -286,7 +296,7 @@ it('desert worm can burrow and ambush', () => {
   const sim = new Simulator();
   
   // Add desert effects and Abilities for burrow handling
-  sim.rulebook = [new Abilities(sim), new DesertEffects(sim)];
+  sim.rulebook = [new Abilities(sim), new DesertEffects(sim), new CommandHandler(sim)];
   
   // Create desert worm
   const worm = {
@@ -303,8 +313,6 @@ it('desert worm can burrow and ambush', () => {
   };
   sim.addUnit(enemy);
   
-  const wormUnit = sim.units.find(u => u.id === worm.id);
-  
   // Use burrow ability through command system
   sim.queuedCommands.push({
     type: 'burrow',
@@ -312,6 +320,9 @@ it('desert worm can burrow and ambush', () => {
     params: { targetX: enemy.pos.x, targetY: enemy.pos.y }
   });
   sim.step(); // Process burrow command
+  
+  // Get the updated worm after the step
+  const wormUnit = sim.units.find(u => u.id === worm.id);
   
   // Check worm is burrowed
   expect(wormUnit?.meta.burrowed).toBeTruthy();
@@ -322,9 +333,12 @@ it('desert worm can burrow and ambush', () => {
     sim.step();
   }
   
+  // Get updated worm from sim.units to see current state
+  const finalWorm = sim.units.find(u => u.id === worm.id);
+  
   // Check worm has emerged
-  expect(wormUnit?.meta.burrowed).toBeFalsy();
-  expect(wormUnit?.meta.invisible).toBeFalsy();
+  expect(finalWorm?.meta.burrowed).toBeFalsy();
+  expect(finalWorm?.meta.invisible).toBeFalsy();
 });
 
 });

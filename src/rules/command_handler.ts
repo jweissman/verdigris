@@ -20,7 +20,12 @@ import { KnockbackCommand } from "../commands/knockback";
 import { UpdateTossCommand } from "../commands/update_toss";
 import { ApplyStatusEffectCommand, UpdateStatusEffectsCommand } from "../commands/status_effect";
 import { MarkDeadCommand } from "../commands/mark_dead";
-import { SetIntendedMoveCommand } from "../commands/set_intended_move";
+import { HaltCommand } from "../commands/halt";
+import { MetaCommand } from "../commands/meta";
+import { PullCommand } from "../commands/pull";
+import { BurrowCommand } from "../commands/burrow";
+import { CharmCommand } from "../commands/charm";
+import { AddCommand } from "../commands/add";
 
 export type QueuedCommand = {
   type: string;
@@ -32,39 +37,48 @@ export type QueuedCommand = {
 
 export class CommandHandler extends Rule {
   private commands: Map<string, Command> = new Map();
+  private transform: any; // Transform object for mutations
 
-  constructor(sim: any) {
+  constructor(sim: any, transform?: any) {
     super(sim);
-    // Register available commands
-    this.commands.set('toss', new Toss(sim));
-    this.commands.set('weather', new ChangeWeather(sim));
-    this.commands.set('deploy', new Deploy(sim));
-    this.commands.set('spawn', new Deploy(sim)); // Alias for deploy
-    this.commands.set('airdrop', new AirdropCommand(sim));
-    this.commands.set('drop', new AirdropCommand(sim)); // Alias for airdrop
-    this.commands.set('lightning', new Lightning(sim));
-    this.commands.set('bolt', new Lightning(sim)); // Alias for lightning
-    this.commands.set('grapple', new Grapple(sim));
-    this.commands.set('hook', new Grapple(sim)); // Alias for grapple
-    this.commands.set('pin', new Pin(sim));
-    this.commands.set('temperature', new Temperature(sim));
-    this.commands.set('temp', new Temperature(sim)); // Alias
+    this.transform = transform || sim.getTransform();
+    
+    // Register available commands - pass transform to each
+    this.commands.set('toss', new Toss(sim, this.transform));
+    this.commands.set('weather', new ChangeWeather(sim, this.transform));
+    this.commands.set('deploy', new Deploy(sim, this.transform));
+    this.commands.set('spawn', new Deploy(sim, this.transform)); // Alias for deploy
+    this.commands.set('airdrop', new AirdropCommand(sim, this.transform));
+    this.commands.set('drop', new AirdropCommand(sim, this.transform)); // Alias for airdrop
+    this.commands.set('lightning', new Lightning(sim, this.transform));
+    this.commands.set('bolt', new Lightning(sim, this.transform)); // Alias for lightning
+    this.commands.set('grapple', new Grapple(sim, this.transform));
+    this.commands.set('hook', new Grapple(sim, this.transform)); // Alias for grapple
+    this.commands.set('pin', new Pin(sim, this.transform));
+    this.commands.set('temperature', new Temperature(sim, this.transform));
+    this.commands.set('temp', new Temperature(sim, this.transform)); // Alias
     // JSON Abilities commands
-    this.commands.set('damage', new Damage(sim));
-    this.commands.set('heal', new Heal(sim));
-    this.commands.set('aoe', new AoE(sim));
-    this.commands.set('projectile', new Projectile(sim));
-    this.commands.set('jump', new JumpCommand(sim));
+    this.commands.set('damage', new Damage(sim, this.transform));
+    this.commands.set('heal', new Heal(sim, this.transform));
+    this.commands.set('aoe', new AoE(sim, this.transform));
+    this.commands.set('projectile', new Projectile(sim, this.transform));
+    this.commands.set('jump', new JumpCommand(sim, this.transform));
     // System commands
-    this.commands.set('cleanup', new CleanupCommand(sim));
-    this.commands.set('remove', new RemoveCommand(sim));
-    this.commands.set('move', new MoveCommand(sim));
-    this.commands.set('knockback', new KnockbackCommand(sim));
-    this.commands.set('updateToss', new UpdateTossCommand(sim));
-    this.commands.set('applyStatusEffect', new ApplyStatusEffectCommand(sim));
-    this.commands.set('updateStatusEffects', new UpdateStatusEffectsCommand(sim));
-    this.commands.set('markDead', new MarkDeadCommand(sim));
-    this.commands.set('setIntendedMove', new SetIntendedMoveCommand(sim));
+    this.commands.set('cleanup', new CleanupCommand(sim, this.transform));
+    this.commands.set('remove', new RemoveCommand(sim, this.transform));
+    this.commands.set('move', new MoveCommand(sim, this.transform));
+    this.commands.set('knockback', new KnockbackCommand(sim, this.transform));
+    this.commands.set('updateToss', new UpdateTossCommand(sim, this.transform));
+    this.commands.set('applyStatusEffect', new ApplyStatusEffectCommand(sim, this.transform));
+    this.commands.set('updateStatusEffects', new UpdateStatusEffectsCommand(sim, this.transform));
+    this.commands.set('markDead', new MarkDeadCommand(sim, this.transform));
+    this.commands.set('halt', new HaltCommand(sim, this.transform));
+    this.commands.set('meta', new MetaCommand(sim, this.transform));
+    this.commands.set('pull', new PullCommand(sim, this.transform));
+    this.commands.set('burrow', new BurrowCommand(sim, this.transform));
+    this.commands.set('charm', new CharmCommand(sim, this.transform));
+    this.commands.set('changeTeam', new CharmCommand(sim, this.transform)); // Alias
+    this.commands.set('add', new AddCommand(sim, this.transform));
   }
 
   apply = () => {
@@ -118,9 +132,8 @@ export class CommandHandler extends Rule {
         this.sim.queuedCommands = commandsToKeep;
         
         // Commit Transform changes after processing commands
-        const transform = this.sim.getTransform();
-        if (transform) {
-          transform.commit();
+        if (this.transform) {
+          this.transform.commit();
         }
       }
       

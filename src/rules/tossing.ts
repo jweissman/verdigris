@@ -4,7 +4,8 @@ import { Unit } from '../types/Unit';
 export class Tossing extends Rule {
   apply(): void {
     // Process tossing for each unit
-    for (const unit of this.sim.units) {
+    const units = this.sim.units;
+    for (const unit of units) {
       if (unit.meta?.tossing) {
         this.processToss(unit as Unit);
       }

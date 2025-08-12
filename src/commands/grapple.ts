@@ -100,10 +100,18 @@ export class Grapple extends Command {
       target: targetPos
     });
 
-    // Update ability cooldown
-    if (!grappler.lastAbilityTick) {
-      grappler.lastAbilityTick = {};
-    }
-    grappler.lastAbilityTick.grapplingHook = this.sim.ticks;
+    // Queue cooldown update
+    this.sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: grappler.id,
+        meta: {
+          lastAbilityTick: {
+            ...grappler.lastAbilityTick,
+            grapplingHook: this.sim.ticks
+          }
+        }
+      }
+    });
   }
 }

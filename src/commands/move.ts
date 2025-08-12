@@ -28,8 +28,9 @@ export class MoveCommand extends Command {
           effectiveDy = 0;
         }
         
-        const newX = unit.pos.x + effectiveDx;
-        const newY = unit.pos.y + effectiveDy;
+        // Calculate new position and clamp to field bounds
+        const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, unit.pos.x + effectiveDx));
+        const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, unit.pos.y + effectiveDy));
         
         // Determine facing
         let facing = unit.meta.facing || 'right';
@@ -39,19 +40,15 @@ export class MoveCommand extends Command {
           facing = 'left';
         }
         
-        // Bounds check
-        if (newX >= 0 && newX < this.sim.fieldWidth && 
-            newY >= 0 && newY < this.sim.fieldHeight) {
-          return {
-            ...unit,
-            pos: { x: newX, y: newY },
-            intendedMove: { x: 0, y: 0 }, // Clear intended move after applying
-            meta: {
-              ...unit.meta,
-              facing
-            }
-          };
-        }
+        return {
+          ...unit,
+          pos: { x: newX, y: newY },
+          intendedMove: { x: 0, y: 0 }, // Clear intended move after applying
+          meta: {
+            ...unit.meta,
+            facing
+          }
+        };
       }
       return unit;
     });

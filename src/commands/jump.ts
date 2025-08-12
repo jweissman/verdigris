@@ -1,4 +1,5 @@
 import { Command, CommandParams } from '../rules/command';
+import { Transform } from '../core/transform';
 
 /**
  * Jump command - unit jumps to target location with impact damage
@@ -12,28 +13,32 @@ import { Command, CommandParams } from '../rules/command';
 export class JumpCommand extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     if (!unitId) return;
-    const unit = this.sim.units.find(u => u.id === unitId);
+    
+    const transform = new Transform(this.sim);
+    
+    // Get unit position before setting jump
+    const units = this.sim.getPendingUnits ? this.sim.getPendingUnits() : this.sim.units;
+    const unit = units.find(u => u.id === unitId);
     if (!unit) return;
-
+    
     const targetX = params.targetX as number;
     const targetY = params.targetY as number;
     const height = (params.height as number) || 5;
     const damage = (params.damage as number) || 5;
     const radius = (params.radius as number) || 3;
 
-    // Move unit to target position (simple implementation)
-    unit.pos = { x: targetX, y: targetY };
-    
-    // Queue AOE damage at landing spot
-    this.sim.queuedEvents.push({
-      kind: 'aoe',
-      source: unitId,
-      target: { x: targetX, y: targetY },
+    // Set up jumping state - the Jumping rule will handle the animation
+    transform.updateUnit(unitId, {
       meta: {
-        aspect: 'impact',
-        amount: damage,
-        radius: radius,
-        origin: { x: targetX, y: targetY }
+        ...unit.meta,
+        jumping: true,
+        jumpProgress: 0,
+        jumpOrigin: { x: unit.pos.x, y: unit.pos.y },
+        jumpTarget: { x: targetX, y: targetY },
+        jumpHeight: height,
+        jumpDamage: damage,
+        jumpRadius: radius,
+        z: 0
       }
     });
   }

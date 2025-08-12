@@ -16,21 +16,32 @@ export class Abilities extends Rule {
   ability = (name: string): Ability | undefined => Abilities.all[name];
 
   apply = (): void => {
+    // Check for units that need to unburrow
     this.sim.units.forEach(unit => {
       if (unit.meta?.burrowed && unit.meta?.burrowStartTick !== undefined && unit.meta?.burrowDuration !== undefined) {
         const ticksBurrowed = this.sim.ticks - unit.meta.burrowStartTick;
         if (ticksBurrowed >= unit.meta.burrowDuration) {
-          unit.meta.burrowed = false;
-          unit.meta.invisible = false;
-          delete unit.meta.burrowStartTick;
-          delete unit.meta.burrowDuration;
+          // Queue command to unburrow
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: {
+                burrowed: false,
+                invisible: false,
+                burrowStartTick: undefined,
+                burrowDuration: undefined
+              }
+            }
+          });
         }
       }
     });
 
-    const updatedUnits = (this.sim.units as Unit[]).map(unit => {
+    // Process abilities for each unit
+    (this.sim.units as Unit[]).forEach(unit => {
       if (!unit.abilities || !Array.isArray(unit.abilities)) {
-        return unit;
+        return;
       }
       
       for (const abilityName of unit.abilities) {
@@ -45,6 +56,15 @@ export class Abilities extends Rule {
 
         if (!ready) {
           continue;
+        }
+
+        // Check max uses if defined
+        if (ability.maxUses) {
+          const usesKey = `${abilityName}Uses`;
+          const currentUses = unit.meta?.[usesKey] || 0;
+          if (currentUses >= ability.maxUses) {
+            continue; // Ability exhausted
+          }
         }
 
         let shouldTrigger = true;
@@ -81,20 +101,22 @@ export class Abilities extends Rule {
           this.processEffectAsCommand(effect, unit, target);
         }
 
-        // Update cooldown
-        if (!unit.lastAbilityTick) {
-          unit.lastAbilityTick = {};
-        }
-        unit.lastAbilityTick[abilityName] = this.sim.ticks;
+        // Update cooldown via command
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              lastAbilityTick: {
+                ...unit.lastAbilityTick,
+                [abilityName]: this.sim.ticks
+              }
+            }
+          }
+        });
         
       }
-      return unit;
     });
-    
-    // Apply changes through simulator
-    if (this.sim.applyUnitChanges) {
-      this.sim.applyUnitChanges(updatedUnits);
-    }
   }
 
   processEffectAsCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
@@ -604,7 +626,11 @@ export class Abilities extends Rule {
       }
     };
     
-    this.sim.addUnit(summonedUnit);
+    // Queue add command to create the summoned unit
+    this.sim.queuedCommands.push({
+      type: 'add',
+      params: { unit: summonedUnit }
+    });
   }
 
   private adjustHumidity(effect: AbilityEffect, caster: any, primaryTarget: any): void {
@@ -704,12 +730,19 @@ export class Abilities extends Rule {
     const duration = this.resolveValue(effect.duration, caster, target) || 30;
     const radius = this.resolveValue(effect.radius, caster, target) || 3;
     
-    // Apply entangle/pin effect to target
+    // Apply entangle/pin effect to target using meta command
     if (target.id) {
-      if (!target.meta) target.meta = {};
-      target.meta.pinned = true;
-      target.meta.pinDuration = duration;
-      target.meta.entangled = true;
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: target.id,
+          meta: {
+            pinned: true,
+            pinDuration: duration,
+            entangled: true
+          }
+        }
+      });
       
       // Create visual particles for entangle effect
       const particles = [];
@@ -855,7 +888,7 @@ export class Abilities extends Rule {
 
 
     for (const unit of unitsInArea) {
-      // Apply buff
+      // Apply buff directly for now (tests expect immediate effect)
       if (effect.buff) {
         if (!unit.meta) unit.meta = {};
         Object.assign(unit.meta, effect.buff);
@@ -910,9 +943,18 @@ export class Abilities extends Rule {
 
     for (const unit of unitsInArea) {
       if (unit.meta?.hidden || unit.meta?.invisible) {
-        unit.meta.hidden = false;
-        unit.meta.invisible = false;
-        unit.meta.revealed = true;
+        // Queue command to reveal the unit
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              hidden: false,
+              invisible: false,
+              revealed: true
+            }
+          }
+        });
       }
     }
   }
@@ -945,16 +987,27 @@ export class Abilities extends Rule {
       return;
     }
 
-    // Track original team and taming info
-    if (!actualTarget.meta) actualTarget.meta = {};
-    if (!actualTarget.meta.originalTeam) {
-      actualTarget.meta.originalTeam = actualTarget.team;
-    }
-    actualTarget.meta.tamed = true;
-    actualTarget.meta.tamedBy = caster.id;
+    // Queue command to tame the target
+    this.sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: actualTarget.id,
+        meta: {
+          originalTeam: actualTarget.meta?.originalTeam || actualTarget.team,
+          tamed: true,
+          tamedBy: caster.id
+        }
+      }
+    });
     
-    // Change target's team to caster's team  
-    actualTarget.team = caster.team;
+    // Queue command to change team
+    this.sim.queuedCommands.push({
+      type: 'changeTeam',
+      unitId: actualTarget.id,
+      params: {
+        team: caster.team
+      }
+    });
     
     // Add taming particles
     for (let i = 0; i < 5; i++) {
@@ -988,23 +1041,38 @@ export class Abilities extends Rule {
     });
 
     for (const unit of unitsInArea) {
-      if (!unit.meta) unit.meta = {};
-      unit.meta.calmed = true;
-      unit.meta.aggressive = false;
-      unit.intendedMove = { x: 0, y: 0 }; // Stop movement
-      
-      // Add calm particles
-      this.sim.particles.push({
-        id: `calm_${unit.id}_${this.sim.ticks}`,
-        pos: { x: unit.pos.x, y: unit.pos.y - 0.5 },
-        vel: { x: 0, y: -0.05 },
-        ttl: 30,
-        color: '#ADD8E6', // Light blue
-        type: 'calm',
-        size: 0.4,
-        radius: 1,
-        lifetime: 30
+      // Queue command to calm unit
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            calmed: true,
+            aggressive: false
+          }
+        }
       });
+      // Queue halt command
+      this.sim.queuedCommands.push({
+        type: 'halt',
+        params: { unitId: unit.id }
+      });
+      
+      // Add calm particles (only if not already created for this unit)
+      const particleId = `calm_${unit.id}`;
+      if (!unit.meta?.calmed && !this.sim.particles.some(p => p.id === particleId)) {
+        this.sim.particles.push({
+          id: particleId,
+          pos: { x: unit.pos.x, y: unit.pos.y - 0.5 },
+          vel: { x: 0, y: -0.05 },
+          ttl: 30,
+          color: '#ADD8E6', // Light blue
+          type: 'calm',
+          size: 0.4,
+          radius: 1,
+          lifetime: 30
+        });
+      }
     }
   }
 

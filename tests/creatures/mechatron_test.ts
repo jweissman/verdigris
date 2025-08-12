@@ -77,7 +77,9 @@ describe('Mechatron Airdrop System', () => {
   
   it('should handle Mechatron landing with impact damage', () => {
     const sim = new Simulator();
-    sim.rulebook = [new AirdropPhysics(sim), new EventHandler(sim)];
+    // Insert AirdropPhysics before CommandHandler in the rulebook
+    const commandHandlerIndex = sim.rulebook.findIndex(r => r.constructor.name === 'CommandHandler');
+    sim.rulebook.splice(commandHandlerIndex, 0, new AirdropPhysics(sim));
     
     
     // Create enemies around landing zone

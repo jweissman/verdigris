@@ -18,6 +18,9 @@ describe('Desert Day Combat Integration', () => {
     const loader = new SceneLoader(sim);
     loader.loadFromText(sceneContent);
     
+    // Step once to allow segments to be created
+    sim.step();
+    
     // Verify units loaded
     expect(sim.units.length).toBeGreaterThan(0);
     
@@ -50,7 +53,7 @@ describe('Desert Day Combat Integration', () => {
 
   it('should allow grappling and pinning worm segments', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new SegmentedCreatures(sim), new GrapplingPhysics(sim), new Abilities(sim)];
+    sim.rulebook = [new SegmentedCreatures(sim), new GrapplingPhysics(sim), new Abilities(sim), new CommandHandler(sim)];
     
     // Create a grappler
     const grappler = {

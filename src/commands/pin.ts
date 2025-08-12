@@ -96,9 +96,17 @@ export class Pin extends Command {
       return;
     }
 
-    // Pin the target directly
-    target.meta.pinned = true;
-    target.meta.pinDuration = 50; // Duration in ticks
+    // Queue pin command
+    this.sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: target.id,
+        meta: {
+          pinned: true,
+          pinDuration: 50 // Duration in ticks
+        }
+      }
+    });
     
     // Create pin visual effect
     for (let i = 0; i < 8; i++) {
@@ -112,10 +120,18 @@ export class Pin extends Command {
       });
     }
 
-    // Update ability cooldown
-    if (!grappler.lastAbilityTick) {
-      grappler.lastAbilityTick = {};
-    }
-    grappler.lastAbilityTick.pinTarget = this.sim.ticks;
+    // Queue cooldown update
+    this.sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: grappler.id,
+        meta: {
+          lastAbilityTick: {
+            ...grappler.lastAbilityTick,
+            pinTarget: this.sim.ticks
+          }
+        }
+      }
+    });
   }
 }

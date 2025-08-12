@@ -4,9 +4,9 @@ export class AirdropPhysics extends Rule {
   apply = (): void => {
     // Handle units that are currently dropping from the sky
     this.sim.units.forEach(unit => {
-      if (unit.meta.dropping && unit.meta.z > 0) {
+      if (unit.meta?.dropping && unit.meta?.z > 0) {
         // Unit is falling - update altitude
-        unit.meta.z -= unit.meta.dropSpeed || 0.5;
+        const newZ = unit.meta.z - (unit.meta.dropSpeed || 0.5);
         
         // Add falling sound/visual effects
         if (this.sim.ticks % 3 === 0) {
@@ -27,17 +27,40 @@ export class AirdropPhysics extends Rule {
         }
         
         // Check if unit has landed
-        if (unit.meta.z <= 0) {
+        if (newZ <= 0) {
+          // Landing - set z to 0 and handle impact
           this.handleLanding(unit);
+        } else {
+          // Still falling - update altitude
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: {
+                z: newZ
+              }
+            }
+          });
         }
       }
     });
   }
   
   private handleLanding(unit: any): void {
-    // Set unit on ground
-    unit.meta.z = 0;
-    unit.meta.dropping = false;
+    // Queue landing update - clear all drop-related metadata
+    this.sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: unit.id,
+        meta: {
+          z: 0,
+          dropping: false,
+          landingImpact: undefined,
+          dropSpeed: undefined,
+          landingInvulnerability: 10 // 1.25 seconds of invulnerability after landing
+        }
+      }
+    });
     
     // Create landing impact damage to nearby enemies
     if (unit.meta.landingImpact) {
@@ -81,10 +104,6 @@ export class AirdropPhysics extends Rule {
       });
     }
     
-    // Remove landing flags
-    delete unit.meta.landingImpact;
-    delete unit.meta.dropSpeed;
-    
-    unit.meta.landingInvulnerability = 10; // 1.25 seconds
+    // Landing flags are removed by the meta command above
   }
 }

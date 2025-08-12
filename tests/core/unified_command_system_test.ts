@@ -99,8 +99,8 @@ describe('Unified Command System', () => {
     // Run Abilities to trigger deployment
     sim.step();
     
-    // Should have queued a deploy command
-    expect(sim.queuedCommands.length).toBe(1);
+    // Should have queued a deploy command and cooldown update
+    expect(sim.queuedCommands.length).toBe(2);
     expect(sim.queuedCommands[0].type).toBe('deploy');
     expect(sim.queuedCommands[0].unitId).toBe(toymaker.id);
     

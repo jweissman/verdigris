@@ -2,6 +2,7 @@ import { expect } from 'bun:test';
 import { describe, test, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
+import { CommandHandler } from '../../src/rules/command_handler';
 
 describe('Grappling Mass Physics', () => {
   let sim: Simulator;
@@ -66,12 +67,16 @@ describe('Grappling Mass Physics', () => {
     const initialGrapplerX = grappler.pos.x;
     const initialTargetX = target.pos.x;
 
-    // Apply grappling physics directly
+    // Apply grappling physics and process commands
     grapplingPhysics.apply();
+    const commandHandler = new CommandHandler(sim);
+    commandHandler.apply();
 
     // Both should move toward each other
-    expect(grappler.pos.x).toBeGreaterThan(initialGrapplerX);
-    expect(target.pos.x).toBeLessThan(initialTargetX);
+    const updatedGrappler = sim.units.find(u => u.id === 'grappler');
+    const updatedTarget = sim.units.find(u => u.id === 'target');
+    expect(updatedGrappler!.pos.x).toBeGreaterThan(initialGrapplerX);
+    expect(updatedTarget!.pos.x).toBeLessThan(initialTargetX);
   });
 
   test('heavy units resist being pulled', () => {
@@ -130,10 +135,14 @@ describe('Grappling Mass Physics', () => {
     const initialHeavyX = heavyTarget.pos.x;
 
     grapplingPhysics.apply();
+    const commandHandler = new CommandHandler(sim);
+    commandHandler.apply();
 
     // Grappler should move more than the heavy target
-    const grapplerMovement = Math.abs(lightGrappler.pos.x - initialGrapplerX);
-    const heavyMovement = Math.abs(heavyTarget.pos.x - initialHeavyX);
+    const updatedGrappler = sim.units.find(u => u.id === 'grappler');
+    const updatedTarget = sim.units.find(u => u.id === 'heavy');
+    const grapplerMovement = Math.abs(updatedGrappler!.pos.x - initialGrapplerX);
+    const heavyMovement = Math.abs(updatedTarget!.pos.x - initialHeavyX);
     
     expect(grapplerMovement).toBeGreaterThan(heavyMovement * 2);
   });
@@ -196,6 +205,8 @@ describe('Grappling Mass Physics', () => {
     
     // Apply physics update
     grapplingPhysics.apply();
+    const commandHandler = new CommandHandler(sim);
+    commandHandler.apply();
 
     // Get the updated units from the sim
     const updatedWorm = sim.units.find(u => u.id === 'sandworm');
@@ -281,9 +292,12 @@ describe('Grappling Mass Physics', () => {
     });
 
     grapplingPhysics.apply();
+    let commandHandler = new CommandHandler(sim);
+    commandHandler.apply();
 
     // Heavy unit should have some movement penalty from first grapple
-    const firstPenalty = heavy.meta.movementPenalty || 0;
+    const updatedHeavy = sim.units.find(u => u.id === 'heavy');
+    const firstPenalty = updatedHeavy!.meta.movementPenalty || 0;
     expect(firstPenalty).toBeGreaterThan(0);
 
     // Add second grappler
@@ -302,9 +316,12 @@ describe('Grappling Mass Physics', () => {
     heavy.meta.additionalGrapplers = ['g2'];
 
     grapplingPhysics.apply();
+    commandHandler = new CommandHandler(sim);
+    commandHandler.apply();
 
     // With two grapplers, the heavy unit should have increased movement penalty
-    expect(heavy.meta.movementPenalty).toBeGreaterThanOrEqual(firstPenalty);
+    const finalHeavy = sim.units.find(u => u.id === 'heavy');
+    expect(finalHeavy!.meta.movementPenalty).toBeGreaterThanOrEqual(firstPenalty);
   });
 
   test('pinned units cannot move even with intended movement', () => {
@@ -333,6 +350,8 @@ describe('Grappling Mass Physics', () => {
     // Apply movement with penalty
     const grapplingPhysics = new GrapplingPhysics(sim);
     grapplingPhysics.apply();
+    const commandHandler = new CommandHandler(sim);
+    commandHandler.apply();
     
     // Movement should be completely negated by penalty
     if (pinned.meta.movementPenalty === 1.0) {

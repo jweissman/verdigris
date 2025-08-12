@@ -20,35 +20,27 @@ export class UnitMovement extends Rule {
 
 
       if (unit.state !== 'dead') {
+        // Calculate intended movement based on AI behaviors
+        let intendedMove = unit.intendedMove || { x: 0, y: 0 };
+        
         // AI behaviors based on tags
         if (unit.tags) {
           // Hunt behavior
           if (unit.tags.includes('hunt')) {
             const huntedUnit = UnitOperations.hunt(unit, this.sim);
-            // Directly queue move command if hunt produced movement
-            if (huntedUnit.intendedMove.x !== 0 || huntedUnit.intendedMove.y !== 0) {
-              this.sim.queuedCommands.push({
-                type: 'move',
-                params: {
-                  unitId: unit.id,
-                  dx: huntedUnit.intendedMove.x,
-                  dy: huntedUnit.intendedMove.y
-                }
-              });
-              continue; // Skip the normal movement processing
-            }
+            intendedMove = huntedUnit.intendedMove;
           }
           // Swarm behavior (worms group together)
           else if (unit.tags.includes('swarm')) {
             const swarmedUnit = UnitOperations.swarm(unit, this.sim);
-            unit.intendedMove = swarmedUnit.intendedMove;
+            intendedMove = swarmedUnit.intendedMove;
           }
           // Default wanderer behavior
           else if (unit.tags.includes('wander')) {
             const wanderedUnit = UnitOperations.wander(unit);
-            unit.intendedMove = wanderedUnit.intendedMove;
+            intendedMove = wanderedUnit.intendedMove;
           }
-
+          // Follower behavior
           else if (unit.tags.includes('follower')) {
             // Follow the nearest friendly unit
             const friends = this.sim.getRealUnits().filter(u => u.team === unit.team && u.state !== 'dead');
@@ -66,40 +58,40 @@ export class UnitMovement extends Rule {
               const dx = closest.pos.x - unit.pos.x;
               const dy = closest.pos.y - unit.pos.y;
               const mag = Math.sqrt(dx * dx + dy * dy) || 1;
-              unit.intendedMove = { x: (dx / mag), y: (dy / mag) };
+              intendedMove = { x: (dx / mag), y: (dy / mag) };
             } else {
               // No friends, just wander
               const wanderedUnit = UnitOperations.wander(unit);
-              unit.intendedMove = wanderedUnit.intendedMove;
+              intendedMove = wanderedUnit.intendedMove;
             }
           }
         }
-      }
-
-      // Queue move command if unit has intended movement
-      if (unit.intendedMove && (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0)) {
-        // For huge units, validate the movement first
-        if (unit.meta.huge) {
-          if (this.canHugeUnitMove(unit, unit.intendedMove.x, unit.intendedMove.y)) {
+        
+        // Queue move command if unit has intended movement
+        if (intendedMove && (intendedMove.x !== 0 || intendedMove.y !== 0)) {
+          // For huge units, validate the movement first
+          if (unit.meta.huge) {
+            if (this.canHugeUnitMove(unit, intendedMove.x, intendedMove.y)) {
+              this.sim.queuedCommands.push({
+                type: 'move',
+                params: {
+                  unitId: unit.id,
+                  dx: intendedMove.x,
+                  dy: intendedMove.y
+                }
+              });
+            }
+          } else {
+            // Regular unit movement
             this.sim.queuedCommands.push({
               type: 'move',
               params: {
                 unitId: unit.id,
-                dx: unit.intendedMove.x,
-                dy: unit.intendedMove.y
+                dx: intendedMove.x,
+                dy: intendedMove.y
               }
             });
           }
-        } else {
-          // Regular unit movement
-          this.sim.queuedCommands.push({
-            type: 'move',
-            params: {
-              unitId: unit.id,
-              dx: unit.intendedMove.x,
-              dy: unit.intendedMove.y
-            }
-          });
         }
       }
     }

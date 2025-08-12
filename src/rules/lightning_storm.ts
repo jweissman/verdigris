@@ -110,7 +110,9 @@ export class LightningStorm extends Rule {
 
   private boostMechanicalUnits(pos: Vec2): void {
     // Find all mechanical units within range for power boost
-    const mechanicalUnits = this.simulator.units.filter(unit =>
+    // Use pending units during frame to see updates
+    const units = (this.simulator as any).inFrame ? this.simulator.getPendingUnits() : this.simulator.units;
+    const mechanicalUnits = units.filter(unit =>
       unit.tags?.includes('mechanical') &&
       Math.abs(unit.pos.x - pos.x) <= 4 &&
       Math.abs(unit.pos.y - pos.y) <= 4 &&
@@ -118,9 +120,17 @@ export class LightningStorm extends Rule {
     );
 
     mechanicalUnits.forEach(unit => {
-      // Lightning supercharge effect
-      unit.meta.lightningBoost = true;
-      unit.meta.lightningBoostDuration = 60; // 7.5 seconds of boost
+      // Queue lightning supercharge effect
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            lightningBoost: true,
+            lightningBoostDuration: 60 // 7.5 seconds of boost
+          }
+        }
+      });
       
       // Reduce all ability cooldowns by 50%
       if (unit.lastAbilityTick) {
@@ -136,7 +146,13 @@ export class LightningStorm extends Rule {
 
       // Extra boost for mechanist units
       if (unit.tags?.includes('leader') || unit.tags?.includes('engineer')) {
-        unit.meta.lightningBoostDuration = 90; // Extended boost for leaders
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: { lightningBoostDuration: 90 } // Extended boost for leaders
+          }
+        });
         
         // Visual effect on boosted mechanists
         this.simulator.particles.push({

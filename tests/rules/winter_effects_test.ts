@@ -46,7 +46,8 @@ describe('Winter Effects System', () => {
 
   it('should freeze units in sub-zero temperatures', () => {
     const sim = new Simulator();
-    sim.rulebook = [new WinterEffects(sim)];
+    const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
+    sim.rulebook = [new WinterEffects(sim), new CommandHandler(sim)];
     
     // Add a unit
     const unit = { ...Encyclopaedia.unit('soldier'), pos: { x: 10, y: 10 } };
@@ -67,7 +68,7 @@ describe('Winter Effects System', () => {
 
   it('should chill units in cold (but not freezing) temperatures', () => {
     const sim = new Simulator();
-    sim.rulebook = [new WinterEffects(sim)];
+    sim.rulebook = [new WinterEffects(sim), new CommandHandler(sim)];
     
     // Add a unit
     const unit = { ...Encyclopaedia.unit('farmer'), pos: { x: 5, y: 5 } };
@@ -90,7 +91,7 @@ describe('Winter Effects System', () => {
 
   it('should thaw frozen units when temperature rises', () => {
     const sim = new Simulator();
-    sim.rulebook = [new WinterEffects(sim)];
+    sim.rulebook = [new WinterEffects(sim), new CommandHandler(sim)];
     
     // Add a unit and freeze it
     const unit = { ...Encyclopaedia.unit('priest'), pos: { x: 8, y: 8 } };
@@ -167,7 +168,8 @@ describe('Winter Effects System', () => {
 
   it('should prevent frozen units from moving', () => {
     const sim = new Simulator();
-    sim.rulebook = [new WinterEffects(sim)];
+    const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
+    sim.rulebook = [new WinterEffects(sim), new CommandHandler(sim)];
     
     // Add a unit with intended movement
     const unit = { ...Encyclopaedia.unit('soldier'), pos: { x: 5, y: 5 }, intendedMove: { x: 1, y: 0 } };

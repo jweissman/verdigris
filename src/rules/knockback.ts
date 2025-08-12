@@ -1,7 +1,14 @@
 import { Rule } from "./rule";
 import type { Unit } from "../types/Unit";
+import { Transform } from "../core/transform";
 
 export class Knockback extends Rule {
+  private transform: Transform;
+  
+  constructor(sim: any) {
+    super(sim);
+    this.transform = sim.getTransform();
+  }
   apply = () => {
     // Use spatial hash for efficient collision detection
     const knockbackRange = 1.1;
@@ -65,14 +72,19 @@ export class Knockback extends Rule {
           // For huge creatures, validate that the entire body can move to the new position
           if (b.meta.huge) {
             if (this.canHugeUnitMoveTo(b, newX, newY, a)) {
-              b.pos.x = newX;
-              b.pos.y = newY;
+              // Use Transform to update position in pending buffer
+              this.transform.updateUnit(b.id, {
+                pos: { x: newX, y: newY }
+              });
             }
             // If can't move, don't knock back at all
           } else {
-            // Normal unit knockback
-            b.pos.x = Math.max(0, Math.min(newX, this.sim.fieldWidth - 1));
-            b.pos.y = Math.max(0, Math.min(newY, this.sim.fieldHeight - 1));
+            // Normal unit knockback - use Transform
+            const clampedX = Math.max(0, Math.min(newX, this.sim.fieldWidth - 1));
+            const clampedY = Math.max(0, Math.min(newY, this.sim.fieldHeight - 1));
+            this.transform.updateUnit(b.id, {
+              pos: { x: clampedX, y: clampedY }
+            });
           }
         }
       }

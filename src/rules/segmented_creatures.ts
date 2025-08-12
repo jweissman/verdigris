@@ -1,7 +1,6 @@
 import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 import { Rule } from "./rule";
-import { Unit } from "../types/Unit";
 
 // interface SegmentData {
 //   position: Vec2;
@@ -32,9 +31,19 @@ export class SegmentedCreatures extends Rule {
   }
 
   private hasSegments(creature: Unit): boolean {
-    return this.sim.units.some(unit => 
+    // Check if segments already exist for this creature
+    const hasExistingSegments = this.sim.units.some(unit => 
       unit.meta.segment && unit.meta.parentId === creature.id
     );
+    
+    // Also check if add commands are already queued for segments of this creature
+    const hasQueuedSegments = this.sim.queuedCommands?.some(cmd => 
+      cmd.type === 'add' && 
+      cmd.params?.unit?.meta?.segment && 
+      cmd.params?.unit?.meta?.parentId === creature.id
+    ) || false;
+    
+    return hasExistingSegments || hasQueuedSegments;
   }
 
   private createSegments(creature: Unit) {
@@ -114,7 +123,11 @@ export class SegmentedCreatures extends Rule {
           }
         };
 
-        this.sim.addUnit(segment);
+        // Queue add command to create the segment
+        this.sim.queuedCommands.push({
+          type: 'add',
+          params: { unit: segment }
+        });
       }
     }
   }
@@ -142,10 +155,11 @@ export class SegmentedCreatures extends Rule {
 
   private updateSegmentPositions() {
     const segmentGroups = this.getSegmentGroups();
+    const units = this.sim.units;
     
     // Fixed: Use proper iteration over Map entries
     for (const [parentId, segments] of segmentGroups) {
-      const parent = this.sim.units.find(u => u.id === parentId);
+      const parent = units.find(u => u.id === parentId);
       if (!parent || !parent.meta.segmented) continue;
 
       // Update path history when parent moves
@@ -171,13 +185,18 @@ export class SegmentedCreatures extends Rule {
           
           // Only move if position changed
           if (segment.pos.x !== targetPos.x || segment.pos.y !== targetPos.y) {
-            // Calculate facing direction based on movement
-            const prevPos = segment.pos;
-            segment.pos = { ...targetPos };
+            // Queue move command for segment
+            const dx = targetPos.x - segment.pos.x;
+            const dy = targetPos.y - segment.pos.y;
             
-            if (targetPos.x !== prevPos.x) {
-              segment.meta.facing = targetPos.x > prevPos.x ? 'right' : 'left';
-            }
+            this.sim.queuedCommands.push({
+              type: 'move',
+              params: {
+                unitId: segment.id,
+                dx: dx,
+                dy: dy
+              }
+            });
           }
         }
       });
@@ -186,8 +205,9 @@ export class SegmentedCreatures extends Rule {
 
   private getSegmentGroups(): Map<string, Unit[]> {
     const groups = new Map<string, Unit[]>();
+    const units = this.sim.units;
     
-    this.sim.units
+    units
       .filter(unit => unit.meta.segment && unit.meta.parentId)
       .forEach(segment => {
         const parentId = segment.meta.parentId!;
@@ -212,21 +232,19 @@ export class SegmentedCreatures extends Rule {
       !this.sim.units.some(parent => parent.id === unit.meta.parentId)
     );
 
-    // Remove orphaned segments and their path history
+    // Queue remove commands for orphaned segments
     if (orphanedSegments.length > 0) {
-      const filteredUnits = (this.sim.units as Unit[]).filter(u => 
-        !orphanedSegments.some(segment => segment.id === u.id)
-      );
-      
       // Clear path history for orphaned segments
       for (const segment of orphanedSegments) {
         if (segment.meta.parentId) {
           this.pathHistory.delete(segment.meta.parentId);
         }
-      }
-      
-      if (this.sim.applyUnitChanges) {
-        this.sim.applyUnitChanges(filteredUnits);
+        
+        // Queue remove command for this segment
+        this.sim.queuedCommands.push({
+          type: 'remove',
+          params: { unitId: segment.id }
+        });
       }
     }
   }
@@ -273,52 +291,78 @@ export class SegmentedCreatures extends Rule {
 
   private handleSegmentGrappling() {
     // Segments can be individually grappled/pinned
-    this.sim.units.filter(unit => unit.meta.segment).forEach(segment => {
+    const units = this.sim.units;
+    
+    units.filter(unit => unit.meta.segment).forEach(segment => {
       if (segment.meta.grappled || segment.meta.pinned) {
         // Grappled/pinned segments slow down the entire creature
-        const parent = this.sim.units.find(u => u.id === segment.meta.parentId);
+        const parent = units.find(u => u.id === segment.meta.parentId);
         if (parent) {
           // Each grappled segment reduces movement speed
-          const grappledSegments = this.sim.units.filter(u => 
+          const grappledSegments = units.filter(u => 
             u.meta.segment && 
             u.meta.parentId === parent.id &&
             (u.meta.grappled || u.meta.pinned)
           ).length;
           
           const speedPenalty = Math.min(0.8, grappledSegments * 0.2); // Max 80% slow
-          parent.meta.segmentSlowdown = speedPenalty;
           
-          if (!parent.meta.originalSpeed) {
-            parent.meta.originalSpeed = parent.meta.moveSpeed || 1.0;
-          }
-          parent.meta.moveSpeed = parent.meta.originalSpeed * (1 - speedPenalty);
+          // Queue command to update parent's slowdown
+          const originalSpeed = parent.meta.originalSpeed || parent.meta.moveSpeed || 1.0;
+          this.sim.queuedCommands.push({
+            type: 'meta',
+            params: {
+              unitId: parent.id,
+              meta: {
+                segmentSlowdown: speedPenalty,
+                originalSpeed: originalSpeed,
+                moveSpeed: originalSpeed * (1 - speedPenalty)
+              }
+            }
+          });
           
           // If head segment is pinned, entire creature is immobilized
           if (segment.meta.segmentIndex === 1 && segment.meta.pinned) {
-            parent.meta.stunned = true;
-            parent.intendedMove = { x: 0, y: 0 };
+            this.sim.queuedCommands.push({
+              type: 'meta',
+              params: {
+                unitId: parent.id,
+                meta: {
+                  stunned: true
+                }
+              }
+            });
+            this.sim.queuedCommands.push({
+              type: 'halt',
+              params: { unitId: parent.id }
+            });
           }
         }
       }
     });
 
     // Clean up speed penalties when no segments are grappled
-    this.sim.units.filter(unit => unit.meta.segmented).forEach(creature => {
-      const grappledSegments = this.sim.units.filter(u => 
+    units.filter(unit => unit.meta.segmented).forEach(creature => {
+      const grappledSegments = units.filter(u => 
         u.meta.segment && 
         u.meta.parentId === creature.id &&
         (u.meta.grappled || u.meta.pinned)
       ).length;
       
       if (grappledSegments === 0 && creature.meta.segmentSlowdown) {
-        delete creature.meta.segmentSlowdown;
-        if (creature.meta.originalSpeed) {
-          creature.meta.moveSpeed = creature.meta.originalSpeed;
-          delete creature.meta.originalSpeed;
-        }
-        if (creature.meta.stunned) {
-          delete creature.meta.stunned;
-        }
+        // Queue command to clear slowdown
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: creature.id,
+            meta: {
+              segmentSlowdown: undefined,
+              moveSpeed: creature.meta.originalSpeed || 1.0,
+              originalSpeed: undefined,
+              stunned: false
+            }
+          }
+        });
       }
     });
   }

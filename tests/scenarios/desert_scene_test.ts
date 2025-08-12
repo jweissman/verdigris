@@ -44,10 +44,8 @@ describe('Desert Day Scene', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);
     
-    sim.rulebook = [
-      new SegmentedCreatures(sim),
-      new EventHandler(sim)
-    ];
+    // Use default rulebook which includes SegmentedCreatures and CommandHandler
+    // No need to override
     
     // Load scene
     loader.loadScene('desert');
@@ -69,10 +67,19 @@ describe('Desert Day Scene', () => {
     // With 2 desert worms, we should have at least 6 segments
     expect(desertWormSegments.length).toBeGreaterThanOrEqual(3); // At least 1 worm * 3 segments for now
     
+    // Check how many giant sandworms exist (excluding phantoms and segments)
+    // The ID includes a number suffix when created by SceneLoader
+    const giantWorms = sim.units.filter(u => 
+      u.id?.startsWith('giant-sandworm') && !u.meta.segment && !u.meta.phantom
+    );
+    
     // Giant sandworm should have 6 segments
     const giantWormSegments = segments.filter(s => 
-      s.meta.parentId?.includes('giant-sandworm')
+      s.meta.parentId?.startsWith('giant-sandworm')
     );
+    
+    // The test expects exactly 1 giant sandworm with 6 segments
+    expect(giantWorms.length).toBe(1);
     expect(giantWormSegments.length).toEqual(6);
   });
 

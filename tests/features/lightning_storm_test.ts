@@ -73,7 +73,8 @@ describe('Lightning Storm Environmental System', () => {
 
   it('should stun non-mechanical units with EMP effects', () => {
     const sim = new Simulator();
-    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
+    const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
+    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     
     // Create test units - mix of mechanical and organic
@@ -111,7 +112,8 @@ describe('Lightning Storm Environmental System', () => {
 
   it('should boost mechanical units when lightning strikes nearby', () => {
     const sim = new Simulator();
-    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
+    const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
+    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     
     // Create mechanical units

@@ -41,24 +41,29 @@ describe("Scene Integration", () => {
   it("should run all known scenes", () => {
     const sim = new Simulator(10, 10);
     const loader = new SceneLoader(sim);
+    const failedScenes: string[] = [];
+    
     for (const scene in SceneLoader.scenarios) {
+      sim.reset(); // Reset simulator between scenes
       loader.loadScenario(scene);
 
-      const initialUnitCount = sim.units.filter(u => !u.meta.segment).length; // Don't count segments
+      const initialUnitCount = sim.units.filter(u => !u.meta?.segment && !u.meta?.phantom).length; // Don't count segments or phantoms
       
       // Run for 30 steps
       for (let i = 0; i < 30; i++) {
         sim.step();
       }
       
-      // Verify some units are still alive (excluding segments)
-      const aliveUnits = sim.units.filter(u => u.hp > 0 && !u.meta.segment).length;
+      // Verify some units are still alive (excluding segments and phantoms)
+      const aliveUnits = sim.units.filter(u => u.hp > 0 && !u.meta?.segment && !u.meta?.phantom).length;
       const totalUnitsIncludingSegments = sim.units.filter(u => u.hp > 0).length;
       
-      expect(aliveUnits).toBeGreaterThanOrEqual(1);
-      // Allow for segments to be created
-      expect(totalUnitsIncludingSegments).toBeGreaterThanOrEqual(aliveUnits);
+      if (aliveUnits < 1) {
+        failedScenes.push(scene);
+      }
     }
+    
+    expect(failedScenes).toEqual([]);
   });
 
   // we should just set these up as scenarios and then run them

@@ -30,23 +30,48 @@ export class FlyingUnits extends Rule {
     if (shouldFly && !this.flyingUnits.has(unit.id)) {
       // Start flying
       this.flyingUnits.add(unit.id);
-      unit.meta.flying = true;
-      unit.meta.flyingFrame = 5; // Start with frame 5
-      unit.meta.z = 3; // Height above ground
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            flying: true,
+            flyingFrame: 5, // Start with frame 5
+            z: 3 // Height above ground
+          }
+        }
+      });
     } else if (!shouldFly && this.flyingUnits.has(unit.id)) {
       // Stop flying
       this.flyingUnits.delete(unit.id);
-      unit.meta.flying = false;
-      unit.meta.z = 0;
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            flying: false,
+            z: 0
+          }
+        }
+      });
     }
     
     // Update flying animation
     if (unit.meta.flying) {
-      // Alternate between frames 5 and 6
-      unit.meta.flyingFrame = 5 + Math.floor(this.animationFrame / 30) % 2;
+      // Queue animation updates
+      const flyingFrame = 5 + Math.floor(this.animationFrame / 30) % 2;
+      const z = 3 + Math.sin(this.animationFrame * 0.1) * 0.5;
       
-      // Small vertical bobbing for realism
-      unit.meta.z = 3 + Math.sin(this.animationFrame * 0.1) * 0.5;
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            flyingFrame,
+            z
+          }
+        }
+      });
       
       // Flying units can move more freely
       if (unit.sprite === 'bird') {
@@ -83,16 +108,29 @@ export class FlyingUnits extends Rule {
       const time = this.animationFrame * 0.05;
       
       // Circular flight pattern at edges
+      let intendedMove = null;
       if (unit.pos.x <= 1 || unit.pos.x >= this.sim.fieldWidth - 2) {
-        unit.intendedMove = {
+        intendedMove = {
           x: 0,
           y: Math.sin(time) * 0.3
         };
       } else if (unit.pos.y <= 1 || unit.pos.y >= this.sim.fieldHeight - 2) {
-        unit.intendedMove = {
+        intendedMove = {
           x: Math.cos(time) * 0.3,
           y: 0
         };
+      }
+      
+      if (intendedMove) {
+        // Queue move command
+        this.sim.queuedCommands.push({
+          type: 'move',
+          params: {
+            unitId: unit.id,
+            dx: intendedMove.x,
+            dy: intendedMove.y
+          }
+        });
       }
     }
   }

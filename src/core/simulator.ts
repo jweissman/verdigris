@@ -121,34 +121,62 @@ class Simulator {
   fieldWidth: number;
   fieldHeight: number;
 
-  // Double-buffered state for units (not yet active)
-  private unitBuffer: DoubleBuffer<Unit[]> | null = null;
+  // Double buffering: current (for reading) and pending (for writing)
+  private _units: Unit[] = [];
+  private bufferA: Unit[] = [];
+  private bufferB: Unit[] = [];
+  private currentBuffer: 'A' | 'B' = 'A';
+  private inFrame: boolean = false; // Track if we're processing a frame
   private spatialHash: SpatialHash;
   private dirtyUnits: Set<string> = new Set();
   
-  // Units are now private - access through getters/setters
-  private _units: Unit[] = [];
-  
-  // Public access - READ ONLY (enforces proper architecture)
-  get units(): ReadonlyArray<Unit> {
-    return this._units;
+  // Public access - returns current for reading
+  get units(): Unit[] {
+    // During frame processing, return pending units so rules see updates
+    if (this.inFrame) {
+      return this.getPendingUnits();
+    }
+    // Outside frame, return current buffer
+    return this.currentBuffer === 'A' ? this.bufferA : this.bufferB;
   }
   
-  // Get mutable units (only for Transform)
+  // Start a new frame - copy current to pending for mutations
+  private beginFrame(): void {
+    this.inFrame = true;
+    const currentUnits = this.currentBuffer === 'A' ? this.bufferA : this.bufferB;
+    const pendingUnits = this.currentBuffer === 'A' ? this.bufferB : this.bufferA;
+    
+    // Clear pending and copy current state
+    pendingUnits.length = 0;
+    for (const unit of currentUnits) {
+      pendingUnits.push({
+        ...unit,
+        meta: unit.meta ? { ...unit.meta } : {}
+      });
+    }
+  }
+  
+  // End frame - swap buffers (no copy!)
+  private endFrame(): void {
+    // Just swap the buffer pointer - this is the performance win!
+    this.currentBuffer = this.currentBuffer === 'A' ? 'B' : 'A';
+    this.inFrame = false;
+  }
+  
+  // Get pending units for mutations
+  getPendingUnits(): Unit[] {
+    // Pending is always the opposite buffer
+    return this.currentBuffer === 'A' ? this.bufferB : this.bufferA;
+  }
+  
+  // Get units for Transform
   getUnitsForTransform(): Unit[] {
-    return this._units;
+    return this.units;
   }
   
-  // Private setter (only Transform should use this)
+  // Set units from Transform
   setUnitsFromTransform(units: Unit[]): void {
     this._units = units;
-    // Update spatial hash when units change
-    if (this.spatialHash) {
-      this.spatialHash.clear();
-      for (const unit of units) {
-        this.spatialHash.insert(unit.id, unit.pos.x, unit.pos.y);
-      }
-    }
   }
   
   projectiles: Projectile[];
@@ -188,10 +216,10 @@ class Simulator {
   }
   
   createEventHandler() {
-    return new EventHandler(this, this.transform);
+    return new EventHandler(this);
   }
 
-  getTransform() { return this.transform; }
+  protected getTransform() { return this.transform; }
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
@@ -264,6 +292,9 @@ class Simulator {
 
   reset() {
     this._units = [];
+    this.bufferA = [];
+    this.bufferB = [];
+    this.currentBuffer = 'A';
     this.projectiles = [];
     this.processedEvents = [];
     this.queuedCommands = [];
@@ -290,9 +321,9 @@ class Simulator {
       new WinterEffects(this), // Handle environmental winter effects
       new DesertEffects(this), // Handle desert heat shimmer and environmental effects
       new Perdurance(this), // Process damage resistance before events are handled
-      new EventHandler(this), // Convert events to commands
+      this.createEventHandler(), // Convert events to commands
       new Cleanup(this),
-      new CommandHandler(this) // Process ALL commands at the end
+      new CommandHandler(this, this.transform) // Process ALL commands at the end
     ];
   }
 
@@ -312,14 +343,30 @@ class Simulator {
       abilities: unit.abilities || [],
       meta: unit.meta || {}
     };
-    this._units.push(u);
+    // If we're in a frame, add to pending buffer. Otherwise add to current.
+    if (this.inFrame) {
+      const pendingUnits = this.getPendingUnits();
+      pendingUnits.push(u);
+    } else {
+      // Initial setup - add to current buffer
+      const currentUnits = this.currentBuffer === 'A' ? this.bufferA : this.bufferB;
+      currentUnits.push(u);
+    }
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
     return u;
   }
 
   create(unit: Unit) {
     const newUnit = { ...unit, id: unit.id || `unit_${Date.now()}` };
-    this._units.push(newUnit);
+    // If we're in a frame, add to pending buffer. Otherwise add to current.
+    if (this.inFrame) {
+      const pendingUnits = this.getPendingUnits();
+      pendingUnits.push(newUnit);
+    } else {
+      // Initial setup - add to current buffer
+      const currentUnits = this.currentBuffer === 'A' ? this.bufferA : this.bufferB;
+      currentUnits.push(newUnit);
+    }
     this.dirtyUnits.add(newUnit.id); // Mark as dirty for rendering
     return newUnit;
   }
@@ -408,6 +455,9 @@ class Simulator {
     // Clear dirty tracking from last frame
     this.dirtyUnits.clear();
     
+    // BEGIN FRAME - create working copy for double buffering
+    this.beginFrame();
+    
     // Rebuild spatial hash for collision detection
     this.spatialHash.clear();
     this.units.forEach(unit => {
@@ -444,6 +494,9 @@ class Simulator {
         meta: u.meta ? { ...u.meta } : {}
       }));
     }
+    
+    // END FRAME - commit all changes from working copy to current
+    this.endFrame();
     
     let t1 = performance.now();
     let elapsed = t1 - t0;

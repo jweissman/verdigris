@@ -1,5 +1,6 @@
 import { Command, CommandParams } from "../rules/command";
 import { Unit } from "../types/Unit";
+import { Transform } from "../core/transform";
 
 /**
  * Toss command - tosses a unit in a direction
@@ -10,6 +11,12 @@ import { Unit } from "../types/Unit";
  *   distance?: number - Distance to toss (default 3)
  */
 export class Toss extends Command {
+  private transform: Transform;
+  
+  constructor(sim: any, transform?: Transform) {
+    super(sim);
+    this.transform = transform || sim.getTransform();
+  }
   execute(unitId: string | null, params: CommandParams): void {
     // Support both targetId (from abilities) and unitId (direct toss)
     const targetId = (params.targetId as string) || unitId;
@@ -65,12 +72,17 @@ export class Toss extends Command {
     const clampedTargetX = Math.max(0, Math.min(this.sim.fieldWidth - 1, targetX));
     const clampedTargetY = Math.max(0, Math.min(this.sim.fieldHeight - 1, targetY));
 
-    // Set toss state (similar to jump state)
-    unit.meta.tossing = true;
-    unit.meta.tossProgress = 0;
-    unit.meta.tossOrigin = { x: unit.pos.x, y: unit.pos.y };
-    unit.meta.tossTarget = { x: clampedTargetX, y: clampedTargetY };
-    unit.meta.tossForce = force;
-    unit.meta.z = 0; // Start at ground level
+    // Set toss state (similar to jump state) using Transform
+    this.transform.updateUnit(unit.id, {
+      meta: {
+        ...unit.meta,
+        tossing: true,
+        tossProgress: 0,
+        tossOrigin: { x: unit.pos.x, y: unit.pos.y },
+        tossTarget: { x: clampedTargetX, y: clampedTargetY },
+        tossForce: force,
+        z: 0 // Start at ground level
+      }
+    });
   }
 }

@@ -4,47 +4,75 @@ import { Abilities } from './abilities';
 
 export class Jumping extends Rule {
   apply(): void {
-    const updatedUnits = (this.sim.units as Unit[]).map(unit => {
+    const units = this.sim.units;
+    for (const unit of units) {
       if (unit.meta?.jumping) {
         this.updateJump(unit);
       }
-
-      return unit;
-    });
-    
-    // Apply changes through simulator
-    if (this.sim.applyUnitChanges) {
-      this.sim.applyUnitChanges(updatedUnits);
     }
   }
 
   private updateJump(unit: Unit): void {
     const jumpDuration = Abilities.all.jumps.config?.duration || 10; // ticks
-    unit.meta.jumpProgress = (unit.meta.jumpProgress || 0) + 1;
+    const newProgress = (unit.meta.jumpProgress || 0) + 1;
 
-    if (unit.meta.jumpProgress >= jumpDuration) {
-      unit.meta.jumping = false;
-      unit.meta.z = 0;
+    if (newProgress >= jumpDuration) {
+      // Queue landing
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            jumping: false,
+            jumpProgress: newProgress,
+            z: 0
+          }
+        }
+      });
 
       this.sim.queuedEvents.push({
         kind: 'aoe',
         source: unit.id,
         target: unit.pos,
         meta: {
-          radius: Abilities.all.jump.config?.impact.radius || 3,
-          amount: Abilities.all.jump.config?.impact.damage || 5,
+          radius: unit.meta.jumpRadius || Abilities.all.jump?.config?.impact?.radius || 3,
+          amount: unit.meta.jumpDamage || Abilities.all.jump?.config?.impact?.damage || 5,
+          aspect: 'kinetic', // Physical impact damage
+          friendlyFire: false // Explicitly no friendly fire
         }
       });
     } else {
-      const progress = unit.meta.jumpProgress / jumpDuration;
+      const progress = newProgress / jumpDuration;
       const maxHeight = Abilities.all.jump?.config?.height || 5;
-      unit.meta.z = (maxHeight * Math.sin(progress * Math.PI) || 0) * 2;
+      const z = (maxHeight * Math.sin(progress * Math.PI) || 0) * 2;
+      
+      // Queue jump progress update
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            jumpProgress: newProgress,
+            z
+          }
+        }
+      });
 
       let origin = unit.meta.jumpOrigin || { x: unit.pos.x, y: unit.pos.y };
       let target = unit.meta.jumpTarget || { x: unit.intendedMove.x, y: unit.intendedMove.y };
 
-      unit.pos.x = origin.x + (target.x - origin.x) * progress;
-      unit.pos.y = origin.y + (target.y - origin.y) * progress;
+      // Queue move command to update position during jump
+      const newX = Math.round(origin.x + (target.x - origin.x) * progress);
+      const newY = Math.round(origin.y + (target.y - origin.y) * progress);
+      
+      this.sim.queuedCommands.push({
+        type: 'move',
+        params: {
+          unitId: unit.id,
+          dx: newX - unit.pos.x,
+          dy: newY - unit.pos.y
+        }
+      });
     }
   }
 }

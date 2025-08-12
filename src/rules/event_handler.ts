@@ -79,9 +79,21 @@ export class EventHandler extends Rule {
       return;
     }
 
-    this.sim.addUnit({
+    if (!event.meta?.unit) {
+      console.warn('Spawn event missing unit data');
+      return;
+    }
+
+    const newUnit = {
       ...event.meta.unit,
       pos: { x: event.target.x, y: event.target.y },
+      id: event.meta.unit?.id || `spawned_${Date.now()}`
+    };
+    
+    // Queue add command instead of directly adding
+    this.sim.queuedCommands.push({
+      type: 'add',
+      params: { unit: newUnit }
     });
   }
 
@@ -113,7 +125,15 @@ export class EventHandler extends Rule {
       } else if (isChill) {
         return inRange && unit.team !== sourceUnit?.team; // Chill affects enemies
       } else {
-        return inRange && unit.team !== sourceUnit?.team;
+        // For damage AoE: check friendlyFire flag
+        const friendlyFire = event.meta.friendlyFire !== false; // Default to true for backwards compatibility
+        if (!friendlyFire) {
+          // No friendly fire - only affect enemies
+          return inRange && sourceUnit && unit.team !== sourceUnit.team;
+        } else {
+          // With friendly fire - affect anyone in range except the source
+          return inRange && unit.id !== event.source;
+        }
       }
     });
 
@@ -124,8 +144,17 @@ export class EventHandler extends Rule {
       );
       
       if (isEmp) {
-        unit.meta.stunned = true;
-        unit.meta.stunDuration = event.meta.stunDuration || 20;
+        // Queue stun command instead of direct mutation
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              stunned: true,
+              stunDuration: event.meta.stunDuration || 20
+            }
+          }
+        });
         
         this.sim.particles.push({
           pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
@@ -136,10 +165,18 @@ export class EventHandler extends Rule {
           type: 'electric_spark'
         });
       } else if (isChill) {
-        // Apply chill status effect
-        unit.meta.chilled = true;
-        unit.meta.chillIntensity = 0.5; // 50% slow
-        unit.meta.chillDuration = event.meta.duration || 30;
+        // Queue chill command instead of direct mutation
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              chilled: true,
+              chillIntensity: 0.5, // 50% slow
+              chillDuration: event.meta.duration || 30
+            }
+          }
+        });
         
         // Visual effect
         this.sim.particles.push({
@@ -244,10 +281,17 @@ export class EventHandler extends Rule {
       );
       
       for (const unit of unitsAtPosition) {
-        // Store terrain effects in unit metadata
-        unit.meta = unit.meta || {};
-        unit.meta.terrainDefenseBonus = defenseBonus;
-        unit.meta.terrainMovementPenalty = movementPenalty;
+        // Queue terrain effects
+        this.sim.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              terrainDefenseBonus: defenseBonus,
+              terrainMovementPenalty: movementPenalty
+            }
+          }
+        });
       }
       
       // TODO: Store terrain modifications in a persistent map/grid

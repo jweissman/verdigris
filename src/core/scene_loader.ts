@@ -19,6 +19,8 @@ export class SceneLoader {
     simple, complex, healing, projectile, squirrel, chess, toymaker, desert, 
     toymakerChallenge, mechatronSolo, forestTracker 
   };
+  private unitCreationIndex: number = 0;
+  
   constructor(private sim: Simulator) {}
 
   loadScene(scenario: string): void {
@@ -28,6 +30,7 @@ export class SceneLoader {
   loadScenario(scenario: string): void {
     if (scenario in SceneLoader.scenarios) {
       const sceneText = SceneLoader.scenarios[scenario];
+      this.unitCreationIndex = 0; // Reset for each scene
       this.loadFromText(sceneText);
     } else {
       throw new Error(`Scenario "${scenario}" not found`);
@@ -172,7 +175,25 @@ export class SceneLoader {
       unitWithPos.meta = { ...unitData.meta };
     }
     
-    this.sim.addUnit(unitWithPos);
+    // Stagger ability cooldowns to prevent simultaneous mass abilities
+    // Particularly important for jump abilities to prevent mutual destruction
+    if (unitWithPos.abilities && unitWithPos.abilities.includes('jumps')) {
+      // Spread jumps across 100 ticks to prevent mass mutual destruction
+      const offset = (this.unitCreationIndex % 20) * 10; // 0, 10, 20... up to 190
+      unitWithPos.lastAbilityTick = {
+        jumps: -50 + offset // Some can jump immediately, others wait up to 140 ticks
+      };
+      this.unitCreationIndex++;
+    }
+    
+    // Queue add command instead of directly adding
+    if (!this.sim.queuedCommands) {
+      this.sim.queuedCommands = [];
+    }
+    this.sim.queuedCommands.push({
+      type: 'add',
+      params: { unit: unitWithPos }
+    });
   }
 
 }

@@ -68,8 +68,9 @@ describe('Combat Effectiveness Integration', () => {
     }
     
     // Verify deployment limits were respected
+    // We deploy 3 manually, toymaker can deploy up to 5 (maxUses)
     const deployEvents = sim.processedEvents.filter(e => e.kind === 'spawn');
-    expect(deployEvents.length).toBeLessThanOrEqual(5); // Max 5 deployments
+    expect(deployEvents.length).toBeLessThanOrEqual(8); // 3 manual + 5 from toymaker
   });
   
   it('should test construct immediate engagement upon spawn', () => {

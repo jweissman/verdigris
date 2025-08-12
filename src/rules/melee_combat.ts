@@ -15,9 +15,15 @@ export class MeleeCombat extends Rule {
     this.engagements.set(attacker.id, target.id);
     this.lastAttacks.set(attacker.id, this.sim.ticks);
     
-    // Track last attack time for rendering and set attack state
-    attacker.meta.lastAttacked = this.sim.ticks;
-    attacker.state = 'attack'; // Set attack state for rendering
+    // Queue command to update attack state and metadata
+    this.sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: attacker.id,
+        meta: { lastAttacked: this.sim.ticks },
+        state: 'attack'
+      }
+    });
     
     this.sim.queuedEvents.push({
       kind: 'damage',
@@ -56,7 +62,11 @@ export class MeleeCombat extends Rule {
           const dist = Math.sqrt(dx * dx + dy * dy);
           
           if (dist < meleeRange) {
-            unit.intendedMove = { x: 0, y: 0 }; // Stop to fight
+            // Queue halt command to stop movement
+            this.sim.queuedCommands.push({
+              type: 'halt',
+              params: { unitId: unit.id }
+            });
             this.hit(unit, target);
             break; // Only engage one target at a time
           }

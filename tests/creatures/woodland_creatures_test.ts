@@ -196,6 +196,7 @@ describe('Woodland Creatures', () => {
       
       for (let i = 0; i < 20; i++) {
         sim.forceAbility(druid.id, 'summonForestCreature', druid.pos);
+        sim.step(); // Process the ability
         
         // Check for newly summoned units
         const newUnits = sim.units.slice(initialUnitCount);
