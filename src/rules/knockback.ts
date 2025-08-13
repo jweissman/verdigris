@@ -60,8 +60,10 @@ export class Knockback extends Rule {
           let nx, ny;
           
           if (dist === 0) {
-            // Units are exactly on top of each other - push in a random direction
-            const angle = Math.random() * 2 * Math.PI;
+            // Units are exactly on top of each other - use deterministic direction based on IDs
+            // This ensures consistent behavior in tests
+            const hashCode = (a.id + b.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const angle = (hashCode % 8) * (Math.PI / 4); // 8 cardinal/diagonal directions
             nx = Math.cos(angle);
             ny = Math.sin(angle);
           } else {

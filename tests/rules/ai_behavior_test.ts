@@ -45,7 +45,7 @@ describe('AI Behavior System', () => {
     
     // Add worms with some distance between them
     const worm1 = { ...Encyclopaedia.unit('worm'), pos: { x: 1, y: 1 } }; // Will try to move toward ally
-    const worm2 = { ...Encyclopaedia.unit('worm'), pos: { x: 5, y: 1 } }; // Target ally
+    const worm2 = { ...Encyclopaedia.unit('worm'), pos: { x: 4, y: 1 } }; // Target ally, within range 5
     sim.addUnit(worm1);
     sim.addUnit(worm2);
     

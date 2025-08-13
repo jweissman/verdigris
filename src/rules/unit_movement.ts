@@ -20,49 +20,118 @@ export class UnitMovement extends Rule {
 
 
       if (unit.state !== 'dead') {
+        // Skip movement for jumping units - they're following a ballistic trajectory
+        if (unit.meta?.jumping) continue;
+        
         // Calculate intended movement based on AI behaviors
         let intendedMove = unit.intendedMove || { x: 0, y: 0 };
         
         // AI behaviors based on tags
         if (unit.tags) {
-          // Hunt behavior
+          // Hunt behavior - use cached target data
           if (unit.tags.includes('hunt')) {
-            const huntedUnit = UnitOperations.hunt(unit, this.sim);
-            intendedMove = huntedUnit.intendedMove;
+            const targetData = this.sim.targetCache?.getTargetData(unit.id);
+            const targetId = targetData?.closestEnemy;
+            
+            if (targetId) {
+              const target = this.sim.creatureById(targetId);
+              if (target) {
+                const dxRaw = target.pos.x - unit.pos.x;
+                const dyRaw = target.pos.y - unit.pos.y;
+                let dx = 0, dy = 0;
+                if (Math.abs(dxRaw) > Math.abs(dyRaw)) {
+                  dx = dxRaw > 0 ? 1 : -1;
+                } else if (Math.abs(dyRaw) > 0) {
+                  dy = dyRaw > 0 ? 1 : -1;
+                } else if (Math.abs(dxRaw) > 0) {
+                  dx = dxRaw > 0 ? 1 : -1;
+                }
+                intendedMove = { x: dx, y: dy };
+              }
+            }
           }
-          // Swarm behavior (worms group together)
+          // Swarm behavior - use cached ally data
           else if (unit.tags.includes('swarm')) {
-            const swarmedUnit = UnitOperations.swarm(unit, this.sim);
-            intendedMove = swarmedUnit.intendedMove;
+            if (Simulator.rng.random() < 0.15) {
+              // Sometimes don't move (15% chance)
+              intendedMove = { x: 0, y: 0 };
+            } else {
+              const targetData = this.sim.targetCache?.getTargetData(unit.id);
+              const nearbyAllies = targetData?.nearbyAllies || [];
+              const closestAllyId = targetData?.closestAlly;
+              
+              // Use nearby allies if available, otherwise use closest ally
+              const alliesToConsider = nearbyAllies.length > 0 ? nearbyAllies : 
+                                       closestAllyId ? [closestAllyId] : [];
+              
+              if (alliesToConsider.length > 0) {
+                // Calculate center of mass of allies
+                let avgX = 0, avgY = 0;
+                let count = 0;
+                for (const allyId of alliesToConsider) {
+                  const ally = this.sim.creatureById(allyId);
+                  if (ally && ally.state !== 'dead') {
+                    avgX += ally.pos.x;
+                    avgY += ally.pos.y;
+                    count++;
+                  }
+                }
+                
+                if (count > 0) {
+                  avgX /= count;
+                  avgY /= count;
+                  
+                  // Move towards center of mass
+                  let dx = 0, dy = 0;
+                  if (Math.abs(avgX - unit.pos.x) >= 1) dx = avgX > unit.pos.x ? 1 : -1;
+                  if (Math.abs(avgY - unit.pos.y) >= 1) dy = avgY > unit.pos.y ? 1 : -1;
+                  
+                  // Pick one direction for grid movement
+                  if (dx !== 0 && dy !== 0) {
+                    if (Math.random() < 0.5) dy = 0;
+                    else dx = 0;
+                  }
+                  
+                  if (dx !== 0 || dy !== 0) {
+                    intendedMove = { x: dx, y: dy };
+                  } else {
+                    const wanderedUnit = UnitOperations.wander(unit);
+                    intendedMove = wanderedUnit.intendedMove;
+                  }
+                } else {
+                  const wanderedUnit = UnitOperations.wander(unit);
+                  intendedMove = wanderedUnit.intendedMove;
+                }
+              } else {
+                // No allies at all, just wander
+                const wanderedUnit = UnitOperations.wander(unit);
+                intendedMove = wanderedUnit.intendedMove;
+              }
+            }
           }
           // Default wanderer behavior
           else if (unit.tags.includes('wander')) {
             const wanderedUnit = UnitOperations.wander(unit);
             intendedMove = wanderedUnit.intendedMove;
           }
-          // Follower behavior
+          // Follower behavior - use cached ally data
           else if (unit.tags.includes('follower')) {
-            // Follow the nearest friendly unit - optimized to avoid getRealUnits
-            let closest: Unit | null = null;
-            let closestDist = Infinity;
+            const targetData = this.sim.targetCache?.getTargetData(unit.id);
+            const closestAllyId = targetData?.closestAlly;
             
-            for (const u of this.sim.units) {
-              if (u.team !== unit.team || u.state === 'dead' || u.id === unit.id) continue;
-              if (u.meta?.phantom) continue; // Skip phantom units
-              
-              const dist = Math.hypot(u.pos.x - unit.pos.x, u.pos.y - unit.pos.y);
-              if (dist < closestDist) {
-                closest = u;
-                closestDist = dist;
+            if (closestAllyId) {
+              const closest = this.sim.creatureById(closestAllyId);
+              if (closest) {
+                // Move towards the closest friendly unit
+                const dx = closest.pos.x - unit.pos.x;
+                const dy = closest.pos.y - unit.pos.y;
+                const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+                intendedMove = { x: (dx / mag), y: (dy / mag) };
+              } else {
+                // No friends, just wander
+                const wanderedUnit = UnitOperations.wander(unit);
+                intendedMove = wanderedUnit.intendedMove;
               }
-            }
-            
-            if (closest) {
-              // Move towards the closest friendly unit
-              const dx = closest.pos.x - unit.pos.x;
-              const dy = closest.pos.y - unit.pos.y;
-              const mag = Math.sqrt(dx * dx + dy * dy) || 1;
-              intendedMove = { x: (dx / mag), y: (dy / mag) };
             } else {
               // No friends, just wander
               const wanderedUnit = UnitOperations.wander(unit);

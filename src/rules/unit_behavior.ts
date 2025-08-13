@@ -6,43 +6,21 @@ export class UnitBehavior extends Rule {
   apply = () => {
     (this.sim.units as Unit[]).forEach(unit => {
       if (unit.state === 'dead' || unit.hp == 0) return;
+      
+      // Don't change behavior for jumping units - they're in the air!
+      if (unit.meta?.jumping) return;
 
+      // Use cached target data for O(1) lookups instead of O(N) searches
+      const targetData = this.sim.targetCache?.getTargetData(unit.id);
+      
       const find_new_target = () => {
-        // Find closest hostile - optimized to avoid getRealUnits
-        let closestId: string | undefined;
-        let closestDist = Infinity;
-        
-        for (const u of this.sim.units) {
-          if (u.team === unit.team || u.state === 'dead') continue;
-          if (u.meta?.phantom) continue; // Skip phantom units
-          
-          const dist = Math.hypot(u.pos.x - unit.pos.x, u.pos.y - unit.pos.y);
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestId = u.id;
-          }
-        }
-        
-        return closestId;
+        // Use cached closest enemy
+        return targetData?.closestEnemy;
       }
 
       const find_new_protectee = () => {
-        // Find closest friendly - optimized to avoid getRealUnits
-        let closestId: string | undefined;
-        let closestDist = Infinity;
-        
-        for (const u of this.sim.units) {
-          if (u.team !== unit.team || u.state === 'dead' || u.id === unit.id) continue;
-          if (u.meta?.phantom) continue; // Skip phantom units
-          
-          const dist = Math.hypot(u.pos.x - unit.pos.x, u.pos.y - unit.pos.y);
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestId = u.id;
-          }
-        }
-        
-        return closestId;
+        // Use cached closest ally
+        return targetData?.closestAlly;
       }
 
       // Find target if we don't have one (stored in meta)

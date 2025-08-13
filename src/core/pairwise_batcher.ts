@@ -3,6 +3,7 @@
 // and process them in a single pass
 
 import { Unit } from '../types/Unit';
+import { TargetCache } from './target_cache';
 
 export interface PairwiseIntent {
   ruleId: string;
@@ -13,6 +14,7 @@ export interface PairwiseIntent {
 
 export class PairwiseBatcher {
   private intents: PairwiseIntent[] = [];
+  public targetCache: TargetCache = new TargetCache();
   
   // Rules register their intents here
   register(ruleId: string, callback: (a: Unit, b: Unit) => void, maxDistance?: number, filter?: (a: Unit, b: Unit) => boolean): void {
@@ -21,7 +23,13 @@ export class PairwiseBatcher {
   
   // Process all registered intents in ONE pass
   process(units: Unit[]): void {
-    if (this.intents.length === 0) return;
+    // Clear and initialize target cache for all units
+    this.targetCache.clear();
+    for (const unit of units) {
+      if (unit.state !== 'dead') {
+        this.targetCache.initUnit(unit.id);
+      }
+    }
     
     // Single O(N²) pass through all pairs
     for (let i = 0; i < units.length; i++) {
@@ -33,6 +41,9 @@ export class PairwiseBatcher {
         const dx = unitA.pos.x - unitB.pos.x;
         const dy = unitA.pos.y - unitB.pos.y;
         const distSq = dx * dx + dy * dy;
+        
+        // Update target cache for this pair
+        this.targetCache.updatePair(unitA, unitB, distSq);
         
         // Execute all intents that care about this pair
         for (const intent of this.intents) {

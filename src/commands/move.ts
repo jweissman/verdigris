@@ -33,12 +33,14 @@ export class MoveCommand extends Command {
     const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, unit.pos.x + effectiveDx));
     const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, unit.pos.y + effectiveDy));
     
-    // Determine facing
+    // Determine facing (but don't change facing for jumping units)
     let facing = unit.meta?.facing || 'right';
-    if (dx > 0) {
-      facing = 'right';
-    } else if (dx < 0) {
-      facing = 'left';
+    if (!unit.meta?.jumping) {
+      if (dx > 0) {
+        facing = 'right';
+      } else if (dx < 0) {
+        facing = 'left';
+      }
     }
     
     // Use updateUnit for single unit update - much more efficient!

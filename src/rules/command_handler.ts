@@ -19,7 +19,7 @@ import { MoveCommand } from "../commands/move";
 import { KnockbackCommand } from "../commands/knockback";
 import { UpdateTossCommand } from "../commands/update_toss";
 import { ApplyStatusEffectCommand, UpdateStatusEffectsCommand } from "../commands/status_effect";
-import { MarkDeadCommand } from "../commands/mark_dead";
+import { Kill } from "../commands/kill";
 import { HaltCommand } from "../commands/halt";
 import { MetaCommand } from "../commands/meta";
 import { PullCommand } from "../commands/pull";
@@ -75,7 +75,7 @@ export class CommandHandler extends Rule {
     this.commands.set('updateToss', new UpdateTossCommand(sim, this.transform));
     this.commands.set('applyStatusEffect', new ApplyStatusEffectCommand(sim, this.transform));
     this.commands.set('updateStatusEffects', new UpdateStatusEffectsCommand(sim, this.transform));
-    this.commands.set('markDead', new MarkDeadCommand(sim, this.transform));
+    this.commands.set('markDead', new Kill(sim, this.transform));
     this.commands.set('halt', new HaltCommand(sim, this.transform));
     this.commands.set('meta', new MetaCommand(sim, this.transform));
     this.commands.set('pull', new PullCommand(sim, this.transform));

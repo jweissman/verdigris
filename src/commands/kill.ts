@@ -1,7 +1,7 @@
 import { Command } from "../rules/command";
 import { Transform } from "../core/transform";
 
-export class MarkDeadCommand extends Command {
+export class Kill extends Command {
   private transform: Transform;
   
   constructor(sim: any) {

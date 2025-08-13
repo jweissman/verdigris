@@ -18,6 +18,7 @@ import { DesertEffects } from "../rules/desert_effects";
 import { Perdurance } from "../rules/perdurance";
 import { StatusEffects } from "../rules/status_effects";
 import { WinterEffects } from "../rules/winter_effects";
+import { RNG } from "./rng";
 import { LightningStorm } from "../rules/lightning_storm";
 import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
@@ -30,6 +31,7 @@ import { SpatialQueryBatcher } from "./spatial_queries";
 import { PairwiseBatcher } from "./pairwise_batcher";
 import { GridPartition } from "./grid_partition";
 import { ScalarField } from "./ScalarField";
+import { TargetCache } from "./target_cache";
 
 class Simulator {
   sceneBackground: string = 'winter';  // burning-city';
@@ -54,6 +56,12 @@ class Simulator {
   
   // Pairwise operation batcher - the REAL optimization
   public pairwiseBatcher: PairwiseBatcher;
+  
+  // Target cache for centralized enemy/ally finding
+  public targetCache: TargetCache;
+  
+  // Centralized RNG for determinism - static for global access
+  public static rng: RNG = new RNG(12345);
   
   // Grid partition for O(1) spatial queries
   private gridPartition: GridPartition;
@@ -162,6 +170,9 @@ class Simulator {
     
     // Initialize pairwise batcher
     this.pairwiseBatcher = new PairwiseBatcher();
+    
+    // Initialize target cache for centralized target finding
+    this.targetCache = new TargetCache();
     
     // Initialize grid partition for spatial queries (4x4 cells)
     this.gridPartition = new GridPartition(fieldWidth, fieldHeight, 4);
@@ -435,15 +446,16 @@ class Simulator {
     // Phase 2: Process ALL pairwise intents in a single pass
     if (this.pairwiseBatcher) {
       const stats = this.pairwiseBatcher.getStats();
-      if (stats.intentCount > 0) {
-        let batchStart = performance.now();
-        this.pairwiseBatcher.process(this.units);
-        let batchEnd = performance.now();
-        
-        // Only log if taking too long
-        if (this.enableProfiling && (batchEnd - batchStart) > 1) {
-          console.log(`Batched ${stats.intentCount} pairwise intents from ${stats.rules.length} rules in ${(batchEnd - batchStart).toFixed(2)}ms`);
-        }
+      // Always process to update target cache, even if no intents
+      let batchStart = performance.now();
+      this.pairwiseBatcher.process(this.units);
+      // Copy the populated target cache to simulator
+      this.targetCache = this.pairwiseBatcher.targetCache;
+      let batchEnd = performance.now();
+      
+      // Only log if taking too long
+      if (this.enableProfiling && (batchEnd - batchStart) > 1 && stats.intentCount > 0) {
+        console.log(`Batched ${stats.intentCount} pairwise intents from ${stats.rules.length} rules in ${(batchEnd - batchStart).toFixed(2)}ms`);
       }
     }
     
