@@ -25,6 +25,7 @@ export class Jukebox {
   private synthesizer: VoiceSynthesizer;
   private isPlaying: boolean = false;
   private currentLoop: any = null;
+  private allTimeouts: Set<any> = new Set();
   
   // Pre-defined combat sounds
   private combatSounds: Record<string, SoundConfig> = {
@@ -69,6 +70,37 @@ export class Jukebox {
       duration: 1.0,
       voice: 'pad',
       volume: 0.5
+    },
+    // Forest ambient sounds
+    'bird-chirp': {
+      frequencies: [523, 587, 659], // C5-D5-E5 (octave lower, less harsh)
+      duration: 0.3,
+      voice: 'lead',
+      volume: 0.15  // Reduced volume
+    },
+    'bird-trill': {
+      frequencies: [440, 493, 554, 493, 440], // A4-B4-C#5-B4-A4 (octave lower)
+      duration: 0.6,
+      voice: 'pluck',
+      volume: 0.1  // Much quieter
+    },
+    'squirrel-chitter': {
+      frequencies: [300, 350, 280, 320], // Much lower, less waspy
+      duration: 0.25,
+      voice: 'bass',  // Changed from pluck to bass for smoother sound
+      volume: 0.2
+    },
+    'rustling-leaves': {
+      frequencies: [400, 350, 420, 380],
+      duration: 0.4,
+      voice: 'bass',
+      volume: 0.1
+    },
+    'wind-through-trees': {
+      frequencies: [220, 246, 261, 293], // A3-B3-C4-D4
+      duration: 2.0,
+      voice: 'pad',
+      volume: 0.08
     }
   };
   
@@ -101,6 +133,13 @@ export class Jukebox {
       tempo: 60,
       duration: 24,
       voice: 'pad'
+    },
+    'forest-tranquil': {
+      name: 'Forest Tranquil',
+      chords: ['Em', 'C', 'G', 'D', 'Am', 'F', 'C', 'Em'],
+      tempo: 72,
+      duration: 32, // 8 bars, very peaceful
+      voice: 'pad'  // Changed from choir to softer pad voice
     }
   };
   
@@ -145,10 +184,14 @@ export class Jukebox {
       let chordIndex = 0;
       
       const playNextChord = () => {
+        // Remove this timeout from tracking since it's executing
+        this.allTimeouts.delete(this.currentLoop);
+        
         if (!this.isPlaying || chordIndex >= progression.chords.length) {
           if (loop && this.isPlaying) {
             // Restart progression
-            setTimeout(playChords, 100);
+            const restartTimeout = setTimeout(playChords, 100);
+            this.allTimeouts.add(restartTimeout);
           } else {
             this.isPlaying = false;
           }
@@ -176,6 +219,7 @@ export class Jukebox {
         // Schedule next chord
         const nextChordTime = (60 / progression.tempo) * 4 * 1000; // 4 beats per chord
         this.currentLoop = setTimeout(playNextChord, nextChordTime);
+        this.allTimeouts.add(this.currentLoop);
       };
       
       playNextChord();
@@ -187,10 +231,18 @@ export class Jukebox {
   // Stop current progression
   stopProgression(): void {
     this.isPlaying = false;
+    
+    // Clear ALL timeouts, not just the current one
+    this.allTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.allTimeouts.clear();
+    
     if (this.currentLoop) {
       clearTimeout(this.currentLoop);
       this.currentLoop = null;
     }
+    
+    // Stop the synthesizer to prevent continued playback
+    this.synthesizer.stop();
   }
   
   // Create custom combat sound
@@ -268,6 +320,49 @@ export class Jukebox {
   
   stopMusic(): void {
     this.stopProgression();
+  }
+
+  // Forest-specific ambience methods
+  startForestMusic(): void {
+    this.playProgression('forest-tranquil', true);
+  }
+
+  playBirdSong(): void {
+    // Randomly choose between different bird sounds
+    const sounds = ['bird-chirp', 'bird-trill'];
+    const randomSound = sounds[Math.floor(Math.random() * sounds.length)];
+    this.playSound(randomSound);
+  }
+
+  playForestAmbience(): void {
+    // Play various forest ambient sounds
+    const ambientSounds = ['rustling-leaves', 'wind-through-trees', 'squirrel-chitter'];
+    const randomSound = ambientSounds[Math.floor(Math.random() * ambientSounds.length)];
+    this.playSound(randomSound);
+  }
+
+  // Start a forest scene with music and periodic ambient sounds
+  startForestScene(): void {
+    this.startForestMusic();
+    
+    // Set up periodic ambient sounds
+    const playRandomBirdSong = () => {
+      if (Math.random() < 0.3) { // 30% chance every interval
+        this.playBirdSong();
+      }
+    };
+    
+    const playRandomAmbience = () => {
+      if (Math.random() < 0.2) { // 20% chance every interval
+        this.playForestAmbience();
+      }
+    };
+
+    // Play bird songs every 3-6 seconds
+    setInterval(playRandomBirdSong, 3000 + Math.random() * 3000);
+    
+    // Play ambient sounds every 8-15 seconds  
+    setInterval(playRandomAmbience, 8000 + Math.random() * 7000);
   }
   
   // Utility: Parse simple chord notation

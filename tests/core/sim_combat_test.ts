@@ -46,8 +46,8 @@ describe('End-to-end combat', () => {
     // Simulate 100 steps (enough for them to meet and fight multiple times)
     for (let t = 0; t < 100; t++) {
       if (t === 0 || t === 1 || t === 99) {
-        console.log(`Step ${t}: giant at (${sim.roster.giant?.pos.x},${sim.roster.giant?.pos.y}) hp=${sim.roster.giant?.hp}`);
-        console.log(`  minion0 at (${sim.roster.minion0?.pos.x},${sim.roster.minion0?.pos.y}) hp=${sim.roster.minion0?.hp} intendedMove=(${sim.roster.minion0?.intendedMove.x},${sim.roster.minion0?.intendedMove.y})`);
+        console.debug(`Step ${t}: giant at (${sim.roster.giant?.pos.x},${sim.roster.giant?.pos.y}) hp=${sim.roster.giant?.hp}`);
+        console.debug(`  minion0 at (${sim.roster.minion0?.pos.x},${sim.roster.minion0?.pos.y}) hp=${sim.roster.minion0?.hp} intendedMove=(${sim.roster.minion0?.intendedMove.x},${sim.roster.minion0?.intendedMove.y})`);
       }
       sim.step();
     }

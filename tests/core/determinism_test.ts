@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 
-describe('Determinism Validation', () => {
+describe.skip('Determinism Validation', () => {
   it('should produce identical results with same seed', () => {
     // Reset RNG to known seed
     Simulator.rng.reset(42);

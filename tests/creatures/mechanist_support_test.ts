@@ -94,17 +94,17 @@ describe('Mechanist Support Units', () => {
     simConstruct1.lastAbilityTick = { freezeAura: 99 }; // Recently used (1 tick ago, still on cooldown)
     simConstruct2.lastAbilityTick = { whipChain: 98 }; // Recently used (2 ticks ago, still on cooldown)
     
-    console.log(`Before: freezebot cooldown = ${simConstruct1.lastAbilityTick.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick.whipChain}`);
+    console.debug(`Before: freezebot cooldown = ${simConstruct1.lastAbilityTick.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick.whipChain}`);
     
     // Force the power surge ability - this should reset cooldowns
     sim.forceAbility(simFueler.id, 'powerSurge', simFueler);
     
-    console.log(`After power surge (before step): freezebot cooldown = ${simConstruct1.lastAbilityTick?.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick?.whipChain}`);
+    console.debug(`After power surge (before step): freezebot cooldown = ${simConstruct1.lastAbilityTick?.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick?.whipChain}`);
     
     // Process the power surge command
     sim.step();
     
-    console.log(`After step: freezebot cooldown = ${simConstruct1.lastAbilityTick?.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick?.whipChain}`);
+    console.debug(`After step: freezebot cooldown = ${simConstruct1.lastAbilityTick?.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick?.whipChain}`);
     
     // The test should check that the power surge reset effect worked
     // If abilities are triggering automatically during step, we should at least see that 

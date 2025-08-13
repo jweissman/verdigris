@@ -32,6 +32,7 @@ export class VoiceSynthesizer {
   private reverb: ConvolverNode | null = null;
   private inversionStates: Map<string, number> = new Map();
   private bassPatternStates: Map<string, number> = new Map();
+  private activeOscillators: Set<OscillatorNode> = new Set();
   
   constructor() {}
   
@@ -169,6 +170,12 @@ export class VoiceSynthesizer {
         osc.stop(now + voice.delay + duration);
         vibrato.start(now + voice.delay);
         vibrato.stop(now + voice.delay + duration);
+        
+        // Track oscillators for stopping
+        this.activeOscillators.add(osc);
+        this.activeOscillators.add(vibrato);
+        osc.onended = () => this.activeOscillators.delete(osc);
+        vibrato.onended = () => this.activeOscillators.delete(vibrato);
       });
     });
     
@@ -235,6 +242,10 @@ export class VoiceSynthesizer {
     
     osc.start(now);
     osc.stop(now + duration);
+    
+    // Track oscillator
+    this.activeOscillators.add(osc);
+    osc.onended = () => this.activeOscillators.delete(osc);
   }
   
   private playPluck(freq: number | number[], duration: number): void {
@@ -263,6 +274,10 @@ export class VoiceSynthesizer {
       
       osc.start(now + delay);
       osc.stop(now + delay + duration);
+      
+      // Track oscillator
+      this.activeOscillators.add(osc);
+      osc.onended = () => this.activeOscillators.delete(osc);
     });
   }
   
@@ -295,6 +310,10 @@ export class VoiceSynthesizer {
     
     osc.start(now);
     osc.stop(now + duration);
+    
+    // Track oscillator
+    this.activeOscillators.add(osc);
+    osc.onended = () => this.activeOscillators.delete(osc);
   }
   
   private playPad(freq: number | number[], duration: number): void {
@@ -319,6 +338,10 @@ export class VoiceSynthesizer {
       osc.connect(filter);
       osc.start(now);
       osc.stop(now + duration + 0.5);
+      
+      // Track oscillator
+      this.activeOscillators.add(osc);
+      osc.onended = () => this.activeOscillators.delete(osc);
     });
     
     // Slow envelope for pad
@@ -337,6 +360,25 @@ export class VoiceSynthesizer {
     this.reverb.connect(this.audioContext.destination);
   }
   
+  stop(): void {
+    // Stop all active oscillators
+    this.activeOscillators.forEach(osc => {
+      try {
+        osc.stop();
+      } catch (e) {
+        // Oscillator might already be stopped
+      }
+    });
+    this.activeOscillators.clear();
+  }
+
+  resume(): void {
+    // Resume audio context if suspended
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+  }
+
   dispose(): void {
     if (this.audioContext) {
       this.audioContext.close();

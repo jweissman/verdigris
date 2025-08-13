@@ -49,14 +49,22 @@ export default class Orthographic extends View {
   private grid({
     dotSize,
   } = { dotSize: 3 }) {
-    // Draw grid dots at exact integer positions
-    for (let x = 0; x < this.width; x += 8) {
-      for (let y = 0; y < this.height; y += 8) {
-        this.ctx.beginPath();
-        // Ensure grid dots are centered at integer coordinates
-        this.ctx.arc(x + 4, y + 4, dotSize, 0, 2 * Math.PI);
-        this.ctx.fillStyle = "#888";
-        this.ctx.fill();
+    // Draw regular square grid dots
+    const cellWidth = 8;
+    const cellHeight = 8; // Square cells
+    
+    for (let col = 0; col < Math.ceil(this.width / cellWidth); col++) {
+      for (let row = 0; row < Math.ceil(this.height / cellHeight); row++) {
+        const x = col * cellWidth;
+        const y = row * cellHeight;
+        
+        if (x < this.width && y < this.height) {
+          this.ctx.beginPath();
+          // Center dots in each cell
+          this.ctx.arc(x + cellWidth/2, y + cellHeight/2, dotSize, 0, 2 * Math.PI);
+          this.ctx.fillStyle = "#888";
+          this.ctx.fill();
+        }
       }
     }
   }
@@ -84,9 +92,13 @@ export default class Orthographic extends View {
     const spriteHeight = dimensions.height;
     const isHuge = unit.meta.huge;
     
+    // Regular grid positioning (no hexagonal offset)
+    const cellWidth = 8;
+    const cellHeight = 8; // Square cells for grid view
+    
     // CRITICAL: Round to integer pixels to prevent blurring
-    const gridCenterX = Math.round(renderX * 8) + 4; // Center of grid cell
-    const gridCenterY = Math.round(renderY * 8) + 4; // Center of grid cell
+    const gridCenterX = Math.round(renderX * cellWidth + cellWidth/2);
+    const gridCenterY = Math.round(renderY * cellHeight + cellHeight/2);
     
     // Position sprites appropriately for their size
     const pixelX = isHuge ? gridCenterX - 16 : gridCenterX - 8; // Huge units need more offset

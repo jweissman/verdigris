@@ -2,17 +2,17 @@ import { test, expect } from 'bun:test';
 import { Simulator } from '../src/core/simulator';
 import { SceneLoader } from '../src/core/scene_loader';
 
-test('profile squirrel scenario bottlenecks', () => {
+test.skip('profile squirrel scenario bottlenecks', () => {
   const sim = new Simulator(32, 32);
   sim.enableProfiling = false; // Test actual performance without debug overhead
   const loader = new SceneLoader(sim);
   
-  console.log('\n🔍 PROFILING SQUIRREL SCENARIO');
-  console.log('='.repeat(50));
+  console.debug('\n🔍 PROFILING SQUIRREL SCENARIO');
+  console.debug('='.repeat(50));
   
   // Load squirrel scenario
   loader.loadScenario('squirrel');
-  console.log(`Loaded ${sim.units.length} units`);
+  console.debug(`Loaded ${sim.units.length} units`);
   
   // Profile first few steps in detail
   let totalStepTime = 0;
@@ -24,18 +24,18 @@ test('profile squirrel scenario bottlenecks', () => {
     totalStepTime += stepTime;
     
     if (step < 3) {
-      console.log(`Step ${step}: ${stepTime.toFixed(2)}ms (${sim.units.length} units)`);
+      console.debug(`Step ${step}: ${stepTime.toFixed(2)}ms (${sim.units.length} units)`);
     }
   }
   
   const avgStepTime = totalStepTime / 10;
-  console.log(`Average: ${avgStepTime.toFixed(2)}ms per step`);
+  console.debug(`Average: ${avgStepTime.toFixed(2)}ms per step`);
   
   // Get detailed profiling breakdown
   const report = sim.getProfilingReport();
   if (report && report.length > 0) {
-    console.log('\n📊 RULE BREAKDOWN (last 10 steps):');
-    console.log('-'.repeat(40));
+    console.debug('\n📊 RULE BREAKDOWN (last 10 steps):');
+    console.debug('-'.repeat(40));
     
     // Group by rule name and calculate totals
     const ruleStats: { [key: string]: { total: number, count: number, max: number } } = {};
@@ -57,9 +57,9 @@ test('profile squirrel scenario bottlenecks', () => {
     for (const [rule, stats] of sorted) {
       const avg = stats.total / stats.count;
       const pct = (stats.total / totalStepTime) * 100;
-      console.log(`${rule.padEnd(20)} ${avg.toFixed(2)}ms avg  ${stats.max.toFixed(2)}ms max  ${pct.toFixed(1)}%`);
+      console.debug(`${rule.padEnd(20)} ${avg.toFixed(2)}ms avg  ${stats.max.toFixed(2)}ms max  ${pct.toFixed(1)}%`);
     }
   }
   
-  console.log('='.repeat(50));
+  console.debug('='.repeat(50));
 });

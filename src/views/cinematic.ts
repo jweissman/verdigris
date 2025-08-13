@@ -3,9 +3,11 @@ import { Unit } from "../types/Unit";
 import { Simulator } from "../core/simulator";
 import View from "./view";
 import { UnitRenderer } from "../rendering/unit_renderer";
+import { ParticleRenderer } from "../rendering/particle_renderer";
 
 export default class CinematicView extends View {
   private unitRenderer: UnitRenderer;
+  private particleRenderer: ParticleRenderer;
   
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -17,6 +19,7 @@ export default class CinematicView extends View {
   ) {
     super(ctx, sim, width, height, sprites, backgrounds);
     this.unitRenderer = new UnitRenderer(sim);
+    this.particleRenderer = new ParticleRenderer(sprites);
   }
 
   show() {
@@ -205,14 +208,20 @@ export default class CinematicView extends View {
     const baseHeight = dimensions.height;
     const isHuge = unit.meta.huge;
     
-    // Cinematic positioning: more compressed vertically, slight perspective scaling
+    // Cinematic positioning with hexagonal/isometric offset for odd rows
     const battleStripY = this.height * 0.8; // Position battle at bottom
     const yRatio = 1 - (renderY / this.sim.fieldHeight); // Scale Y to fit cinematic strip
     const depthScale = 1  + (yRatio * 1.4); // Front units slightly larger
-    const stackingFactor = 0.24; // Compress Y spacing
     
-    const cinematicX = renderX * 8;
-    const cinematicY = battleStripY - (renderY * 8 * stackingFactor);
+    // Make the battlespace more square with better aspect ratio
+    const cellWidth = 8;
+    const cellHeight = 6; // Reduced from 8 to make more square
+    
+    // Apply hexagonal offset for odd rows (creates isometric feel)
+    const rowOffset = Math.floor(renderY) % 2 === 1 ? cellWidth / 2 : 0;
+    
+    const cinematicX = renderX * cellWidth + rowOffset;
+    const cinematicY = battleStripY - (renderY * cellHeight);
     const pixelWidth = Math.round(baseWidth * depthScale);
     const pixelHeight = Math.round(baseHeight * depthScale);
     
@@ -230,7 +239,8 @@ export default class CinematicView extends View {
       this.ctx.beginPath();
       const shadowWidth = isHuge ? pixelWidth/2.5 : pixelWidth/3;
       const shadowHeight = isHuge ? pixelHeight/8 : pixelHeight/6;
-      this.ctx.ellipse(cinematicX, battleStripY - (renderY * 8 * stackingFactor) + pixelHeight/3, 
+      // Shadow uses same offset as unit
+      this.ctx.ellipse(cinematicX, cinematicY + pixelHeight/3, 
                        shadowWidth, shadowHeight, 0, 0, 2 * Math.PI);
       this.ctx.fill();
       this.ctx.restore();
@@ -300,12 +310,16 @@ export default class CinematicView extends View {
       renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
     }
     
-    // Cinematic positioning
+    // Cinematic positioning with hexagonal offset to match units
     const battleStripY = this.height * 0.8;
-    const stackingFactor = 0.24;
+    const cellWidth = 8;
+    const cellHeight = 6;
     
-    const cinematicX = renderX * 8;
-    const cinematicY = battleStripY - (renderY * 8 * stackingFactor);
+    // Apply same hexagonal offset for projectiles
+    const rowOffset = Math.floor(renderY) % 2 === 1 ? cellWidth / 2 : 0;
+    
+    const cinematicX = renderX * cellWidth + rowOffset;
+    const cinematicY = battleStripY - (renderY * cellHeight);
     let adjustedCinematicY = cinematicY;
     
     // Apply z-axis offset for elevation
@@ -387,207 +401,41 @@ export default class CinematicView extends View {
   }
   
   private renderParticleCinematic(particle: any) {
-    // Convert grid position to cinematic coordinates
-    const scale = Math.min(this.ctx.canvas.width / this.sim.fieldWidth, this.ctx.canvas.height / this.sim.fieldHeight) * 0.8;
-    const offsetX = (this.ctx.canvas.width - this.sim.fieldWidth * scale) / 2;
-    const offsetY = (this.ctx.canvas.height - this.sim.fieldHeight * scale) / 2;
+    // Convert particle position to grid coordinates
+    const gridX = particle.pos.x / 8; // Convert pixel to grid
+    const gridY = particle.pos.y / 8;
     
-    const cinematicX = particle.pos.x * scale + offsetX;
-    const cinematicY = particle.pos.y * scale + offsetY;
+    // Apply hexagonal offset matching units and projectiles
+    const battleStripY = this.height * 0.8;
+    const cellWidth = 8;
+    const cellHeight = 6;
+    
+    const rowOffset = Math.floor(gridY) % 2 === 1 ? cellWidth / 2 : 0;
+    
+    const cinematicX = gridX * cellWidth + rowOffset;
+    const cinematicY = battleStripY - (gridY * cellHeight);
     
     // Apply 3D height effect - higher particles appear lighter and slightly offset
     const height = particle.z || 0;
-    // const heightEffect = Math.min(height / 20, 1); // Normalize height to 0-1
     let adjustedY = cinematicY - height * 0.8; // Higher particles appear higher on screen
-    
-    this.ctx.save();
     
     // Apply transparency based on height and age
     const ageEffect = particle.lifetime > 100 ? 1 : particle.lifetime / 100;
-    const alpha = Math.min(ageEffect); // * (0.6 + heightEffect * 0.4), 1);
+    const alpha = Math.min(ageEffect, 1);
     
-    // Type-specific rendering
-    if (particle.type === 'leaf') {
-      this.renderLeafParticle(particle, cinematicX, adjustedY, alpha);
-    } else if (particle.type === 'rain') {
-      this.renderRainParticle(particle, cinematicX, adjustedY, alpha);
-    } else if (particle.type === 'snow') {
-      this.renderSnowParticle(particle, cinematicX, adjustedY, alpha);
-    } else if (particle.type === 'debris') { // Fire/spark particles use debris type
-      this.renderFireParticle(particle, cinematicX, adjustedY, alpha);
-    } else {
-      // Generic particle rendering
-      this.ctx.globalAlpha = alpha;
-      this.ctx.fillStyle = particle.color;
-      this.ctx.beginPath();
-      this.ctx.arc(cinematicX, adjustedY, particle.radius * scale, 0, 2 * Math.PI);
-      this.ctx.fill();
-    }
+    // Calculate scale based on depth (particles in back are smaller)
+    const yRatio = 1 - (gridY / this.sim.fieldHeight);
+    const depthScale = 0.8 + (yRatio * 0.6); // Particles scale from 0.8 to 1.4
     
-    this.ctx.restore();
+    // Use common particle renderer
+    this.particleRenderer.renderParticle(this.ctx, particle, {
+      x: cinematicX,
+      y: adjustedY,
+      alpha: alpha,
+      scale: depthScale
+    });
   }
   
-  private renderLeafParticle(_particle: any, x: number, y: number, alpha: number) {
-    this.ctx.globalAlpha = alpha;
-    
-    // TODO: Replace with actual leaf sprite (8x8 with 8 frames for animation)
-    const leafSprite = this.sprites.get('leaf');
-    const frameIndex = Math.floor((this.sim.ticks * 0.1) % 8);
-    if (leafSprite) {
-      this.ctx.save();
-      this.ctx.translate(x, y);
-      // this.ctx.rotate((particle.pos.x * 0.1 + this.sim.ticks * 0.02) % (Math.PI * 2));
-
-      // scale
-      // this.ctx.scale(scale, scale);
-
-      // Draw at native 8x8 size, centered on the position
-      this.ctx.drawImage(leafSprite, frameIndex * 8, 0, 8, 8, -4, -4, 8, 8);
-      this.ctx.restore();
-    }
-    
-    // Fallback: Simple leaf shape
-    // const rotation = (particle.pos.x * 0.1 + this.sim.ticks * 0.02) % (Math.PI * 2);
-    
-    // this.ctx.save();
-    // this.ctx.translate(x, y);
-    // this.ctx.rotate(rotation);
-    
-    // // Draw leaf as an elongated ellipse with a slight curve
-    // this.ctx.fillStyle = particle.color;
-    // this.ctx.beginPath();
-    // this.ctx.ellipse(0, 0, size * 1.5, size * 0.8, 0, 0, 2 * Math.PI);
-    // this.ctx.fill();
-    
-    // // Add a darker center line for leaf detail
-    // if (size > 1) {
-    //   this.ctx.strokeStyle = this.adjustColorBrightness(particle.color, -40);
-    //   this.ctx.lineWidth = Math.max(0.5, size * 0.1);
-    //   this.ctx.beginPath();
-    //   this.ctx.moveTo(-size * 1.2, 0);
-    //   this.ctx.lineTo(size * 1.2, 0);
-    //   this.ctx.stroke();
-    // }
-    
-    // this.ctx.restore();
-  }
-  
-  private renderRainParticle(particle: any, x: number, y: number, alpha: number) {
-    this.ctx.globalAlpha = alpha;
-    
-    // Rain drops are tiny dots with diagonal trailing lines
-    const dropSize = particle.radius || 1;
-    
-    // Draw the main rain drop as a small circle
-    this.ctx.fillStyle = particle.color;
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, dropSize * 0.5, 0, 2 * Math.PI);
-    this.ctx.fill();
-    
-    // Draw diagonal trailing line based on velocity
-    if (particle.vel && !particle.landed) {
-      this.ctx.strokeStyle = particle.color;
-      this.ctx.lineWidth = Math.max(0.5, dropSize * 0.3);
-      this.ctx.globalAlpha = alpha * 0.6; // Make trail slightly transparent
-      
-      // Calculate trail length based on speed
-      const speed = Math.sqrt(particle.vel.x * particle.vel.x + particle.vel.y * particle.vel.y);
-      const trailLength = Math.min(speed * 8, 12); // Limit max trail length
-      
-      // Trail direction is opposite to velocity
-      const trailEndX = x - particle.vel.x * trailLength;
-      const trailEndY = y - particle.vel.y * trailLength;
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, y);
-      this.ctx.lineTo(trailEndX, trailEndY);
-      this.ctx.stroke();
-    }
-  }
-  
-  private renderSnowParticle(particle: any, x: number, y: number, alpha: number) {
-    this.ctx.globalAlpha = alpha;
-    
-    // Snow particles are single pixels with black borders for visibility
-    const pixelSize = Math.max(1, Math.round(particle.radius || 0.5));
-    
-    // Draw black border first (slightly larger)
-    this.ctx.fillStyle = '#000000';
-    this.ctx.fillRect(Math.floor(x) - 0.5, Math.floor(y) - 0.5, pixelSize + 1, pixelSize + 1);
-    
-    // Draw white center
-    this.ctx.fillStyle = particle.color || '#FFFFFF';
-    this.ctx.fillRect(Math.floor(x), Math.floor(y), pixelSize, pixelSize);
-    
-    // If landed, draw a subtle indicator showing the target cell
-    if (particle.landed && particle.targetCell) {
-      this.ctx.globalAlpha = alpha * 0.3;
-      this.ctx.strokeStyle = '#87CEEB'; // Light blue outline
-      this.ctx.lineWidth = 1;
-      this.ctx.strokeRect(
-        particle.targetCell.x * 8 - 4, 
-        particle.targetCell.y * 8 - 4, 
-        8, 8
-      );
-    }
-  }
-  
-  private renderFireParticle(particle: any, x: number, y: number, alpha: number) {
-    this.ctx.globalAlpha = alpha;
-    
-    // Fire particles are glowing sparks with ember-like appearance
-    const sparkSize = particle.radius || 1;
-    
-    // Create glowing effect with multiple layers
-    const glowRadius = sparkSize * 2;
-    
-    // Outer glow (soft orange/red)
-    this.ctx.globalAlpha = alpha * 0.2;
-    this.ctx.fillStyle = '#FF4500';
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, glowRadius, 0, 2 * Math.PI);
-    this.ctx.fill();
-    
-    // Middle glow (brighter)
-    this.ctx.globalAlpha = alpha * 0.5;
-    this.ctx.fillStyle = '#FF6347';
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, sparkSize * 1.2, 0, 2 * Math.PI);
-    this.ctx.fill();
-    
-    // Core spark (brightest)
-    this.ctx.globalAlpha = alpha;
-    this.ctx.fillStyle = particle.color;
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, sparkSize * 0.6, 0, 2 * Math.PI);
-    this.ctx.fill();
-    
-    // Add flickering white-hot center for larger sparks
-    if (sparkSize > 1 && Simulator.rng.random() < 0.7) {
-      this.ctx.globalAlpha = alpha * 0.8;
-      this.ctx.fillStyle = '#FFFFFF';
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, sparkSize * 0.3, 0, 2 * Math.PI);
-      this.ctx.fill();
-    }
-    
-    // Add upward-trailing sparks if moving upward (fire rises)
-    if (particle.vel && particle.vel.y < 0 && !particle.landed) {
-      this.ctx.globalAlpha = alpha * 0.4;
-      this.ctx.strokeStyle = particle.color;
-      this.ctx.lineWidth = Math.max(0.5, sparkSize * 0.2);
-      
-      // Short upward trail
-      const trailLength = Math.min(Math.abs(particle.vel.y) * 4, 6);
-      const trailEndY = y + trailLength; // Trail goes down (opposite to upward movement)
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, y);
-      this.ctx.lineTo(x + particle.vel.x * 2, trailEndY);
-      this.ctx.stroke();
-    }
-  }
-
   private renderAoEEffectsCinematic() {
     // Query simulator for recent AoE events
     const recentAoEEvents = this.sim.processedEvents.filter(event => 
@@ -607,12 +455,16 @@ export default class CinematicView extends View {
       // Fade out over time
       const alpha = Math.max(0, 1 - (age / maxAge));
       
-      // Cinematic positioning
+      // Cinematic positioning with hexagonal offset
       const battleStripY = this.height * 0.8;
-      const stackingFactor = 0.24;
+      const cellWidth = 8;
+      const cellHeight = 6;
       
-      const cinematicX = pos.x * 8;
-      const cinematicY = battleStripY - (pos.y * 8 * stackingFactor);
+      // Apply hexagonal offset for AoE effects
+      const rowOffset = Math.floor(pos.y) % 2 === 1 ? cellWidth / 2 : 0;
+      
+      const cinematicX = pos.x * cellWidth + rowOffset;
+      const cinematicY = battleStripY - (pos.y * cellHeight);
       
       // Scale effect with perspective
       const yRatio = 1 - (pos.y / this.sim.fieldHeight);
@@ -623,7 +475,7 @@ export default class CinematicView extends View {
       this.ctx.globalAlpha = alpha * 0.6;
       this.ctx.strokeStyle = event.meta.aspect === 'heal' ? '#00ff88' : '#ff4400';
       this.ctx.lineWidth = 2 * scale;
-      const pixelRadius = radius * 8 * stackingFactor * scale;
+      const pixelRadius = radius * cellHeight * scale; // Use cellHeight for consistent scaling
       this.ctx.beginPath();
       this.ctx.arc(cinematicX, cinematicY, pixelRadius, 0, 2 * Math.PI);
       this.ctx.stroke();

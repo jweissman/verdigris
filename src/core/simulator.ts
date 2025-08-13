@@ -161,8 +161,8 @@ class Simulator {
   sandstormActive?: boolean;
   
   // Performance profiling
-  profiler?: PerformanceProfiler;
-  enableProfiling: boolean = false;
+  // profiler?: PerformanceProfiler;
+  // enableProfiling: boolean = false;
   
   // Transform for controlled mutations
   private transform: Transform;
@@ -184,7 +184,7 @@ class Simulator {
     // Replace Math.random with our seeded RNG
     const originalRandom = Math.random;
     Math.random = () => {
-      console.warn('⚠️  NON-DETERMINISTIC Math.random() called! Use Simulator.rng.random() instead');
+      // console.warn('⚠️  NON-DETERMINISTIC Math.random() called! Use Simulator.rng.random() instead');
       // console.trace(); // Show stack trace to find the caller
       return Simulator.rng.random();
     };
@@ -193,7 +193,7 @@ class Simulator {
     (Math as any)._originalRandom = originalRandom;
     Simulator.randomProtected = true;
     
-    console.log('Math.random() protection enabled - all randomness now deterministic');
+    // console.log('Math.random() protection enabled - all randomness now deterministic');
   }
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
@@ -288,11 +288,6 @@ class Simulator {
   
   pause() {
     this.paused = true;
-  }
-  
-  enablingProfiling() {
-    // Disable expensive features for maximum speed
-    this.enableProfiling = false;
   }
 
   reset() {
@@ -443,21 +438,6 @@ class Simulator {
     return Object.fromEntries(this.units.map(unit => [unit.id, unit]));
   }
   
-  startProfiling() {
-    this.enableProfiling = true;
-    this.profiler = new PerformanceProfiler();
-  }
-  
-  stopProfiling() {
-    if (this.profiler) {
-      this.profiler.printReport();
-    }
-    this.enableProfiling = false;
-  }
-  
-  getProfilingReport() {
-    return this.profiler?.getReport() || [];
-  }
 
   tick() { this.step(true); }
 
@@ -513,84 +493,20 @@ class Simulator {
       });
     }
     
-    // Phase 1: Let all rules register their pairwise intents
-    if (this.performanceMode) {
-      // PERFORMANCE MODE: Run only essential rules
-      const essentialRules = [
-        'UnitBehavior',    // AI decisions
-        'UnitMovement',    // Actually move units
-        'MeleeCombat',     // Handle combat
-        'Cleanup',         // Remove dead units
-        'CommandHandler'   // Process commands
-      ];
-      
       for (const rule of this.rulebook) {
-        const ruleName = rule.constructor.name;
-        if (essentialRules.includes(ruleName)) {
-          rule.execute();
-        }
-      }
-    } else {
-      // NORMAL MODE: Run all rules with profiling
-      let lastUnits: Unit[] = []; // Initialize for debug tracking
-      for (const rule of this.rulebook) {
-        const ruleName = rule.constructor.name;
-        
-        if (this.enableProfiling && this.profiler) {
-          this.profiler.startTimer(ruleName);
-        }
-        
-        let tr0 = performance.now();
         rule.execute();
-        let tr1 = performance.now();
-        
-        if (this.enableProfiling && this.profiler) {
-          this.profiler.endTimer();
-        }
-        
-        // Only do expensive logging in development/profiling mode
-        if (this.enableProfiling) {
-          let elapsed = tr1 - tr0;
-          if (elapsed > 1 || this.ticks <= 2) { // Log slow rules or first two ticks
-            console.warn(`[Step ${this.ticks}] Rule ${ruleName} executed in ${elapsed.toFixed(2)}ms`);
-          }
-        }
-
-        // Debug unit changes per rule
-        if (this.enableProfiling && this.ticks <= 5) {
-          this._debugUnits(lastUnits, ruleName);
-          lastUnits = this.units.map(u => ({ ...u, meta: u.meta ? { ...u.meta } : {} }));
-        }
       }
-    }
     
     // Phase 2: Process ALL pairwise intents in a single pass
     if (this.pairwiseBatcher && !this.performanceMode) {
-      const stats = this.pairwiseBatcher.getStats();
       // Always process to update target cache, even if no intents
-      let batchStart = performance.now();
       this.pairwiseBatcher.process(this.units, this);
       // Copy the populated target cache to simulator
       this.targetCache = this.pairwiseBatcher.targetCache;
-      let batchEnd = performance.now();
-      
-      // Only log if taking too long
-      if (this.enableProfiling && (batchEnd - batchStart) > 1 && stats.intentCount > 0) {
-        console.log(`Batched ${stats.intentCount} pairwise intents from ${stats.rules.length} rules in ${(batchEnd - batchStart).toFixed(2)}ms`);
-      }
     }
     
     // Track changed units for render deltas
     this.updateChangedUnits();
-    
-    // Only check performance in profiling mode
-    if (this.enableProfiling) {
-      let t1 = performance.now();
-      let elapsed = t1 - t0;
-      if (elapsed > 30) {
-        console.warn(`Simulation step ${this.ticks} took ${elapsed.toFixed(2)}ms`);
-      }
-    }
     
     // Skip expensive environmental updates in performance mode
     if (!this.performanceMode) {

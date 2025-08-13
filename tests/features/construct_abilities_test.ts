@@ -68,7 +68,7 @@ describe('Construct Abilities', () => {
       const freezebotUnit = sim.units.find(u => u.id === freezebot.id);
       
       if (i === 0 || i === 15) {
-        console.log(`Step ${i}: freezebot abilities:`, freezebotUnit?.abilities, 'lastAbilityTick:', freezebotUnit?.lastAbilityTick);
+        console.debug(`Step ${i}: freezebot abilities:`, freezebotUnit?.abilities, 'lastAbilityTick:', freezebotUnit?.lastAbilityTick);
       }
       
       if (enemyUnit?.meta.chilled) {

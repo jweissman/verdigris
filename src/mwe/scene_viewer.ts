@@ -2,18 +2,22 @@ import { Game } from "../core/game";
 import { createScaledRenderer } from "../core/renderer";
 import { SceneLoader } from "../core/scene_loader";
 import { Simulator } from "../core/simulator";
+import { Jukebox } from "../audio/jukebox";
 
 class ScenarioViewer {
   sim: Simulator;
   sceneLoader: SceneLoader;
   renderer;
+  jukebox: Jukebox;
   isPlaying: boolean = false;
+  musicEnabled: boolean = true;
   gameLoop;
   lastSimTime: number = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.sim = new Simulator(40, 25);
     this.sceneLoader = new SceneLoader(this.sim);
+    this.jukebox = new Jukebox();
     const sprites = Game.loadSprites();
     const backgrounds = Game.loadBackgrounds();
     const { renderer, handleResize, draw } = createScaledRenderer(320, 200, canvas, this.sim, sprites, backgrounds);
@@ -47,8 +51,28 @@ class ScenarioViewer {
 
   loadScene(scenario: string) {
     try {
+      // Stop any current music first
+      this.jukebox.stopMusic();
+      
       this.sceneLoader.loadScenario(scenario);
       this.draw();
+      
+      // Start appropriate music based on scene type (only if enabled)
+      if (this.musicEnabled) {
+        if (scenario.toLowerCase().includes('forest')) {
+          console.log('🌲 Starting forest ambience...');
+          this.jukebox.startForestMusic(); // Just music, not automatic ambient sounds
+        } else if (scenario.toLowerCase().includes('desert')) {
+          console.log('🏜️ Starting exploration music...');
+          this.jukebox.startExplorationMusic();
+        } else if (scenario.toLowerCase().includes('battle') || scenario.toLowerCase().includes('complex')) {
+          console.log('⚔️ Starting battle music...');
+          this.jukebox.startBattleMusic();
+        } else {
+          console.log('🎵 Starting exploration music...');
+          this.jukebox.startExplorationMusic();
+        }
+      }
     } catch (error) {
       console.error('Failed to load scene:', error);
     }
@@ -83,7 +107,7 @@ window.onload = () => {
   const viewer = new ScenarioViewer(canvas);
 
   // Console logging to the UI
-  const logDiv = document.getElementById('console-log') as HTMLDivElement;
+  const logDiv = document.getElementById('console') as HTMLDivElement;
   logDiv.style.whiteSpace = 'pre-wrap';
   logDiv.style.fontFamily = 'monospace';
   logDiv.style.color = 'white';
@@ -123,6 +147,38 @@ window.onload = () => {
 
   document.getElementById('toggle-view').addEventListener('click', () => {
     viewer.toggleView();
+  });
+
+  // Audio controls
+  document.getElementById('toggle-music').addEventListener('click', () => {
+    viewer.musicEnabled = !viewer.musicEnabled;
+    if (!viewer.musicEnabled) {
+      viewer.jukebox.stopMusic();
+      console.log('🔇 Music disabled');
+    } else {
+      console.log('🎵 Music enabled');
+      // Reload current scene music if any
+      const currentScene = (document.getElementById('scene-selector') as HTMLSelectElement).value;
+      if (currentScene) {
+        viewer.loadScene(currentScene);
+      }
+    }
+  });
+
+  document.getElementById('play-bird').addEventListener('click', () => {
+    viewer.jukebox.playBirdSong();
+    console.log('🐦 Bird song played');
+  });
+
+  document.getElementById('play-ambient').addEventListener('click', () => {
+    viewer.jukebox.playForestAmbience();
+    console.log('🌿 Forest ambient sound played');
+  });
+
+  document.getElementById('volume').addEventListener('input', (e) => {
+    const volume = parseFloat((e.target as HTMLInputElement).value);
+    // TODO: Implement volume control in jukebox
+    console.log(`🔊 Volume set to ${Math.round(volume * 100)}%`);
   });
 
   console.log('Scene tester ready! Select a battle scenario to begin.');

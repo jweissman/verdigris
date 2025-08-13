@@ -43,12 +43,12 @@ describe('Abilities Integration', () => {
     sim.step();
 
     // Debug: what abilities do these units actually have?
-    console.log('Archer abilities:', Object.keys(archer.abilities || {}));
-    console.log('Enemy abilities:', Object.keys(enemy.abilities || {}));
+    console.debug('Archer abilities:', Object.keys(archer.abilities || {}));
+    console.debug('Enemy abilities:', Object.keys(enemy.abilities || {}));
     
     // Check if the Abilities rule queued any commands
-    console.log(`Commands queued: ${sim.queuedCommands.length}`);
-    console.log('Queued commands:', sim.queuedCommands);
+    console.debug(`Commands queued: ${sim.queuedCommands.length}`);
+    console.debug('Queued commands:', sim.queuedCommands);
     
     // Should have queued some commands if abilities triggered
     expect(sim.queuedCommands.length).toBeGreaterThanOrEqual(0); // Start with basic assertion
@@ -83,21 +83,21 @@ describe('Abilities Integration', () => {
     const commandHandler = new CommandHandler(sim);
     sim.rulebook = [jsonAbilities, commandHandler];
 
-    console.log('=== Before Abilities step ===');
-    console.log('Ranger abilities:', Object.keys(ranger.abilities || {}));
-    console.log('Priest abilities:', Object.keys(priest.abilities || {}));
-    console.log('Projectiles before:', sim.projectiles.length);
+    console.debug('=== Before Abilities step ===');
+    console.debug('Ranger abilities:', Object.keys(ranger.abilities || {}));
+    console.debug('Priest abilities:', Object.keys(priest.abilities || {}));
+    console.debug('Projectiles before:', sim.projectiles.length);
 
     // Run simulation step
     sim.step();
 
-    console.log('=== After Abilities step ===');
-    console.log(`Commands queued: ${sim.queuedCommands.length}`);
-    console.log(`Events queued: ${sim.queuedEvents.length}`);
-    console.log(`Projectiles after: ${sim.projectiles.length}`);
+    console.debug('=== After Abilities step ===');
+    console.debug(`Commands queued: ${sim.queuedCommands.length}`);
+    console.debug(`Events queued: ${sim.queuedEvents.length}`);
+    console.debug(`Projectiles after: ${sim.projectiles.length}`);
     
     if (sim.queuedCommands.length > 0) {
-      console.log('Commands:', sim.queuedCommands.map(cmd => `${cmd.type} by ${cmd.unitId}`));
+      console.debug('Commands:', sim.queuedCommands.map(cmd => `${cmd.type} by ${cmd.unitId}`));
     }
 
     // Abilities should successfully process abilities that regular Abilities cannot

@@ -37,5 +37,5 @@ test('delta tracking system works', () => {
   expect(sim.hasUnitChanged('test-unit')).toBe(true);
   expect(sim.hasUnitChanged('nonexistent-unit')).toBe(false);
   
-  console.log(`Changed units this frame: ${changedUnits.length}/${sim.units.length}`);
+  console.debug(`Changed units this frame: ${changedUnits.length}/${sim.units.length}`);
 });

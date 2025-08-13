@@ -18,11 +18,20 @@
         <option value="toymakerChallenge">Toymaker Challenge</option>
         <option value="mechatronSolo">Mechatron Solo</option>
         <option value="forestTracker">Forest Tracker</option>
+        <option value="forestDay">Forest Day</option>
       </select>
       <button class="button" id="play-pause">Play/Pause</button>
       <button class="button" id="step">Step</button>
       <button class="button" id="restart">Restart</button>
       <button class="button" id="toggle-view">Toggle View</button>
+    </div>
+    
+    <div class="audio-controls">
+      <label>Audio:</label>
+      <button class="button" id="toggle-music">Music On/Off</button>
+      <button class="button" id="play-bird">Bird Song</button>
+      <button class="button" id="play-ambient">Forest Sounds</button>
+      <label>Volume: <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5"></label>
     </div>
     
     <canvas id="battlefield" width="320" height="200" style="margin: 50px"></canvas>

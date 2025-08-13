@@ -248,17 +248,17 @@ describe("Perdurance System", () => {
     });
     
     const initialHp = construct.hp;
-    console.log('Construct ID:', construct.id, 'Initial HP:', initialHp, 'Perdurance:', construct.meta?.perdurance);
-    console.log('Events before step:', sim.queuedEvents.length);
-    console.log('Commands before step:', sim.queuedCommands.length);
+    console.debug('Construct ID:', construct.id, 'Initial HP:', initialHp, 'Perdurance:', construct.meta?.perdurance);
+    console.debug('Events before step:', sim.queuedEvents.length);
+    console.debug('Commands before step:', sim.queuedCommands.length);
     
     // Process the event
     sim.step();
-    console.log('Events after step:', sim.queuedEvents.length);
-    console.log('Commands after step:', sim.queuedCommands.length);
+    console.debug('Events after step:', sim.queuedEvents.length);
+    console.debug('Commands after step:', sim.queuedCommands.length);
     
     const constructUnit = sim.units.find(u => u.id === construct.id);
-    console.log('After damage - HP:', constructUnit?.hp, 'Expected:', initialHp - 1);
+    console.debug('After damage - HP:', constructUnit?.hp, 'Expected:', initialHp - 1);
     expect(constructUnit?.hp).toBe(initialHp - 1); // Damage capped to 1
   });
 
@@ -316,7 +316,7 @@ describe("Perdurance System", () => {
     sim.step();
     
     const constructUnit = sim.units.find(u => u.id === construct.id);
-    console.log(`Construct HP after 8 damage events: ${constructUnit?.hp}`);
+    console.debug(`Construct HP after 8 damage events: ${constructUnit?.hp}`);
     expect(constructUnit?.hp).toBe(0); // Should be defeated by chip damage
   });
 });

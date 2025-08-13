@@ -146,6 +146,7 @@ class Game {
   }
 
   bootstrap() {
+    this.sim.reset();
     // Setup input handling
     this.setupInput();
 

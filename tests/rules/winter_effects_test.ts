@@ -81,8 +81,8 @@ describe('Winter Effects System', () => {
     sim.step();
     
     const chilledUnit = sim.units.find(u => u.id === unit.id);
-    console.log('Chilled unit meta:', chilledUnit?.meta);
-    console.log('Unit ID match:', unit.id, 'found:', chilledUnit?.id);
+    console.debug('Chilled unit meta:', chilledUnit?.meta);
+    console.debug('Unit ID match:', unit.id, 'found:', chilledUnit?.id);
     expect(chilledUnit?.meta.statusEffects).toBeDefined();
     
     const chillEffect = chilledUnit?.meta.statusEffects?.find(effect => effect.type === 'chill');

@@ -2,10 +2,12 @@ import { Abilities } from "../rules/abilities";
 import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import View from "./view";
+import { ParticleRenderer } from "../rendering/particle_renderer";
 // Temporarily removed TextRenderer until MWE is working
 
 export default class Isometric extends View {
   // private textRenderer: TextRenderer;
+  private particleRenderer: ParticleRenderer;
   
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -18,6 +20,7 @@ export default class Isometric extends View {
     super(ctx, sim, width, height, sprites, backgrounds);
     // this.textRenderer = new TextRenderer();
     // this.textRenderer.setContext(ctx);
+    this.particleRenderer = new ParticleRenderer(sprites);
   }
   
   show() {
@@ -147,8 +150,11 @@ export default class Isometric extends View {
       verticalSpacing = 1.5; // Very tight for maps with limited vertical space
     }
     
-    // Simple orthogonal grid with row staggering for depth illusion
-    const screenX = x * tileWidth + (y * rowOffset) + offsets.x;
+    // Apply hexagonal offset for odd rows
+    const hexOffset = Math.floor(y) % 2 === 1 ? tileWidth / 2 : 0;
+    
+    // Hexagonal grid positioning - just use hex offset for odd rows
+    const screenX = x * tileWidth + hexOffset + offsets.x;
     const screenY = (y * verticalSpacing) + offsets.y;
     
     return { x: screenX, y: screenY };
@@ -787,43 +793,26 @@ export default class Isometric extends View {
     const isoPos = this.toIsometric(x, y);
     const screenY = isoPos.y - (z * 8); // Apply height offset
     
-    this.ctx.save();
-    
     // Apply particle transparency based on lifetime
     const alpha = particle.lifetime > 100 ? 1 : particle.lifetime / 100;
-    this.ctx.globalAlpha = Math.min(alpha, 0.8);
     
-    // Lightning particles get special bright rendering
-    if (particle.type === 'lightning') {
-      this.ctx.fillStyle = particle.color || '#ffff00';
-      this.ctx.shadowColor = particle.color || '#ffff00';
-      this.ctx.shadowBlur = 4;
+    // Use the common particle renderer for sprite-based rendering
+    this.particleRenderer.renderParticle(this.ctx, particle, {
+      x: isoPos.x,
+      y: screenY,
+      alpha: Math.min(alpha, 0.8),
+      scale: 1.0
+    });
+    
+    // Draw shadow on ground if particle is in the air
+    if (z > 0) {
+      this.ctx.save();
+      this.ctx.globalAlpha = 0.2;
+      this.ctx.fillStyle = '#000000';
       this.ctx.beginPath();
-      this.ctx.arc(isoPos.x, screenY, particle.radius || 2, 0, 2 * Math.PI);
+      this.ctx.arc(isoPos.x, isoPos.y, particle.radius || 1, 0, 2 * Math.PI);
       this.ctx.fill();
-    } else if (particle.type === 'rain' || particle.type === 'snow') {
-      // Weather particles
-      this.ctx.fillStyle = particle.color || (particle.type === 'snow' ? '#ffffff' : '#4444ff');
-      this.ctx.beginPath();
-      this.ctx.arc(isoPos.x, screenY, particle.radius || 1, 0, 2 * Math.PI);
-      this.ctx.fill();
-      
-      // Draw shadow on ground if particle is in the air
-      if (z > 0) {
-        this.ctx.globalAlpha = 0.2;
-        this.ctx.fillStyle = '#000000';
-        this.ctx.beginPath();
-        this.ctx.arc(isoPos.x, isoPos.y, particle.radius || 1, 0, 2 * Math.PI);
-        this.ctx.fill();
-      }
-    } else {
-      // Generic particle rendering
-      this.ctx.fillStyle = particle.color || '#ffffff';
-      this.ctx.beginPath();
-      this.ctx.arc(isoPos.x, screenY, particle.radius || 1, 0, 2 * Math.PI);
-      this.ctx.fill();
+      this.ctx.restore();
     }
-    
-    this.ctx.restore();
   }
 }

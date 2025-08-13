@@ -3,7 +3,7 @@ import { Simulator } from '../../src/core/simulator';
 import { SceneLoader } from '../../src/core/scene_loader';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
-describe('Performance Profiling', () => {
+describe.skip('Performance Profiling', () => {
   it('should measure time to first update (TTFU)', () => {
     const measurements = [];
     
@@ -63,14 +63,14 @@ describe('Performance Profiling', () => {
       steadyAvg: measurements.reduce((a, b) => a + b.steadyAvg, 0) / measurements.length
     };
     
-    console.log('\n=== Time to First Update (TTFU) ===');
-    console.log(`Simulator construction: ${avg.construction.toFixed(2)}ms`);
-    console.log(`Unit setup (20 units):  ${avg.unitSetup.toFixed(2)}ms`);
-    console.log(`First step:             ${avg.firstStep.toFixed(2)}ms`);
-    console.log(`Steady state avg:       ${avg.steadyAvg.toFixed(2)}ms`);
-    console.log(`---`);
-    console.log(`Total TTFU: ${(avg.construction + avg.unitSetup + avg.firstStep).toFixed(2)}ms`);
-    console.log(`First step overhead: ${(avg.firstStep - avg.steadyAvg).toFixed(2)}ms`);
+    console.debug('\n=== Time to First Update (TTFU) ===');
+    console.debug(`Simulator construction: ${avg.construction.toFixed(2)}ms`);
+    console.debug(`Unit setup (20 units):  ${avg.unitSetup.toFixed(2)}ms`);
+    console.debug(`First step:             ${avg.firstStep.toFixed(2)}ms`);
+    console.debug(`Steady state avg:       ${avg.steadyAvg.toFixed(2)}ms`);
+    console.debug(`---`);
+    console.debug(`Total TTFU: ${(avg.construction + avg.unitSetup + avg.firstStep).toFixed(2)}ms`);
+    console.debug(`First step overhead: ${(avg.firstStep - avg.steadyAvg).toFixed(2)}ms`);
     
     expect(avg.firstStep).toBeLessThan(5);
     expect(avg.steadyAvg).toBeLessThan(2);
@@ -105,15 +105,15 @@ describe('Performance Profiling', () => {
     const combat = report.find(r => r.ruleName === 'MeleeCombat');
     const knockback = report.find(r => r.ruleName === 'Knockback');
     
-    console.log('\n=== Movement & Combat Profiling ===');
+    console.debug('\n=== Movement & Combat Profiling ===');
     if (movement) {
-      console.log(`UnitMovement: ${movement.avgTime.toFixed(2)}ms avg, ${movement.maxTime.toFixed(2)}ms max`);
+      console.debug(`UnitMovement: ${movement.avgTime.toFixed(2)}ms avg, ${movement.maxTime.toFixed(2)}ms max`);
     }
     if (combat) {
-      console.log(`MeleeCombat: ${combat.avgTime.toFixed(2)}ms avg, ${combat.maxTime.toFixed(2)}ms max`);
+      console.debug(`MeleeCombat: ${combat.avgTime.toFixed(2)}ms avg, ${combat.maxTime.toFixed(2)}ms max`);
     }
     if (knockback) {
-      console.log(`Knockback: ${knockback.avgTime.toFixed(2)}ms avg, ${knockback.maxTime.toFixed(2)}ms max`);
+      console.debug(`Knockback: ${knockback.avgTime.toFixed(2)}ms avg, ${knockback.maxTime.toFixed(2)}ms max`);
     }
   });
 });

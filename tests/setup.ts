@@ -33,4 +33,4 @@ let globalSim: Simulator | null = null;
   }
 };
 
-console.log('Test setup loaded - use getTestSimulator() and resetTestSimulator()');
+console.debug('Test setup loaded - use getTestSimulator() and resetTestSimulator()');

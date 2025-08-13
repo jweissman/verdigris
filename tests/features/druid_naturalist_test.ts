@@ -47,7 +47,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
       expect(summoned).toBeDefined();
       
       // Should be a forest creature (check actual ability config)
-      const forestCreatures = ['squirrel', 'bear', 'owl', 'bird', 'deer', 'rabbit', 'fox', 'wolf', 'mesoworm'];
+      const forestCreatures = ['squirrel', 'bear', 'owl', 'bird', 'deer', 'rabbit', 'fox', 'wolf', 'mesoworm', 'megasquirrel'];
       expect(forestCreatures).toContain(summoned?.sprite);
       
       // Should be on the druid's team
@@ -329,13 +329,13 @@ describe('Druid and Naturalist Forest Abilities', () => {
       // Debug output if taming failed
       const finalWorm = sim.units.find(u => u.id === 'worm1');
       if (finalWorm?.team !== 'friendly') {
-        console.log('Taming failed. Worm tags:', finalWorm?.tags);
-        console.log('Worm mass:', finalWorm?.mass);
-        console.log('Worm pos:', finalWorm?.pos);
+        console.debug('Taming failed. Worm tags:', finalWorm?.tags);
+        console.debug('Worm mass:', finalWorm?.mass);
+        console.debug('Worm pos:', finalWorm?.pos);
         const nat = sim.units.find(u => u.id === 'naturalist1');
-        console.log('Naturalist pos:', nat?.pos);
-        console.log('Distance:', Math.sqrt(Math.pow(finalWorm.pos.x - nat.pos.x, 2) + Math.pow(finalWorm.pos.y - nat.pos.y, 2)));
-        console.log('Naturalist abilities:', nat?.abilities);
+        console.debug('Naturalist pos:', nat?.pos);
+        console.debug('Distance:', Math.sqrt(Math.pow(finalWorm.pos.x - nat.pos.x, 2) + Math.pow(finalWorm.pos.y - nat.pos.y, 2)));
+        console.debug('Naturalist abilities:', nat?.abilities);
       }
       
       // Get actual units from sim, not local references

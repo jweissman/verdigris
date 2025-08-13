@@ -10,6 +10,7 @@ import desert from './scenes/desert-day.battle.txt';
 import toymakerChallenge from './scenes/toymaker-challenge.battle.txt';
 import mechatronSolo from './scenes/mechatron-solo.battle.txt';
 import forestTracker from './scenes/forest-tracker.battle.txt';
+import forestDay from './scenes/forest-day.battle.txt';
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { CommandHandler } from "../rules/command_handler";
 import { SegmentedCreatures } from "../rules/segmented_creatures";
@@ -17,7 +18,7 @@ import { SegmentedCreatures } from "../rules/segmented_creatures";
 export class SceneLoader {
   static scenarios = { 
     simple, complex, healing, projectile, squirrel, chess, toymaker, desert, 
-    toymakerChallenge, mechatronSolo, forestTracker 
+    toymakerChallenge, mechatronSolo, forestTracker, forestDay
   };
   private unitCreationIndex: number = 0;
   
