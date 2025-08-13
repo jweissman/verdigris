@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { SceneLoader } from '../../src/core/scene_loader';
-import { WinterEffects } from '../../src/rules/winter_effects';
+import { BiomeEffects } from '../../src/rules/biome_effects';
 
 describe('Toysday Integration', () => {
   it('should run complete toymaker scenario with winter effects', () => {
@@ -22,7 +22,7 @@ describe('Toysday Integration', () => {
     expect(enemies.length).toBeGreaterThan(0);
     
     // Start winter storm
-    WinterEffects.createWinterStorm(sim);
+    BiomeEffects.createWinterStorm(sim);
     expect(sim.winterActive).toBe(true);
     
     // Run battle simulation
@@ -64,7 +64,7 @@ describe('Toysday Integration', () => {
     const sim = new Simulator();
     
     // Create winter conditions
-    WinterEffects.createWinterStorm(sim);
+    BiomeEffects.createWinterStorm(sim);
     
     // Deploy one of each construct type
     const constructTypes = ['freezebot', 'clanker', 'spiker', 'swarmbot', 'roller', 'zapper'];

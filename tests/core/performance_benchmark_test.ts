@@ -5,7 +5,7 @@ import { SceneLoader } from '../../src/core/scene_loader';
 describe('Performance Benchmark', () => {
   it('should complete 50 steps in under 100ms (HARD TARGET: <2ms per step)', () => {
     const sim = new Simulator(32, 24);
-    sim.enableProfiling = true; // Enable profiling to see what's slow!
+    sim.enableProfiling = false; // Disable for clean performance measurement
     const loader = new SceneLoader(sim);
     
     // Load a complex scene with many units

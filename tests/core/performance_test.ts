@@ -4,13 +4,14 @@ import { Simulator } from '../../src/core/simulator';
 
 describe('Performance Tests', () => {
   const scenarios = ['simple', 'complex', 'healing', 'projectile', 'squirrel'];
-  const SIMULATION_STEPS = 50;
-  const EXECUTION_TIME_PER_STEP = 5; // ms per step
+  const SIMULATION_STEPS = 500;
+  const EXECUTION_TIME_PER_STEP = 0.5; // ms per step
   const MAX_EXECUTION_TIME = SIMULATION_STEPS * EXECUTION_TIME_PER_STEP + 10; // xms per step + 10ms buffer
 
   scenarios.forEach(scenario => {
     it(`should run ${scenario} scenario for ${SIMULATION_STEPS} steps within ${MAX_EXECUTION_TIME}ms`, () => {
       const sim = new Simulator(32, 32);
+      sim.enableProfiling = false; // Disable debug overhead for performance tests
       const loader = new SceneLoader(sim);
       
       const startTime = performance.now();

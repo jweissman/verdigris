@@ -1,0 +1,65 @@
+import { test, expect } from 'bun:test';
+import { Simulator } from '../src/core/simulator';
+import { SceneLoader } from '../src/core/scene_loader';
+
+test('profile squirrel scenario bottlenecks', () => {
+  const sim = new Simulator(32, 32);
+  sim.enableProfiling = false; // Test actual performance without debug overhead
+  const loader = new SceneLoader(sim);
+  
+  console.log('\n🔍 PROFILING SQUIRREL SCENARIO');
+  console.log('='.repeat(50));
+  
+  // Load squirrel scenario
+  loader.loadScenario('squirrel');
+  console.log(`Loaded ${sim.units.length} units`);
+  
+  // Profile first few steps in detail
+  let totalStepTime = 0;
+  for (let step = 0; step < 10; step++) {
+    const stepStart = performance.now();
+    sim.step();
+    const stepEnd = performance.now();
+    const stepTime = stepEnd - stepStart;
+    totalStepTime += stepTime;
+    
+    if (step < 3) {
+      console.log(`Step ${step}: ${stepTime.toFixed(2)}ms (${sim.units.length} units)`);
+    }
+  }
+  
+  const avgStepTime = totalStepTime / 10;
+  console.log(`Average: ${avgStepTime.toFixed(2)}ms per step`);
+  
+  // Get detailed profiling breakdown
+  const report = sim.getProfilingReport();
+  if (report && report.length > 0) {
+    console.log('\n📊 RULE BREAKDOWN (last 10 steps):');
+    console.log('-'.repeat(40));
+    
+    // Group by rule name and calculate totals
+    const ruleStats: { [key: string]: { total: number, count: number, max: number } } = {};
+    
+    for (const entry of report) {
+      if (!ruleStats[entry.name]) {
+        ruleStats[entry.name] = { total: 0, count: 0, max: 0 };
+      }
+      ruleStats[entry.name].total += entry.duration;
+      ruleStats[entry.name].count++;
+      ruleStats[entry.name].max = Math.max(ruleStats[entry.name].max, entry.duration);
+    }
+    
+    // Sort by total time
+    const sorted = Object.entries(ruleStats)
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 8);
+    
+    for (const [rule, stats] of sorted) {
+      const avg = stats.total / stats.count;
+      const pct = (stats.total / totalStepTime) * 100;
+      console.log(`${rule.padEnd(20)} ${avg.toFixed(2)}ms avg  ${stats.max.toFixed(2)}ms max  ${pct.toFixed(1)}%`);
+    }
+  }
+  
+  console.log('='.repeat(50));
+});

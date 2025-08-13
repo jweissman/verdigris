@@ -2,8 +2,23 @@ import { Abilities } from "../rules/abilities";
 import { Unit } from "../types/Unit";
 import { Simulator } from "../core/simulator";
 import View from "./view";
+import { UnitRenderer } from "../rendering/unit_renderer";
 
 export default class CinematicView extends View {
+  private unitRenderer: UnitRenderer;
+  
+  constructor(
+    ctx: CanvasRenderingContext2D,
+    sim: any,
+    width: number,
+    height: number,
+    sprites: Map<string, HTMLImageElement>,
+    backgrounds: Map<string, HTMLImageElement> = new Map()
+  ) {
+    super(ctx, sim, width, height, sprites, backgrounds);
+    this.unitRenderer = new UnitRenderer(sim);
+  }
+
   show() {
     this.updateMovementInterpolations();
     this.updateProjectileInterpolations();
@@ -168,46 +183,27 @@ export default class CinematicView extends View {
   }
 
   private showUnitCinematic(unit: Unit) {
-    // Skip rendering phantom units (they're invisible)
-    if (unit.meta.phantom) {
+    // Use centralized logic for determining if unit should render
+    if (!this.unitRenderer.shouldRenderUnit(unit)) {
+      return;
+    }
+    
+    // Check for damage blinking using centralized logic
+    if (this.unitRenderer.shouldBlinkFromDamage(unit, this.animationTime)) {
       return;
     }
 
-    // Check if unit was recently damaged and should blink
-    const recentDamage = this.sim.processedEvents.find(event => 
-      event.kind === 'damage' && 
-      event.target === unit.id && 
-      event.meta.tick && 
-      (this.sim.ticks - event.meta.tick) < 2
-    );
+    // Get render position from centralized renderer
+    const renderPos = this.unitRenderer.getRenderPosition(unit, this.unitInterpolations);
+    const renderX = renderPos.x;
+    const renderY = renderPos.y;
+    const renderZ = renderPos.z;
     
-    if (recentDamage && Math.floor(this.animationTime / 100) % 2 === 0) {
-      return; // Don't render this frame (creates blink effect)
-    }
-
-    // Calculate render position with cinematic adjustments
-    let renderX = unit.pos.x;
-    let renderY = unit.pos.y;
-    let renderZ = unit.meta?.z || 0;
-      
-    const interp = this.unitInterpolations.get(unit.id);
-    if (interp) {
-      const easeProgress = this.easeInOutQuad(interp.progress);
-      renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
-      renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
-      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
-    }
-    
-    // Handle huge units vs normal units in cinematic view - support custom dimensions
-    const isHuge = unit.meta.huge;
-    let baseWidth = 16;
-    let baseHeight = 16;
-    
-    if (isHuge) {
-      // Use custom dimensions if specified, otherwise default to megasquirrel size
-      baseWidth = unit.meta.width || 64;
-      baseHeight = unit.meta.height || 32;
-    }
+    // Get sprite dimensions from centralized logic
+    const dimensions = this.unitRenderer.getSpriteDimensions(unit);
+    const baseWidth = dimensions.width;
+    const baseHeight = dimensions.height;
+    const isHuge = unit.meta?.huge;
     
     // Cinematic positioning: more compressed vertically, slight perspective scaling
     const battleStripY = this.height * 0.8; // Position battle at bottom
@@ -239,23 +235,15 @@ export default class CinematicView extends View {
       this.ctx.fill();
       this.ctx.restore();
 
-      // Choose frame based on unit state
-      let frameIndex = 0;
-      if (unit.state === 'dead') {
-        frameIndex = 3;
-      } else if (unit.state === 'attack') {
-        frameIndex = 2;
-      } else {
-        frameIndex = Math.floor((this.animationTime / 400) % 2);
-      }
+      // Get animation frame from centralized logic - this fixes the inconsistency!
+      const frameIndex = this.unitRenderer.getAnimationFrame(unit, this.animationTime);
       
       const frameX = frameIndex * baseWidth;
       const pixelX = cinematicX - pixelWidth / 2;
       const pixelY = Math.round(finalY - pixelHeight / 2);
-      // Handle sprite flipping based on facing direction
+      // Handle sprite flipping using centralized logic
       this.ctx.save();
-      const facing = unit.meta.facing || 'right';
-      const shouldFlip = facing === 'left';
+      const shouldFlip = !this.unitRenderer.shouldFlipSprite(unit);
       
       if (!shouldFlip) {
         // Flip horizontally by scaling x by -1 and translating
@@ -269,8 +257,8 @@ export default class CinematicView extends View {
       );
       this.ctx.restore();
     } else {
-      // Fallback rectangle (scaled for huge units)
-      this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
+      // Fallback rectangle using centralized color logic
+      this.ctx.fillStyle = this.unitRenderer.getUnitColor(unit);
       this.ctx.fillRect(Math.round(cinematicX - pixelWidth/2), Math.round(finalY - pixelHeight/2), pixelWidth, pixelHeight);
     }
     

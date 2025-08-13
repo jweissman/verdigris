@@ -14,10 +14,9 @@ import { CommandHandler, QueuedCommand } from "../rules/command_handler";
 import { HugeUnits } from "../rules/huge_units";
 import { SegmentedCreatures } from "../rules/segmented_creatures";
 import { GrapplingPhysics } from "../rules/grappling_physics";
-import { DesertEffects } from "../rules/desert_effects";
+import { BiomeEffects } from "../rules/biome_effects";
 import { Perdurance } from "../rules/perdurance";
 import { StatusEffects } from "../rules/status_effects";
-import { WinterEffects } from "../rules/winter_effects";
 import { RNG } from "./rng";
 import { LightningStorm } from "../rules/lightning_storm";
 import { Projectile } from "../types/Projectile";
@@ -62,6 +61,11 @@ class Simulator {
   
   // Centralized RNG for determinism - static for global access
   public static rng: RNG = new RNG(12345);
+  
+  // Track units that changed this frame for render deltas
+  private lastFrameUnits: Unit[] = [];
+  private changedUnits: Set<string> = new Set();
+  
   
   // Grid partition for O(1) spatial queries
   private gridPartition: GridPartition;
@@ -266,8 +270,7 @@ class Simulator {
       new Jumping(this),
       new Tossing(this), // Handle tossed units
       new StatusEffects(this), // Handle status effects before damage processing
-      new WinterEffects(this), // Handle environmental winter effects
-      new DesertEffects(this), // Handle desert heat shimmer and environmental effects
+      new BiomeEffects(this), // Handle all environmental biome effects (winter, desert, etc.)
       new Perdurance(this), // Process damage resistance before events are handled
       this.createEventHandler(), // Convert events to commands
       new Cleanup(this),
@@ -301,6 +304,7 @@ class Simulator {
       currentUnits.push(u);
     }
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
+    this.unitCache.set(u.id, u); // Update cache for immediate lookup
     return u;
   }
 
@@ -316,6 +320,7 @@ class Simulator {
       currentUnits.push(newUnit);
     }
     this.dirtyUnits.add(newUnit.id); // Mark as dirty for rendering
+    this.unitCache.set(newUnit.id, newUnit); // Update cache for immediate lookup
     return newUnit;
   }
   
@@ -396,9 +401,12 @@ class Simulator {
     this.spatialHash.clear();
     this.positionMap.clear();
     this.gridPartition.clear();
+    this.unitCache.clear(); // Rebuild unit lookup cache
     
     this.units.forEach(unit => {
       this.spatialHash.insert(unit.id, unit.pos.x, unit.pos.y);
+      this.unitCache.set(unit.id, unit); // Add to O(1) lookup cache
+      
       
       // Add to grid partition for O(1) neighbor queries
       this.gridPartition.insert(unit);
@@ -415,6 +423,7 @@ class Simulator {
     });
     
     // Phase 1: Let all rules register their pairwise intents
+    let lastUnits: Unit[] = []; // Initialize for debug tracking
     for (const rule of this.rulebook) {
       const ruleName = rule.constructor.name;
       
@@ -458,6 +467,9 @@ class Simulator {
         console.log(`Batched ${stats.intentCount} pairwise intents from ${stats.rules.length} rules in ${(batchEnd - batchStart).toFixed(2)}ms`);
       }
     }
+    
+    // Track changed units for render deltas
+    this.updateChangedUnits();
     
     // END FRAME - commit all changes from working copy to current
     this.endFrame();
@@ -1021,8 +1033,11 @@ class Simulator {
     return (unit.meta.phantom && unit.meta.parentId === owner?.id) || unit === owner;
   }
 
+  // Unit lookup cache for O(1) performance
+  private unitCache: Map<string, Unit> = new Map();
+
   creatureById(id) {
-    return this.units.find(unit => unit.id === id);
+    return this.unitCache.get(id);
   }
 
   objEq(a: any, b: any): boolean {
@@ -1064,6 +1079,51 @@ class Simulator {
     state: '🛡️',
   }
 
+  // Update which units changed this frame for render optimization
+  private updateChangedUnits(): void {
+    this.changedUnits.clear();
+    
+    for (const currentUnit of this.units) {
+      const previousUnit = this.lastFrameUnits.find(u => u.id === currentUnit.id);
+      
+      if (!previousUnit) {
+        // New unit
+        this.changedUnits.add(currentUnit.id);
+      } else {
+        // Check if unit changed
+        const delta = this.delta(previousUnit, currentUnit);
+        if (Object.keys(delta).length > 0) {
+          this.changedUnits.add(currentUnit.id);
+        }
+      }
+    }
+    
+    // Check for removed units
+    for (const previousUnit of this.lastFrameUnits) {
+      const currentUnit = this.units.find(u => u.id === previousUnit.id);
+      if (!currentUnit) {
+        this.changedUnits.add(previousUnit.id);
+      }
+    }
+    
+    // Update last frame snapshot
+    this.lastFrameUnits = this.units.map(u => ({ 
+      ...u, 
+      meta: u.meta ? { ...u.meta } : {} 
+    }));
+  }
+  
+  // Public API for renderer to get only changed units
+  public getChangedUnits(): string[] {
+    return Array.from(this.changedUnits);
+  }
+  
+  // Public API to check if a specific unit changed
+  public hasUnitChanged(unitId: string): boolean {
+    return this.changedUnits.has(unitId);
+  }
+  
+
   _debugUnits(unitsBefore: Unit[], phase: string) {
     let printedPhase = false;
     for (const u of this.units) {
@@ -1075,7 +1135,7 @@ class Simulator {
             continue; // No changes, skip detailed logging
           }
           if (!printedPhase) {
-            // console.debug(`## ${phase}`);
+            console.debug(`## ${phase}`);
             printedPhase = true;
           }
           let str = (`  ${u.id}`);
@@ -1083,7 +1143,7 @@ class Simulator {
             let icon = this.attrEmoji[key] || '|';
             str += (` | ${icon} ${key}: ${this.prettyPrint(before[key])} → ${this.prettyPrint(u[key])}`);
           })
-          // console.debug(str);
+          console.debug(str);
 
         }
       } else {
