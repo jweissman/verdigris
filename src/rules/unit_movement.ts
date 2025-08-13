@@ -206,51 +206,63 @@ export class UnitMovement extends Rule {
     ];
   }
   static resolveCollisions(sim: Simulator) {
-    // if any units are now on the same square, we want to push the lighter one out
-    const positions: { [key: string]: Unit[] } = {};
+    // Build fresh collision map from current unit positions
+    const collisionMap: { [key: string]: Unit[] } = {};
+    
     for (const unit of sim.units) {
+      if (unit.state === 'dead') continue;
       const posKey = `${Math.round(unit.pos.x)},${Math.round(unit.pos.y)}`;
-      if (!positions[posKey]) positions[posKey] = [];
-      positions[posKey].push(unit);
+      if (!collisionMap[posKey]) collisionMap[posKey] = [];
+      collisionMap[posKey].push(unit);
     }
-    for (const posKey in positions) {
-      const unitsAtPos = positions[posKey];
-      if (unitsAtPos.length > 1) {
-        // Sort by mass, then by hp
-        unitsAtPos.sort((a, b) => {
-          if (a.mass !== b.mass) {
-            return a.mass - b.mass ? 1 : -1;
-          }
-          if (a.hp !== b.hp) {
-            return a.hp - b.hp ? 1 : -1;
-          }
-          if (a.id !== b.id) {
-            return String(a.id).localeCompare(String(b.id));
-          }
-          return 0;
-        });
-        // Queue moves to push lighter units out of the way
-        for (let i = 1; i < unitsAtPos.length; i++) {
-          const unit = unitsAtPos[i];
-          let halt = false;
-          for (let dx = -1; dx <= 1; dx++) {
-            if (halt) break;
-            for (let dy = -1; dy <= 1; dy++) {
-              if (dx === 0 && dy === 0) continue; // Skip no movement
-              if (sim.validMove(unit, dx, dy)) {
-                // Queue a move command instead of direct mutation
-                sim.queuedCommands.push({
-                  type: 'move',
-                  params: {
-                    unitId: unit.id,
-                    dx: dx,
-                    dy: dy
-                  }
-                });
-                halt = true; // Stop trying to move this unit
-                break;
+    
+    // Process collisions efficiently without redundant validMove calls
+    for (const posKey in collisionMap) {
+      const unitsAtPos = collisionMap[posKey];
+      if (unitsAtPos.length <= 1) continue;
+      
+      // Sort by priority: higher mass and hp units stay
+      unitsAtPos.sort((a, b) => {
+        const massDiff = (b.mass || 1) - (a.mass || 1);
+        if (massDiff !== 0) return massDiff;
+        const hpDiff = b.hp - a.hp;
+        if (hpDiff !== 0) return hpDiff;
+        return String(a.id).localeCompare(String(b.id));
+      });
+      
+      // Displace lower-priority units with minimal validation
+      for (let i = 1; i < unitsAtPos.length; i++) {
+        const unit = unitsAtPos[i];
+        const [x, y] = posKey.split(',').map(Number);
+        
+        // Try displacement directions efficiently
+        const displacements = [
+          [1, 0], [-1, 0], [0, 1], [0, -1],
+          [1, 1], [-1, -1], [1, -1], [-1, 1]
+        ];
+        
+        for (const [dx, dy] of displacements) {
+          const newX = x + dx;
+          const newY = y + dy;
+          
+          // Quick boundary check
+          if (newX < 0 || newX >= sim.fieldWidth || newY < 0 || newY >= sim.fieldHeight) continue;
+          
+          // Check if target position is free using collision map
+          const targetKey = `${newX},${newY}`;
+          if (!collisionMap[targetKey] || collisionMap[targetKey].length === 0) {
+            // Position is free, queue the displacement
+            sim.queuedCommands.push({
+              type: 'move',
+              params: {
+                unitId: unit.id,
+                dx: dx,
+                dy: dy
               }
-            }
+            });
+            // Mark target position as occupied to avoid multiple units moving there
+            collisionMap[targetKey] = [unit];
+            break; // Found a spot, stop searching
           }
         }
       }
