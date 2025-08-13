@@ -87,16 +87,16 @@ export default class DSL {
     // Random selections
     let random = {
       position: () => ({
-        x: Math.round(Math.random() * sim.fieldWidth),
-        y: Math.round(Math.random() * sim.fieldHeight)
+        x: Math.round(Simulator.rng.random() * sim.fieldWidth),
+        y: Math.round(Simulator.rng.random() * sim.fieldHeight)
       }),
       ally: () => {
         const units = allies();
-        return units.length > 0 ? units[Math.floor(Math.random() * units.length)] : null;
+        return units.length > 0 ? units[Math.floor(Simulator.rng.random() * units.length)] : null;
       },
       enemy: () => {
         const units = enemies();
-        return units.length > 0 ? units[Math.floor(Math.random() * units.length)] : null;
+        return units.length > 0 ? units[Math.floor(Simulator.rng.random() * units.length)] : null;
       }
     };
     
@@ -104,9 +104,9 @@ export default class DSL {
     let unit = (id: string) => sim.roster[id] || null;
     
     // Simple random utilities
-    let randomFloat = (min: number, max: number) => min + Math.random() * (max - min);
+    let randomFloat = (min: number, max: number) => min + Simulator.rng.random() * (max - min);
     let randomInt = (min: number, max: number) => Math.floor(randomFloat(min, max + 1));
-    let pick = (array: any[]) => array[Math.floor(Math.random() * array.length)];
+    let pick = (array: any[]) => array[Math.floor(Simulator.rng.random() * array.length)];
     let randomPos = (centerX: number, centerY: number, range: number) => ({
       x: centerX + randomFloat(-range, range),
       y: centerY + randomFloat(-range, range)

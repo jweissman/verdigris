@@ -23,12 +23,12 @@ export class WinterEffects extends Rule {
       for (let i = 0; i < 3; i++) { // More snowflakes for better hit chance
         // Focus snowfall around units - bias toward center 20x20 area
         let x: number;
-        if (Math.random() < 0.7) {
+        if (this.rng.random() < 0.7) {
           // 70% chance to fall in center area where units usually are
-          x = 5 + Math.floor(Math.random() * 20); // x range 5-25
+          x = 5 + Math.floor(this.rng.random() * 20); // x range 5-25
         } else {
           // 30% chance anywhere on field
-          x = Math.floor(Math.random() * this.sim.fieldWidth);
+          x = Math.floor(this.rng.random() * this.sim.fieldWidth);
         }
         const y = 0; // Start at top
         

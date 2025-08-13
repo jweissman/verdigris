@@ -1,4 +1,5 @@
 import { Command, CommandParams } from "../rules/command";
+import { Simulator } from "../core/simulator";
 
 /**
  * Projectile command - creates a projectile
@@ -30,7 +31,7 @@ export class Projectile extends Command {
     const projectileTeam = team || caster?.team || 'neutral';
 
     const projectile: any = {
-      id: `projectile_${unitId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `projectile_${unitId}_${Date.now()}_${Simulator.rng.random().toString(36).substr(2, 9)}`,
       pos: startPos,
       vel: { x: 0, y: 0 },
       radius: radius,

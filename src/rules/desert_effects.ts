@@ -37,8 +37,8 @@ export class DesertEffects extends Rule {
     if (this.sim.ticks % 3 === 0) { // Every 3 ticks for subtle effect
       // Sample multiple points across the field
       for (let i = 0; i < 8; i++) {
-        const x = Math.floor(Math.random() * this.sim.fieldWidth);
-        const y = Math.floor(Math.random() * this.sim.fieldHeight);
+        const x = Math.floor(this.rng.random() * this.sim.fieldWidth);
+        const y = Math.floor(this.rng.random() * this.sim.fieldHeight);
         
         const temperature = this.sim.temperatureField.get(x, y);
         
@@ -47,22 +47,22 @@ export class DesertEffects extends Rule {
           const intensity = Math.min(1, (temperature - 25) / 20); // Scale 0-1 from 25-45°C
           
           // Skip some particles based on intensity for varied effect
-          if (Math.random() > intensity * 0.6) continue;
+          if (this.rng.random() > intensity * 0.6) continue;
           
           // Create heat shimmer particle
           this.sim.particles.push({
             pos: { 
-              x: x * 8 + Math.random() * 8, 
-              y: y * 8 + Math.random() * 8 
+              x: x * 8 + this.rng.random() * 8, 
+              y: y * 8 + this.rng.random() * 8 
             },
             vel: { 
-              x: (Math.random() - 0.5) * 0.2, 
-              y: -0.1 - Math.random() * 0.2 // Generally rise upward 
+              x: (this.rng.random() - 0.5) * 0.2, 
+              y: -0.1 - this.rng.random() * 0.2 // Generally rise upward 
             },
-            radius: 0.3 + Math.random() * 0.4,
+            radius: 0.3 + this.rng.random() * 0.4,
             color: this.getShimmerColor(temperature),
-            lifetime: 15 + Math.floor(Math.random() * 15), // 15-30 ticks
-            z: Math.random() * 2, // Vary height for depth
+            lifetime: 15 + Math.floor(this.rng.random() * 15), // 15-30 ticks
+            z: this.rng.random() * 2, // Vary height for depth
             type: 'heat_shimmer'
           });
         }
@@ -85,7 +85,7 @@ export class DesertEffects extends Rule {
         const age = 1 - (particle.lifetime / 30); // 0 to 1 as particle ages
         const wobbleIntensity = Math.sin(age * Math.PI) * 0.3; // Stronger in middle of lifetime
         
-        particle.vel.x += (Math.random() - 0.5) * wobbleIntensity;
+        particle.vel.x += (this.rng.random() - 0.5) * wobbleIntensity;
         
         // Gradually fade alpha as particle rises
         const alpha = Math.max(0.1, 1 - age * 0.8);
@@ -138,10 +138,10 @@ export class DesertEffects extends Rule {
           });
           
           // Create heat stress visual
-          if (Math.random() < 0.1) { // Occasional stress particles
+          if (this.rng.random() < 0.1) { // Occasional stress particles
             this.sim.particles.push({
               pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 - 4 },
-              vel: { x: (Math.random() - 0.5) * 0.3, y: -0.5 },
+              vel: { x: (this.rng.random() - 0.5) * 0.3, y: -0.5 },
               radius: 1,
               color: '#FF6644',
               lifetime: 20,
@@ -185,7 +185,7 @@ export class DesertEffects extends Rule {
         const currentTemp = sim.temperatureField.get(x, y);
         // Set desert temperatures: 28-42°C with variation
         const baseTemp = 35;
-        const variation = (Math.random() - 0.5) * 14; // ±7°C variation
+        const variation = (this.rng.random() - 0.5) * 14; // ±7°C variation
         const desertTemp = Math.max(28, Math.min(42, baseTemp + variation));
         
         sim.temperatureField.set(x, y, desertTemp);
@@ -234,14 +234,14 @@ export class DesertEffects extends Rule {
     if (this.sim.ticks % 3 === 0) { // Less frequent but more particles
       for (let i = 0; i < particleCount; i++) {
         // Sand blows horizontally across the field
-        const y = Math.random() * this.sim.fieldHeight;
-        const x = Math.random() < 0.5 ? 0 : this.sim.fieldWidth - 1;
-        const velX = x === 0 ? 0.3 + Math.random() * 0.2 : -0.3 - Math.random() * 0.2;
+        const y = this.rng.random() * this.sim.fieldHeight;
+        const x = this.rng.random() < 0.5 ? 0 : this.sim.fieldWidth - 1;
+        const velX = x === 0 ? 0.3 + this.rng.random() * 0.2 : -0.3 - this.rng.random() * 0.2;
         
         this.sim.particles.push({
           pos: { x: x * 8, y: y * 8 },
-          vel: { x: velX, y: (Math.random() - 0.5) * 0.1 },
-          radius: 0.5 + Math.random() * 0.5,
+          vel: { x: velX, y: (this.rng.random() - 0.5) * 0.1 },
+          radius: 0.5 + this.rng.random() * 0.5,
           lifetime: 100,
           color: '#D2691E', // Sandy brown
           z: 3,
@@ -289,7 +289,7 @@ export class DesertEffects extends Rule {
       }
       
       // Small chance of sand damage
-      if (this.sim.ticks % 40 === 0 && Math.random() < this.sandstormIntensity * 0.2) {
+      if (this.sim.ticks % 40 === 0 && this.rng.random() < this.sandstormIntensity * 0.2) {
         this.sim.queuedEvents.push({
           kind: 'damage',
           source: 'sandstorm',

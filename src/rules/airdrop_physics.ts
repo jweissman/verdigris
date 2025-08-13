@@ -13,10 +13,10 @@ export class AirdropPhysics extends Rule {
           // Create whistling wind particles
           this.sim.particles.push({
             pos: { 
-              x: unit.pos.x + (Math.random() - 0.5) * 2, 
-              y: unit.pos.y + (Math.random() - 0.5) * 2 
+              x: unit.pos.x + (this.rng.random() - 0.5) * 2, 
+              y: unit.pos.y + (this.rng.random() - 0.5) * 2 
             },
-            vel: { x: (Math.random() - 0.5) * 0.4, y: 0.8 },
+            vel: { x: (this.rng.random() - 0.5) * 0.4, y: 0.8 },
             radius: 0.5,
             lifetime: 15,
             color: '#AAAAAA',
@@ -84,7 +84,7 @@ export class AirdropPhysics extends Rule {
     // Create dust cloud particle effects
     for (let i = 0; i < 20; i++) {
       const angle = (Math.PI * 2 * i) / 20;
-      const distance = 2 + Math.random() * 3;
+      const distance = 2 + this.rng.random() * 3;
       
       this.sim.particles.push({
         pos: { 
@@ -95,8 +95,8 @@ export class AirdropPhysics extends Rule {
           x: Math.cos(angle) * 0.8, 
           y: Math.sin(angle) * 0.8 
         },
-        radius: 1 + Math.random(),
-        lifetime: 30 + Math.random() * 20,
+        radius: 1 + this.rng.random(),
+        lifetime: 30 + this.rng.random() * 20,
         color: '#8B4513', // Brown dust
         z: 0,
         type: 'debris',

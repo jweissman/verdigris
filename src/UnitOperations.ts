@@ -49,7 +49,7 @@ export class UnitOperations {
       { x: 0, y: 1 },
       { x: 0, y: -1 }
     ];
-    const dir = dirs[Math.floor(Math.random() * dirs.length)];
+    const dir = dirs[Math.floor(Simulator.rng.random() * dirs.length)];
     return {
       ...unit,
       intendedMove: { x: dir.x, y: dir.y }
@@ -115,12 +115,12 @@ export class UnitOperations {
     if (Math.abs(dyRaw) > Math.abs(dxRaw)) {
       dy = dyRaw > 0 ? 1 : -1;
       // Sometimes also move diagonally for more aggressive pathing
-      if (Math.abs(dxRaw) > 0.5 && Math.random() < 0.7) {
+      if (Math.abs(dxRaw) > 0.5 && Simulator.rng.random() < 0.7) {
         dx = dxRaw > 0 ? 1 : -1;
       }
     } else if (Math.abs(dxRaw) > 0) {
       dx = dxRaw > 0 ? 1 : -1;
-      if (Math.abs(dyRaw) > 0.5 && Math.random() < 0.7) {
+      if (Math.abs(dyRaw) > 0.5 && Simulator.rng.random() < 0.7) {
         dy = dyRaw > 0 ? 1 : -1;
       }
     }
@@ -133,7 +133,7 @@ export class UnitOperations {
   }
 
   static swarm(unit: Unit, sim: Simulator): Unit {
-    if (Math.random() < 0.15) {
+    if (Simulator.rng.random() < 0.15) {
       return unit;
     }
 
@@ -159,7 +159,7 @@ export class UnitOperations {
     if (Math.abs(avgY - unit.pos.y) >= 1) dy = avgY > unit.pos.y ? 1 : -1;
     // If both dx and dy are nonzero, pick one randomly for grid movement
     if (dx !== 0 && dy !== 0) {
-      if (Math.random() < 0.5) dy = 0;
+      if (Simulator.rng.random() < 0.5) dy = 0;
       else dx = 0;
     }
     // Fallback: if (0,0), wander

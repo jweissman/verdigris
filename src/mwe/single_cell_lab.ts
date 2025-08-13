@@ -218,8 +218,8 @@ export default class SingleCellLab {
   private spawnTestParticle(type: string) {
     const particle = {
       pos: { 
-        x: this.currentCell.x * 8 + Math.random() * 8, 
-        y: this.currentCell.y * 8 + Math.random() * 8 
+        x: this.currentCell.x * 8 + Simulator.rng.random() * 8, 
+        y: this.currentCell.y * 8 + Simulator.rng.random() * 8 
       },
       vel: { x: 0, y: type === 'rain' ? 1 : 0.5 },
       radius: type === 'lightning' ? 3 : 1.5,
@@ -386,8 +386,8 @@ export default class SingleCellLab {
       // Determine frame based on effect type
       let frame = 0;
       switch(effect.type) {
-        case 'fire': frame = 4 + Math.floor(Math.random() * 7); break;
-        case 'explosion': frame = 11 + Math.floor(Math.random() * 9); break;
+        case 'fire': frame = 4 + Math.floor(Simulator.rng.random() * 7); break;
+        case 'explosion': frame = 11 + Math.floor(Simulator.rng.random() * 9); break;
         case 'ice': frame = 20; break;
       }
       

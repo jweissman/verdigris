@@ -1,4 +1,5 @@
 import { Command, CommandParams } from "../rules/command";
+import { Simulator } from "../core/simulator";
 
 /**
  * ChangeWeather command - changes weather conditions
@@ -26,10 +27,10 @@ export class ChangeWeather extends Command {
             id: `rain_${Date.now()}_${i}`,
             type: 'rain',
             pos: { 
-              x: Math.random() * this.sim.fieldWidth * 8, 
-              y: Math.random() * 10 
+              x: Simulator.rng.random() * this.sim.fieldWidth * 8, 
+              y: Simulator.rng.random() * 10 
             },
-            vel: { x: 0, y: 1 + Math.random() * 2 },
+            vel: { x: 0, y: 1 + Simulator.rng.random() * 2 },
             radius: 1,
             color: '#4488CC',
             lifetime: 100
@@ -61,13 +62,13 @@ export class ChangeWeather extends Command {
             id: `sand_${Date.now()}_${i}`,
             type: 'sand',
             pos: { 
-              x: -5 + Math.random() * (this.sim.fieldWidth + 10) * 8, 
-              y: Math.random() * this.sim.fieldHeight * 8 
+              x: -5 + Simulator.rng.random() * (this.sim.fieldWidth + 10) * 8, 
+              y: Simulator.rng.random() * this.sim.fieldHeight * 8 
             },
-            vel: { x: 2 + Math.random() * 3, y: (Math.random() - 0.5) * 0.5 },
-            radius: 0.5 + Math.random() * 0.5,
+            vel: { x: 2 + Simulator.rng.random() * 3, y: (Simulator.rng.random() - 0.5) * 0.5 },
+            radius: 0.5 + Simulator.rng.random() * 0.5,
             color: '#D2691E',
-            lifetime: 100 + Math.random() * 50
+            lifetime: 100 + Simulator.rng.random() * 50
           });
         }
         
@@ -90,12 +91,12 @@ export class ChangeWeather extends Command {
             id: `leaf_${Date.now()}_${i}`,
             type: 'leaf',
             pos: { 
-              x: Math.random() * this.sim.fieldWidth, 
-              y: Math.random() * this.sim.fieldHeight 
+              x: Simulator.rng.random() * this.sim.fieldWidth, 
+              y: Simulator.rng.random() * this.sim.fieldHeight 
             },
-            vel: { x: Math.random() * 0.2 - 0.1, y: 0.1 + Math.random() * 0.1 },
-            z: 5 + Math.random() * 10,
-            lifetime: 100 + Math.random() * 100,
+            vel: { x: Simulator.rng.random() * 0.2 - 0.1, y: 0.1 + Simulator.rng.random() * 0.1 },
+            z: 5 + Simulator.rng.random() * 10,
+            lifetime: 100 + Simulator.rng.random() * 100,
             radius: 1,
             color: '#8B4513'
           });

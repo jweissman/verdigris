@@ -4,6 +4,7 @@ import { AbilityEffect } from "../types/AbilityEffect";
 import { Ability } from "../types/Ability";
 import { Unit } from "../types/Unit";
 import * as abilitiesJson from '../../data/abilities.json';
+import { Simulator } from '../core/simulator';
 
 export class Abilities extends Rule {
   // @ts-ignore
@@ -258,11 +259,11 @@ export class Abilities extends Rule {
       // Check if it's an array (random selection) or number range
       if (Array.isArray(value.$random)) {
         // Random selection from array
-        return value.$random[Math.floor(Math.random() * value.$random.length)];
+        return value.$random[Math.floor(this.rng.random() * value.$random.length)];
       } else if (value.$random.length === 2 && typeof value.$random[0] === 'number') {
         // Random number range
         const [min, max] = value.$random;
-        return Math.floor(min + Math.random() * (max - min + 1));
+        return Math.floor(min + this.rng.random() * (max - min + 1));
       }
     }
     
@@ -615,8 +616,8 @@ export class Abilities extends Rule {
       ...Encyclopaedia.unit(unitType),
       id: `${unitType}_${caster.id}_${this.sim.ticks}`,
       pos: { 
-        x: pos.x + (Math.random() - 0.5) * 2, 
-        y: pos.y + (Math.random() - 0.5) * 2 
+        x: pos.x + (this.rng.random() - 0.5) * 2, 
+        y: pos.y + (this.rng.random() - 0.5) * 2 
       },
       team: caster.team,
       meta: {
@@ -709,10 +710,10 @@ export class Abilities extends Rule {
             // Visual feedback - dust particles
             for (let i = 0; i < 3; i++) {
               this.sim.particles.push({
-                pos: { x: x + Math.random(), y: y + Math.random() },
-                vel: { x: (Math.random() - 0.5) * 0.2, y: -Math.random() * 0.3 },
-                radius: 0.5 + Math.random() * 0.5,
-                lifetime: 20 + Math.random() * 20,
+                pos: { x: x + this.rng.random(), y: y + this.rng.random() },
+                vel: { x: (this.rng.random() - 0.5) * 0.2, y: -this.rng.random() * 0.3 },
+                radius: 0.5 + this.rng.random() * 0.5,
+                lifetime: 20 + this.rng.random() * 20,
                 color: '#8B4513', // Brown dust
                 type: 'debris' // Use debris for dust/dirt particles
               });
@@ -750,8 +751,8 @@ export class Abilities extends Rule {
         particles.push({
           id: `entangle_${caster.id}_${this.sim.ticks}_${i}`,
           pos: { 
-            x: target.pos.x + (Math.random() - 0.5) * radius, 
-            y: target.pos.y + (Math.random() - 0.5) * radius 
+            x: target.pos.x + (this.rng.random() - 0.5) * radius, 
+            y: target.pos.y + (this.rng.random() - 0.5) * radius 
           },
           vel: { x: 0, y: 0 },
           ttl: duration,
@@ -1014,8 +1015,8 @@ export class Abilities extends Rule {
       this.sim.particles.push({
         id: `tame_${caster.id}_${this.sim.ticks}_${i}`,
         pos: { 
-          x: actualTarget.pos.x + (Math.random() - 0.5) * 2, 
-          y: actualTarget.pos.y + (Math.random() - 0.5) * 2 
+          x: actualTarget.pos.x + (this.rng.random() - 0.5) * 2, 
+          y: actualTarget.pos.y + (this.rng.random() - 0.5) * 2 
         },
         vel: { x: 0, y: -0.1 },
         radius: 0.3,
@@ -1089,17 +1090,17 @@ export class Abilities extends Rule {
     for (let i = 0; i < count; i++) {
       this.sim.particles.push({
         pos: { 
-          x: pos.x + (Math.random() - 0.5) * 2, 
-          y: pos.y + (Math.random() - 0.5) * 2 
+          x: pos.x + (this.rng.random() - 0.5) * 2, 
+          y: pos.y + (this.rng.random() - 0.5) * 2 
         },
         vel: { 
-          x: (Math.random() - 0.5) * 0.2, 
-          y: (Math.random() - 0.5) * 0.2 
+          x: (this.rng.random() - 0.5) * 0.2, 
+          y: (this.rng.random() - 0.5) * 0.2 
         },
-        ttl: lifetime + Math.random() * 10,
+        ttl: lifetime + this.rng.random() * 10,
         color: color,
         type: (effect as any).particleType || 'generic',
-        size: 0.3 + Math.random() * 0.2,
+        size: 0.3 + this.rng.random() * 0.2,
         radius: 1,
         lifetime
       });

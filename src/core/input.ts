@@ -122,8 +122,8 @@ export default class Input {
 
   randomGridPosition(): { x: number, y: number } {
     return {
-      x: Math.floor(Math.random() * this.sim.fieldWidth),
-      y: Math.floor(Math.random() * this.sim.fieldHeight)
+      x: Math.floor(Simulator.rng.random() * this.sim.fieldWidth),
+      y: Math.floor(Simulator.rng.random() * this.sim.fieldHeight)
     };
   }
 }

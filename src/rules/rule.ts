@@ -1,4 +1,4 @@
-import type { Simulator } from "../core/simulator";
+import { Simulator } from "../core/simulator";
 import type { Unit } from "../types/Unit";
 
 export abstract class Rule {
@@ -8,6 +8,8 @@ export abstract class Rule {
     this.simulator = simulator;
   }
 
+  get rng() { return Simulator.rng }
+ 
   execute(): void {
     this.apply();
   }

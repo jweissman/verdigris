@@ -237,7 +237,7 @@ export class RopeClimbing extends Rule {
       if (this.sim.ticks % 3 === 0) {
         this.sim.particles.push({
           pos: { x: unit.pos.x * 8, y: unit.pos.y * 8 },
-          vel: { x: Math.random() * 2 - 1, y: Math.random() * 2 - 1 },
+          vel: { x: this.rng.random() * 2 - 1, y: this.rng.random() * 2 - 1 },
           radius: 1,
           color: '#888888',
           lifetime: 8,

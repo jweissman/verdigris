@@ -72,7 +72,7 @@ export class Perdurance extends Rule {
         if (damageAspect === 'radiant') return false; // Allow radiant damage  
         if (damageAspect === 'physical' || !damageAspect) {
           // 50% chance to resist physical damage
-          return Math.random() < 0.5;
+          return this.rng.random() < 0.5;
         }
         return false; // Allow other damage
 

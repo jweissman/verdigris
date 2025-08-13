@@ -76,14 +76,14 @@ export class Airdrop extends Command {
     for (let i = 0; i < 12; i++) {
       this.sim.particles.push({
         pos: { 
-          x: x + (Math.random() - 0.5) * 3, 
-          y: Math.random() * 10 // Spread across upper atmosphere
+          x: x + (Simulator.rng.random() - 0.5) * 3, 
+          y: Simulator.rng.random() * 10 // Spread across upper atmosphere
         },
-        vel: { x: (Math.random() - 0.5) * 0.3, y: 0.6 },
-        radius: 1.5 + Math.random(),
-        lifetime: 40 + Math.random() * 20,
+        vel: { x: (Simulator.rng.random() - 0.5) * 0.3, y: 0.6 },
+        radius: 1.5 + Simulator.rng.random(),
+        lifetime: 40 + Simulator.rng.random() * 20,
         color: '#666666', // Dark smoke
-        z: 15 + Math.random() * 5,
+        z: 15 + Simulator.rng.random() * 5,
         type: 'debris', // Use existing fire particle renderer for smoke
         landed: false
       });

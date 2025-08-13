@@ -1,5 +1,6 @@
 import { Abilities } from "../rules/abilities";
 import { Unit } from "../types/Unit";
+import { Simulator } from "../core/simulator";
 import View from "./view";
 
 export default class CinematicView extends View {
@@ -574,7 +575,7 @@ export default class CinematicView extends View {
     this.ctx.fill();
     
     // Add flickering white-hot center for larger sparks
-    if (sparkSize > 1 && Math.random() < 0.7) {
+    if (sparkSize > 1 && Simulator.rng.random() < 0.7) {
       this.ctx.globalAlpha = alpha * 0.8;
       this.ctx.fillStyle = '#FFFFFF';
       this.ctx.beginPath();

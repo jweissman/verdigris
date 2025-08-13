@@ -1,4 +1,5 @@
 import { Command, CommandParams } from "../rules/command";
+import { Simulator } from "../core/simulator";
 
 /**
  * Temperature command - sets temperature at a position or globally
@@ -46,7 +47,7 @@ export class Temperature extends Command {
       for (let fx = 0; fx < this.sim.fieldWidth; fx++) {
         for (let fy = 0; fy < this.sim.fieldHeight; fy++) {
           // Add some variation for realism
-          const variation = (Math.random() - 0.5) * 4; // ±2°C variation
+          const variation = (Simulator.rng.random() - 0.5) * 4; // ±2°C variation
           const finalTemp = amount + variation;
           
           this.sim.temperatureField.set(fx, fy, finalTemp);

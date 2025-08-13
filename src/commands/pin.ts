@@ -1,4 +1,5 @@
 import { Command, CommandParams } from "../rules/command";
+import { Simulator } from "../core/simulator";
 
 /**
  * Pin command - reinforces grapple to fully pin target
@@ -111,9 +112,9 @@ export class Pin extends Command {
     for (let i = 0; i < 8; i++) {
       this.sim.particles.push({
         pos: { x: targetX * 8 + 4, y: targetY * 8 + 4 },
-        vel: { x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2 },
-        radius: 0.5 + Math.random() * 0.5,
-        lifetime: 20 + Math.random() * 10,
+        vel: { x: (Simulator.rng.random() - 0.5) * 2, y: (Simulator.rng.random() - 0.5) * 2 },
+        radius: 0.5 + Simulator.rng.random() * 0.5,
+        lifetime: 20 + Simulator.rng.random() * 10,
         color: '#FF6600',
         type: 'pin'
       });

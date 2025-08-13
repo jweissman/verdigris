@@ -52,7 +52,7 @@ export class UnitMovement extends Rule {
           }
           // Swarm behavior - use cached ally data
           else if (unit.tags.includes('swarm')) {
-            if (Simulator.rng.random() < 0.15) {
+            if (this.rng.random() < 0.15) {
               // Sometimes don't move (15% chance)
               intendedMove = { x: 0, y: 0 };
             } else {
@@ -88,7 +88,7 @@ export class UnitMovement extends Rule {
                   
                   // Pick one direction for grid movement
                   if (dx !== 0 && dy !== 0) {
-                    if (Math.random() < 0.5) dy = 0;
+                    if (this.rng.random() < 0.5) dy = 0;
                     else dx = 0;
                   }
                   

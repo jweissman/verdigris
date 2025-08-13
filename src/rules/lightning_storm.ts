@@ -1,5 +1,5 @@
 import { Rule } from './rule';
-import type { Simulator } from '../core/simulator';
+import { Simulator } from '../core/simulator';
 import { Vec2 } from '../types/Vec2';
 // Position type removed - use Vec2 instead
 
@@ -21,7 +21,7 @@ export class LightningStorm extends Rule {
       this.lastStrikeTime = this.simulator.ticks;
       
       // Vary the cooldown for dramatic effect (6-12 ticks)
-      this.strikeCooldown = 6 + Math.random() * 6;
+      this.strikeCooldown = 6 + this.rng.random() * 6;
     }
 
     // Update existing lightning particles
@@ -31,8 +31,8 @@ export class LightningStorm extends Rule {
   public generateLightningStrike(targetPos?: Vec2): void {
     // Use specified position or pick random strike location
     const strikePos = targetPos || {
-      x: Math.floor(Math.random() * this.simulator.fieldWidth),
-      y: Math.floor(Math.random() * this.simulator.fieldHeight)
+      x: Math.floor(this.rng.random() * this.simulator.fieldWidth),
+      y: Math.floor(this.rng.random() * this.simulator.fieldHeight)
     };
 
     this.createLightningVisuals(strikePos);
@@ -48,19 +48,19 @@ export class LightningStorm extends Rule {
     // Main lightning bolt - vertical streak
     for (let i = 0; i < 8; i++) {
       this.simulator.particles.push({
-        pos: { x: pixelX + (Math.random() - 0.5) * 3, y: pixelY - i * 4 },
+        pos: { x: pixelX + (this.rng.random() - 0.5) * 3, y: pixelY - i * 4 },
         vel: { x: 0, y: 0 },
-        radius: 1 + Math.random() * 2,
+        radius: 1 + this.rng.random() * 2,
         color: i < 2 ? '#FFFFFF' : (i < 4 ? '#CCCCFF' : '#8888FF'),
-        lifetime: 8 + Math.random() * 4, // Brief but intense
+        lifetime: 8 + this.rng.random() * 4, // Brief but intense
         type: 'lightning'
       });
     }
 
     // Lightning branches - jagged extensions
     for (let branch = 0; branch < 4; branch++) {
-      const branchAngle = Math.random() * Math.PI * 2;
-      const branchLength = 2 + Math.random() * 3;
+      const branchAngle = this.rng.random() * Math.PI * 2;
+      const branchLength = 2 + this.rng.random() * 3;
       
       for (let i = 0; i < branchLength; i++) {
         this.simulator.particles.push({
@@ -69,9 +69,9 @@ export class LightningStorm extends Rule {
             y: pixelY + Math.sin(branchAngle) * i * 8
           },
           vel: { x: 0, y: 0 },
-          radius: 0.5 + Math.random(),
+          radius: 0.5 + this.rng.random(),
           color: '#AAAAFF',
-          lifetime: 6 + Math.random() * 3,
+          lifetime: 6 + this.rng.random() * 3,
           type: 'lightning_branch'
         });
       }
@@ -82,12 +82,12 @@ export class LightningStorm extends Rule {
       this.simulator.particles.push({
         pos: { x: pixelX, y: pixelY },
         vel: { 
-          x: (Math.random() - 0.5) * 2,
-          y: (Math.random() - 0.5) * 2
+          x: (this.rng.random() - 0.5) * 2,
+          y: (this.rng.random() - 0.5) * 2
         },
         radius: 0.5,
         color: '#CCCCFF',
-        lifetime: 15 + Math.random() * 10,
+        lifetime: 15 + this.rng.random() * 10,
         type: 'electric_spark'
       });
     }
@@ -174,7 +174,7 @@ export class LightningStorm extends Rule {
     // Thunder rumble - expanding energy ring
     for (let i = 0; i < 16; i++) {
       const angle = (i / 16) * Math.PI * 2;
-      const radius = 2 + Math.random();
+      const radius = 2 + this.rng.random();
       
       this.simulator.particles.push({
         pos: { x: pixelX, y: pixelY },
@@ -184,7 +184,7 @@ export class LightningStorm extends Rule {
         },
         radius: radius,
         color: '#444488',
-        lifetime: 20 + Math.random() * 15,
+        lifetime: 20 + this.rng.random() * 15,
         type: 'thunder_ring'
       });
     }
@@ -193,13 +193,13 @@ export class LightningStorm extends Rule {
     for (let i = 0; i < 6; i++) {
       this.simulator.particles.push({
         pos: { 
-          x: pixelX + (Math.random() - 0.5) * 16,
-          y: pixelY + (Math.random() - 0.5) * 16
+          x: pixelX + (this.rng.random() - 0.5) * 16,
+          y: pixelY + (this.rng.random() - 0.5) * 16
         },
         vel: { x: 0, y: -0.1 },
         radius: 1,
         color: '#6666AA',
-        lifetime: 40 + Math.random() * 20,
+        lifetime: 40 + this.rng.random() * 20,
         type: 'ozone'
       });
     }
@@ -226,13 +226,13 @@ export class LightningStorm extends Rule {
     for (let i = 0; i < 8; i++) {
       sim.particles.push({
         pos: { 
-          x: Math.random() * sim.fieldWidth * 8,
-          y: Math.random() * sim.fieldHeight * 8
+          x: Simulator.rng.random() * sim.fieldWidth * 8,
+          y: Simulator.rng.random() * sim.fieldHeight * 8
         },
-        vel: { x: (Math.random() - 0.5) * 0.2, y: -0.1 },
+        vel: { x: (Simulator.rng.random() - 0.5) * 0.2, y: -0.1 },
         radius: 0.5,
         color: '#333366',
-        lifetime: 120 + Math.random() * 60,
+        lifetime: 120 + Simulator.rng.random() * 60,
         type: 'storm_cloud'
       });
     }

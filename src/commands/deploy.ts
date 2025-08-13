@@ -1,4 +1,5 @@
 import { Command, CommandParams } from "../rules/command";
+import { Simulator } from "../core/simulator";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
 /**
@@ -46,8 +47,8 @@ export class Deploy extends Command {
         return;
       }
     } else {
-      deployX = Math.floor(Math.random() * this.sim.fieldWidth);
-      deployY = Math.floor(Math.random() * this.sim.fieldHeight);
+      deployX = Math.floor(Simulator.rng.random() * this.sim.fieldWidth);
+      deployY = Math.floor(Simulator.rng.random() * this.sim.fieldHeight);
     }
     
     try {
