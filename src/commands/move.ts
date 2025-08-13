@@ -28,13 +28,13 @@ export class MoveCommand extends Command {
       let effectiveDx = dx;
       let effectiveDy = dy;
       
-      if (unit.meta?.chilled) {
+      if (unit.meta.chilled) {
         const slowFactor = 1 - (unit.meta.chillIntensity || 0.5);
         effectiveDx *= slowFactor;
         effectiveDy *= slowFactor;
       }
       
-      if (unit.meta?.stunned) {
+      if (unit.meta.stunned) {
         effectiveDx = 0;
         effectiveDy = 0;
       }
@@ -48,8 +48,8 @@ export class MoveCommand extends Command {
     newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, newY));
     
     // Determine facing (but don't change facing for physics movement)
-    let facing = unit.meta?.facing || 'right';
-    if (!unit.meta?.jumping && !unit.meta?.tossing && params.dx !== undefined) {
+    let facing = unit.meta.facing || 'right';
+    if (!unit.meta.jumping && !unit.meta.tossing && params.dx !== undefined) {
       const dx = params.dx as number;
       if (dx > 0) {
         facing = 'right';

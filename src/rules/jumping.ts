@@ -6,7 +6,7 @@ export class Jumping extends Rule {
   apply(): void {
     const units = this.sim.units;
     for (const unit of units) {
-      if (unit.meta?.jumping) {
+      if (unit.meta.jumping) {
         this.updateJump(unit);
       }
     }

@@ -4,7 +4,7 @@ export class AirdropPhysics extends Rule {
   apply = (): void => {
     // Handle units that are currently dropping from the sky
     this.sim.units.forEach(unit => {
-      if (unit.meta?.dropping && unit.meta?.z > 0) {
+      if (unit.meta.dropping && unit.meta.z > 0) {
         // Unit is falling - update altitude
         const newZ = unit.meta.z - (unit.meta.dropSpeed || 0.5);
         

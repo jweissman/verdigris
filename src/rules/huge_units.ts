@@ -99,7 +99,8 @@ export class HugeUnits extends Rule {
     this.sim.units
       .filter(unit => unit.meta.phantom && unit.meta.parentId)
       .forEach(phantom => {
-        const parentId = phantom.meta.parentId!;
+        const meta = phantom.meta || {};
+        const parentId = meta.parentId!;
         if (!pairs.has(parentId)) {
           pairs.set(parentId, []);
         }
@@ -115,11 +116,12 @@ export class HugeUnits extends Rule {
   }
 
   private cleanupOrphanedPhantoms() {
-    const orphanedPhantoms = this.sim.units.filter(unit => 
-      unit.meta.phantom && 
-      unit.meta.parentId &&
-      !this.sim.units.some(parent => parent.id === unit.meta.parentId)
-    );
+    const orphanedPhantoms = this.sim.units.filter(unit => {
+      const meta = unit.meta || {};
+      return meta.phantom && 
+             meta.parentId &&
+             !this.sim.units.some(parent => parent.id === meta.parentId);
+    });
 
     // Queue commands to remove orphaned phantoms
     for (const phantom of orphanedPhantoms) {

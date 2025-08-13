@@ -15,43 +15,29 @@ export class UpdateTossCommand extends Command {
     
     if (!targetId) return;
     
-    this.transform.mapUnits(unit => {
-      if (unit.id === targetId) {
-        if (complete) {
-          // Toss completed
-          return {
-            ...unit,
-            pos: { 
-              x: params.targetX as number, 
-              y: params.targetY as number 
-            },
-            meta: {
-              ...unit.meta,
-              tossing: false,
-              tossProgress: undefined,
-              tossOrigin: undefined,
-              tossTarget: undefined,
-              tossForce: undefined,
-              z: 0
-            }
-          };
-        } else {
-          // Update toss progress
-          return {
-            ...unit,
-            pos: { 
-              x: params.x as number, 
-              y: params.y as number 
-            },
-            meta: {
-              ...unit.meta,
-              tossProgress: params.progress as number,
-              z: params.z as number
-            }
-          };
-        }
+    const targetUnit = this.sim.units.find(u => u.id === targetId);
+    if (targetUnit) {
+      if (complete) {
+        // Toss completed
+        targetUnit.pos = { 
+          x: params.targetX as number, 
+          y: params.targetY as number 
+        };
+        targetUnit.meta.tossing = false;
+        targetUnit.meta.tossProgress = undefined;
+        targetUnit.meta.tossOrigin = undefined;
+        targetUnit.meta.tossTarget = undefined;
+        targetUnit.meta.tossForce = undefined;
+        targetUnit.meta.z = 0;
+      } else {
+        // Update toss progress
+        targetUnit.pos = { 
+          x: params.x as number, 
+          y: params.y as number 
+        };
+        targetUnit.meta.tossProgress = params.progress as number;
+        targetUnit.meta.z = params.z as number;
       }
-      return unit;
-    });
+    }
   }
 }

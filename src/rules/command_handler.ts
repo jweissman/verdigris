@@ -32,6 +32,7 @@ import { GuardCommand } from "../commands/guard";
 import { FaceCommand } from "../commands/face";
 import { ForcesCommand } from "../commands/forces";
 import { AICommand } from "../commands/ai";
+import { SimulateCommand } from "../commands/simulate";
 
 export type QueuedCommand = {
   type: string;
@@ -95,6 +96,7 @@ export class CommandHandler extends Rule {
     // Higher-order bulk commands for performance
     this.commands.set('forces', new ForcesCommand(sim, this.transform));
     this.commands.set('ai', new AICommand(sim, this.transform));
+    this.commands.set('simulate', new SimulateCommand(sim, this.transform));
   }
 
   apply = () => {
@@ -204,7 +206,7 @@ export class CommandHandler extends Rule {
         // Log command counts if profiling enabled
         if (this.sim.enableProfiling && Object.keys(commandCounts).length > 0) {
           const total = Object.values(commandCounts).reduce((a, b) => a + b, 0);
-          if (total > 50) { // Only log if many commands
+          if (total > 0) { // Always log when profiling
             console.log(`[Step ${this.sim.ticks}] Processed ${total} commands:`, JSON.stringify(commandCounts));
           }
         }
@@ -354,15 +356,13 @@ export class CommandHandler extends Rule {
    * Vectorized movement processing for massive performance gains
    */
   private processMovementsBatch(moveBatch: { [unitId: string]: any }): void {
-    // Sync units to SoA for vectorized processing
-    this.sim.syncUnitsToArrays();
     const arrays = this.sim.unitArrays;
     
     // Build unit ID to index lookup
     const idToIndex = new Map<string, number>();
-    for (let i = 0; i < arrays.activeCount; i++) {
-      if (arrays.active[i] && arrays.units[i]) {
-        idToIndex.set(arrays.units[i].id, i);
+    for (let i = 0; i < arrays.capacity; i++) {
+      if (arrays.active[i] && arrays.unitIds[i]) {
+        idToIndex.set(arrays.unitIds[i], i);
       }
     }
     
@@ -397,7 +397,6 @@ export class CommandHandler extends Rule {
       arrays.intendedMoveY[index] = 0;
     }
     
-    // Sync positions back to unit objects
-    this.sim.syncPositionsFromArrays();
+    // No need to sync - positions are already in arrays
   }
 }

@@ -14,14 +14,6 @@ export class Kill extends Command {
     
     if (!targetId) return;
     
-    this.transform.mapUnits(unit => {
-      if (unit.id === targetId) {
-        return {
-          ...unit,
-          state: 'dead'
-        };
-      }
-      return unit;
-    });
+    this.transform.updateUnit(targetId, { state: 'dead' });
   }
 }

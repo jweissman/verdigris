@@ -27,18 +27,15 @@ export class KnockbackCommand extends Command {
       // Force-based knockback
       const force = params.force as { x: number; y: number };
       
-      this.transform.mapUnits(unit => {
-        if (unit.id === targetId) {
-          return {
-            ...unit,
-            pos: {
-              x: unit.pos.x + force.x,
-              y: unit.pos.y + force.y
-            }
-          };
-        }
-        return unit;
-      });
+      // Find the target unit and update its position
+      const targetUnit = this.sim.units.find(u => u.id === targetId);
+      if (targetUnit) {
+        const newPos = {
+          x: targetUnit.pos.x + force.x,
+          y: targetUnit.pos.y + force.y
+        };
+        this.transform.updateUnit(targetId, { pos: newPos });
+      }
     }
   }
 }

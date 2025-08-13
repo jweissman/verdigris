@@ -49,7 +49,7 @@ export class PullCommand extends Command {
     // Massive units (>30 mass) can't be pulled
     const targetIsImmovable = targetMass > 30;
     
-    if (target.meta?.pinned || targetIsImmovable) {
+    if (target.meta.pinned || targetIsImmovable) {
       // Only grappler moves
       const grapplerPull = force * 2; // Double force when target is immovable
       this.transform.updateUnit(grapplerId, {

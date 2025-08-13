@@ -6,7 +6,7 @@ export class Tossing extends Rule {
     // Process tossing for each unit
     const units = this.sim.units;
     for (const unit of units) {
-      if (unit.meta?.tossing) {
+      if (unit.meta.tossing) {
         this.processToss(unit as Unit);
       }
     }

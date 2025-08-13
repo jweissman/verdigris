@@ -8,7 +8,7 @@ export class MeleeCombat extends Rule {
   apply = () => {
     // Reset attack states for units that haven't attacked recently
     for (const unit of this.sim.units) {
-      if (unit.state === 'attack' && unit.meta?.lastAttacked) {
+      if (unit.state === 'attack' && unit.meta.lastAttacked) {
         const ticksSinceAttack = this.sim.ticks - unit.meta.lastAttacked;
         if (ticksSinceAttack > 2) { // Reset after 2 ticks of no attacks
           this.sim.queuedCommands.push({
@@ -63,12 +63,12 @@ export class MeleeCombat extends Rule {
       
       // Skip invalid attackers
       if (attacker.hp <= 0) return;
-      if (attacker.meta?.jumping) return;
+      if (attacker.meta.jumping) return;
       if (attacker.tags?.includes('noncombatant')) return;
       
       // Skip invalid targets
       if (target.hp <= 0) return;
-      if (target.meta?.jumping) return;
+      if (target.meta.jumping) return;
       if (target.tags?.includes('noncombatant')) return;
       
       // Only attack enemies

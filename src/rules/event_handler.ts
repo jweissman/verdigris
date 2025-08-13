@@ -17,7 +17,7 @@ export class EventHandler extends Rule {
       },
       damage: e => `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage (now at ${targetUnit?.hp} hp)`,
       heal: e => `${e.source} healed ${e.target} for ${e.meta.amount} (now at ${targetUnit?.hp} hp)`,
-      terrain: e => `${e.source} modified terrain at (${e.target?.x}, ${e.target?.y}): ${e.meta?.terrainType}`,
+      terrain: e => `${e.source} modified terrain at (${e.target?.x}, ${e.target?.y}): ${e.meta.terrainType}`,
     })
     if (!tx.hasOwnProperty(event.kind)) {
       // console.warn(`No translation for event kind: ${event.kind}`);
@@ -66,7 +66,7 @@ export class EventHandler extends Rule {
     // Keep only recent processed events (last 60 ticks for example)
     const maxHistoryTicks = 60;
     this.sim.processedEvents = this.sim.processedEvents.filter(e => 
-      e.meta?.tick && (this.sim.ticks - e.meta.tick) < maxHistoryTicks
+      e.meta.tick && (this.sim.ticks - e.meta.tick) < maxHistoryTicks
     );
     
     // Clear events after processing
@@ -79,7 +79,7 @@ export class EventHandler extends Rule {
       return;
     }
 
-    if (!event.meta?.unit) {
+    if (!event.meta.unit) {
       console.warn('Spawn event missing unit data');
       return;
     }
@@ -253,14 +253,14 @@ export class EventHandler extends Rule {
       type: 'knockback',
       params: {
         targetId: event.target,
-        force: event.meta?.force || { x: 0, y: 0 }
+        force: event.meta.force || { x: 0, y: 0 }
       }
     });
   }
   
   private handleTerrain(event: Action) {
     // Handle terrain modification events
-    const terrainType = event.meta?.terrainType;
+    const terrainType = event.meta.terrainType;
     const position = event.target as Vec2;
     
     if (!position || typeof position !== 'object' || !('x' in position && 'y' in position)) {
@@ -272,8 +272,8 @@ export class EventHandler extends Rule {
     // Apply terrain effects
     if (terrainType === 'trench') {
       // Add defensive bonus to units in this position
-      const defenseBonus = event.meta?.defenseBonus || 0.5;
-      const movementPenalty = event.meta?.movementPenalty || 0.3;
+      const defenseBonus = event.meta.defenseBonus || 0.5;
+      const movementPenalty = event.meta.movementPenalty || 0.3;
       
       // Find units at this position and apply effects
       const unitsAtPosition = this.sim.units.filter(u => 
@@ -297,7 +297,7 @@ export class EventHandler extends Rule {
       
       // TODO: Store terrain modifications in a persistent map/grid
       // For now, just log that the terrain was modified
-      console.log(`Trench dug at (${position.x}, ${position.y}) with defense bonus ${defenseBonus}`);
+      // console.log(`Trench dug at (${position.x}, ${position.y}) with defense bonus ${defenseBonus}`);
     }
   }
 }

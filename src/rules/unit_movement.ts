@@ -6,16 +6,14 @@ import { Simulator } from "../core/simulator";
 export class UnitMovement extends Rule {
   static wanderRate: number = 0.15; // Slower, more deliberate movement
   apply = () => {
-    // Use bulk forces command in performance mode
-    if (this.sim.performanceMode && this.sim.units.length > 10) {
-      this.sim.queuedCommands.push({
-        type: 'forces',
-        params: {}
-      });
-      return;
-    }
+    // Always use bulk forces command for consistent behavior
+    this.sim.queuedCommands.push({
+      type: 'forces',
+      params: {}
+    });
+    return;
     
-    // Traditional individual command processing
+    // REMOVED: Traditional individual command processing - keeping code below for reference but unreachable
     for (let unit of this.sim.units) {
       if (unit.hp <= 0) {
         // Queue command to mark as dead
@@ -29,7 +27,7 @@ export class UnitMovement extends Rule {
 
       if (unit.state !== 'dead') {
         // Skip movement for jumping units - they're following a ballistic trajectory
-        if (unit.meta?.jumping) continue;
+        if (unit.meta.jumping) continue;
         
         // Calculate intended movement based on AI behaviors
         let intendedMove = unit.intendedMove || { x: 0, y: 0 };
@@ -179,6 +177,52 @@ export class UnitMovement extends Rule {
 
     UnitMovement.resolveCollisions(this.sim);
   }
+  
+  private applyBulkMovement(): void {
+    // Process all movement in a single pass without commands
+    const units = this.sim.units as Unit[];
+    
+    // First mark dead units
+    for (const unit of units) {
+      if (unit.hp <= 0 && unit.state !== 'dead') {
+        unit.state = 'dead';
+      }
+    }
+    
+    // Then apply all movements directly
+    for (const unit of units) {
+      if (unit.state === 'dead' || unit.meta.jumping) continue;
+      
+      const intendedMove = unit.intendedMove;
+      if (!intendedMove || (intendedMove.x === 0 && intendedMove.y === 0)) continue;
+      
+      // Check if movement is valid
+      const newX = unit.pos.x + intendedMove.x;
+      const newY = unit.pos.y + intendedMove.y;
+      
+      // Boundary check
+      if (newX < 0 || newX >= this.sim.fieldWidth || newY < 0 || newY >= this.sim.fieldHeight) {
+        continue;
+      }
+      
+      // For huge units, check all body positions
+      if (unit.meta.huge) {
+        if (!this.canHugeUnitMove(unit, intendedMove.x, intendedMove.y)) {
+          continue;
+        }
+      }
+      
+      // Apply the movement directly
+      unit.pos.x = newX;
+      unit.pos.y = newY;
+      
+      // Mark as dirty for rendering
+      this.sim.markDirty(unit.id);
+    }
+    
+    // Resolve any collisions that occurred
+    UnitMovement.resolveCollisions(this.sim);
+  }
 
   private canHugeUnitMove(unit: Unit, dx: number, dy: number): boolean {
     // Check if all body cells of a huge unit can move to their new positions
@@ -223,14 +267,24 @@ export class UnitMovement extends Rule {
     UnitMovement.resolveCollisionsTraditional(sim);
   }
   
-  // Vectorized collision resolution using SoA
+  // Vectorized collision resolution using SoA - OPTIMIZED with spatial grid
   private static resolveCollisionsSoA(sim: Simulator) {
     // Sync to SoA for vectorized processing
-    sim.syncUnitsToArrays();
     const arrays = sim.unitArrays;
+    
+    // Build spatial grid for O(1) collision checks
+    const spatialGrid = new Map<string, number>();
+    for (let i = 0; i < arrays.activeCount; i++) {
+      if (arrays.active[i] === 0 || arrays.state[i] === 3) continue;
+      const key = `${Math.floor(arrays.posX[i])},${Math.floor(arrays.posY[i])}`;
+      spatialGrid.set(key, i); // Only store one unit per cell for simplicity
+    }
     
     // Use SoA collision detection (much faster)
     const collisions = arrays.detectCollisions(1.0);
+    
+    // Batch all displacements to apply at once
+    const displacements = new Float32Array(arrays.capacity * 2);
     
     // Process each collision pair
     for (const [i, j] of collisions) {
@@ -242,116 +296,128 @@ export class UnitMovement extends Rule {
       const priorityJ = arrays.mass[j] * 10 + arrays.hp[j];
       
       const displacedIndex = priorityI > priorityJ ? j : i;
-      const stableIndex = priorityI > priorityJ ? i : j;
+      
+      // Skip if already displaced
+      if (displacements[displacedIndex * 2] !== 0 || displacements[displacedIndex * 2 + 1] !== 0) continue;
       
       // Find displacement for lower priority unit
-      const x = arrays.posX[displacedIndex];
-      const y = arrays.posY[displacedIndex];
+      const x = Math.floor(arrays.posX[displacedIndex]);
+      const y = Math.floor(arrays.posY[displacedIndex]);
       
-      const displacements = [
+      const dirs = [
         [1, 0], [-1, 0], [0, 1], [0, -1],
         [1, 1], [-1, -1], [1, -1], [-1, 1]
       ];
       
-      for (const [dx, dy] of displacements) {
+      for (const [dx, dy] of dirs) {
         const newX = x + dx;
         const newY = y + dy;
         
         // Boundary check
         if (newX < 0 || newX >= sim.fieldWidth || newY < 0 || newY >= sim.fieldHeight) continue;
         
-        // Quick collision check using SoA
-        let collision = false;
-        for (let k = 0; k < arrays.activeCount; k++) {
-          if (arrays.active[k] === 0 || k === displacedIndex) continue;
-          const dist = Math.abs(arrays.posX[k] - newX) + Math.abs(arrays.posY[k] - newY);
-          if (dist < 1.0) {
-            collision = true;
-            break;
-          }
-        }
-        
-        if (!collision) {
-          // Queue displacement command
-          const unit = arrays.units[displacedIndex];
-          if (unit) {
-            sim.queuedCommands.push({
-              type: 'move',
-              params: {
-                unitId: unit.id,
-                dx: dx,
-                dy: dy
-              }
-            });
-          }
+        // O(1) collision check using spatial grid
+        const key = `${newX},${newY}`;
+        if (!spatialGrid.has(key)) {
+          // Found free space - record displacement
+          displacements[displacedIndex * 2] = dx;
+          displacements[displacedIndex * 2 + 1] = dy;
+          spatialGrid.set(key, displacedIndex); // Reserve this spot
           break;
+        }
+      }
+    }
+    
+    // Apply all displacements in a single vectorized batch
+    const moveCommand = sim.rulebook.find(r => r.constructor.name === 'CommandHandler')?.commands?.get('move');
+    if (moveCommand) {
+      for (let i = 0; i < arrays.activeCount; i++) {
+        const dx = displacements[i * 2];
+        const dy = displacements[i * 2 + 1];
+        if (dx !== 0 || dy !== 0) {
+          // Direct execution to avoid command queue overhead
+          arrays.posX[i] += dx;
+          arrays.posY[i] += dy;
+          // No need to update unit position - proxy will read from arrays
         }
       }
     }
   }
   
-  // Traditional collision resolution (fallback)
+  // Traditional collision resolution - OPTIMIZED
   private static resolveCollisionsTraditional(sim: Simulator) {
-    // Build fresh collision map from current unit positions
-    const collisionMap: { [key: string]: Unit[] } = {};
+    // Build spatial hash for O(1) lookups
+    const spatialHash = new Map<string, Unit>();
+    const collisions: Unit[][] = [];
     
+    // Single pass to detect collisions
     for (const unit of sim.units) {
       if (unit.state === 'dead') continue;
-      const posKey = `${Math.round(unit.pos.x)},${Math.round(unit.pos.y)}`;
-      if (!collisionMap[posKey]) collisionMap[posKey] = [];
-      collisionMap[posKey].push(unit);
+      const key = `${Math.floor(unit.pos.x)},${Math.floor(unit.pos.y)}`;
+      
+      const existing = spatialHash.get(key);
+      if (existing) {
+        // Collision detected - add to list
+        let found = false;
+        for (const group of collisions) {
+          if (group.includes(existing)) {
+            group.push(unit);
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          collisions.push([existing, unit]);
+        }
+      } else {
+        spatialHash.set(key, unit);
+      }
     }
     
-    // Process collisions efficiently without redundant validMove calls
-    for (const posKey in collisionMap) {
-      const unitsAtPos = collisionMap[posKey];
-      if (unitsAtPos.length <= 1) continue;
-      
-      // Sort by priority: higher mass and hp units stay
-      unitsAtPos.sort((a, b) => {
-        const massDiff = (b.mass || 1) - (a.mass || 1);
-        if (massDiff !== 0) return massDiff;
-        const hpDiff = b.hp - a.hp;
-        if (hpDiff !== 0) return hpDiff;
-        return String(a.id).localeCompare(String(b.id));
+    // Batch all move commands
+    const moves: Array<{unitId: string, dx: number, dy: number}> = [];
+    
+    // Process collision groups
+    for (const group of collisions) {
+      // Sort by priority once
+      group.sort((a, b) => {
+        const priorityA = (a.mass || 1) * 10 + a.hp;
+        const priorityB = (b.mass || 1) * 10 + b.hp;
+        return priorityB - priorityA;
       });
       
-      // Displace lower-priority units with minimal validation
-      for (let i = 1; i < unitsAtPos.length; i++) {
-        const unit = unitsAtPos[i];
-        const [x, y] = posKey.split(',').map(Number);
+      // Displace all but the highest priority
+      for (let i = 1; i < group.length; i++) {
+        const unit = group[i];
+        const x = Math.floor(unit.pos.x);
+        const y = Math.floor(unit.pos.y);
         
-        // Try displacement directions efficiently
-        const displacements = [
-          [1, 0], [-1, 0], [0, 1], [0, -1],
-          [1, 1], [-1, -1], [1, -1], [-1, 1]
-        ];
-        
-        for (const [dx, dy] of displacements) {
+        // Try each direction
+        const dirs = [[1,0], [-1,0], [0,1], [0,-1], [1,1], [-1,-1], [1,-1], [-1,1]];
+        for (const [dx, dy] of dirs) {
           const newX = x + dx;
           const newY = y + dy;
           
-          // Quick boundary check
+          // Boundary check
           if (newX < 0 || newX >= sim.fieldWidth || newY < 0 || newY >= sim.fieldHeight) continue;
           
-          // Check if target position is free using collision map
-          const targetKey = `${newX},${newY}`;
-          if (!collisionMap[targetKey] || collisionMap[targetKey].length === 0) {
-            // Position is free, queue the displacement
-            sim.queuedCommands.push({
-              type: 'move',
-              params: {
-                unitId: unit.id,
-                dx: dx,
-                dy: dy
-              }
-            });
-            // Mark target position as occupied to avoid multiple units moving there
-            collisionMap[targetKey] = [unit];
-            break; // Found a spot, stop searching
+          // O(1) check if free
+          const key = `${newX},${newY}`;
+          if (!spatialHash.has(key)) {
+            moves.push({ unitId: unit.id, dx, dy });
+            spatialHash.set(key, unit); // Reserve spot
+            break;
           }
         }
       }
+    }
+    
+    // Queue all moves at once
+    for (const move of moves) {
+      sim.queuedCommands.push({
+        type: 'move',
+        params: move
+      });
     }
   }
 }

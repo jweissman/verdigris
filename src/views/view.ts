@@ -39,7 +39,7 @@ export default class View {
     // Check for new movements
     for (const unit of this.sim.units) {
       const prevPos = this.previousPositions.get(unit.id);
-      const currentZ = unit.meta?.z || 0;
+      const currentZ = unit.meta.z || 0;
       if (!prevPos) {
         // First time seeing this unit, just record position
         this.previousPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y, z: currentZ });

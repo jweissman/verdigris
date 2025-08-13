@@ -188,7 +188,7 @@ export class SpatialQueryBatcher {
   }
   
   private getUnitPositions(unit: Unit): Vec2[] {
-    if (!unit.meta?.huge) return [unit.pos];
+    if (!unit.meta.huge) return [unit.pos];
     
     // For huge units, include all body positions
     return [

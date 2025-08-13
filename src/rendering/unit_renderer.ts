@@ -31,7 +31,7 @@ export class UnitRenderer {
    */
   shouldRenderUnit(unit: Unit): boolean {
     // Skip phantom units (they're invisible)
-    if (unit.meta?.phantom) {
+    if (unit.meta.phantom) {
       return false;
     }
     
@@ -51,7 +51,7 @@ export class UnitRenderer {
     const recentDamage = this.sim.processedEvents.find(event => 
       event.kind === 'damage' && 
       event.target === unit.id && 
-      event.meta?.tick && 
+      event.meta.tick && 
       (this.sim.ticks - event.meta.tick) < 2
     );
     
@@ -76,13 +76,13 @@ export class UnitRenderer {
    * Get sprite dimensions for a unit
    */
   getSpriteDimensions(unit: Unit): { width: number; height: number } {
-    const isHuge = unit.meta?.huge;
+    const isHuge = unit.meta.huge;
     
     if (isHuge) {
       // Use custom dimensions if specified
       return {
-        width: unit.meta?.width || 64,
-        height: unit.meta?.height || 32
+        width: unit.meta.width || 64,
+        height: unit.meta.height || 32
       };
     }
     
@@ -96,7 +96,7 @@ export class UnitRenderer {
   getRenderPosition(unit: Unit, interpolations?: Map<string, any>): { x: number; y: number; z: number } {
     let x = unit.pos.x;
     let y = unit.pos.y;
-    let z = unit.meta?.z || 0;
+    let z = unit.meta.z || 0;
     
     const interp = interpolations?.get(unit.id);
     if (interp) {
@@ -114,7 +114,7 @@ export class UnitRenderer {
    * Draw unit shadow
    */
   drawShadow(ctx: CanvasRenderingContext2D, unit: Unit, screenX: number, screenY: number, scale: number = 8) {
-    const isHuge = unit.meta?.huge;
+    const isHuge = unit.meta.huge;
     
     ctx.save();
     ctx.fillStyle = '#00000050';
@@ -172,7 +172,7 @@ export class UnitRenderer {
    * Determine if sprite should be flipped
    */
   shouldFlipSprite(unit: Unit): boolean {
-    const facing = unit.meta?.facing || 'right';
+    const facing = unit.meta.facing || 'right';
     return facing === 'left';
   }
   

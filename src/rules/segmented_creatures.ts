@@ -12,9 +12,10 @@ export class SegmentedCreatures extends Rule {
   private pathHistory: Map<string, Vec2[]> = new Map(); // Track movement history for snake-like following
 
   apply = () => {
-    const segmentedCreatures = this.sim.units.filter(unit => 
-      unit.meta.segmented && !this.hasSegments(unit)
-    );
+    const segmentedCreatures = this.sim.units.filter(unit => {
+      const meta = unit.meta || {};
+      return meta.segmented && !this.hasSegments(unit);
+    });
     for (let i = 0; i < segmentedCreatures.length; i++) {
       const creature = segmentedCreatures[i];
       if (i > 100) {
@@ -39,8 +40,8 @@ export class SegmentedCreatures extends Rule {
     // Also check if add commands are already queued for segments of this creature
     const hasQueuedSegments = this.sim.queuedCommands?.some(cmd => 
       (cmd.type === 'spawn' || cmd.type === 'add') && 
-      cmd.params?.unit?.meta?.segment && 
-      cmd.params?.unit?.meta?.parentId === creature.id
+      cmd.params?.unit?.meta.segment && 
+      cmd.params?.unit?.meta.parentId === creature.id
     ) || false;
     
     return hasExistingSegments || hasQueuedSegments;
@@ -134,7 +135,7 @@ export class SegmentedCreatures extends Rule {
 
   private getSegmentSprite(segmentType: 'head' | 'body' | 'tail', parentCreature?: Unit): string {
     // Check if parent uses custom segment sprites
-    if (parentCreature?.meta?.useCustomSegmentSprites) {
+    if (parentCreature?.meta.useCustomSegmentSprites) {
       const baseSprite = parentCreature.sprite.replace('-head', '');
       switch (segmentType) {
         case 'head': return `${baseSprite}-head`;

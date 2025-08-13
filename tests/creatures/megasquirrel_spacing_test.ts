@@ -10,18 +10,28 @@ describe('Megasquirrel Spacing', () => {
     // Use default rulebook which includes HugeUnits, Knockback, and CommandHandler
     
     // Add megasquirrel at (10, 5) - away from edges
-    sim.addUnit({
+    const mega = {
       ...Encyclopaedia.unit('megasquirrel'),
       id: 'mega1',
       pos: { x: 10, y: 5 }
-    });
+    };
+    // Remove hunt tag and set wait posture for this test - we don't want the megasquirrel to move
+    mega.tags = mega.tags.filter(t => t !== 'hunt');
+    mega.posture = 'wait'; // Explicitly set wait posture
+    mega.intendedMove = { x: 0, y: 0 }; // Explicitly set no movement
+    sim.addUnit(mega);
     
     // Add a small unit adjacent to the megasquirrel 
-    sim.addUnit({
+    const wormUnit = {
       ...Encyclopaedia.unit('worm'),
       id: 'worm1', 
       pos: { x: 11, y: 5 } // Right next to megasquirrel head
-    });
+    };
+    // Remove any movement-related tags from worm and set wait posture
+    wormUnit.tags = wormUnit.tags.filter(t => t !== 'hunt' && t !== 'swarm');
+    wormUnit.posture = 'wait';
+    wormUnit.intendedMove = { x: 0, y: 0 };
+    sim.addUnit(wormUnit);
     
     const originalWormPos = { ...sim.creatureById('worm1').pos };
     
@@ -29,15 +39,15 @@ describe('Megasquirrel Spacing', () => {
     sim.step();
     
     const worm = sim.creatureById('worm1');
-    const mega = sim.creatureById('mega1');
+    const megaAfter = sim.creatureById('mega1');
     
     // The worm should have been pushed away
-    const distance = Math.abs(worm.pos.x - mega.pos.x) + Math.abs(worm.pos.y - mega.pos.y);
+    const distance = Math.abs(worm.pos.x - megaAfter.pos.x) + Math.abs(worm.pos.y - megaAfter.pos.y);
     expect(distance).toBeGreaterThan(1); // Should be pushed away from direct adjacency
     
     // Megasquirrel should stay in place (not be pushed by the worm)
-    expect(mega.pos.x).toBe(10);
-    expect(mega.pos.y).toBe(5);
+    expect(megaAfter.pos.x).toBe(10);
+    expect(megaAfter.pos.y).toBe(5);
   });
 
   // NOTE: flaky somehow -- we should identify sources of randomness in the simulation and centralize them i think?

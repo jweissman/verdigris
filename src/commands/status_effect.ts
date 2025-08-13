@@ -15,29 +15,20 @@ export class ApplyStatusEffectCommand extends Command {
     
     if (!targetId || !effect) return;
     
-    this.transform.mapUnits(unit => {
-      if (unit.id === targetId) {
-        const statusEffects = unit.meta.statusEffects || [];
-        
-        // Check if effect already exists
-        const existingEffect = statusEffects.find((e: any) => e.type === effect.type);
-        if (existingEffect) {
-          // Refresh duration
-          existingEffect.duration = Math.max(existingEffect.duration, effect.duration);
-          return unit;
-        } else {
-          // Add new effect
-          return {
-            ...unit,
-            meta: {
-              ...unit.meta,
-              statusEffects: [...statusEffects, effect]
-            }
-          };
-        }
+    const targetUnit = this.sim.units.find(u => u.id === targetId);
+    if (targetUnit) {
+      const statusEffects = targetUnit.meta.statusEffects || [];
+      
+      // Check if effect already exists
+      const existingEffect = statusEffects.find((e: any) => e.type === effect.type);
+      if (existingEffect) {
+        // Refresh duration
+        existingEffect.duration = Math.max(existingEffect.duration, effect.duration);
+      } else {
+        // Add new effect
+        targetUnit.meta.statusEffects = [...statusEffects, effect];
       }
-      return unit;
-    });
+    }
   }
 }
 
@@ -54,50 +45,43 @@ export class UpdateStatusEffectsCommand extends Command {
     
     if (!targetId) return;
     
-    this.transform.mapUnits(unit => {
-      if (unit.id === targetId) {
-        const statusEffects = unit.meta.statusEffects || [];
-        
-        // Decrement durations and filter out expired
-        const updatedEffects = statusEffects
-          .map((effect: any) => ({
-            ...effect,
-            duration: effect.duration - 1
-          }))
-          .filter((effect: any) => effect.duration > 0);
-        
-        // Apply effect mechanics
-        let chilled = false;
-        let chillIntensity = 0;
-        let stunned = false;
-        
-        updatedEffects.forEach((effect: any) => {
-          switch (effect.type) {
-            case 'chill':
-              chilled = true;
-              chillIntensity = effect.intensity;
-              break;
-            case 'stun':
-              stunned = true;
-              break;
-            case 'burn':
-              // Damage handled by StatusEffects rule via events
-              break;
-          }
-        });
-        
-        return {
-          ...unit,
-          meta: {
-            ...unit.meta,
-            statusEffects: updatedEffects,
-            chilled,
-            chillIntensity: chilled ? chillIntensity : undefined,
-            stunned
-          }
-        };
-      }
-      return unit;
-    });
+    const targetUnit = this.sim.units.find(u => u.id === targetId);
+    if (targetUnit) {
+      const statusEffects = targetUnit.meta.statusEffects || [];
+      
+      // Decrement durations and filter out expired
+      const updatedEffects = statusEffects
+        .map((effect: any) => ({
+          ...effect,
+          duration: effect.duration - 1
+        }))
+        .filter((effect: any) => effect.duration > 0);
+      
+      // Apply effect mechanics
+      let chilled = false;
+      let chillIntensity = 0;
+      let stunned = false;
+      
+      updatedEffects.forEach((effect: any) => {
+        switch (effect.type) {
+          case 'chill':
+            chilled = true;
+            chillIntensity = effect.intensity;
+            break;
+          case 'stun':
+            stunned = true;
+            break;
+          case 'burn':
+            // Damage handled by StatusEffects rule via events
+            break;
+        }
+      });
+      
+      // Update metadata directly on the proxy
+      targetUnit.meta.statusEffects = updatedEffects;
+      targetUnit.meta.chilled = chilled;
+      targetUnit.meta.chillIntensity = chilled ? chillIntensity : undefined;
+      targetUnit.meta.stunned = stunned;
+    }
   }
 }

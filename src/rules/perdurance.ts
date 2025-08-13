@@ -22,7 +22,7 @@ export class Perdurance extends Rule {
   }
 
   private modifyDamage(event: any, target: Unit): any {
-    const perdurance = target.meta?.perdurance;
+    const perdurance = target.meta.perdurance;
     if (!perdurance) return event;
 
     const modifiedEvent = { 
@@ -53,7 +53,7 @@ export class Perdurance extends Rule {
   }
 
   private shouldBlockDamage(unit: Unit, damageAspect?: string): boolean {
-    const perdurance = unit.meta?.perdurance;
+    const perdurance = unit.meta.perdurance;
     if (!perdurance) return false; // No special resistance
 
     switch (perdurance) {

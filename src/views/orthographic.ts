@@ -82,7 +82,7 @@ export default class Orthographic extends View {
     const dimensions = this.unitRenderer.getSpriteDimensions(unit);
     const spriteWidth = dimensions.width;
     const spriteHeight = dimensions.height;
-    const isHuge = unit.meta?.huge;
+    const isHuge = unit.meta.huge;
     
     // CRITICAL: Round to integer pixels to prevent blurring
     const gridCenterX = Math.round(renderX * 8) + 4; // Center of grid cell
@@ -375,7 +375,7 @@ export default class Orthographic extends View {
 
   private renderJumpTarget(unit: Unit) {
     // Only show if unit is jumping and has a target
-    if (!unit.meta?.jumping || !unit.meta?.jumpTarget) {
+    if (!unit.meta.jumping || !unit.meta.jumpTarget) {
       return;
     }
 
@@ -392,7 +392,7 @@ export default class Orthographic extends View {
 
   private renderTossTarget(unit: Unit) {
     // Only show if unit is being tossed and has a target
-    if (!unit.meta?.tossing || !unit.meta?.tossTarget) {
+    if (!unit.meta.tossing || !unit.meta.tossTarget) {
       return;
     }
 

@@ -95,10 +95,10 @@ export class GrapplingPhysics extends Rule {
           }
           
           // Check if target is segmented and damage segments
-          if (hitUnit.meta?.segmented) {
+          if (hitUnit.meta.segmented) {
             // Find the first segment
             const firstSegment = this.sim.units.find(u => 
-              u.meta?.segment && u.meta?.parentId === hitUnit.id && u.meta?.segmentIndex === 1
+              u.meta.segment && u.meta.parentId === hitUnit.id && u.meta.segmentIndex === 1
             );
             
             if (firstSegment && firstSegment.hp > 0) {
@@ -223,7 +223,7 @@ export class GrapplingPhysics extends Rule {
         });
       } else {
         // Regular creatures are slowed
-        if (!target.meta?.movementPenalty) {
+        if (!target.meta.movementPenalty) {
           this.sim.queuedCommands.push({
             type: 'meta',
             params: {
@@ -243,7 +243,7 @@ export class GrapplingPhysics extends Rule {
 
       // Decrement duration
       grappleLine.duration--;
-      if (target.meta?.grappledDuration) {
+      if (target.meta.grappledDuration) {
         this.sim.queuedCommands.push({
           type: 'meta',
           params: {
@@ -273,7 +273,7 @@ export class GrapplingPhysics extends Rule {
     
     // Mark massive units as pinned
     const targetMass = target.mass || 1;
-    if (targetMass > 30 && !target.meta?.pinned) {
+    if (targetMass > 30 && !target.meta.pinned) {
       this.sim.queuedCommands.push({
         type: 'meta',
         params: {

@@ -20,12 +20,12 @@ export class UnitArrays {
   team: Int8Array; // 0=neutral, 1=friendly, 2=hostile
   state: Int8Array; // 0=idle, 1=moving, 2=attacking, 3=dead
   
-  // Reference to full unit objects (for non-performance-critical data)
-  units: any[];
-  
-  // Track active units
+  // Track active units - NO object storage!
   active: Uint8Array; // 0=inactive, 1=active
   activeCount: number = 0;
+  
+  // Map index to unit ID for lookups
+  unitIds: string[];
   
   capacity: number;
   
@@ -48,10 +48,14 @@ export class UnitArrays {
     this.state = new Int8Array(capacity);
     
     this.active = new Uint8Array(capacity);
-    this.units = new Array(capacity);
+    this.unitIds = new Array(capacity);
   }
   
   // Add a unit to the arrays
+  addUnit(unit: any): number {
+    return this.add(unit);
+  }
+  
   add(unit: any): number {
     // Find first inactive slot
     let index = -1;
@@ -84,11 +88,8 @@ export class UnitArrays {
     this.state[index] = this.stateToInt(unit.state);
     
     this.active[index] = 1;
-    this.units[index] = unit;
+    this.unitIds[index] = unit.id;
     this.activeCount++;
-    
-    // Store index in unit for fast lookup
-    unit._arrayIndex = index;
     
     return index;
   }
@@ -98,55 +99,10 @@ export class UnitArrays {
     if (index < 0 || index >= this.capacity) return;
     
     this.active[index] = 0;
-    this.units[index] = null;
+    this.unitIds[index] = '';
     this.activeCount--;
   }
   
-  // Sync changes from arrays back to unit objects
-  syncToUnits(): void {
-    for (let i = 0; i < this.capacity; i++) {
-      if (this.active[i] === 0) continue;
-      
-      const unit = this.units[i];
-      if (!unit) continue;
-      
-      unit.pos.x = this.posX[i];
-      unit.pos.y = this.posY[i];
-      unit.intendedMove.x = this.intendedMoveX[i];
-      unit.intendedMove.y = this.intendedMoveY[i];
-      
-      unit.hp = this.hp[i];
-      unit.maxHp = this.maxHp[i];
-      unit.dmg = this.dmg[i];
-      
-      unit.mass = this.mass[i];
-      unit.team = this.intToTeam(this.team[i]);
-      unit.state = this.intToState(this.state[i]);
-    }
-  }
-  
-  // Sync changes from units to arrays
-  syncFromUnits(): void {
-    for (let i = 0; i < this.capacity; i++) {
-      if (this.active[i] === 0) continue;
-      
-      const unit = this.units[i];
-      if (!unit) continue;
-      
-      this.posX[i] = unit.pos.x;
-      this.posY[i] = unit.pos.y;
-      this.intendedMoveX[i] = unit.intendedMove?.x || 0;
-      this.intendedMoveY[i] = unit.intendedMove?.y || 0;
-      
-      this.hp[i] = unit.hp;
-      this.maxHp[i] = unit.maxHp;
-      this.dmg[i] = unit.dmg || 1;
-      
-      this.mass[i] = unit.mass || 1;
-      this.team[i] = this.teamToInt(unit.team);
-      this.state[i] = this.stateToInt(unit.state);
-    }
-  }
   
   // Helper methods for conversion
   teamToInt(team: string): number {
@@ -185,6 +141,12 @@ export class UnitArrays {
       case 3: return 'dead';
       default: return 'idle';
     }
+  }
+  
+  // Clear all units
+  clear(): void {
+    this.active.fill(0);
+    this.activeCount = 0;
   }
   
   // Fast distance check using arrays

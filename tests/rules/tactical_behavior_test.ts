@@ -4,6 +4,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import { CommandHandler } from '../../src/rules/command_handler';
+import { UnitBehavior } from '../../src/rules/unit_behavior';
 import { UnitMovement } from '../../src/rules/unit_movement';
 import { setupTest } from '../test_helper';
 
@@ -13,7 +14,7 @@ describe('Tactical Behavior Improvements', () => {
   });
   it('should make constructs hunt enemies aggressively', () => {
     const sim = new Simulator();
-    sim.rulebook = [new UnitMovement(sim), new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new UnitBehavior(sim), new UnitMovement(sim), new EventHandler(sim), new CommandHandler(sim)];
     
     
     // Create constructs and enemies

@@ -191,7 +191,7 @@ export default class Isometric extends View {
 
     let renderX = unit.pos.x;
     let renderY = unit.pos.y;
-    let renderZ = unit.meta?.z || 0;
+    let renderZ = unit.meta.z || 0;
       
     const interp = this.unitInterpolations.get(unit.id);
     if (interp) {
@@ -456,7 +456,7 @@ export default class Isometric extends View {
   }
 
   private renderJumpTarget(unit: Unit) {
-    if (!unit.meta?.jumping || !unit.meta?.jumpTarget) {
+    if (!unit.meta.jumping || !unit.meta.jumpTarget) {
       return;
     }
 
@@ -472,7 +472,7 @@ export default class Isometric extends View {
   }
 
   private renderTossTarget(unit: Unit) {
-    if (!unit.meta?.tossing || !unit.meta?.tossTarget) {
+    if (!unit.meta.tossing || !unit.meta.tossTarget) {
       return;
     }
 
@@ -583,11 +583,11 @@ export default class Isometric extends View {
       const x = Math.floor(unit.pos.x);
       const y = Math.floor(unit.pos.y);
       
-      if (unit.meta?.onFire) {
+      if (unit.meta.onFire) {
         setCellEffect(x, y, 'fire');
-      } else if (unit.meta?.frozen) {
+      } else if (unit.meta.frozen) {
         setCellEffect(x, y, 'ice');
-      } else if (unit.meta?.electrified) {
+      } else if (unit.meta.electrified) {
         setCellEffect(x, y, 'lightning');
       }
     }
@@ -678,7 +678,7 @@ export default class Isometric extends View {
   private renderGrapplingLines() {
     // Draw tether lines between grappled units
     for (const unit of this.sim.units) {
-      if (unit.meta?.grappled && unit.meta?.tetherPoint) {
+      if (unit.meta.grappled && unit.meta.tetherPoint) {
         // Find the grappler
         const grappler = this.sim.units.find(u => u.id === unit.meta.grappledBy);
         if (!grappler) continue;

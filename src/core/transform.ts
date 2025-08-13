@@ -24,18 +24,10 @@ export class Transform {
   
   /**
    * Get working copy for mutations
-   * - During frame: use pending buffer
-   * - Outside frame: use current buffer (for tests)
+   * Now just returns the main units array since we removed double buffering
    */
   private getWorkingCopy(): Unit[] {
-    // If we're in a frame, work on pending buffer
-    // Otherwise work on current buffer (for tests that don't use frames)
-    if ((this.sim as any).inFrame) {
-      return this.sim.getPendingUnits();
-    } else {
-      // Not in frame - work directly on current units
-      return (this.sim as any).currentBuffer === 'A' ? (this.sim as any).bufferA : (this.sim as any).bufferB;
-    }
+    return this.sim.units as Unit[];
   }
   
   /**
@@ -59,26 +51,24 @@ export class Transform {
   
   /**
    * Transform all units with a mapping function
-   * Works on the working copy
+   * DEPRECATED - DO NOT USE! This replaces proxies with plain objects
+   * Use updateUnit instead
    */
   mapUnits(fn: (unit: Unit) => Unit): void {
-    const units = this.getWorkingCopy();
-    for (let i = 0; i < units.length; i++) {
-      units[i] = fn(units[i]);
-    }
-    this.setUnits(units);
+    throw new Error('mapUnits is deprecated! It creates plain objects. Use updateUnit instead.');
   }
   
   /**
    * Filter units (remove some)
    */
   filterUnits(fn: (unit: Unit) => boolean): void {
-    const units = this.getWorkingCopy();
-    // Filter in place by removing units that don't match
-    for (let i = units.length - 1; i >= 0; i--) {
-      if (!fn(units[i])) {
-        units.splice(i, 1);
-      }
+    // Get all units and find those to remove
+    const allUnits = this.sim.units as Unit[];
+    const unitsToRemove = allUnits.filter(u => !fn(u));
+    
+    // Remove each unit efficiently
+    for (const unit of unitsToRemove) {
+      this.sim.removeUnitById(unit.id);
     }
   }
   
@@ -86,16 +76,14 @@ export class Transform {
    * Add a unit
    */
   addUnit(unit: Unit): void {
-    const units = this.getWorkingCopy();
-    units.push(unit);
-    // No need to call setUnits - we're mutating the pending buffer directly
+    this.sim.addUnit(unit);
   }
   
   /**
    * Remove a unit by ID
    */
   removeUnit(unitId: string): void {
-    this.filterUnits(u => u.id !== unitId);
+    this.sim.removeUnitById(unitId);
   }
   
   /**

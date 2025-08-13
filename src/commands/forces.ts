@@ -5,6 +5,12 @@ import { Command } from "../rules/command";
  * Replaces individual move commands with vectorized physics updates
  */
 export class ForcesCommand extends Command {
+  private transform: any;
+  
+  constructor(sim: any, transform: any) {
+    super(sim);
+    this.transform = transform;
+  }
   
   execute(unitId: string | null, params: Record<string, any>): void {
     // This command operates on all units at once
@@ -12,72 +18,221 @@ export class ForcesCommand extends Command {
   }
   
   private applyAllForces(): void {
-    if (!this.sim.unitArrays || !this.sim.performanceMode) {
-      // Fallback to traditional processing
+    // USE TYPED ARRAYS DIRECTLY FOR REAL PERFORMANCE!
+    const arrays = this.sim.unitArrays;
+    if (!arrays) {
+      this.applyAllForcesLegacy();
       return;
     }
     
-    // Sync to SoA for vectorized processing
-    this.sim.syncUnitsToArrays();
-    const arrays = this.sim.unitArrays;
+    // Vectorized movement on typed arrays - this is where the speed comes from!
+    const capacity = arrays.capacity;
     
-    // Vectorized movement application - process ALL units at once
-    for (let i = 0; i < arrays.activeCount; i++) {
-      if (arrays.active[i] === 0) continue;
-      if (arrays.state[i] === 3) continue; // Skip dead units
+    // Process all units in tight loops over typed arrays
+    for (let i = 0; i < capacity; i++) {
+      // Skip inactive or dead units (branch-free would be even faster)
+      if (arrays.active[i] === 0 || arrays.state[i] === 3 || arrays.hp[i] <= 0) continue;
       
-      // Apply intended movement (kinematics)
-      const newX = arrays.posX[i] + arrays.intendedMoveX[i];
-      const newY = arrays.posY[i] + arrays.intendedMoveY[i];
+      // Skip units with special states (stored in metadata)
+      const unitId = arrays.unitIds[i];
+      const meta = this.sim.unitColdData.get(unitId);
+      if (meta?.meta?.jumping || meta?.meta?.phantom) continue;
       
-      // Clamp to field bounds
+      // Apply intended movement directly to position arrays
+      const dx = arrays.intendedMoveX[i];
+      const dy = arrays.intendedMoveY[i];
+      
+      if (dx === 0 && dy === 0) continue;
+      
+      // Calculate new position with bounds checking
+      const newX = arrays.posX[i] + dx;
+      const newY = arrays.posY[i] + dy;
+      
+      // Clamp to field bounds (branchless min/max for performance)
       arrays.posX[i] = Math.max(0, Math.min(this.sim.fieldWidth - 1, newX));
       arrays.posY[i] = Math.max(0, Math.min(this.sim.fieldHeight - 1, newY));
-      
-      // Clear intended movement after applying
-      arrays.intendedMoveX[i] = 0;
-      arrays.intendedMoveY[i] = 0;
     }
     
-    // Vectorized collision resolution - all at once
-    this.resolveAllCollisions(arrays);
-    
-    // Sync back to Unit objects
-    this.sim.syncPositionsFromArrays();
+    // Resolve collisions using SoA collision detection
+    this.resolveCollisionsSoA(arrays);
   }
   
-  private resolveAllCollisions(arrays: any): void {
-    // Ultra-fast collision detection using SoA
-    const collisions = arrays.detectCollisions(1.0);
+  private applyAllForcesLegacy(): void {
+    // Batch all movement operations through Transform
+    // This maintains the buffering while processing all units at once
     
-    // Process all collisions in batch
-    for (const [i, j] of collisions) {
-      if (arrays.state[i] === 3 || arrays.state[j] === 3) continue;
+    // Build a map of all movement updates
+    const moveUpdates = new Map<string, { pos: { x: number, y: number } }>();
+    const units = this.sim.units;
+    
+    // First pass: calculate all new positions
+    for (const unit of units) {
+      if (unit.state === 'dead' || unit.hp <= 0) continue;
+      if (unit.meta.jumping) continue; // Skip jumping units
+      if (unit.meta.phantom) continue; // Skip phantom units - they follow parent
       
-      // Determine priority (mass + hp)
-      const priorityI = arrays.mass[i] * 10 + arrays.hp[i];
-      const priorityJ = arrays.mass[j] * 10 + arrays.hp[j];
+      const intendedMove = unit.intendedMove;
+      if (!intendedMove || (intendedMove.x === 0 && intendedMove.y === 0)) continue;
       
-      const displacedIndex = priorityI > priorityJ ? j : i;
+      // Calculate new position
+      const newX = unit.pos.x + intendedMove.x;
+      const newY = unit.pos.y + intendedMove.y;
       
-      // Find displacement
-      const x = arrays.posX[displacedIndex];
-      const y = arrays.posY[displacedIndex];
+      // Clamp to field bounds
+      const clampedX = Math.max(0, Math.min(this.sim.fieldWidth - 1, newX));
+      const clampedY = Math.max(0, Math.min(this.sim.fieldHeight - 1, newY));
       
-      // Try immediate displacement without validation overhead
-      const displacements = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      moveUpdates.set(unit.id, { pos: { x: clampedX, y: clampedY } });
+    }
+    
+    // Second pass: resolve collisions by checking occupancy
+    const occupancy = new Map<string, string>(); // position -> unitId
+    
+    // First claim positions for units that aren't moving
+    for (const unit of units) {
+      if (!moveUpdates.has(unit.id) && unit.state !== 'dead') {
+        const key = `${Math.round(unit.pos.x)},${Math.round(unit.pos.y)}`;
+        occupancy.set(key, unit.id);
+      }
+    }
+    
+    // Then try to claim new positions for moving units
+    for (const [unitId, update] of moveUpdates) {
+      const key = `${Math.round(update.pos.x)},${Math.round(update.pos.y)}`;
+      const unit = units.find(u => u.id === unitId);
       
-      for (const [dx, dy] of displacements) {
-        const newX = x + dx;
-        const newY = y + dy;
+      if (!occupancy.has(key)) {
+        // Position is free, claim it
+        occupancy.set(key, unitId);
+      } else {
+        // Collision! Check if we can push through based on mass
+        const occupyingId = occupancy.get(key);
+        const occupyingUnit = units.find(u => u.id === occupyingId);
         
-        // Quick bounds check
-        if (newX >= 0 && newX < this.sim.fieldWidth && 
-            newY >= 0 && newY < this.sim.fieldHeight) {
-          arrays.posX[displacedIndex] = newX;
-          arrays.posY[displacedIndex] = newY;
-          break;
+        if (unit && occupyingUnit) {
+          const myPriority = (unit.mass || 1) * 10 + (unit.hp || 0);
+          const theirPriority = (occupyingUnit.mass || 1) * 10 + (occupyingUnit.hp || 0);
+          
+          if (myPriority > theirPriority) {
+            // We have higher priority, take the position
+            occupancy.set(key, unitId);
+            // Mark the displaced unit to be moved elsewhere
+            moveUpdates.set(occupyingId, { pos: { x: occupyingUnit.pos.x, y: occupyingUnit.pos.y } });
+          } else {
+            // We have lower priority, stay in place
+            const currentKey = `${Math.round(unit.pos.x)},${Math.round(unit.pos.y)}`;
+            occupancy.set(currentKey, unitId);
+            moveUpdates.set(unitId, { pos: { x: unit.pos.x, y: unit.pos.y } });
+          }
         }
+      }
+    }
+    
+    // Apply all movements through Transform
+    for (const [unitId, update] of moveUpdates) {
+      this.transform.updateUnit(unitId, update);
+    }
+    
+    // Resolve any remaining collisions (units that started at same position)
+    this.resolveOverlaps();
+  }
+  
+  private resolveOverlaps(): void {
+    // Find units at same position and separate them
+    const positionMap = new Map<string, string[]>(); // position -> [unitIds]
+    
+    for (const unit of this.sim.units) {
+      if (unit.state === 'dead') continue;
+      const key = `${Math.round(unit.pos.x)},${Math.round(unit.pos.y)}`;
+      
+      if (!positionMap.has(key)) {
+        positionMap.set(key, []);
+      }
+      positionMap.get(key)!.push(unit.id);
+    }
+    
+    // Separate overlapping units
+    for (const [pos, unitIds] of positionMap) {
+      if (unitIds.length <= 1) continue; // No collision
+      
+      // Sort by priority (mass * 10 + hp) to determine who stays
+      const unitsWithPriority = unitIds.map(id => {
+        const unit = this.sim.units.find(u => u.id === id);
+        if (!unit) return null;
+        return { id, priority: (unit.mass || 1) * 10 + (unit.hp || 0), unit };
+      }).filter(x => x !== null) as any[];
+      
+      unitsWithPriority.sort((a, b) => b.priority - a.priority);
+      
+      // Keep highest priority unit in place, displace others
+      for (let i = 1; i < unitsWithPriority.length; i++) {
+        const unit = unitsWithPriority[i].unit;
+        if (!unit) continue;
+        
+        // Try to find an adjacent free position
+        const displacements = [[1,0], [-1,0], [0,1], [0,-1], [1,1], [-1,1], [1,-1], [-1,-1]];
+        for (const [dx, dy] of displacements) {
+          const newX = unit.pos.x + dx;
+          const newY = unit.pos.y + dy;
+          
+          // Check bounds
+          if (newX < 0 || newX >= this.sim.fieldWidth || newY < 0 || newY >= this.sim.fieldHeight) {
+            continue;
+          }
+          
+          // Check if position is free
+          const newKey = `${Math.round(newX)},${Math.round(newY)}`;
+          if (!positionMap.has(newKey) || positionMap.get(newKey)!.length === 0) {
+            // Move unit here
+            this.transform.updateUnit(unitIds[i], { pos: { x: newX, y: newY } });
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  private resolveCollisionsSoA(arrays: any): void {
+    // Build spatial grid for O(1) collision detection
+    const grid = new Map<number, number>(); // packed position -> unit index
+    const fieldWidth = this.sim.fieldWidth;
+    
+    // First pass: find collisions using packed positions for speed
+    for (let i = 0; i < arrays.capacity; i++) {
+      if (arrays.active[i] === 0 || arrays.state[i] === 3) continue;
+      
+      // Pack position into single integer for faster map lookup
+      const packedPos = Math.floor(arrays.posY[i]) * fieldWidth + Math.floor(arrays.posX[i]);
+      
+      const existing = grid.get(packedPos);
+      if (existing !== undefined) {
+        // Collision! Resolve based on priority
+        const priorityI = arrays.mass[i] * 10 + arrays.hp[i];
+        const priorityExisting = arrays.mass[existing] * 10 + arrays.hp[existing];
+        
+        const toDisplace = priorityI > priorityExisting ? existing : i;
+        
+        // Displace to adjacent cell (vectorized search)
+        const x = arrays.posX[toDisplace];
+        const y = arrays.posY[toDisplace];
+        
+        // Try cardinal directions first (most common case)
+        if (x + 1 < fieldWidth && !grid.has(packedPos + 1)) {
+          arrays.posX[toDisplace] = x + 1;
+        } else if (x - 1 >= 0 && !grid.has(packedPos - 1)) {
+          arrays.posX[toDisplace] = x - 1;
+        } else if (y + 1 < this.sim.fieldHeight && !grid.has(packedPos + fieldWidth)) {
+          arrays.posY[toDisplace] = y + 1;
+        } else if (y - 1 >= 0 && !grid.has(packedPos - fieldWidth)) {
+          arrays.posY[toDisplace] = y - 1;
+        }
+        
+        // Update grid with winner
+        if (toDisplace === existing) {
+          grid.set(packedPos, i);
+        }
+      } else {
+        grid.set(packedPos, i);
       }
     }
   }

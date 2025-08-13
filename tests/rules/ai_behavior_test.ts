@@ -98,6 +98,7 @@ describe('AI Behavior System', () => {
 
   it('swarm behavior handles blocked movement gracefully', () => {
     const sim = new Simulator();
+    sim.enableProfiling = true; // Enable debug output
     
     UnitMovement.wanderRate = 1;
     
@@ -110,6 +111,8 @@ describe('AI Behavior System', () => {
     sim.addUnit(worm3);
     
     const worms = sim.units.filter(u => u.sprite === 'worm');
+    console.log('All units:', sim.units.map(u => ({ id: u.id, sprite: u.sprite, x: u.pos.x, y: u.pos.y })));
+    console.log('Worms found:', worms.length);
     expect(worms.length).toBe(3);
     
     const positions = worms.map(w => ({ x: w.pos.x, y: w.pos.y }));

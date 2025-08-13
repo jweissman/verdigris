@@ -203,7 +203,7 @@ export default class CinematicView extends View {
     const dimensions = this.unitRenderer.getSpriteDimensions(unit);
     const baseWidth = dimensions.width;
     const baseHeight = dimensions.height;
-    const isHuge = unit.meta?.huge;
+    const isHuge = unit.meta.huge;
     
     // Cinematic positioning: more compressed vertically, slight perspective scaling
     const battleStripY = this.height * 0.8; // Position battle at bottom

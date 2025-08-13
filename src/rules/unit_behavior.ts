@@ -4,11 +4,19 @@ import { Unit } from "../types/Unit";
 // This rule interprets posture/tags and sets intendedMove for each unit
 export class UnitBehavior extends Rule {
   apply = () => {
+    // Always use bulk AI command for consistent behavior
+    this.sim.queuedCommands.push({
+      type: 'ai',
+      params: {}
+    });
+    return;
+    
+    // REMOVED: Traditional per-unit processing - keeping code below for reference but unreachable
     (this.sim.units as Unit[]).forEach(unit => {
       if (unit.state === 'dead' || unit.hp == 0) return;
       
       // Don't change behavior for jumping units - they're in the air!
-      if (unit.meta?.jumping) return;
+      if (unit.meta.jumping) return;
 
       // Use cached target data for O(1) lookups instead of O(N) searches
       const targetData = this.sim.targetCache?.getTargetData(unit.id);
@@ -24,7 +32,7 @@ export class UnitBehavior extends Rule {
       }
 
       // Find target if we don't have one (stored in meta)
-      let targetId = unit.meta?.intendedTarget;
+      let targetId = unit.meta.intendedTarget;
       if (!targetId) {
         targetId = find_new_target();
         // Only set target if we found one and it's different
@@ -38,7 +46,7 @@ export class UnitBehavior extends Rule {
       
       if (!targetId) {
         // No enemies - wait
-        if (unit.meta?.posture !== 'wait') {
+        if (unit.meta.posture !== 'wait') {
           this.sim.queuedCommands.push({
             type: 'pose',
             params: { unitId: unit.id, posture: 'wait' }
@@ -58,9 +66,9 @@ export class UnitBehavior extends Rule {
       }
 
       // Handle guard posture protectee selection
-      const posture = unit.meta?.posture || unit.posture || 'wait';
+      const posture = unit.meta.posture || unit.posture || 'wait';
       if (posture === 'guard') {
-        const currentProtectee = unit.meta?.intendedProtectee;
+        const currentProtectee = unit.meta.intendedProtectee;
         const newProtectee = find_new_protectee();
         
         // Only update if protectee changed
@@ -78,7 +86,7 @@ export class UnitBehavior extends Rule {
       switch (posture) {
         case 'wait': 
           intendedMove = { x: 0, y: 0 };
-          if (unit.meta?.intendedTarget) {
+          if (unit.meta.intendedTarget) {
             this.sim.queuedCommands.push({
               type: 'target',
               params: { unitId: unit.id, targetId: undefined }
@@ -87,7 +95,7 @@ export class UnitBehavior extends Rule {
           break;
 
         case 'guard':
-          if (unit.meta?.intendedProtectee) {
+          if (unit.meta.intendedProtectee) {
             const protectee = this.sim.creatureById(unit.meta.intendedProtectee);
             if (protectee && protectee.state !== 'dead') {
               // Move towards protectee

@@ -29,7 +29,7 @@ import { Transform } from "./transform";
 import { SpatialQueryBatcher } from "./spatial_queries";
 import { PairwiseBatcher } from "./pairwise_batcher";
 import { UnitArrays } from "../sim/unit_arrays";
-import { UnitProxyManager } from "../sim/unit_proxy";
+import { UnitProxy, UnitProxyManager } from "../sim/unit_proxy";
 import { GridPartition } from "./grid_partition";
 import { ScalarField } from "./ScalarField";
 import { TargetCache } from "./target_cache";
@@ -40,16 +40,21 @@ class Simulator {
   fieldWidth: number;
   fieldHeight: number;
 
-  // SoA storage for performance
   private unitArrays: UnitArrays;
-  private unitProxyManager: UnitProxyManager;
   
-  // Legacy double buffering (kept for compatibility)
-  private _units: Unit[] = [];
-  private bufferA: Unit[] = [];
-  private bufferB: Unit[] = [];
-  private currentBuffer: 'A' | 'B' = 'A';
-  private inFrame: boolean = false; // Track if we're processing a frame
+  // Cold storage for non-performance-critical unit data
+  private unitColdData: Map<string, {
+    sprite: string;
+    abilities: any[];
+    tags?: string[];
+    meta: Record<string, any>;
+    intendedTarget?: string;
+    posture?: string;
+    type?: string;
+    lastAbilityTick?: Record<string, number>;
+  }> = new Map();
+  
+  // No more _units array! Units are proxies to SoA
   private spatialHash: SpatialHash;
   private dirtyUnits: Set<string> = new Set();
   
@@ -76,53 +81,48 @@ class Simulator {
   // Grid partition for O(1) spatial queries
   private gridPartition: GridPartition;
   
-  // Public access - returns current for reading
-  get units(): Unit[] {
-    // During frame processing, return pending units so rules see updates
-    if (this.inFrame) {
-      return this.getPendingUnits();
+  // Proxy cache to avoid recreating them
+  private proxyManager: UnitProxyManager;
+  private proxyCache: UnitProxy[] = [];
+  private proxyCacheValid = false;
+  
+  // Return proxies that wrap the SoA arrays
+  get units(): readonly Unit[] {
+    if (!this.proxyCacheValid) {
+      this.proxyCache = this.proxyManager.getAllProxies();
+      this.proxyCacheValid = true;
     }
-    // Outside frame, return current buffer
-    return this.currentBuffer === 'A' ? this.bufferA : this.bufferB;
-  }
-  
-  // Start a new frame - copy current to pending for mutations
-  private beginFrame(): void {
-    this.inFrame = true;
-    const currentUnits = this.currentBuffer === 'A' ? this.bufferA : this.bufferB;
-    const pendingUnits = this.currentBuffer === 'A' ? this.bufferB : this.bufferA;
-    
-    // Clear pending and copy current state
-    pendingUnits.length = 0;
-    for (const unit of currentUnits) {
-      pendingUnits.push({
-        ...unit,
-        meta: unit.meta ? { ...unit.meta } : {}
-      });
-    }
-  }
-  
-  // End frame - swap buffers (no copy!)
-  private endFrame(): void {
-    // Just swap the buffer pointer - this is the performance win!
-    this.currentBuffer = this.currentBuffer === 'A' ? 'B' : 'A';
-    this.inFrame = false;
-  }
-  
-  // Get pending units for mutations
-  getPendingUnits(): Unit[] {
-    // Pending is always the opposite buffer
-    return this.currentBuffer === 'A' ? this.bufferB : this.bufferA;
+    return this.proxyCache;
   }
   
   // Get units for Transform
   getUnitsForTransform(): Unit[] {
-    return this.units;
+    return this.units as Unit[];
   }
   
-  // Set units from Transform
+  // Deprecated - should not be called anymore
+  // Units are managed through SoA arrays only
   setUnitsFromTransform(units: Unit[]): void {
-    this._units = units;
+    throw new Error('setUnitsFromTransform is deprecated! Units should be managed through addUnit/removeUnitById only');
+  }
+  
+  // Remove a unit by ID
+  removeUnitById(unitId: string): void {
+    // Find the unit index by scanning the arrays
+    for (let i = 0; i < this.unitArrays.capacity; i++) {
+      if (this.unitArrays.active[i] === 0) continue;
+      if (this.unitArrays.unitIds[i] === unitId) {
+        // Mark as inactive in arrays
+        this.unitArrays.active[i] = 0;
+        this.unitArrays.activeCount--;
+        this.unitCache.delete(unitId);
+        this.unitColdData.delete(unitId);
+        
+        // Invalidate proxy cache
+        this.proxyCacheValid = false;
+        return;
+      }
+    }
   }
   
   projectiles: Projectile[];
@@ -143,6 +143,14 @@ class Simulator {
     duration: number; // ticks remaining for current weather
     intensity: number; // 0-1 scale
   };
+  
+  // Performance mode flag for aggressive optimizations
+  performanceMode: boolean = false;
+  
+  // Enable performance mode for tests
+  enablePerformanceMode(): void {
+    this.performanceMode = true;
+  }
   
   // Environmental states
   winterActive?: boolean;
@@ -189,7 +197,12 @@ class Simulator {
     
     // Initialize SoA storage for performance
     this.unitArrays = new UnitArrays(1000); // Support up to 1000 units
-    this.unitProxyManager = new UnitProxyManager(this.unitArrays);
+    
+    // Initialize cold data storage
+    this.unitColdData = new Map();
+    
+    // Initialize proxy manager
+    this.proxyManager = new UnitProxyManager(this.unitArrays, this.unitColdData);
     
     // Initialize transform for controlled mutations
     this.transform = new Transform(this);
@@ -248,23 +261,26 @@ class Simulator {
   }
 
   paused: boolean = false;
-  performanceMode: boolean = false;
   
   pause() {
     this.paused = true;
   }
   
-  enablePerformanceMode() {
-    this.performanceMode = true;
+  enablingProfiling() {
     // Disable expensive features for maximum speed
     this.enableProfiling = false;
   }
 
   reset() {
-    this._units = [];
-    this.bufferA = [];
-    this.bufferB = [];
-    this.currentBuffer = 'A';
+    // Clear SoA storage and proxy cache
+    this.unitArrays.clear();
+    this.unitCache.clear();
+    this.unitColdData.clear();
+    this.proxyCache = [];
+    this.proxyCacheValid = false;
+    // CRITICAL: Clear proxy manager's cache too!
+    this.proxyManager.clearCache();
+    
     this.projectiles = [];
     this.processedEvents = [];
     this.queuedCommands = [];
@@ -311,35 +327,58 @@ class Simulator {
       mass: unit.mass || 1,
       abilities: unit.abilities || [],
       meta: unit.meta || {}
-    };
-    // If we're in a frame, add to pending buffer. Otherwise add to current.
-    if (this.inFrame) {
-      const pendingUnits = this.getPendingUnits();
-      pendingUnits.push(u);
-    } else {
-      // Initial setup - add to current buffer
-      const currentUnits = this.currentBuffer === 'A' ? this.bufferA : this.bufferB;
-      currentUnits.push(u);
-    }
+    } as Unit;
+    
+    // Add to SoA storage (stores full unit AND breaks out hot data)
+    const index = this.unitArrays.addUnit(u);
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
-    this.unitCache.set(u.id, u); // Update cache for immediate lookup
-    return u;
+    
+    // Store cold data separately
+    this.unitColdData.set(u.id, {
+      sprite: u.sprite || 'default',
+      abilities: u.abilities || [],
+      tags: u.tags,
+      meta: u.meta || {},
+      intendedTarget: u.intendedTarget,
+      posture: u.posture,
+      type: u.type,
+      lastAbilityTick: u.lastAbilityTick
+    });
+    
+    // Invalidate proxy cache
+    this.proxyCacheValid = false;
+    
+    // Use proxy manager to get/create proxy
+    const proxy = this.proxyManager.getProxy(index);
+    this.unitCache.set(u.id, proxy);
+    return proxy;
   }
 
   create(unit: Unit) {
     const newUnit = { ...unit, id: unit.id || `unit_${Date.now()}` };
-    // If we're in a frame, add to pending buffer. Otherwise add to current.
-    if (this.inFrame) {
-      const pendingUnits = this.getPendingUnits();
-      pendingUnits.push(newUnit);
-    } else {
-      // Initial setup - add to current buffer
-      const currentUnits = this.currentBuffer === 'A' ? this.bufferA : this.bufferB;
-      currentUnits.push(newUnit);
-    }
+    const index = this.unitArrays.addUnit(newUnit);
+    
+    // Store cold data
+    this.unitColdData.set(newUnit.id, {
+      sprite: newUnit.sprite || 'default',
+      abilities: newUnit.abilities || [],
+      tags: newUnit.tags,
+      meta: newUnit.meta || {},
+      intendedTarget: newUnit.intendedTarget,
+      posture: newUnit.posture,
+      type: newUnit.type,
+      lastAbilityTick: newUnit.lastAbilityTick
+    });
+    
     this.dirtyUnits.add(newUnit.id); // Mark as dirty for rendering
-    this.unitCache.set(newUnit.id, newUnit); // Update cache for immediate lookup
-    return newUnit;
+    
+    // Invalidate proxy cache
+    this.proxyCacheValid = false;
+    
+    // Use proxy manager to get/create proxy
+    const proxy = this.proxyManager.getProxy(index);
+    this.unitCache.set(newUnit.id, proxy);
+    return proxy;
   }
   
   // Mark a unit as modified (needs re-rendering)
@@ -368,66 +407,7 @@ class Simulator {
   }
   
   // Sync units to SoA for performance-critical operations
-  syncUnitsToArrays(): void {
-    if (!this.unitArrays) return;
-    
-    // Clear existing arrays
-    this.unitArrays.activeCount = 0;
-    this.unitArrays.active.fill(0);
-    
-    let arrayIndex = 0;
-    for (const unit of this.units) {
-      if (arrayIndex >= this.unitArrays.capacity) {
-        console.warn(`Unit capacity exceeded: ${arrayIndex}/${this.unitArrays.capacity}`);
-        break;
-      }
-      
-      // Validate unit data before syncing
-      if (!unit || !unit.pos || typeof unit.pos.x !== 'number' || typeof unit.pos.y !== 'number') {
-        console.warn('Invalid unit data, skipping:', unit?.id);
-        continue;
-      }
-      
-      // Add unit to arrays
-      this.unitArrays.posX[arrayIndex] = unit.pos.x;
-      this.unitArrays.posY[arrayIndex] = unit.pos.y;
-      this.unitArrays.intendedMoveX[arrayIndex] = unit.intendedMove?.x || 0;
-      this.unitArrays.intendedMoveY[arrayIndex] = unit.intendedMove?.y || 0;
-      this.unitArrays.hp[arrayIndex] = unit.hp || 0;
-      this.unitArrays.maxHp[arrayIndex] = unit.maxHp || 1;
-      this.unitArrays.dmg[arrayIndex] = unit.dmg || 1;
-      this.unitArrays.mass[arrayIndex] = unit.mass || 1;
-      this.unitArrays.team[arrayIndex] = this.unitArrays.teamToInt(unit.team || 'neutral');
-      this.unitArrays.state[arrayIndex] = this.unitArrays.stateToInt(unit.state || 'idle');
-      this.unitArrays.active[arrayIndex] = 1;
-      this.unitArrays.units[arrayIndex] = unit;
-      
-      // Store back-reference for fast lookup
-      unit._arrayIndex = arrayIndex;
-      arrayIndex++;
-    }
-    
-    this.unitArrays.activeCount = arrayIndex;
-  }
   
-  // Sync positions back from SoA to units after vectorized operations
-  syncPositionsFromArrays(): void {
-    if (!this.unitArrays) return;
-    
-    for (let i = 0; i < this.unitArrays.activeCount; i++) {
-      if (this.unitArrays.active[i] === 0) continue;
-      
-      const unit = this.unitArrays.units[i];
-      if (unit && unit.pos && typeof this.unitArrays.posX[i] === 'number') {
-        unit.pos.x = this.unitArrays.posX[i];
-        unit.pos.y = this.unitArrays.posY[i];
-        
-        if (!unit.intendedMove) unit.intendedMove = { x: 0, y: 0 };
-        unit.intendedMove.x = this.unitArrays.intendedMoveX[i] || 0;
-        unit.intendedMove.y = this.unitArrays.intendedMoveY[i] || 0;
-      }
-    }
-  }
   
   // Get list of dirty unit IDs
   getDirtyUnits(): Set<string> {
@@ -474,66 +454,94 @@ class Simulator {
     // Clear dirty tracking from last frame
     this.dirtyUnits.clear();
     
-    // BEGIN FRAME - create working copy for double buffering
-    this.beginFrame();
+    // Skip expensive double buffering - just work on the main array
+    // The overliteral double buffer was hurting performance
     
-    // Rebuild spatial structures for collision detection
-    this.spatialHash.clear();
-    this.positionMap.clear();
-    this.gridPartition.clear();
-    this.unitCache.clear(); // Rebuild unit lookup cache
-    
-    this.units.forEach(unit => {
-      this.spatialHash.insert(unit.id, unit.pos.x, unit.pos.y);
-      this.unitCache.set(unit.id, unit); // Add to O(1) lookup cache
+    // Rebuild spatial structures for collision detection only if not in performance mode
+    if (!this.performanceMode) {
+      this.spatialHash.clear();
+      this.positionMap.clear();
+      this.gridPartition.clear();
+      this.unitCache.clear(); // Rebuild unit lookup cache
       
-      
-      // Add to grid partition for O(1) neighbor queries
-      this.gridPartition.insert(unit);
-      
-      // Build position map for O(1) occupancy checks
-      const positions = this.getHugeUnitBodyPositions(unit);
-      for (const pos of positions) {
-        const key = `${Math.round(pos.x)},${Math.round(pos.y)}`;
-        if (!this.positionMap.has(key)) {
-          this.positionMap.set(key, new Set());
+      this.units.forEach(unit => {
+        this.spatialHash.insert(unit.id, unit.pos.x, unit.pos.y);
+        this.unitCache.set(unit.id, unit); // Add to O(1) lookup cache
+        
+        // Add to grid partition for O(1) neighbor queries
+        this.gridPartition.insert(unit);
+        
+        // Build position map for O(1) occupancy checks
+        const positions = this.getHugeUnitBodyPositions(unit);
+        for (const pos of positions) {
+          const key = `${Math.round(pos.x)},${Math.round(pos.y)}`;
+          if (!this.positionMap.has(key)) {
+            this.positionMap.set(key, new Set());
+          }
+          this.positionMap.get(key)!.add(unit);
         }
-        this.positionMap.get(key)!.add(unit);
-      }
-    });
+      });
+    } else {
+      // Minimal spatial tracking in performance mode
+      this.unitCache.clear();
+      this.units.forEach(unit => {
+        this.unitCache.set(unit.id, unit);
+      });
+    }
     
     // Phase 1: Let all rules register their pairwise intents
-    let lastUnits: Unit[] = []; // Initialize for debug tracking
-    for (const rule of this.rulebook) {
-      const ruleName = rule.constructor.name;
+    if (this.performanceMode) {
+      // PERFORMANCE MODE: Run only essential rules
+      const essentialRules = [
+        'UnitBehavior',    // AI decisions
+        'UnitMovement',    // Actually move units
+        'MeleeCombat',     // Handle combat
+        'Cleanup',         // Remove dead units
+        'CommandHandler'   // Process commands
+      ];
       
-      if (this.enableProfiling && this.profiler) {
-        this.profiler.startTimer(ruleName);
-      }
-      
-      let tr0 = performance.now();
-      rule.execute();
-      let tr1 = performance.now();
-      
-      if (this.enableProfiling && this.profiler) {
-        this.profiler.endTimer();
-      }
-      
-      // Only do expensive logging in development/profiling mode
-      if (this.enableProfiling) {
-        let elapsed = tr1 - tr0;
-        if (elapsed > 1 || this.ticks <= 2) { // Log slow rules or first two ticks
-          console.warn(`[Step ${this.ticks}] Rule ${ruleName} executed in ${elapsed.toFixed(2)}ms`);
+      for (const rule of this.rulebook) {
+        const ruleName = rule.constructor.name;
+        if (essentialRules.includes(ruleName)) {
+          rule.execute();
         }
       }
+    } else {
+      // NORMAL MODE: Run all rules with profiling
+      let lastUnits: Unit[] = []; // Initialize for debug tracking
+      for (const rule of this.rulebook) {
+        const ruleName = rule.constructor.name;
+        
+        if (this.enableProfiling && this.profiler) {
+          this.profiler.startTimer(ruleName);
+        }
+        
+        let tr0 = performance.now();
+        rule.execute();
+        let tr1 = performance.now();
+        
+        if (this.enableProfiling && this.profiler) {
+          this.profiler.endTimer();
+        }
+        
+        // Only do expensive logging in development/profiling mode
+        if (this.enableProfiling) {
+          let elapsed = tr1 - tr0;
+          if (elapsed > 1 || this.ticks <= 2) { // Log slow rules or first two ticks
+            console.warn(`[Step ${this.ticks}] Rule ${ruleName} executed in ${elapsed.toFixed(2)}ms`);
+          }
+        }
 
-      // PERFORMANCE: Removed expensive debug unit tracking that was copying all units every rule!
-      // this._debugUnits(lastUnits, ruleName);
-      // lastUnits = this.units.map(u => ({ ...u, meta: u.meta ? { ...u.meta } : {} }));
+        // Debug unit changes per rule
+        if (this.enableProfiling && this.ticks <= 5) {
+          this._debugUnits(lastUnits, ruleName);
+          lastUnits = this.units.map(u => ({ ...u, meta: u.meta ? { ...u.meta } : {} }));
+        }
+      }
     }
     
     // Phase 2: Process ALL pairwise intents in a single pass
-    if (this.pairwiseBatcher) {
+    if (this.pairwiseBatcher && !this.performanceMode) {
       const stats = this.pairwiseBatcher.getStats();
       // Always process to update target cache, even if no intents
       let batchStart = performance.now();
@@ -551,9 +559,6 @@ class Simulator {
     // Track changed units for render deltas
     this.updateChangedUnits();
     
-    // END FRAME - commit all changes from working copy to current
-    this.endFrame();
-    
     // Only check performance in profiling mode
     if (this.enableProfiling) {
       let t1 = performance.now();
@@ -563,22 +568,25 @@ class Simulator {
       }
     }
     
-    // Update particles
-    this.updateParticles();
-    
-    // Update scalar fields
-    this.updateScalarFields();
-    
-    // Update weather system
-    this.updateWeather();
-    
-    // Process fire effects
-    this.processFireEffects();
-    this.extinguishFires();
-    
-    // Spawn environmental particles occasionally
-    if (Math.random() < 0.2) { // 2% chance per tick - gentler for testing
-      this.spawnLeafParticle();
+    // Skip expensive environmental updates in performance mode
+    if (!this.performanceMode) {
+      // Update particles
+      this.updateParticles();
+      
+      // Update scalar fields
+      this.updateScalarFields();
+      
+      // Update weather system
+      this.updateWeather();
+      
+      // Process fire effects
+      this.processFireEffects();
+      this.extinguishFires();
+      
+      // Spawn environmental particles occasionally
+      if (Simulator.rng.random() < 0.2) { // 2% chance per tick - gentler for testing
+        this.spawnLeafParticle();
+      }
     }
     
     this.lastCall = t0;
@@ -694,17 +702,17 @@ class Simulator {
     
     const particle: Particle = {
       pos: {
-        x: Math.random() * this.fieldWidth,
+        x: Simulator.rng.random() * this.fieldWidth,
         y: -2 // Start above the visible area
       },
       vel: {
-        x: (Math.random() - 0.5) * 0.1, // Small initial horizontal velocity
-        y: Math.random() * 0.05 + 0.02  // Small downward velocity
+        x: (Simulator.rng.random() - 0.5) * 0.1, // Small initial horizontal velocity
+        y: Simulator.rng.random() * 0.05 + 0.02  // Small downward velocity
       },
-      radius: Math.random() * 1.5 + 0.5, // Small leaf size
-      lifetime: 1000 + Math.random() * 500, // Long lifetime for drifting
-      color: leafColors[Math.floor(Math.random() * leafColors.length)],
-      z: 10 + Math.random() * 20, // Start at various heights
+      radius: Simulator.rng.random() * 1.5 + 0.5, // Small leaf size
+      lifetime: 1000 + Simulator.rng.random() * 500, // Long lifetime for drifting
+      color: leafColors[Math.floor(Simulator.rng.random() * leafColors.length)],
+      z: 10 + Simulator.rng.random() * 20, // Start at various heights
       type: 'leaf',
       landed: false
     };
@@ -755,7 +763,10 @@ class Simulator {
       
       // All living units generate slight heat
       if (unit.state !== 'dead') {
-        this.temperatureField.addGradient(unit.pos.x, unit.pos.y, 2, 0.5);
+        const pos = unit.pos;
+        const x = pos.x;
+        const y = pos.y;
+        this.temperatureField.addGradient(x, y, 2, 0.5);
       }
       
       // Breathing/movement generates slight humidity
@@ -836,20 +847,20 @@ class Simulator {
     
     // Rain increases humidity across the field
     for (let i = 0; i < Math.ceil(intensity * 5); i++) {
-      const x = Math.random() * this.fieldWidth;
-      const y = Math.random() * this.fieldHeight;
+      const x = Simulator.rng.random() * this.fieldWidth;
+      const y = Simulator.rng.random() * this.fieldHeight;
       this.humidityField.addGradient(x, y, 2, intensity * 0.1);
     }
     
     // Rain cools the field slightly
     for (let i = 0; i < Math.ceil(intensity * 3); i++) {
-      const x = Math.random() * this.fieldWidth;
-      const y = Math.random() * this.fieldHeight;
+      const x = Simulator.rng.random() * this.fieldWidth;
+      const y = Simulator.rng.random() * this.fieldHeight;
       this.temperatureField.addGradient(x, y, 3, -intensity * 2);
     }
     
     // Spawn rain particles
-    if (Math.random() < intensity * 0.5) {
+    if (Simulator.rng.random() < intensity * 0.5) {
       this.spawnRainParticle();
     }
   }
@@ -862,9 +873,9 @@ class Simulator {
     
     // Pressure fluctuations during storms
     for (let i = 0; i < Math.ceil(intensity * 3); i++) {
-      const x = Math.random() * this.fieldWidth;
-      const y = Math.random() * this.fieldHeight;
-      const pressureChange = (Math.random() - 0.5) * intensity * 0.2;
+      const x = Simulator.rng.random() * this.fieldWidth;
+      const y = Simulator.rng.random() * this.fieldHeight;
+      const pressureChange = (Simulator.rng.random() - 0.5) * intensity * 0.2;
       this.pressureField.addGradient(x, y, 4, pressureChange);
     }
   }
@@ -879,17 +890,17 @@ class Simulator {
   spawnRainParticle() {
     const particle: Particle = {
       pos: {
-        x: Math.random() * this.fieldWidth,
+        x: Simulator.rng.random() * this.fieldWidth,
         y: -1 // Start above visible area
       },
       vel: {
-        x: 0.2 + Math.random() * 0.3, // Diagonal movement (right)
-        y: 0.8 + Math.random() * 0.4  // Fast downward
+        x: 0.2 + Simulator.rng.random() * 0.3, // Diagonal movement (right)
+        y: 0.8 + Simulator.rng.random() * 0.4  // Fast downward
       },
-      radius: 0.5 + Math.random() * 0.5, // Small drops
-      lifetime: 50 + Math.random() * 30, // Short lifetime
+      radius: 0.5 + Simulator.rng.random() * 0.5, // Small drops
+      lifetime: 50 + Simulator.rng.random() * 30, // Short lifetime
       color: '#4A90E2', // Blue rain color
-      z: 5 + Math.random() * 10, // Start at moderate height
+      z: 5 + Simulator.rng.random() * 10, // Start at moderate height
       type: 'rain',
       landed: false
     };
@@ -903,13 +914,13 @@ class Simulator {
     const particle: Particle = {
       pos: { x, y },
       vel: {
-        x: (Math.random() - 0.5) * 0.4, // Random horizontal spread
-        y: -0.2 - Math.random() * 0.3   // Upward movement (fire rises)
+        x: (Simulator.rng.random() - 0.5) * 0.4, // Random horizontal spread
+        y: -0.2 - Simulator.rng.random() * 0.3   // Upward movement (fire rises)
       },
-      radius: 0.8 + Math.random() * 0.7, // Variable spark size
-      lifetime: 30 + Math.random() * 40, // Medium lifetime
-      color: fireColors[Math.floor(Math.random() * fireColors.length)],
-      z: Math.random() * 3, // Start at ground level to low height
+      radius: 0.8 + Simulator.rng.random() * 0.7, // Variable spark size
+      lifetime: 30 + Simulator.rng.random() * 40, // Medium lifetime
+      color: fireColors[Math.floor(Simulator.rng.random() * fireColors.length)],
+      z: Simulator.rng.random() * 3, // Start at ground level to low height
       type: 'debris', // Reuse debris type for now
       landed: false
     };
@@ -934,9 +945,9 @@ class Simulator {
         unit.meta.fireDuration--;
         
         // Spawn fire particles around burning unit
-        if (Math.random() < 0.3) {
-          const offsetX = (Math.random() - 0.5) * 2;
-          const offsetY = (Math.random() - 0.5) * 2;
+        if (Simulator.rng.random() < 0.3) {
+          const offsetX = (Simulator.rng.random() - 0.5) * 2;
+          const offsetY = (Simulator.rng.random() - 0.5) * 2;
           this.spawnFireParticle(unit.pos.x + offsetX, unit.pos.y + offsetY);
         }
         
@@ -1000,7 +1011,11 @@ class Simulator {
 
   clone() {
     const newSimulator = new Simulator();
-    newSimulator._units = this._units.map(unit => ({ ...unit }));
+    // Clone units via SoA
+    for (let i = 0; i < this.unitArrays.capacity; i++) {
+      if (this.unitArrays.active[i] === 0) continue;
+      newSimulator.unitArrays.add(this.unitArrays.units[i]);
+    }
     return newSimulator;
   }
 

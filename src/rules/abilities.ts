@@ -19,7 +19,7 @@ export class Abilities extends Rule {
   apply = (): void => {
     // Check for units that need to unburrow
     this.sim.units.forEach(unit => {
-      if (unit.meta?.burrowed && unit.meta?.burrowStartTick !== undefined && unit.meta?.burrowDuration !== undefined) {
+      if (unit.meta.burrowed && unit.meta.burrowStartTick !== undefined && unit.meta.burrowDuration !== undefined) {
         const ticksBurrowed = this.sim.ticks - unit.meta.burrowStartTick;
         if (ticksBurrowed >= unit.meta.burrowDuration) {
           // Queue command to unburrow
@@ -62,7 +62,7 @@ export class Abilities extends Rule {
         // Check max uses if defined
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
-          const currentUses = unit.meta?.[usesKey] || 0;
+          const currentUses = unit.meta[usesKey] || 0;
           if (currentUses >= ability.maxUses) {
             continue; // Ability exhausted
           }
@@ -942,7 +942,7 @@ export class Abilities extends Rule {
     });
 
     for (const unit of unitsInArea) {
-      if (unit.meta?.hidden || unit.meta?.invisible) {
+      if (unit.meta.hidden || unit.meta.invisible) {
         // Queue command to reveal the unit
         this.sim.queuedCommands.push({
           type: 'meta',
@@ -993,7 +993,7 @@ export class Abilities extends Rule {
       params: {
         unitId: actualTarget.id,
         meta: {
-          originalTeam: actualTarget.meta?.originalTeam || actualTarget.team,
+          originalTeam: actualTarget.meta.originalTeam || actualTarget.team,
           tamed: true,
           tamedBy: caster.id
         }
@@ -1060,7 +1060,7 @@ export class Abilities extends Rule {
       
       // Add calm particles (only if not already created for this unit)
       const particleId = `calm_${unit.id}`;
-      if (!unit.meta?.calmed && !this.sim.particles.some(p => p.id === particleId)) {
+      if (!unit.meta.calmed && !this.sim.particles.some(p => p.id === particleId)) {
         this.sim.particles.push({
           id: particleId,
           pos: { x: unit.pos.x, y: unit.pos.y - 0.5 },
