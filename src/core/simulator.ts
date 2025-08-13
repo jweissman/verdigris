@@ -73,6 +73,9 @@ class Simulator {
   // Centralized RNG for determinism - static for global access
   public static rng: RNG = new RNG(12345);
   
+  // Flag to track if Math.random has been protected
+  private static randomProtected: boolean = false;
+  
   // Track units that changed this frame for render deltas
   private lastFrameUnits: Unit[] = [];
   private changedUnits: Set<string> = new Set();
@@ -175,9 +178,30 @@ class Simulator {
 
   protected getTransform() { return this.transform; }
 
+  private setupDeterministicRandomness(): void {
+    if (Simulator.randomProtected) return;
+    
+    // Replace Math.random with our seeded RNG
+    const originalRandom = Math.random;
+    Math.random = () => {
+      console.warn('⚠️  NON-DETERMINISTIC Math.random() called! Use Simulator.rng.random() instead');
+      // console.trace(); // Show stack trace to find the caller
+      return Simulator.rng.random();
+    };
+    
+    // Store original for potential restoration
+    (Math as any)._originalRandom = originalRandom;
+    Simulator.randomProtected = true;
+    
+    console.log('Math.random() protection enabled - all randomness now deterministic');
+  }
+
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
     this.fieldHeight = fieldHeight;
+    
+    // Protect against non-deterministic Math.random usage
+    this.setupDeterministicRandomness();
     
     // Initialize spatial hash for collision detection
     this.spatialHash = new SpatialHash(4); // 4x4 grid cells

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker - 4 Voice Synthesizer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            padding: 10px;
+        }
+        
+        .tracker {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+        
+        .controls {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #0f0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        button {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+        }
+        
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+        
+        .pattern-grid {
+            border: 1px solid #0f0;
+            background: #000;
+        }
+        
+        .grid-header {
+            display: flex;
+            border-bottom: 1px solid #0f0;
+            background: #001100;
+        }
+        
+        .grid-row {
+            display: flex;
+        }
+        
+        .grid-row:nth-child(4n) {
+            border-bottom: 1px solid #003300;
+        }
+        
+        .cell {
+            width: 40px;
+            height: 14px;
+            border-right: 1px solid #001100;
+            padding: 1px 2px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        
+        .cell.step { 
+            width: 25px; 
+            color: #006600;
+            text-align: center;
+        }
+        
+        .cell.header {
+            font-weight: bold;
+            text-align: center;
+            background: #002200;
+        }
+        
+        .cell.active {
+            background: #003300;
+        }
+        
+        .cell.playing {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        .cell:hover {
+            background: #004400;
+        }
+        
+        input[type="text"] {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 2px;
+            font-family: inherit;
+            font-size: 11px;
+        }
+        
+        #bpm {
+            width: 40px;
+        }
+        
+        .status {
+            color: #00ff00;
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="tracker">
+        <h1>VERDIGRIS TRACKER v0.1</h1>
+        
+        <div class="controls">
+            <button id="play">PLAY</button>
+            <button id="stop">STOP</button>
+            <button id="clear">CLEAR</button>
+            <label>BPM: <input type="text" id="bpm" value="120"></label>
+            <label>STEPS: <input type="text" id="steps" value="16"></label>
+            <div class="status" id="status">READY</div>
+        </div>
+        
+        <div class="pattern-grid" id="grid">
+            <!-- Grid will be generated here -->
+        </div>
+    </div>
+    
+    <script type="module">
+        // Simple 4-channel tracker with pure math synthesis
+        
+        class MathSynth {
+            constructor() {
+                this.audioContext = null;
+                this.channels = [
+                    { name: 'CHOIR', wave: 'sine', detune: 10 },
+                    { name: 'PLUCK', wave: 'triangle', detune: 0 },
+                    { name: 'LEAD', wave: 'sawtooth', detune: 2 },
+                    { name: 'FOLEY', wave: 'square', detune: 50 }
+                ];
+            }
+            
+            init() {
+                if (!this.audioContext) {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            
+            playNote(channel, note, duration = 0.1) {
+                if (!this.audioContext) this.init();
+                
+                const freq = this.noteToFreq(note);
+                if (!freq) return;
+                
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.type = this.channels[channel].wave;
+                osc.frequency.value = freq;
+                
+                // Add detune for richness
+                if (this.channels[channel].detune > 0) {
+                    const osc2 = this.audioContext.createOscillator();
+                    osc2.type = this.channels[channel].wave;
+                    osc2.frequency.value = freq * (1 + this.channels[channel].detune / 1000);
+                    osc2.connect(gain);
+                    osc2.start();
+                    osc2.stop(this.audioContext.currentTime + duration);
+                }
+                
+                // Simple envelope
+                gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + duration);
+            }
+            
+            noteToFreq(note) {
+                if (!note || note === '---') return null;
+                
+                const notes = { 
+                    'C': 261.63, 'C#': 277.18, 'D': 293.66, 'D#': 311.13,
+                    'E': 329.63, 'F': 349.23, 'F#': 369.99, 'G': 392.00,
+                    'G#': 415.30, 'A': 440.00, 'A#': 466.16, 'B': 493.88
+                };
+                
+                const match = note.match(/([A-G]#?)(\d)/);
+                if (!match) return null;
+                
+                const [, noteName, octave] = match;
+                const baseFreq = notes[noteName];
+                const octaveShift = parseInt(octave) - 4;
+                
+                return baseFreq * Math.pow(2, octaveShift);
+            }
+        }
+        
+        class TrackerUI {
+            constructor() {
+                this.synth = new MathSynth();
+                this.pattern = [];
+                this.steps = 16;
+                this.channels = 4;
+                this.currentStep = 0;
+                this.isPlaying = false;
+                this.bpm = 120;
+                this.timer = null;
+                
+                this.initPattern();
+                this.initUI();
+            }
+            
+            initPattern() {
+                this.pattern = [];
+                for (let ch = 0; ch < this.channels; ch++) {
+                    this.pattern[ch] = [];
+                    for (let step = 0; step < this.steps; step++) {
+                        this.pattern[ch][step] = '---';
+                    }
+                }
+                
+                // Default pattern
+                this.pattern[0] = ['C4', '---', 'E4', '---', 'G4', '---', 'E4', '---', 
+                                   'C4', '---', 'E4', '---', 'G4', '---', 'C5', '---'];
+                this.pattern[1] = ['C2', '---', '---', '---', 'G2', '---', '---', '---',
+                                   'C2', '---', '---', '---', 'E2', '---', '---', '---'];
+            }
+            
+            initUI() {
+                this.renderGrid();
+                
+                document.getElementById('play').onclick = () => this.play();
+                document.getElementById('stop').onclick = () => this.stop();
+                document.getElementById('clear').onclick = () => this.clear();
+                document.getElementById('bpm').onchange = (e) => {
+                    this.bpm = parseInt(e.target.value) || 120;
+                };
+            }
+            
+            renderGrid() {
+                const grid = document.getElementById('grid');
+                grid.innerHTML = '';
+                
+                // Header
+                const header = document.createElement('div');
+                header.className = 'grid-header';
+                
+                const stepHeader = document.createElement('div');
+                stepHeader.className = 'cell header step';
+                stepHeader.textContent = '#';
+                header.appendChild(stepHeader);
+                
+                for (let step = 0; step < this.steps; step++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell header';
+                    cell.textContent = (step % 4 === 0) ? (step/4 + 1).toString() : '.';
+                    header.appendChild(cell);
+                }
+                
+                grid.appendChild(header);
+                
+                // Channels
+                for (let ch = 0; ch < this.channels; ch++) {
+                    const row = document.createElement('div');
+                    row.className = 'grid-row';
+                    
+                    const chLabel = document.createElement('div');
+                    chLabel.className = 'cell step';
+                    chLabel.textContent = this.synth.channels[ch].name.substring(0, 3);
+                    row.appendChild(chLabel);
+                    
+                    for (let step = 0; step < this.steps; step++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.id = `cell-${ch}-${step}`;
+                        cell.textContent = this.pattern[ch][step];
+                        cell.contentEditable = true;
+                        
+                        cell.onclick = () => this.editCell(ch, step);
+                        cell.onblur = (e) => {
+                            this.pattern[ch][step] = e.target.textContent || '---';
+                        };
+                        
+                        row.appendChild(cell);
+                    }
+                    
+                    grid.appendChild(row);
+                }
+            }
+            
+            editCell(channel, step) {
+                const cell = document.getElementById(`cell-${channel}-${step}`);
+                cell.focus();
+                
+                // Play note preview
+                if (this.pattern[channel][step] !== '---') {
+                    this.synth.playNote(channel, this.pattern[channel][step], 0.2);
+                }
+            }
+            
+            play() {
+                if (this.isPlaying) return;
+                
+                this.isPlaying = true;
+                this.currentStep = 0;
+                document.getElementById('status').textContent = 'PLAYING';
+                
+                const stepTime = 60000 / (this.bpm * 4); // 16th notes
+                
+                const tick = () => {
+                    if (!this.isPlaying) return;
+                    
+                    // Play notes at current step
+                    for (let ch = 0; ch < this.channels; ch++) {
+                        const note = this.pattern[ch][this.currentStep];
+                        if (note !== '---') {
+                            this.synth.playNote(ch, note, stepTime / 1000);
+                        }
+                    }
+                    
+                    // Update display
+                    this.updateDisplay();
+                    
+                    // Next step
+                    this.currentStep = (this.currentStep + 1) % this.steps;
+                    
+                    this.timer = setTimeout(tick, stepTime);
+                };
+                
+                tick();
+            }
+            
+            stop() {
+                this.isPlaying = false;
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+                document.getElementById('status').textContent = 'STOPPED';
+                this.clearDisplay();
+            }
+            
+            clear() {
+                this.stop();
+                this.initPattern();
+                this.renderGrid();
+                document.getElementById('status').textContent = 'CLEARED';
+            }
+            
+            updateDisplay() {
+                // Clear previous
+                document.querySelectorAll('.cell.playing').forEach(cell => {
+                    cell.classList.remove('playing');
+                });
+                
+                // Highlight current
+                for (let ch = 0; ch < this.channels; ch++) {
+                    const cell = document.getElementById(`cell-${ch}-${this.currentStep}`);
+                    if (cell) cell.classList.add('playing');
+                }
+            }
+            
+            clearDisplay() {
+                document.querySelectorAll('.cell.playing').forEach(cell => {
+                    cell.classList.remove('playing');
+                });
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            window.tracker = new TrackerUI();
+        });
+    </script>
+</body>
+</html>

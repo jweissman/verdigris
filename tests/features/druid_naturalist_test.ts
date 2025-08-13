@@ -7,7 +7,7 @@ import { Unit } from '../../src/types/Unit';
 
 describe('Druid and Naturalist Forest Abilities', () => {
   describe('Druid', () => {
-    it.skip('should summon random forest creatures', () => {
+    it('should summon random forest creatures', () => {
       const sim = new Simulator(32, 24);
       
       // Create a druid
@@ -46,8 +46,8 @@ describe('Druid and Naturalist Forest Abilities', () => {
       const summoned = sim.units.find(u => u.meta?.summoned && u.meta?.summonedBy === 'druid1');
       expect(summoned).toBeDefined();
       
-      // Should be a forest creature
-      const forestCreatures = ['squirrel', 'bear', 'owl', 'bird', 'deer', 'rabbit', 'fox', 'mesoworm'];
+      // Should be a forest creature (check actual ability config)
+      const forestCreatures = ['squirrel', 'bear', 'owl', 'bird', 'deer', 'rabbit', 'fox', 'wolf', 'mesoworm'];
       expect(forestCreatures).toContain(summoned?.sprite);
       
       // Should be on the druid's team

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundboard 4x4</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #1a1a1a;
+            color: #e0e0e0;
+            font: 12px 'SF Mono', 'Monaco', monospace;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .soundboard {
+            background: #2a2a2a;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+        
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            font-size: 16px;
+            text-shadow: 0 0 10px #4CAF50;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            grid-template-rows: repeat(4, 80px);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .pad {
+            background: #333;
+            border: 2px solid #666;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+            user-select: none;
+        }
+        
+        .pad:hover {
+            border-color: #4CAF50;
+            background: #3a3a3a;
+        }
+        
+        .pad:active,
+        .pad.playing {
+            background: #4CAF50;
+            color: #000;
+            transform: scale(0.95);
+            box-shadow: 0 0 15px #4CAF50;
+        }
+        
+        .pad-name {
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .pad-freq {
+            font-size: 8px;
+            color: #888;
+        }
+        
+        .pad.playing .pad-freq {
+            color: #000;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            appearance: none;
+            cursor: pointer;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .preset-btn {
+            background: #444;
+            color: #e0e0e0;
+            border: 1px solid #666;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.1s;
+        }
+        
+        .preset-btn:hover {
+            background: #555;
+            border-color: #888;
+        }
+        
+        .edit-panel {
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .edit-panel.show {
+            display: block;
+        }
+        
+        .edit-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        
+        .edit-input {
+            background: #333;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            padding: 3px 5px;
+            border-radius: 2px;
+            font-size: 10px;
+            font-family: inherit;
+        }
+        
+        .edit-input.short {
+            width: 60px;
+        }
+        
+        .edit-input.med {
+            width: 80px;
+        }
+        
+        .edit-label {
+            font-size: 10px;
+            color: #aaa;
+            width: 50px;
+        }
+        
+        .edit-btn {
+            background: #4CAF50;
+            color: #000;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 10px;
+            font-family: inherit;
+        }
+        
+        .edit-btn:hover {
+            background: #66BB6A;
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 10px;
+            color: #888;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="soundboard">
+        <div class="title">🎵 SOUNDBOARD 4×4</div>
+        
+        <div class="controls">
+            <div class="volume-control">
+                <span style="font-size: 10px;">VOL</span>
+                <input type="range" class="volume-slider" id="volume" min="0" max="100" value="70">
+                <span id="volume-display" style="font-size: 10px; width: 30px;">70%</span>
+            </div>
+            
+            <button class="preset-btn" id="drum-preset">DRUMS</button>
+            <button class="preset-btn" id="combat-preset">COMBAT</button>
+            <button class="preset-btn" id="edit-toggle">EDIT</button>
+        </div>
+        
+        <div class="grid" id="grid">
+            <!-- Generated by JavaScript -->
+        </div>
+        
+        <div class="edit-panel" id="edit-panel">
+            <div style="font-size: 11px; margin-bottom: 8px; color: #4CAF50;">Edit Pad <span id="edit-pad-num">0</span></div>
+            <div class="edit-row">
+                <span class="edit-label">Name:</span>
+                <input type="text" class="edit-input med" id="edit-name" placeholder="sound name">
+            </div>
+            <div class="edit-row">
+                <span class="edit-label">Freq:</span>
+                <input type="text" class="edit-input med" id="edit-freq" placeholder="440,880">
+                <span class="edit-label">Dur:</span>
+                <input type="text" class="edit-input short" id="edit-dur" placeholder="0.1">
+            </div>
+            <div class="edit-row">
+                <span class="edit-label">Wave:</span>
+                <select class="edit-input med" id="edit-wave">
+                    <option value="sine">Sine</option>
+                    <option value="square">Square</option>
+                    <option value="triangle">Triangle</option>
+                    <option value="sawtooth">Sawtooth</option>
+                </select>
+                <button class="edit-btn" id="edit-save">SAVE</button>
+                <button class="edit-btn" id="edit-clear" style="background: #f44336;">CLEAR</button>
+            </div>
+        </div>
+        
+        <div class="status" id="status">Ready • Click pads to play • Right-click to edit</div>
+    </div>
+    
+    <script src="./soundboard_app.ts" type="module"></script>
+</body>
+</html>

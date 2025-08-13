@@ -9,7 +9,7 @@ import { StatusEffects } from '../../src/rules/status_effects';
 import { Perdurance } from '../../src/rules/perdurance';
 
 describe('Toysday Winter Integration', () => {
-  it.skip('should run complete winter toymaker scenario', () => {
+  it('should run complete winter toymaker scenario', () => {
     const sim = new Simulator();
     
     // Full rulebook including winter effects
@@ -72,9 +72,8 @@ describe('Toysday Winter Integration', () => {
     expect(snowflakeCount).toBeGreaterThan(0);
     expect(sim.winterActive).toBe(true);
     
-    // Check that constructs have proper abilities (identify by construct-specific unit names)
-    const constructTypes = ['freezebot', 'clanker', 'spiker', 'swarmbot', 'roller', 'zapper'];
-    const constructs = sim.units.filter(u => constructTypes.includes(u.id.split(':')[0]));
+    // Check that constructs have proper abilities (look for construct tag)
+    const constructs = sim.units.filter(u => u.tags?.includes('construct'));
     expect(constructs.length).toBeGreaterThan(0);
     
     const construct = constructs[0];

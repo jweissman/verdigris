@@ -55,6 +55,31 @@ describe('Projectile simulation', () => {
     expect(proj.vel.y).toBeCloseTo(0, 5);
     expect(proj.team).toBe('friendly');
   });
+
+  it('should detect bullet collision with enemy units', () => {
+    const sim = new Simulator();
+    sim.addUnit({ id: 'target', pos: { x: 1, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
+    
+    // Add a bullet projectile heading toward the target
+    sim.projectiles = [{
+      id: 'bullet_shooter',
+      pos: { x: 0, y: 0 },
+      vel: { x: 1, y: 0 }, // Moving right toward target
+      radius: 0.1,
+      damage: 3,
+      team: 'friendly',
+      type: 'bullet'
+    }];
+
+    const initialHp = sim.units[0].hp;
+    sim.step();
+
+    // Bullet should hit target and be removed
+    expect(sim.projectiles.length).toBe(0);
+    
+    // Target should take damage
+    expect(sim.units[0].hp).toBeLessThan(initialHp);
+  });
 });
 
 // note: flaky somehow?
@@ -95,26 +120,36 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
   });
 
   // note: flaky somehow?
-  it.skip('should fire bomb projectiles that arc to targets', () => {
+  it('should fire bomb projectiles that arc to targets', () => {
     const sim = new Simulator(40, 25);
     const sceneLoader = new SceneLoader(sim);
     
-    // Create a scenario with bombardier and nearby worm
-    const bombardierTest = `b....
-.....
-.....
-..w..`;
+    // Add abilities system so bombardier can use abilities
+    const { Abilities } = require('../../src/rules/abilities');
+    const { CommandHandler } = require('../../src/rules/command_handler');
+    const { EventHandler } = require('../../src/rules/event_handler');
+    sim.rulebook = [new Abilities(sim), new CommandHandler(sim), new EventHandler(sim)];
+    
+    // Create a scenario with bombardier and worm at proper distance (6-14 range)
+    const bombardierTest = `b........
+.........
+.........
+.........
+.........
+.........
+........w`;
     
     sceneLoader.loadFromText(bombardierTest);
     
-    const bombardier = sim.units.find(u => u.sprite === 'bombardier' && u.abilities.bombardier);
+    const bombardier = sim.units.find(u => u.sprite === 'bombardier');
+    expect(bombardier).toBeTruthy();
     expect(bombardier?.abilities.includes('bombardier')).toBe(true);
     
     let foundBomb = false;
     let bomb;
     
     // Step until bombardier fires and check for bomb during flight
-    for (let i = 0; i < bombardier?.abilities.bombardier.config?.duration || 0; i++) {
+    for (let i = 0; i < 20; i++) {
       sim.step();
       const bombs = sim.projectiles.filter(p => p.type === 'bomb');
       if (bombs.length > 0 && !foundBomb) {

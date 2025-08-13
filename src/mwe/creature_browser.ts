@@ -93,11 +93,8 @@ export default class CreatureBrowserUI {
 
 
   constructor() {
-    // let bgs = Game.loadBackgrounds();
-    // let sprites = Game.loadSprites();
-
     this.setupControls();
-    // this.renderCreatures();
+    this.renderCreatures(); // Actually render the creatures!
   }
 
   setupControls() {

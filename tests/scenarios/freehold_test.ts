@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { UnitOperations } from '../../src/UnitOperations';
-import { UnitMovement } from '../../src/rules/unit_movement';
 
 describe('Freehold Scenario Layer', () => {
   it('addWorm adds a worm at the specified grid position', () => {
@@ -18,8 +16,8 @@ describe('Freehold Scenario Layer', () => {
 
   it('can add a worm at a random grid position', () => {
     const sim = new Simulator();
-    const randomX = Math.floor(Math.random() * sim.fieldWidth);
-    const randomY = Math.floor(Math.random() * sim.fieldHeight);
+    const randomX = Math.floor(Simulator.rng.random() * sim.fieldWidth);
+    const randomY = Math.floor(Simulator.rng.random() * sim.fieldHeight);
     const worm = { ...Encyclopaedia.unit('worm'), pos: { x: randomX, y: randomY } };
     sim.addUnit(worm);
     const addedWorm = sim.units.find(u => u.sprite === 'worm');

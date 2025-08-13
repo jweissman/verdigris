@@ -10,7 +10,7 @@ describe('Lightning Storm Environmental System', () => {
   });
 
   // NOTE: flaky
-  it.skip('should create lightning storm and generate periodic strikes', () => {
+  it('should create lightning storm and generate periodic strikes', () => {
     const sim = new Simulator();
     sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
     

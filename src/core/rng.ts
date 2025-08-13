@@ -24,6 +24,11 @@ export class RNG {
   randomInt(min: number, max: number): number {
     return Math.floor(min + this.random() * (max - min + 1));
   }
+
+  dn(faces: number): number { return this.randomInt(1, faces); }
+
+  d3 = () => this.dn(3)
+  
   
   // Pick random element from array
   randomChoice<T>(array: T[]): T {

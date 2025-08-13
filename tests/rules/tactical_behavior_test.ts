@@ -56,7 +56,7 @@ describe('Tactical Behavior Improvements', () => {
   });
   
   // NOTE: very flaky somehow
-  it.skip('should limit toymaker deployment to prevent overload', () => {
+  it('should limit toymaker deployment to prevent overload', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
     
@@ -65,8 +65,8 @@ describe('Tactical Behavior Improvements', () => {
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
     sim.addUnit(toymaker);
     
-    const deployBot = toymaker.abilities.deployBot;
-    expect(deployBot.maxUses).toBe(5);
+    const deployBotAbility = Abilities.all.deployBot;
+    expect(deployBotAbility.maxUses).toBe(5);
     
     let deploymentsSuccessful = 0;
     const initialUnits = sim.units.length;

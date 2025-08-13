@@ -33,13 +33,49 @@ export class ProjectileMotion extends Rule {
   }
 
   private updateBullet(proj: Projectile): Projectile {
-    // Simple linear motion for bullets
+    // Calculate new position
+    const newPos = {
+      x: proj.pos.x + proj.vel.x,
+      y: proj.pos.y + proj.vel.y
+    };
+
+    // Check for collision with units
+    const hitUnit = this.sim.units.find(unit => {
+      if (unit.team === proj.team) return false; // Don't hit same team
+      if (unit.hp <= 0) return false; // Don't hit dead units
+      
+      const dx = newPos.x - unit.pos.x;
+      const dy = newPos.y - unit.pos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Unit radius is typically 0.5, projectile radius varies
+      const collisionDistance = (unit.radius || 0.5) + (proj.radius || 0.1);
+      return distance <= collisionDistance;
+    });
+
+    if (hitUnit) {
+      // Queue damage event and mark projectile for removal
+      this.sim.queuedEvents.push({
+        kind: 'damage',
+        source: proj.id.split('_')[1] || 'unknown', // Extract source unit ID
+        target: hitUnit.id,
+        meta: {
+          aspect: 'impact',
+          amount: proj.damage || 1
+        }
+      });
+
+      // Mark projectile as completed by moving it out of bounds
+      return {
+        ...proj,
+        pos: { x: -1, y: -1 } // Will be filtered out
+      };
+    }
+
+    // No collision, continue motion
     return {
       ...proj,
-      pos: {
-        x: proj.pos.x + proj.vel.x,
-        y: proj.pos.y + proj.vel.y
-      }
+      pos: newPos
     };
   }
 

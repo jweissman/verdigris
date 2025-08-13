@@ -1,0 +1,86 @@
+{
+  "id": "lich_theme",
+  "name": "The Lich",
+  "length": 32,
+  "meta": {
+    "composer": "Claude",
+    "bpm": 130,
+    "key": "E minor",
+    "description": "Dark metal theme with tritones and power chords"
+  },
+  "tracks": [
+    {
+      "channel": 0,
+      "name": "bass",
+      "notes": [
+        {"note": "E-2", "instrument": 1, "volume": 64},
+        null, null, null,
+        {"note": "E-2", "instrument": 1, "volume": 64},
+        null,
+        {"note": "G-2", "instrument": 1, "volume": 64},
+        null,
+        {"note": "E-2", "instrument": 1, "volume": 64},
+        null, null, null,
+        {"note": "D#-2", "instrument": 1, "volume": 64},
+        null, null, null,
+        {"note": "E-2", "instrument": 1, "volume": 64},
+        null, null, null,
+        {"note": "E-2", "instrument": 1, "volume": 64},
+        null,
+        {"note": "G-2", "instrument": 1, "volume": 64},
+        null,
+        {"note": "E-2", "instrument": 1, "volume": 64},
+        null, null, null,
+        {"note": "F#-2", "instrument": 1, "volume": 64},
+        null,
+        {"note": "F#-2", "instrument": 1, "volume": 64},
+        null
+      ],
+      "effects": []
+    },
+    {
+      "channel": 1, 
+      "name": "lead",
+      "notes": [
+        null, null, null, null, null, null, null, null,
+        {"note": "G-5", "instrument": 2, "volume": 50},
+        null,
+        {"note": "F#-5", "instrument": 2, "volume": 50},
+        null,
+        {"note": "F-5", "instrument": 2, "volume": 50},
+        null, null, null,
+        {"note": "E-5", "instrument": 2, "volume": 50},
+        null,
+        {"note": "D#-5", "instrument": 2, "volume": 50},
+        null,
+        {"note": "D-5", "instrument": 2, "volume": 50},
+        null, null, null,
+        null, null, null, null, null, null, null, null
+      ],
+      "effects": []
+    },
+    {
+      "channel": 2,
+      "name": "power_chords", 
+      "notes": [
+        {"note": "E-4", "instrument": 3, "volume": 55},
+        null, null, null,
+        {"note": "E-4", "instrument": 3, "volume": 55},
+        null, null, null,
+        null, null, null, null,
+        {"note": "D#4", "instrument": 3, "volume": 55},
+        null, null, null,
+        {"note": "E-4", "instrument": 3, "volume": 55},
+        null, null, null,
+        {"note": "E-4", "instrument": 3, "volume": 55},
+        null, null, null,
+        null, null, null, null,
+        {"note": "F#4", "instrument": 3, "volume": 55},
+        null,
+        {"note": "G-4", "instrument": 3, "volume": 55},
+        null
+      ],
+      "effects": []
+    }
+  ]
+}
