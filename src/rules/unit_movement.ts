@@ -6,8 +6,16 @@ import { Simulator } from "../core/simulator";
 export class UnitMovement extends Rule {
   static wanderRate: number = 0.15; // Slower, more deliberate movement
   apply = () => {
-    // TODO: Convert to commands
-    // For now, just process movement intents
+    // Use bulk forces command in performance mode
+    if (this.sim.performanceMode && this.sim.units.length > 10) {
+      this.sim.queuedCommands.push({
+        type: 'forces',
+        params: {}
+      });
+      return;
+    }
+    
+    // Traditional individual command processing
     for (let unit of this.sim.units) {
       if (unit.hp <= 0) {
         // Queue command to mark as dead
@@ -206,6 +214,84 @@ export class UnitMovement extends Rule {
     ];
   }
   static resolveCollisions(sim: Simulator) {
+    // Use SoA acceleration for any significant unit count
+    if (sim.unitArrays && sim.units.length > 20) {
+      return UnitMovement.resolveCollisionsSoA(sim);
+    }
+    
+    // Fallback to traditional method for smaller unit counts
+    UnitMovement.resolveCollisionsTraditional(sim);
+  }
+  
+  // Vectorized collision resolution using SoA
+  private static resolveCollisionsSoA(sim: Simulator) {
+    // Sync to SoA for vectorized processing
+    sim.syncUnitsToArrays();
+    const arrays = sim.unitArrays;
+    
+    // Use SoA collision detection (much faster)
+    const collisions = arrays.detectCollisions(1.0);
+    
+    // Process each collision pair
+    for (const [i, j] of collisions) {
+      // Skip dead units
+      if (arrays.state[i] === 3 || arrays.state[j] === 3) continue;
+      
+      // Determine which unit has priority (higher mass + hp)
+      const priorityI = arrays.mass[i] * 10 + arrays.hp[i];
+      const priorityJ = arrays.mass[j] * 10 + arrays.hp[j];
+      
+      const displacedIndex = priorityI > priorityJ ? j : i;
+      const stableIndex = priorityI > priorityJ ? i : j;
+      
+      // Find displacement for lower priority unit
+      const x = arrays.posX[displacedIndex];
+      const y = arrays.posY[displacedIndex];
+      
+      const displacements = [
+        [1, 0], [-1, 0], [0, 1], [0, -1],
+        [1, 1], [-1, -1], [1, -1], [-1, 1]
+      ];
+      
+      for (const [dx, dy] of displacements) {
+        const newX = x + dx;
+        const newY = y + dy;
+        
+        // Boundary check
+        if (newX < 0 || newX >= sim.fieldWidth || newY < 0 || newY >= sim.fieldHeight) continue;
+        
+        // Quick collision check using SoA
+        let collision = false;
+        for (let k = 0; k < arrays.activeCount; k++) {
+          if (arrays.active[k] === 0 || k === displacedIndex) continue;
+          const dist = Math.abs(arrays.posX[k] - newX) + Math.abs(arrays.posY[k] - newY);
+          if (dist < 1.0) {
+            collision = true;
+            break;
+          }
+        }
+        
+        if (!collision) {
+          // Queue displacement command
+          const unit = arrays.units[displacedIndex];
+          if (unit) {
+            sim.queuedCommands.push({
+              type: 'move',
+              params: {
+                unitId: unit.id,
+                dx: dx,
+                dy: dy
+              }
+            });
+          }
+          break;
+        }
+      }
+    }
+  }
+  
+  // Traditional collision resolution (fallback)
+  private static resolveCollisionsTraditional(sim: Simulator) {
     // Build fresh collision map from current unit positions
     const collisionMap: { [key: string]: Unit[] } = {};
     

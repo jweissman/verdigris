@@ -18,13 +18,28 @@ export class Tossing extends Rule {
 
     if (tossProgress >= tossDuration) {
       // Toss completed - queue command to land at target
+      // Complete toss: move to target and clear toss state
       this.sim.queuedCommands.push({
-        type: 'updateToss',
+        type: 'move',
         params: {
           unitId: unit.id,
-          complete: true,
-          targetX: unit.meta.tossTarget?.x || unit.pos.x,
-          targetY: unit.meta.tossTarget?.y || unit.pos.y
+          x: unit.meta.tossTarget?.x || unit.pos.x,
+          y: unit.meta.tossTarget?.y || unit.pos.y,
+          z: 0
+        }
+      });
+      
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            tossing: false,
+            tossProgress: undefined,
+            tossOrigin: undefined,
+            tossTarget: undefined,
+            tossForce: undefined
+          }
         }
       });
 
@@ -54,15 +69,22 @@ export class Tossing extends Rule {
       const maxHeight = 3; // Lower arc than jump
       const newZ = (maxHeight * Math.sin(progress * Math.PI)) * 2;
       
+      // Update toss position and progress
       this.sim.queuedCommands.push({
-        type: 'updateToss',
+        type: 'move',
         params: {
           unitId: unit.id,
-          complete: false,
-          progress: tossProgress,
           x: newX,
           y: newY,
           z: newZ
+        }
+      });
+      
+      this.sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: { tossProgress: tossProgress }
         }
       });
     }

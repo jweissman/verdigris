@@ -13,7 +13,7 @@ export class UnitProxy implements Unit {
   constructor(arrays: UnitArrays, index: number) {
     this.arrays = arrays;
     this._index = index;
-    this._id = arrays.indexToId[index];
+    this._id = arrays.units[index]?.id || `unit_${index}`;
   }
   
   // Update index if unit moved in arrays
@@ -27,46 +27,45 @@ export class UnitProxy implements Unit {
   
   set id(value: string) {
     this._id = value;
-    this.arrays.indexToId[this._index] = value;
+    if (this.arrays.units[this._index]) {
+      this.arrays.units[this._index].id = value;
+    }
   }
   
   get pos() {
     const arrays = this.arrays;
     const idx = this._index;
     return {
-      get x() { return arrays.x[idx]; },
+      get x() { return arrays.posX[idx]; },
       set x(v: number) { 
-        arrays.x[idx] = v;
-        arrays.dirtyMask[idx] = 1;
+        arrays.posX[idx] = v;
       },
-      get y() { return arrays.y[idx]; },
+      get y() { return arrays.posY[idx]; },
       set y(v: number) { 
-        arrays.y[idx] = v;
-        arrays.dirtyMask[idx] = 1;
+        arrays.posY[idx] = v;
       }
     };
   }
   
   set pos(value: { x: number; y: number }) {
-    this.arrays.x[this._index] = value.x;
-    this.arrays.y[this._index] = value.y;
-    this.arrays.dirtyMask[this._index] = 1;
+    this.arrays.posX[this._index] = value.x;
+    this.arrays.posY[this._index] = value.y;
   }
   
   get intendedMove() {
     const arrays = this.arrays;
     const idx = this._index;
     return {
-      get x() { return arrays.vx[idx]; },
-      set x(v: number) { arrays.vx[idx] = v; },
-      get y() { return arrays.vy[idx]; },
-      set y(v: number) { arrays.vy[idx] = v; }
+      get x() { return arrays.intendedMoveX[idx]; },
+      set x(v: number) { arrays.intendedMoveX[idx] = v; },
+      get y() { return arrays.intendedMoveY[idx]; },
+      set y(v: number) { arrays.intendedMoveY[idx] = v; }
     };
   }
   
   set intendedMove(value: { x: number; y: number }) {
-    this.arrays.vx[this._index] = value.x;
-    this.arrays.vy[this._index] = value.y;
+    this.arrays.intendedMoveX[this._index] = value.x;
+    this.arrays.intendedMoveY[this._index] = value.y;
   }
   
   get hp(): number {
@@ -75,7 +74,6 @@ export class UnitProxy implements Unit {
   
   set hp(value: number) {
     this.arrays.hp[this._index] = value;
-    this.arrays.dirtyMask[this._index] = 1;
     if (value <= 0) {
       this.arrays.state[this._index] = 3; // dead
     }
@@ -119,7 +117,6 @@ export class UnitProxy implements Unit {
       'dead': 3
     };
     this.arrays.state[this._index] = stateMap[value] || 0;
-    this.arrays.dirtyMask[this._index] = 1;
   }
   
   get mass(): number {
@@ -168,15 +165,19 @@ export class UnitProxyManager {
   }
   
   getProxyById(id: string): UnitProxy | undefined {
-    const index = this.arrays.idToIndex.get(id);
-    if (index === undefined) return undefined;
-    return this.getProxy(index);
+    // O(N) search for now - could be optimized with id->index map
+    for (let i = 0; i < this.arrays.capacity; i++) {
+      if (this.arrays.active[i] && this.arrays.units[i]?.id === id) {
+        return this.getProxy(i);
+      }
+    }
+    return undefined;
   }
   
   getAllProxies(): UnitProxy[] {
     const proxies: UnitProxy[] = [];
-    for (let i = 0; i < this.arrays.count; i++) {
-      if (this.arrays.state[i] !== 3) { // Not dead
+    for (let i = 0; i < this.arrays.capacity; i++) {
+      if (this.arrays.active[i] && this.arrays.state[i] !== 3) { // Active and not dead
         proxies.push(this.getProxy(i));
       }
     }

@@ -697,9 +697,8 @@ export class Abilities extends Rule {
             this.sim.queuedEvents.push({
               kind: 'terrain',
               source: caster.id,
+              target: { x, y }, // Position goes in target, not meta
               meta: {
-                x,
-                y,
                 terrainType: 'trench',
                 duration,
                 defenseBonus: 0.5, // 50% damage reduction

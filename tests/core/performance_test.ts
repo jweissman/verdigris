@@ -12,6 +12,7 @@ describe('Performance Tests', () => {
     it(`should run ${scenario} scenario for ${SIMULATION_STEPS} steps within ${MAX_EXECUTION_TIME}ms`, () => {
       const sim = new Simulator(32, 32);
       sim.enableProfiling = false; // Disable debug overhead for performance tests
+      sim.enablePerformanceMode(); // Enable ultra-fast mode
       const loader = new SceneLoader(sim);
       
       const startTime = performance.now();

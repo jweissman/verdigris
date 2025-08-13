@@ -4,8 +4,6 @@ import { Transform } from "../core/transform";
 export class MoveCommand extends Command {
   execute(unitId: string | null, params: Record<string, any>): void {
     const targetId = params.unitId as string;
-    const dx = params.dx as number;
-    const dy = params.dy as number;
     
     if (!targetId) return;
     
@@ -14,28 +12,45 @@ export class MoveCommand extends Command {
     const unit = this.sim.units.find(u => u.id === targetId);
     if (!unit) return;
     
-    // Handle status effects
-    let effectiveDx = dx;
-    let effectiveDy = dy;
+    // Support both relative (dx/dy) and absolute (x/y) positioning
+    let newX: number, newY: number;
     
-    if (unit.meta?.chilled) {
-      const slowFactor = 1 - (unit.meta.chillIntensity || 0.5);
-      effectiveDx *= slowFactor;
-      effectiveDy *= slowFactor;
+    if (params.x !== undefined && params.y !== undefined) {
+      // Absolute positioning (physics/tossing)
+      newX = params.x as number;
+      newY = params.y as number;
+    } else {
+      // Relative movement (dx/dy)
+      const dx = params.dx as number || 0;
+      const dy = params.dy as number || 0;
+      
+      // Handle status effects for relative movement
+      let effectiveDx = dx;
+      let effectiveDy = dy;
+      
+      if (unit.meta?.chilled) {
+        const slowFactor = 1 - (unit.meta.chillIntensity || 0.5);
+        effectiveDx *= slowFactor;
+        effectiveDy *= slowFactor;
+      }
+      
+      if (unit.meta?.stunned) {
+        effectiveDx = 0;
+        effectiveDy = 0;
+      }
+      
+      newX = unit.pos.x + effectiveDx;
+      newY = unit.pos.y + effectiveDy;
     }
     
-    if (unit.meta?.stunned) {
-      effectiveDx = 0;
-      effectiveDy = 0;
-    }
+    // Clamp to field bounds
+    newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, newX));
+    newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, newY));
     
-    // Calculate new position and clamp to field bounds
-    const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, unit.pos.x + effectiveDx));
-    const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, unit.pos.y + effectiveDy));
-    
-    // Determine facing (but don't change facing for jumping units)
+    // Determine facing (but don't change facing for physics movement)
     let facing = unit.meta?.facing || 'right';
-    if (!unit.meta?.jumping) {
+    if (!unit.meta?.jumping && !unit.meta?.tossing && params.dx !== undefined) {
+      const dx = params.dx as number;
       if (dx > 0) {
         facing = 'right';
       } else if (dx < 0) {
@@ -43,14 +58,19 @@ export class MoveCommand extends Command {
       }
     }
     
+    // Build meta updates
+    let metaUpdates = { ...unit.meta, facing };
+    
+    // Handle physics z-coordinate
+    if (params.z !== undefined) {
+      metaUpdates.z = params.z as number;
+    }
+    
     // Use updateUnit for single unit update - much more efficient!
     transform.updateUnit(targetId, {
       pos: { x: newX, y: newY },
       intendedMove: { x: 0, y: 0 }, // Clear intended move after applying
-      meta: {
-        ...unit.meta,
-        facing
-      }
+      meta: metaUpdates
     });
   }
 }

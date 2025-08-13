@@ -149,7 +149,7 @@ export class UnitArrays {
   }
   
   // Helper methods for conversion
-  private teamToInt(team: string): number {
+  teamToInt(team: string): number {
     switch (team) {
       case 'neutral': return 0;
       case 'friendly': return 1;
@@ -158,7 +158,7 @@ export class UnitArrays {
     }
   }
   
-  private intToTeam(value: number): string {
+  intToTeam(value: number): string {
     switch (value) {
       case 0: return 'neutral';
       case 1: return 'friendly';
@@ -167,7 +167,7 @@ export class UnitArrays {
     }
   }
   
-  private stateToInt(state: string): number {
+  stateToInt(state: string): number {
     switch (state) {
       case 'idle': return 0;
       case 'moving': return 1;
@@ -177,7 +177,7 @@ export class UnitArrays {
     }
   }
   
-  private intToState(value: number): string {
+  intToState(value: number): string {
     switch (value) {
       case 0: return 'idle';
       case 1: return 'moving';

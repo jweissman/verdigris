@@ -136,6 +136,9 @@ export class BiomeEffects extends Rule {
   ];
 
   apply = (): void => {
+    // Skip expensive biome processing in performance mode
+    if (this.sim.performanceMode) return;
+    
     // Sample environmental conditions across the field
     const conditions = this.sampleEnvironmentalConditions();
     

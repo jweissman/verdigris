@@ -28,6 +28,8 @@ import { PerformanceProfiler } from "./performance_profiler";
 import { Transform } from "./transform";
 import { SpatialQueryBatcher } from "./spatial_queries";
 import { PairwiseBatcher } from "./pairwise_batcher";
+import { UnitArrays } from "../sim/unit_arrays";
+import { UnitProxyManager } from "../sim/unit_proxy";
 import { GridPartition } from "./grid_partition";
 import { ScalarField } from "./ScalarField";
 import { TargetCache } from "./target_cache";
@@ -38,7 +40,11 @@ class Simulator {
   fieldWidth: number;
   fieldHeight: number;
 
-  // Double buffering: current (for reading) and pending (for writing)
+  // SoA storage for performance
+  private unitArrays: UnitArrays;
+  private unitProxyManager: UnitProxyManager;
+  
+  // Legacy double buffering (kept for compatibility)
   private _units: Unit[] = [];
   private bufferA: Unit[] = [];
   private bufferB: Unit[] = [];
@@ -181,6 +187,10 @@ class Simulator {
     // Initialize grid partition for spatial queries (4x4 cells)
     this.gridPartition = new GridPartition(fieldWidth, fieldHeight, 4);
     
+    // Initialize SoA storage for performance
+    this.unitArrays = new UnitArrays(1000); // Support up to 1000 units
+    this.unitProxyManager = new UnitProxyManager(this.unitArrays);
+    
     // Initialize transform for controlled mutations
     this.transform = new Transform(this);
     
@@ -238,8 +248,16 @@ class Simulator {
   }
 
   paused: boolean = false;
+  performanceMode: boolean = false;
+  
   pause() {
     this.paused = true;
+  }
+  
+  enablePerformanceMode() {
+    this.performanceMode = true;
+    // Disable expensive features for maximum speed
+    this.enableProfiling = false;
   }
 
   reset() {
@@ -347,6 +365,68 @@ class Simulator {
   // Check if any units are dirty (need re-rendering)
   hasDirtyUnits(): boolean {
     return this.dirtyUnits.size > 0;
+  }
+  
+  // Sync units to SoA for performance-critical operations
+  syncUnitsToArrays(): void {
+    if (!this.unitArrays) return;
+    
+    // Clear existing arrays
+    this.unitArrays.activeCount = 0;
+    this.unitArrays.active.fill(0);
+    
+    let arrayIndex = 0;
+    for (const unit of this.units) {
+      if (arrayIndex >= this.unitArrays.capacity) {
+        console.warn(`Unit capacity exceeded: ${arrayIndex}/${this.unitArrays.capacity}`);
+        break;
+      }
+      
+      // Validate unit data before syncing
+      if (!unit || !unit.pos || typeof unit.pos.x !== 'number' || typeof unit.pos.y !== 'number') {
+        console.warn('Invalid unit data, skipping:', unit?.id);
+        continue;
+      }
+      
+      // Add unit to arrays
+      this.unitArrays.posX[arrayIndex] = unit.pos.x;
+      this.unitArrays.posY[arrayIndex] = unit.pos.y;
+      this.unitArrays.intendedMoveX[arrayIndex] = unit.intendedMove?.x || 0;
+      this.unitArrays.intendedMoveY[arrayIndex] = unit.intendedMove?.y || 0;
+      this.unitArrays.hp[arrayIndex] = unit.hp || 0;
+      this.unitArrays.maxHp[arrayIndex] = unit.maxHp || 1;
+      this.unitArrays.dmg[arrayIndex] = unit.dmg || 1;
+      this.unitArrays.mass[arrayIndex] = unit.mass || 1;
+      this.unitArrays.team[arrayIndex] = this.unitArrays.teamToInt(unit.team || 'neutral');
+      this.unitArrays.state[arrayIndex] = this.unitArrays.stateToInt(unit.state || 'idle');
+      this.unitArrays.active[arrayIndex] = 1;
+      this.unitArrays.units[arrayIndex] = unit;
+      
+      // Store back-reference for fast lookup
+      unit._arrayIndex = arrayIndex;
+      arrayIndex++;
+    }
+    
+    this.unitArrays.activeCount = arrayIndex;
+  }
+  
+  // Sync positions back from SoA to units after vectorized operations
+  syncPositionsFromArrays(): void {
+    if (!this.unitArrays) return;
+    
+    for (let i = 0; i < this.unitArrays.activeCount; i++) {
+      if (this.unitArrays.active[i] === 0) continue;
+      
+      const unit = this.unitArrays.units[i];
+      if (unit && unit.pos && typeof this.unitArrays.posX[i] === 'number') {
+        unit.pos.x = this.unitArrays.posX[i];
+        unit.pos.y = this.unitArrays.posY[i];
+        
+        if (!unit.intendedMove) unit.intendedMove = { x: 0, y: 0 };
+        unit.intendedMove.x = this.unitArrays.intendedMoveX[i] || 0;
+        unit.intendedMove.y = this.unitArrays.intendedMoveY[i] || 0;
+      }
+    }
   }
   
   // Get list of dirty unit IDs

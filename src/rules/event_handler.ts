@@ -264,7 +264,8 @@ export class EventHandler extends Rule {
     const position = event.target as Vec2;
     
     if (!position || typeof position !== 'object' || !('x' in position && 'y' in position)) {
-      console.warn(`Invalid position for terrain event: ${event.target}`);
+      console.trace(`Invalid position for terrain event: ${event.target}`);
+      // throw new Error(`Invalid position for terrain event: ${event.target}`);
       return;
     }
     

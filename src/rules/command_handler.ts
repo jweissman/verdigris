@@ -17,7 +17,7 @@ import { CleanupCommand } from "../commands/cleanup";
 import { RemoveCommand } from "../commands/remove";
 import { MoveCommand } from "../commands/move";
 import { KnockbackCommand } from "../commands/knockback";
-import { UpdateTossCommand } from "../commands/update_toss";
+// UpdateTossCommand replaced by unified MoveCommand
 import { ApplyStatusEffectCommand, UpdateStatusEffectsCommand } from "../commands/status_effect";
 import { Kill } from "../commands/kill";
 import { HaltCommand } from "../commands/halt";
@@ -30,6 +30,8 @@ import { PoseCommand } from "../commands/pose";
 import { TargetCommand } from "../commands/target";
 import { GuardCommand } from "../commands/guard";
 import { FaceCommand } from "../commands/face";
+import { ForcesCommand } from "../commands/forces";
+import { AICommand } from "../commands/ai";
 
 export type QueuedCommand = {
   type: string;
@@ -72,7 +74,7 @@ export class CommandHandler extends Rule {
     this.commands.set('remove', new RemoveCommand(sim, this.transform));
     this.commands.set('move', new MoveCommand(sim, this.transform));
     this.commands.set('knockback', new KnockbackCommand(sim, this.transform));
-    this.commands.set('updateToss', new UpdateTossCommand(sim, this.transform));
+    // updateToss replaced by unified move command
     this.commands.set('applyStatusEffect', new ApplyStatusEffectCommand(sim, this.transform));
     this.commands.set('updateStatusEffects', new UpdateStatusEffectsCommand(sim, this.transform));
     this.commands.set('markDead', new Kill(sim, this.transform));
@@ -89,6 +91,10 @@ export class CommandHandler extends Rule {
     this.commands.set('target', new TargetCommand(sim, this.transform));
     this.commands.set('guard', new GuardCommand(sim, this.transform));
     this.commands.set('face', new FaceCommand(sim, this.transform));
+    
+    // Higher-order bulk commands for performance
+    this.commands.set('forces', new ForcesCommand(sim, this.transform));
+    this.commands.set('ai', new AICommand(sim, this.transform));
   }
 
   apply = () => {
@@ -133,8 +139,9 @@ export class CommandHandler extends Rule {
         // Track command counts for profiling
         const commandCounts: { [key: string]: number } = {};
         
-        // Batch meta commands per unit
+        // Batch commands per unit to reduce processing overhead
         const metaBatch: { [unitId: string]: any } = {};
+        const moveBatch: { [unitId: string]: any } = {};
         const otherCommands: any[] = [];
         
         for (const queuedCommand of commandsToProcess) {
@@ -154,6 +161,11 @@ export class CommandHandler extends Rule {
             if (queuedCommand.params.state) {
               metaBatch[unitId].state = queuedCommand.params.state;
             }
+          }
+          // Batch move commands (last move wins)
+          else if (queuedCommand.type === 'move' && queuedCommand.params?.unitId) {
+            const unitId = queuedCommand.params.unitId as string;
+            moveBatch[unitId] = queuedCommand.params; // Last move command wins
           } else {
             otherCommands.push(queuedCommand);
           }
@@ -164,6 +176,20 @@ export class CommandHandler extends Rule {
         if (metaCommand) {
           for (const [unitId, updates] of Object.entries(metaBatch)) {
             metaCommand.execute(unitId, updates);
+          }
+        }
+        
+        // Process batched move commands with vectorization
+        if (Object.keys(moveBatch).length > 10 && this.sim.unitArrays) {
+          // Use vectorized movement for large batches
+          this.processMovementsBatch(moveBatch);
+        } else {
+          // Use individual move commands for small batches
+          const moveCommand = this.commands.get('move');
+          if (moveCommand) {
+            for (const [unitId, params] of Object.entries(moveBatch)) {
+              moveCommand.execute(unitId, params);
+            }
           }
         }
         
@@ -322,5 +348,56 @@ export class CommandHandler extends Rule {
         console.warn(`Unknown command type ${commandType} - cannot convert args to params`);
         return {};
     }
+  }
+  
+  /**
+   * Vectorized movement processing for massive performance gains
+   */
+  private processMovementsBatch(moveBatch: { [unitId: string]: any }): void {
+    // Sync units to SoA for vectorized processing
+    this.sim.syncUnitsToArrays();
+    const arrays = this.sim.unitArrays;
+    
+    // Build unit ID to index lookup
+    const idToIndex = new Map<string, number>();
+    for (let i = 0; i < arrays.activeCount; i++) {
+      if (arrays.active[i] && arrays.units[i]) {
+        idToIndex.set(arrays.units[i].id, i);
+      }
+    }
+    
+    // Process all movements vectorized
+    for (const [unitId, params] of Object.entries(moveBatch)) {
+      const index = idToIndex.get(unitId);
+      if (index === undefined) continue;
+      
+      let newX: number, newY: number;
+      
+      // Handle both relative (dx/dy) and absolute (x/y) positioning
+      if (params.x !== undefined && params.y !== undefined) {
+        newX = params.x;
+        newY = params.y;
+      } else {
+        const dx = params.dx || 0;
+        const dy = params.dy || 0;
+        newX = arrays.posX[index] + dx;
+        newY = arrays.posY[index] + dy;
+      }
+      
+      // Clamp to field bounds
+      newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, newX));
+      newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, newY));
+      
+      // Update position in SoA (vectorized)
+      arrays.posX[index] = newX;
+      arrays.posY[index] = newY;
+      
+      // Clear intended move
+      arrays.intendedMoveX[index] = 0;
+      arrays.intendedMoveY[index] = 0;
+    }
+    
+    // Sync positions back to unit objects
+    this.sim.syncPositionsFromArrays();
   }
 }
