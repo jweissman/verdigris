@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { EventHandler } from '../../src/rules/event_handler';
+import { Tossing } from '../../src/rules/tossing';
 import { LightningStorm } from '../../src/rules/lightning_storm';
 
 describe('Command DSL', () => {
@@ -58,9 +59,9 @@ describe('Command DSL', () => {
     expect(sim.weather.current).toBe('sandstorm');
   });
 
-  it.skip('should handle toss command', () => {
+  it('should handle toss command', () => {
     const sim = new Simulator();
-    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim), new Tossing(sim)];
     
     // Add a unit to toss
     const unit = {
@@ -81,16 +82,29 @@ describe('Command DSL', () => {
     // Queue toss command
     sim.queuedCommands = [{
       type: 'toss',
-      args: [],
+      params: {
+        direction: { x: 1, y: 0 },  // Toss eastward
+        force: 5,
+        distance: 3
+      },
       unitId: 'test-unit'
     }];
     
     // Process command
-    const initialPos = { ...unit.pos };
     sim.step();
     
-    // Unit should have been tossed (position changed or toss state set)
-    expect(unit.pos).not.toEqual(initialPos);
+    // Unit should have toss state set
+    const tossedUnit = sim.units.find(u => u.id === 'test-unit');
+    expect(tossedUnit?.meta?.tossing).toBe(true);
+    expect(tossedUnit?.meta?.tossTarget).toBeDefined();
+    
+    // After a few more steps, position should change
+    const initialPos = { ...unit.pos };
+    for (let i = 0; i < 5; i++) {
+      sim.step();
+    }
+    const finalUnit = sim.units.find(u => u.id === 'test-unit');
+    expect(finalUnit?.pos).not.toEqual(initialPos);
   });
 
   it('should handle lightning command', () => {

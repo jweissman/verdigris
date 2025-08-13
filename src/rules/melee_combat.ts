@@ -6,18 +6,39 @@ export class MeleeCombat extends Rule {
   engagements: Map<string, string> = new Map(); // Maps unit IDs to their current combat target ID
   lastAttacks: Map<string, number> = new Map(); // Track last attack time for each unit
   apply = () => {
-    // Reset attack states for units that haven't attacked recently
-    for (const unit of this.sim.units) {
-      if (unit.state === 'attack' && unit.meta.lastAttacked) {
-        const ticksSinceAttack = this.sim.ticks - unit.meta.lastAttacked;
-        if (ticksSinceAttack > 2) { // Reset after 2 ticks of no attacks
-          this.sim.queuedCommands.push({
-            type: 'meta',
-            params: {
-              unitId: unit.id,
-              state: 'idle'
-            }
-          });
+    // VECTORIZED: Reset attack states using typed arrays
+    const arrays = this.sim.unitArrays;
+    if (arrays) {
+      const currentTick = this.sim.ticks;
+      for (let i = 0; i < arrays.capacity; i++) {
+        if (arrays.active[i] === 0) continue;
+        
+        // Check if unit is in attack state and needs reset
+        if (arrays.state[i] === 2) { // 2 = attack state
+          const unitId = arrays.unitIds[i];
+          const meta = this.sim.unitColdData.get(unitId);
+          const lastAttacked = meta?.meta?.lastAttacked;
+          
+          if (lastAttacked && (currentTick - lastAttacked) > 2) {
+            // Reset to idle
+            arrays.state[i] = 0; // 0 = idle
+          }
+        }
+      }
+    } else {
+      // Fallback for non-SoA mode
+      for (const unit of this.sim.units) {
+        if (unit.state === 'attack' && unit.meta.lastAttacked) {
+          const ticksSinceAttack = this.sim.ticks - unit.meta.lastAttacked;
+          if (ticksSinceAttack > 2) {
+            this.sim.queuedCommands.push({
+              type: 'meta',
+              params: {
+                unitId: unit.id,
+                state: 'idle'
+              }
+            });
+          }
         }
       }
     }

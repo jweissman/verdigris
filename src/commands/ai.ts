@@ -14,13 +14,7 @@ export class AICommand extends Command {
   }
   
   execute(unitId: string | null, params: Record<string, any>): void {
-    // In performance mode with many units, skip AI most frames
-    // Running AI every 10th frame gives best balance of responsiveness and performance
-    if (this.sim.performanceMode && this.sim.units.length > 30) {
-      if (this.sim.ticks % 10 !== 0) return;
-    }
-    
-    // This command operates on all units at once
+    // Always process AI for determinism
     this.processAllAI();
   }
   
@@ -53,7 +47,25 @@ export class AICommand extends Command {
     closestEnemy.fill(-1);
     closestAlly.fill(-1);
     
-    // VECTORIZED DISTANCE CALCULATIONS - O(n²) but cache-friendly!
+    // BUILD SPATIAL GRID for O(1) neighbor lookups!
+    const gridSize = 5; // 5x5 cells for search radius
+    const gridWidth = Math.ceil(this.sim.fieldWidth / gridSize);
+    const gridHeight = Math.ceil(this.sim.fieldHeight / gridSize); 
+    const grid = new Array(gridWidth * gridHeight);
+    for (let i = 0; i < grid.length; i++) {
+      grid[i] = [];
+    }
+    
+    // Populate grid
+    for (let i = 0; i < capacity; i++) {
+      if (arrays.active[i] === 0 || arrays.state[i] === 3) continue;
+      const gx = Math.floor(arrays.posX[i] / gridSize);
+      const gy = Math.floor(arrays.posY[i] / gridSize);
+      const gridIdx = gy * gridWidth + gx;
+      if (grid[gridIdx]) grid[gridIdx].push(i);
+    }
+    
+    // SPATIAL HASHED DISTANCE CALCULATIONS - O(n) average case!
     for (let i = 0; i < capacity; i++) {
       if (arrays.active[i] === 0 || arrays.state[i] === 3) continue;
       
@@ -61,28 +73,46 @@ export class AICommand extends Command {
       const y1 = arrays.posY[i];
       const team1 = arrays.team[i];
       
-      // Check against all other units
-      for (let j = 0; j < capacity; j++) {
-        if (i === j || arrays.active[j] === 0 || arrays.state[j] === 3) continue;
-        
-        // Vectorized distance calculation
-        const dx = arrays.posX[j] - x1;
-        const dy = arrays.posY[j] - y1;
-        const distSq = dx * dx + dy * dy;
-        
-        if (distSq > MAX_SEARCH_RADIUS_SQ) continue;
-        
-        if (arrays.team[j] !== team1) {
-          // Enemy
-          if (distSq < enemyDistSq[i]) {
-            enemyDistSq[i] = distSq;
-            closestEnemy[i] = j;
-          }
-        } else {
-          // Ally
-          if (distSq < allyDistSq[i]) {
-            allyDistSq[i] = distSq;
-            closestAlly[i] = j;
+      // Only check nearby grid cells
+      const gx = Math.floor(x1 / gridSize);
+      const gy = Math.floor(y1 / gridSize);
+      const searchCells = Math.ceil(searchRadius / gridSize);
+      
+      for (let dy = -searchCells; dy <= searchCells; dy++) {
+        for (let dx = -searchCells; dx <= searchCells; dx++) {
+          const checkGx = gx + dx;
+          const checkGy = gy + dy;
+          
+          if (checkGx < 0 || checkGx >= gridWidth || checkGy < 0 || checkGy >= gridHeight) continue;
+          
+          const gridIdx = checkGy * gridWidth + checkGx;
+          const cellUnits = grid[gridIdx];
+          if (!cellUnits) continue;
+          
+          // Check units in this cell
+          for (const j of cellUnits) {
+            if (i === j) continue;
+            
+            // Vectorized distance calculation
+            const dx = arrays.posX[j] - x1;
+            const dy = arrays.posY[j] - y1;
+            const distSq = dx * dx + dy * dy;
+            
+            if (distSq > MAX_SEARCH_RADIUS_SQ) continue;
+            
+            if (arrays.team[j] !== team1) {
+              // Enemy
+              if (distSq < enemyDistSq[i]) {
+                enemyDistSq[i] = distSq;
+                closestEnemy[i] = j;
+              }
+            } else {
+              // Ally
+              if (distSq < allyDistSq[i]) {
+                allyDistSq[i] = distSq;
+                closestAlly[i] = j;
+              }
+            }
           }
         }
       }

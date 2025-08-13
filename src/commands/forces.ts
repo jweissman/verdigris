@@ -213,8 +213,8 @@ export class ForcesCommand extends Command {
         const toDisplace = priorityI > priorityExisting ? existing : i;
         
         // Displace to adjacent cell (vectorized search)
-        const x = arrays.posX[toDisplace];
-        const y = arrays.posY[toDisplace];
+        const x = Math.floor(arrays.posX[toDisplace]);
+        const y = Math.floor(arrays.posY[toDisplace]);
         
         // Try cardinal directions first (most common case)
         if (x + 1 < fieldWidth && !grid.has(packedPos + 1)) {
@@ -234,6 +234,14 @@ export class ForcesCommand extends Command {
       } else {
         grid.set(packedPos, i);
       }
+    }
+    
+    // Final bounds check to ensure no units escape
+    const fieldHeight = this.sim.fieldHeight;
+    for (let i = 0; i < arrays.capacity; i++) {
+      if (arrays.active[i] === 0) continue;
+      arrays.posX[i] = Math.max(0, Math.min(fieldWidth - 1, arrays.posX[i]));
+      arrays.posY[i] = Math.max(0, Math.min(fieldHeight - 1, arrays.posY[i]));
     }
   }
 }

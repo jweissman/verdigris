@@ -43,6 +43,18 @@ describe('Performance Tests', () => {
       expect(executionTime).toBeLessThan(MAX_EXECUTION_TIME);
       
       // Correctness assertions
+      const outOfBoundsX = sim.units.filter(u => u.pos.x < 0 || u.pos.x >= sim.fieldWidth);
+      const outOfBoundsY = sim.units.filter(u => u.pos.y < 0 || u.pos.y >= sim.fieldHeight);
+      
+      if (outOfBoundsX.length > 0) {
+        console.log(`Units out of bounds X (field width=${sim.fieldWidth}):`, 
+          outOfBoundsX.map(u => ({id: u.id, x: u.pos.x, y: u.pos.y})));
+      }
+      if (outOfBoundsY.length > 0) {
+        console.log(`Units out of bounds Y (field height=${sim.fieldHeight}):`, 
+          outOfBoundsY.map(u => ({id: u.id, x: u.pos.x, y: u.pos.y})));
+      }
+      
       expect(sim.units.every(u => u.pos.x >= 0 && u.pos.x < sim.fieldWidth)).toBe(true);
       expect(sim.units.every(u => u.pos.y >= 0 && u.pos.y < sim.fieldHeight)).toBe(true);
     });

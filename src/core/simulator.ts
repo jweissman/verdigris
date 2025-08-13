@@ -545,7 +545,7 @@ class Simulator {
       const stats = this.pairwiseBatcher.getStats();
       // Always process to update target cache, even if no intents
       let batchStart = performance.now();
-      this.pairwiseBatcher.process(this.units);
+      this.pairwiseBatcher.process(this.units, this);
       // Copy the populated target cache to simulator
       this.targetCache = this.pairwiseBatcher.targetCache;
       let batchEnd = performance.now();
