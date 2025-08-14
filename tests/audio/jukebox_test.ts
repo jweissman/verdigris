@@ -33,7 +33,12 @@ class MockAudioContext {
   createBiquadFilter() {
     return {
       type: 'lowpass',
-      frequency: { value: 1000 },
+      frequency: { 
+        value: 1000,
+        setValueAtTime: () => {},
+        linearRampToValueAtTime: () => {},
+        exponentialRampToValueAtTime: () => {}
+      },
       Q: { value: 1 },
       connect: () => {}
     };

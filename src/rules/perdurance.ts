@@ -6,6 +6,10 @@ export class Perdurance extends Rule {
     // Process damage events and apply perdurance rules
     this.sim.queuedEvents = this.sim.queuedEvents.map(event => {
       if (event.kind === 'damage') {
+        // Ensure meta exists
+        if (!event.meta) {
+          event.meta = { amount: 1, aspect: 'physical' };
+        }
         const target = this.sim.units.find(u => u.id === event.target);
         if (target) {
           // Check if damage should be blocked completely

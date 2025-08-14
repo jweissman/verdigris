@@ -48,6 +48,14 @@ import zapper from "../assets/sprites/zapper.png";
 // @ts-ignore
 import toymaker from "../assets/sprites/toymaker.png";
 // @ts-ignore
+import bear from "../assets/sprites/bear.png";
+// @ts-ignore
+import owl from "../assets/sprites/owl.png";
+// @ts-ignore
+import deer from "../assets/sprites/deer.png";
+// @ts-ignore
+import buck from "../assets/sprites/buck.png";
+// @ts-ignore
 import lightning from "../assets/sprites/lightning.png";
 // @ts-ignore
 import mechatron from "../assets/sprites/mechatron.png";
@@ -179,6 +187,10 @@ class Game {
       { name: 'jumpbot', src: jumpbot },
       { name: 'toymaker', src: toymaker },
       { name: 'zapper', src: zapper },
+      { name: 'bear', src: bear },
+      { name: 'owl', src: owl },
+      { name: 'deer', src: deer },
+      { name: 'buck', src: buck },
     { name: 'mechatron', src: mechatron },
     { name: 'mechatronist', src: mechantronist },
     { name: 'lightning', src: lightning },

@@ -5,6 +5,7 @@
 
 import { VoiceSynthesizer } from './voice_synthesizer';
 import { AudioWorkstation } from './audio_workstation';
+import { Simulator } from '../core/simulator';
 
 export interface SoundConfig {
   frequencies: number[];
@@ -136,10 +137,34 @@ export class Jukebox {
     },
     'forest-tranquil': {
       name: 'Forest Tranquil',
-      chords: ['Em', 'C', 'G', 'D', 'Am', 'F', 'C', 'Em'],
-      tempo: 72,
-      duration: 32, // 8 bars, very peaceful
-      voice: 'pad'  // Changed from choir to softer pad voice
+      chords: ['Em9', 'Cmaj7', 'G/B', 'D7sus4', 'Am7', 'Fmaj7', 'Cmaj7', 'Em9', 
+               'Am7', 'D9', 'Gmaj7', 'Em7', 'Cmaj7', 'Am7', 'Fmaj7', 'G7sus4'],
+      tempo: 55, // Gentle pace - not too slow
+      duration: 48, // Longer, more evolving progression
+      voice: 'pad'  // Soft pad voice
+    },
+    'forest-awakening': {
+      name: 'Forest Awakening',
+      chords: ['Gmaj9', 'Em9', 'Cmaj7/G', 'D7sus4', 'Bm7', 'Em7', 'Am7', 'D7'],
+      tempo: 55,
+      duration: 32,
+      voice: 'pad'
+    },
+    'forest-twilight': {
+      name: 'Forest Twilight',
+      chords: ['Am', 'F', 'C', 'G', 'Dm7', 'G7', 'Cmaj7', 'Am',
+               'F', 'Em', 'Dm', 'G', 'Am7', 'Fmaj7', 'G7sus4', 'C'],
+      tempo: 58,
+      duration: 40,
+      voice: 'pad'
+    },
+    'forest-mist': {
+      name: 'Forest Mist', 
+      chords: ['Dm', 'Am', 'Gm', 'Dm', 'Bb', 'F', 'C', 'Am',
+               'Dm7', 'Gm7', 'C7', 'Fmaj7', 'Bb', 'Am', 'Dm', 'A7'],
+      tempo: 52,
+      duration: 44,
+      voice: 'pad'
     }
   };
   
@@ -206,12 +231,45 @@ export class Jukebox {
             AudioWorkstation.noteToFrequency(note, 4)
           );
           
+          // Alternate between rested and flowing chords for natural rhythm
+          const shouldRest = chordIndex % 4 === 3; // Just rest on every 4th chord
+          const actualDuration = shouldRest ? chordDuration * 0.8 : chordDuration * 0.92; // Less extreme gaps
+          
           this.synthesizer.playNote(
             progression.voice,
             frequencies,
-            chordDuration,
+            actualDuration,
             `progression-${progressionName}`
           );
+          
+          // Add gentle plucked melody over forest themes
+          if (progressionName === 'forest-tranquil' || progressionName === 'forest-awakening') {
+            // Play arpeggio patterns: up-arp, up-arp, rest, up-arp etc
+            const pattern = Simulator.rng.random();
+            if (pattern > 0.25) { // 75% chance of plucks
+              // Build a small arpeggio from chord tones
+              const arpNotes = chordNotes.slice(0, 3).map((note, i) => {
+                const octave = i === 0 ? 4 : 5; // Mix octaves, not too high
+                return AudioWorkstation.noteToFrequency(note, octave);
+              });
+              
+              // Play 2-3 note arpeggio
+              const arpLength = Simulator.rng.random() > 0.5 ? 2 : 3;
+              arpNotes.slice(0, arpLength).forEach((freq, i) => {
+                setTimeout(() => {
+                  if (this.isPlaying) {
+                    this.synthesizer.playNote(
+                      'pluck',
+                      [freq],
+                      0.3,
+                      `arp-${progressionName}-${i}`
+                    );
+                  }
+                }, i * 150 + Simulator.rng.random() * 50); // Quick arpeggio timing
+              });
+            }
+            // Otherwise rest (25% chance)
+          }
         }
         
         chordIndex++;

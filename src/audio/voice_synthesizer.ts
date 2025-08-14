@@ -141,9 +141,10 @@ export class VoiceSynthesizer {
         const voiceGain = this.audioContext!.createGain();
         const panner = this.audioContext!.createStereoPanner();
         
+        // Use sine wave with slight detune for warmth without pressure
         osc.type = 'sine';
         osc.frequency.value = noteFreq;
-        osc.detune.value = voice.detune;
+        osc.detune.value = voice.detune * 0.5; // Less detune for cleaner sound
         
         // Add vibrato
         const vibrato = this.audioContext!.createOscillator();
@@ -153,12 +154,12 @@ export class VoiceSynthesizer {
         vibrato.connect(vibratoGain);
         vibratoGain.connect(osc.frequency);
         
-        // ADSR envelope
-        const level = 0.15 / Math.sqrt(frequencies.length);
+        // Ultra-soft envelope for zen/ambient feel
+        const level = 0.03 / Math.sqrt(frequencies.length); // Much quieter
         voiceGain.gain.setValueAtTime(0, now + voice.delay);
-        voiceGain.gain.linearRampToValueAtTime(level, now + voice.delay + 0.15);
-        voiceGain.gain.linearRampToValueAtTime(level * 0.8, now + voice.delay + 0.35);
-        voiceGain.gain.exponentialRampToValueAtTime(0.01, now + voice.delay + duration);
+        voiceGain.gain.linearRampToValueAtTime(level, now + voice.delay + 1.0); // Very slow fade in
+        voiceGain.gain.linearRampToValueAtTime(level * 0.5, now + voice.delay + duration * 0.8);
+        voiceGain.gain.exponentialRampToValueAtTime(0.001, now + voice.delay + duration + 0.5);
         
         panner.pan.value = Math.max(-1, Math.min(1, notePan + voice.pan));
         
@@ -263,11 +264,11 @@ export class VoiceSynthesizer {
       osc.type = 'triangle';
       osc.frequency.value = noteFreq;
       
-      // Fast attack, natural decay
-      const level = 0.4 / Math.sqrt(frequencies.length);
+      // Very gentle pluck - fast attack, natural decay
+      const level = 0.03 / Math.sqrt(frequencies.length); // Much quieter for ambient feel
       gain.gain.setValueAtTime(0, now + delay);
-      gain.gain.linearRampToValueAtTime(level, now + delay + 0.001);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + delay + duration);
+      gain.gain.linearRampToValueAtTime(level, now + delay + 0.002); // Slightly softer attack
+      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + duration * 0.7); // Quicker decay
       
       osc.connect(gain);
       gain.connect(this.audioContext!.destination);
@@ -327,28 +328,45 @@ export class VoiceSynthesizer {
     const reverbSend = this.audioContext.createGain();
     
     filter.type = 'lowpass';
-    filter.frequency.value = 2000;
-    filter.Q.value = 1;
+    filter.frequency.value = 400; // Start low
+    filter.Q.value = 5; // More resonance for character
+    
+    // Add slow filter sweep for movement
+    filter.frequency.setValueAtTime(400, now);
+    filter.frequency.linearRampToValueAtTime(600, now + duration * 0.3);
+    filter.frequency.linearRampToValueAtTime(400, now + duration * 0.7);
+    
+    // Add LFO for filter modulation
+    const lfo = this.audioContext.createOscillator();
+    const lfoGain = this.audioContext.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.2; // Very slow LFO
+    lfoGain.gain.value = 100; // Less modulation depth
+    lfo.connect(lfoGain);
+    lfoGain.connect(filter.frequency);
+    lfo.start(now);
+    lfo.stop(now + duration + 0.5); // Stop with the notes, not after
     
     frequencies.forEach(noteFreq => {
       const osc = this.audioContext!.createOscillator();
-      osc.type = 'sine';
+      // Use sawtooth with heavy filtering for warm pad sound
+      osc.type = 'sawtooth';
       osc.frequency.value = noteFreq;
       
       osc.connect(filter);
       osc.start(now);
-      osc.stop(now + duration + 0.5);
+      osc.stop(now + duration * 0.9); // Stop slightly early for clean transition
       
       // Track oscillator
       this.activeOscillators.add(osc);
       osc.onended = () => this.activeOscillators.delete(osc);
     });
     
-    // Slow envelope for pad
+    // Barely audible, zen-like envelope with soft edges
     masterGain.gain.setValueAtTime(0, now);
-    masterGain.gain.linearRampToValueAtTime(0.1, now + 0.3);
-    masterGain.gain.linearRampToValueAtTime(0.08, now + duration);
-    masterGain.gain.exponentialRampToValueAtTime(0.01, now + duration + 0.5);
+    masterGain.gain.linearRampToValueAtTime(0.02, now + 0.5); // Quicker but still soft attack
+    masterGain.gain.linearRampToValueAtTime(0.015, now + duration * 0.7); // Sustain shorter
+    masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.9); // Fade out before next chord
     
     filter.connect(masterGain);
     masterGain.connect(this.audioContext.destination);
@@ -361,15 +379,24 @@ export class VoiceSynthesizer {
   }
   
   stop(): void {
-    // Stop all active oscillators
+    if (!this.audioContext) return;
+    
+    const now = this.audioContext.currentTime;
+    
+    // Fade out all active oscillators to prevent clicks
     this.activeOscillators.forEach(osc => {
       try {
-        osc.stop();
+        // Schedule a quick fade out then stop
+        osc.stop(now + 0.05); // Stop 50ms from now
       } catch (e) {
         // Oscillator might already be stopped
       }
     });
-    this.activeOscillators.clear();
+    
+    // Clear after a delay
+    setTimeout(() => {
+      this.activeOscillators.clear();
+    }, 100);
   }
 
   resume(): void {

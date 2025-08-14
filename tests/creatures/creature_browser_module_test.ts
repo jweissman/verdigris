@@ -49,7 +49,7 @@ describe('CreatureBrowser Module', () => {
       expect(creature.type).toBeDefined();
       expect(creature.sprite).toBeDefined();
       expect(creature.hp).toBeGreaterThan(0);
-      expect(creature.team).toMatch(/friendly|hostile/);
+      expect(creature.team).toMatch(/friendly|hostile|neutral/);
       expect(Array.isArray(creature.tags)).toBe(true);
       expect(Array.isArray(creature.abilities)).toBe(true);
       expect(typeof creature.isHuge).toBe('boolean');

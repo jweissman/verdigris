@@ -254,20 +254,35 @@ export class AudioWorkstation {
   
   // Chord parsing utilities
   static parseChord(chord: string): string[] | null {
+    // Handle slash chords (e.g., C/E)
+    let bassNote: string | null = null;
+    let mainChord = chord;
+    if (chord.includes('/')) {
+      const parts = chord.split('/');
+      mainChord = parts[0];
+      bassNote = parts[1];
+    }
+    
     const intervals: Record<string, number[]> = {
       '': [0, 4, 7],
       'm': [0, 3, 7],
       '7': [0, 4, 7, 10],
       'maj7': [0, 4, 7, 11],
+      'maj9': [0, 4, 7, 11, 14],
       'm7': [0, 3, 7, 10],
+      'm9': [0, 3, 7, 10, 14],
       'dim': [0, 3, 6],
       'aug': [0, 4, 8],
       'sus2': [0, 2, 7],
       'sus4': [0, 5, 7],
-      '9': [0, 4, 7, 10, 14]
+      '7sus4': [0, 5, 7, 10],
+      '9': [0, 4, 7, 10, 14],
+      '6': [0, 4, 7, 9],
+      'm6': [0, 3, 7, 9],
+      'add9': [0, 4, 7, 14]
     };
     
-    const match = chord.match(/^([A-G][#b]?)(m|maj7?|m7|dim|aug|sus[24]|7|9)?$/);
+    const match = mainChord.match(/^([A-G][#b]?)(m|maj[79]?|m[679]|dim|aug|sus[24]|7sus4|7|9|6|add9)?$/);
     if (!match) return null;
     
     const [, root, quality = ''] = match;
@@ -281,10 +296,21 @@ export class AudioWorkstation {
       rootIndex--;
     }
     
-    return chordIntervals.map(interval => {
+    const chordNotes = chordIntervals.map(interval => {
       const noteIndex = (rootIndex + interval) % 12;
       return notes[noteIndex];
     });
+    
+    // Add bass note for slash chords
+    if (bassNote) {
+      const bassIndex = notes.indexOf(bassNote.replace('b', ''));
+      if (bassIndex >= 0) {
+        // Add bass note at the beginning, an octave lower
+        chordNotes.unshift(notes[bassIndex]);
+      }
+    }
+    
+    return chordNotes;
   }
   
   static noteToFrequency(note: string, octave: number = 4): number {

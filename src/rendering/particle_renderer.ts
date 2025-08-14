@@ -24,8 +24,12 @@ export class ParticleRenderer {
   ): void {
     const { x, y, alpha, scale = 1 } = config;
     
+    // For 1-bit aesthetic, don't use alpha - either draw or don't
+    // If alpha would be too low, don't draw at all
+    if (alpha < 0.5) return;
+    
     ctx.save();
-    ctx.globalAlpha = alpha;
+    // No alpha blending for 1-bit aesthetic
     
     // Render based on particle type
     switch (particle.type) {
@@ -87,57 +91,41 @@ export class ParticleRenderer {
   }
 
   private renderLeafFallback(ctx: CanvasRenderingContext2D, particle: any, x: number, y: number, scale: number): void {
-    ctx.fillStyle = particle.color || '#228B22';
+    ctx.fillStyle = '#000000'; // BLACK only for 1-bit aesthetic
     ctx.save();
     ctx.translate(x, y);
     const rotation = (particle.pos.x * 0.1 + particle.lifetime * 0.02) % (Math.PI * 2);
     ctx.rotate(rotation);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 3 * scale, 2 * scale, 0, 0, 2 * Math.PI);
-    ctx.fill();
+    // Simple 2x2 pixel square for minimal leaf
+    ctx.fillRect(-1, -1, 2, 2);
     ctx.restore();
   }
 
   private renderRainParticle(ctx: CanvasRenderingContext2D, particle: any, x: number, y: number, scale: number): void {
-    ctx.strokeStyle = particle.color || '#4169E1';
-    ctx.lineWidth = Math.max(0.5, 1 * scale);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + (particle.vel?.x || 0) * 2 * scale, y + (particle.vel?.y || 2) * scale);
-    ctx.stroke();
+    // Simple black pixel for rain - 1-bit aesthetic
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
   }
 
   private renderSnowParticle(ctx: CanvasRenderingContext2D, particle: any, x: number, y: number, scale: number): void {
-    ctx.fillStyle = particle.color || '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(x, y, (particle.radius || 2) * scale, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    // Add sparkle effect for snow
-    if (scale > 0.5) {
-      ctx.strokeStyle = '#E6E6FA';
-      ctx.lineWidth = 0.5;
-      const sparkleSize = 2 * scale;
-      ctx.beginPath();
-      ctx.moveTo(x - sparkleSize, y);
-      ctx.lineTo(x + sparkleSize, y);
-      ctx.moveTo(x, y - sparkleSize);
-      ctx.lineTo(x, y + sparkleSize);
-      ctx.stroke();
-    }
+    // Black pixel for snow in 1-bit style
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
   }
 
   private renderFireParticle(ctx: CanvasRenderingContext2D, particle: any, x: number, y: number, scale: number): void {
-    // Fire particles use gradient from yellow to red
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, (particle.radius || 3) * scale);
-    gradient.addColorStop(0, '#FFFF00');
-    gradient.addColorStop(0.5, '#FF6600');
-    gradient.addColorStop(1, particle.color || '#FF0000');
-    
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, (particle.radius || 3) * scale, 0, 2 * Math.PI);
-    ctx.fill();
+    // Use fire sprite if available, otherwise black pixel
+    const fireSprite = this.sprites.get('fire-particle');
+    if (fireSprite) {
+      const frame = Math.floor((particle.lifetime / 5) % 4);
+      ctx.drawImage(fireSprite, frame * 8, 0, 8, 8, x - 4, y - 4, 8, 8);
+    } else {
+      // Flickering black pixel
+      if (Math.floor(particle.lifetime / 2) % 2 === 0) {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(Math.floor(x), Math.floor(y), 2, 2);
+      }
+    }
   }
 
   private renderLightningParticle(ctx: CanvasRenderingContext2D, particle: any, x: number, y: number, scale: number): void {
@@ -157,22 +145,15 @@ export class ParticleRenderer {
         x - drawWidth/2, y - drawHeight/2, drawWidth, drawHeight
       );
     } else {
-      // Fallback to bright electric effect
-      ctx.fillStyle = particle.color || '#FFFFFF';
-      ctx.shadowColor = '#00FFFF';
-      ctx.shadowBlur = 5 * scale;
-      ctx.beginPath();
-      ctx.arc(x, y, (particle.radius || 2) * scale, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.shadowBlur = 0; // Reset shadow
+      // Simple black pixel for lightning
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(Math.floor(x) - 1, Math.floor(y) - 1, 3, 3);
     }
   }
 
   private renderGenericParticle(ctx: CanvasRenderingContext2D, particle: any, x: number, y: number, scale: number): void {
-    // Fallback rendering for unknown particle types
-    ctx.fillStyle = particle.color || '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(x, y, (particle.radius || 2) * scale, 0, 2 * Math.PI);
-    ctx.fill();
+    // All particles are black pixels for 1-bit aesthetic
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
   }
 }

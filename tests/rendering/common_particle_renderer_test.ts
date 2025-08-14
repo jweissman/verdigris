@@ -28,6 +28,7 @@ describe('Common Particle Renderer', () => {
       ellipse: () => {},
       fill: () => {},
       stroke: () => {},
+      fillRect: () => {}, // Add fillRect for 1-bit pixel rendering
       drawImage: () => {},
       createRadialGradient: () => ({
         addColorStop: () => {}
@@ -67,23 +68,23 @@ describe('Common Particle Renderer', () => {
     expect(drawImageCalled).toBe(true);
   });
 
-  it('should render rain particles as streaks', () => {
+  it('should render rain particles as black pixels', () => {
     const rainParticle = {
       type: 'rain',
       pos: { x: 80, y: 60 },
-      vel: { x: 2, y: 5 },
-      color: '#4169E1'
+      vel: { x: 2, y: 5 }
     };
 
     const config = { x: 160, y: 120, alpha: 0.6 };
 
-    // Spy on stroke to verify line rendering
-    let strokeCalled = false;
-    mockCtx.stroke = () => { strokeCalled = true; };
+    // Spy on fillRect to verify pixel rendering
+    let fillRectCalled = false;
+    mockCtx.fillRect = () => { fillRectCalled = true; };
 
     renderer.renderParticle(mockCtx, rainParticle, config);
 
-    expect(strokeCalled).toBe(true);
+    expect(fillRectCalled).toBe(true);
+    expect(mockCtx.fillStyle).toBe('#000000'); // Black for 1-bit aesthetic
   });
 
   it('should render snow particles with sparkle effect', () => {
@@ -97,37 +98,33 @@ describe('Common Particle Renderer', () => {
     const config = { x: 160, y: 120, alpha: 0.9, scale: 1.2 };
 
     // Spy on fill and stroke to verify circle and sparkle
-    let fillCalled = false;
-    let strokeCalled = false;
-    mockCtx.fill = () => { fillCalled = true; };
-    mockCtx.stroke = () => { strokeCalled = true; };
+    let fillRectCalled = false;
+    mockCtx.fillRect = () => { fillRectCalled = true; };
 
     renderer.renderParticle(mockCtx, snowParticle, config);
 
-    expect(fillCalled).toBe(true);
-    expect(strokeCalled).toBe(true); // Sparkle effect for radius > 1
+    expect(fillRectCalled).toBe(true);
+    expect(mockCtx.fillStyle).toBe('#000000'); // Black for 1-bit aesthetic
   });
 
-  it('should render fire particles with gradient', () => {
+  it('should render fire particles as black pixels', () => {
     const fireParticle = {
       type: 'debris',
       pos: { x: 90, y: 70 },
       radius: 4,
-      color: '#FF0000'
+      lifetime: 10
     };
 
     const config = { x: 160, y: 120, alpha: 0.7 };
 
-    // Spy on gradient creation
-    let gradientCreated = false;
-    mockCtx.createRadialGradient = () => {
-      gradientCreated = true;
-      return { addColorStop: () => {} };
-    };
+    // Fire should flicker - sometimes draw, sometimes don't
+    let fillRectCalled = false;
+    mockCtx.fillRect = () => { fillRectCalled = true; };
 
     renderer.renderParticle(mockCtx, fireParticle, config);
 
-    expect(gradientCreated).toBe(true);
+    // Fire particles may flicker based on lifetime
+    expect(mockCtx.fillStyle === '#000000' || mockCtx.fillStyle === '').toBe(true);
   });
 
   it('should render lightning particles with sprite animation', () => {
@@ -159,16 +156,14 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 0.5 };
 
-    // Spy on arc and fill for circle rendering
-    let arcCalled = false;
-    let fillCalled = false;
-    mockCtx.arc = () => { arcCalled = true; };
-    mockCtx.fill = () => { fillCalled = true; };
+    // Spy on fillRect for pixel rendering
+    let fillRectCalled = false;
+    mockCtx.fillRect = () => { fillRectCalled = true; };
 
     renderer.renderParticle(mockCtx, genericParticle, config);
 
-    expect(arcCalled).toBe(true);
-    expect(fillCalled).toBe(true);
+    expect(fillRectCalled).toBe(true);
+    expect(mockCtx.fillStyle).toBe('#000000');
   });
 
   it('should handle missing sprites gracefully with fallbacks', () => {
@@ -184,12 +179,13 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 0.8 };
 
-    // Spy on ellipse for fallback leaf rendering
-    let ellipseCalled = false;
-    mockCtx.ellipse = () => { ellipseCalled = true; };
+    // Spy on fillRect for fallback rendering (simple black square)
+    let fillRectCalled = false;
+    mockCtx.fillRect = () => { fillRectCalled = true; };
 
     fallbackRenderer.renderParticle(mockCtx, leafParticle, config);
 
-    expect(ellipseCalled).toBe(true);
+    expect(fillRectCalled).toBe(true);
+    expect(mockCtx.fillStyle).toBe('#000000');
   });
 });

@@ -3,10 +3,8 @@ import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import View from "./view";
 import { ParticleRenderer } from "../rendering/particle_renderer";
-// Temporarily removed TextRenderer until MWE is working
 
 export default class Isometric extends View {
-  // private textRenderer: TextRenderer;
   private particleRenderer: ParticleRenderer;
   
   constructor(
@@ -18,26 +16,16 @@ export default class Isometric extends View {
     backgrounds: Map<string, HTMLImageElement> = new Map()
   ) {
     super(ctx, sim, width, height, sprites, backgrounds);
-    // this.textRenderer = new TextRenderer();
-    // this.textRenderer.setContext(ctx);
     this.particleRenderer = new ParticleRenderer(sprites);
   }
   
   show() {
     this.updateMovementInterpolations();
     this.updateProjectileInterpolations();
-
-    // Draw background from cinematic view
     this.renderBackground();
-    
-    // Draw cell effects layer (fire, ice, etc)
     this.renderCellEffects();
-    
-    // Draw grid dots from battle view
-    this.ctx.save();
-    this.ctx.globalAlpha = 0.3; // Slightly more visible
+    // Draw grid at full opacity for crisp 1-bit look
     this.grid();
-    this.ctx.restore();
     
     // Sort units by y position for proper layering (from cinematic view)
     const sortedUnits = [...this.sim.units].sort((a, b) => b.pos.y - a.pos.y > 0 ? 1 : -1);
@@ -161,22 +149,8 @@ export default class Isometric extends View {
   }
 
   private grid() {
-    const cellEffectsSprite = this.sprites.get('cell-effects');
-    if (!cellEffectsSprite) return;
-    
-    // Draw white cell sprite for each grid position as the base
-    for (let x = 0; x < this.sim.fieldWidth; x++) {
-      for (let y = 0; y < this.sim.fieldHeight; y++) {
-        const { x: screenX, y: screenY } = this.toIsometric(x, y);
-        
-        // Draw white cell (frame 0) as the base grid
-        this.ctx.drawImage(
-          cellEffectsSprite,
-          0, 0, 16, 16,  // Frame 0 is the white cell
-          screenX - 8, screenY - 8, 16, 16
-        );
-      }
-    }
+    // Don't draw base grid - only draw cells with effects in renderCellEffects()
+    return;
   }
 
   private showUnit(unit: Unit) {
@@ -287,7 +261,7 @@ export default class Isometric extends View {
       this.ctx.fillRect(pixelX, realPixelY, 8, 8);
     }
       
-    if (typeof unit.hp === 'number') {
+    if (typeof unit.hp === 'number' && unit.hp < unit.maxHp) {
       const maxHp = unit.maxHp || 100;
       const hpRatio = Math.max(0, Math.min(1, unit.hp / maxHp));
       this.drawBar("hit points", pixelX, realPixelY - 4, spriteWidth, 2, hpRatio);
@@ -424,6 +398,8 @@ export default class Isometric extends View {
   }
 
   private renderMovementIntention(unit: Unit) {
+    return;
+
     if (!unit.intendedMove || (unit.intendedMove.x === 0 && unit.intendedMove.y === 0)) {
       return;
     }
@@ -804,15 +780,11 @@ export default class Isometric extends View {
       scale: 1.0
     });
     
-    // Draw shadow on ground if particle is in the air
-    if (z > 0) {
-      this.ctx.save();
-      this.ctx.globalAlpha = 0.2;
+    // Draw shadow on ground if particle is in the air (only for leaves close to ground)
+    if (particle.type === 'leaf' && z > 0 && z < 5) {
+      // Simple black pixel shadow for 1-bit aesthetic
       this.ctx.fillStyle = '#000000';
-      this.ctx.beginPath();
-      this.ctx.arc(isoPos.x, isoPos.y, particle.radius || 1, 0, 2 * Math.PI);
-      this.ctx.fill();
-      this.ctx.restore();
+      this.ctx.fillRect(Math.floor(isoPos.x) - 1, Math.floor(isoPos.y), 2, 1);
     }
   }
 }

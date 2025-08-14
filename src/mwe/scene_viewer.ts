@@ -1,5 +1,5 @@
 import { Game } from "../core/game";
-import { createScaledRenderer } from "../core/renderer";
+import Renderer, { createScaledRenderer } from "../core/renderer";
 import { SceneLoader } from "../core/scene_loader";
 import { Simulator } from "../core/simulator";
 import { Jukebox } from "../audio/jukebox";
@@ -7,10 +7,12 @@ import { Jukebox } from "../audio/jukebox";
 class ScenarioViewer {
   sim: Simulator;
   sceneLoader: SceneLoader;
-  renderer;
+  renderer: Renderer;
   jukebox: Jukebox;
   isPlaying: boolean = false;
   musicEnabled: boolean = true;
+  currentMusic: string = '';
+  currentScenario: string = ''; // Track the current scenario
   gameLoop;
   lastSimTime: number = 0;
 
@@ -54,25 +56,40 @@ class ScenarioViewer {
       // Stop any current music first
       this.jukebox.stopMusic();
       
+      // Store the current scenario for restart
+      this.currentScenario = scenario;
+      
       this.sceneLoader.loadScenario(scenario);
+      
+      // Debug output for spawned creatures
+      console.log(`=== Scene "${scenario}" loaded ===`);
+      console.log(`Total units: ${this.sim.units.length}`);
+      
+      // Count by type
+      const unitCounts = new Map<string, number>();
+      this.sim.units.forEach(unit => {
+        const type = unit.type || unit.sprite || 'unknown';
+        unitCounts.set(type, (unitCounts.get(type) || 0) + 1);
+      });
+      
+      console.log('Unit types spawned:');
+      unitCounts.forEach((count, type) => {
+        console.log(`  ${type}: ${count}`);
+      });
+      
+      // Check for sprite mismatches
+      const spriteMismatches = this.sim.units.filter(u => u.type && u.sprite && u.type !== u.sprite);
+      if (spriteMismatches.length > 0) {
+        console.log('Units with placeholder sprites:');
+        spriteMismatches.forEach(u => {
+          console.log(`  ${u.type} using sprite "${u.sprite}"`);
+        });
+      }
+      
       this.draw();
       
-      // Start appropriate music based on scene type (only if enabled)
-      if (this.musicEnabled) {
-        if (scenario.toLowerCase().includes('forest')) {
-          console.log('🌲 Starting forest ambience...');
-          this.jukebox.startForestMusic(); // Just music, not automatic ambient sounds
-        } else if (scenario.toLowerCase().includes('desert')) {
-          console.log('🏜️ Starting exploration music...');
-          this.jukebox.startExplorationMusic();
-        } else if (scenario.toLowerCase().includes('battle') || scenario.toLowerCase().includes('complex')) {
-          console.log('⚔️ Starting battle music...');
-          this.jukebox.startBattleMusic();
-        } else {
-          console.log('🎵 Starting exploration music...');
-          this.jukebox.startExplorationMusic();
-        }
-      }
+      // Don't auto-start music, let user control it via selector
+      // Scene metadata can override with 'play' command
     } catch (error) {
       console.error('Failed to load scene:', error);
     }
@@ -88,15 +105,36 @@ class ScenarioViewer {
   }
 
   restart() {
-    const currentScenario = Object.keys(SceneLoader.scenarios)[0]; // or store the last loaded scenario
-    if (currentScenario) {
-      this.loadScene(currentScenario);
+    if (this.currentScenario) {
+      this.loadScene(this.currentScenario);
+    } else {
+      // Fallback to first scenario if none loaded yet
+      const firstScenario = Object.keys(SceneLoader.scenarios)[0];
+      if (firstScenario) {
+        this.loadScene(firstScenario);
+      }
     }
   }
 
   toggleView() {
     const currentMode = this.renderer.viewMode || 'cinematic';
-    const newMode = currentMode === 'grid' ? 'cinematic' : 'grid';
+    let newMode: 'grid' | 'cinematic' | 'iso';
+    
+    // Cycle through: cinematic -> iso -> grid -> cinematic
+    switch(currentMode) {
+      case 'cinematic':
+        newMode = 'iso';
+        break;
+      case 'iso':
+        newMode = 'grid';
+        break;
+      case 'grid':
+        newMode = 'cinematic';
+        break;
+      default:
+        newMode = 'cinematic';
+    }
+    
     this.renderer.setViewMode(newMode);
     this.draw();
   }
@@ -149,36 +187,39 @@ window.onload = () => {
     viewer.toggleView();
   });
 
-  // Audio controls
+  // Music controls
+  const musicSelector = document.getElementById('music-selector') as HTMLSelectElement;
+  musicSelector.addEventListener('change', (e) => {
+    const selectedMusic = (e.target as HTMLSelectElement).value;
+    viewer.jukebox.stopMusic();
+    if (selectedMusic) {
+      viewer.currentMusic = selectedMusic;
+      viewer.jukebox.playProgression(selectedMusic, true);
+      console.log(`🎵 Playing: ${selectedMusic}`);
+    } else {
+      viewer.currentMusic = '';
+      console.log('🔇 Music stopped');
+    }
+  });
+  
   document.getElementById('toggle-music').addEventListener('click', () => {
     viewer.musicEnabled = !viewer.musicEnabled;
     if (!viewer.musicEnabled) {
       viewer.jukebox.stopMusic();
-      console.log('🔇 Music disabled');
-    } else {
-      console.log('🎵 Music enabled');
-      // Reload current scene music if any
-      const currentScene = (document.getElementById('scene-selector') as HTMLSelectElement).value;
-      if (currentScene) {
-        viewer.loadScene(currentScene);
-      }
+      console.log('⏸️ Music paused');
+    } else if (viewer.currentMusic) {
+      viewer.jukebox.playProgression(viewer.currentMusic, true);
+      console.log('▶️ Music resumed');
     }
   });
 
-  document.getElementById('play-bird').addEventListener('click', () => {
-    viewer.jukebox.playBirdSong();
-    console.log('🐦 Bird song played');
-  });
-
-  document.getElementById('play-ambient').addEventListener('click', () => {
-    viewer.jukebox.playForestAmbience();
-    console.log('🌿 Forest ambient sound played');
-  });
-
-  document.getElementById('volume').addEventListener('input', (e) => {
-    const volume = parseFloat((e.target as HTMLInputElement).value);
-    // TODO: Implement volume control in jukebox
-    console.log(`🔊 Volume set to ${Math.round(volume * 100)}%`);
+  document.getElementById('next-music').addEventListener('click', () => {
+    const progressions = viewer.jukebox.getAvailableProgressions();
+    const currentIndex = progressions.indexOf(viewer.currentMusic);
+    const nextIndex = (currentIndex + 1) % progressions.length;
+    const nextMusic = progressions[nextIndex];
+    musicSelector.value = nextMusic;
+    musicSelector.dispatchEvent(new Event('change'));
   });
 
   console.log('Scene tester ready! Select a battle scenario to begin.');

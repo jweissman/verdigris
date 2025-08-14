@@ -50,10 +50,9 @@ describe('Forest Scene - Cozy Atmosphere', () => {
     loader.loadFromText(sceneContent);
     
     // Check weather particles
-    const rainParticles = sim.particles.filter(p => p.type === 'rain');
-    const leafParticles = sim.particles.filter(p => p.type === 'leaf');
+    const leafParticles = sim.particles.filter(p => p.type === 'leaf' || p.type === 'leaves');
     
-    expect(rainParticles.length).toBeGreaterThan(0);
+    // Forest scene has leaves weather, not rain
     expect(leafParticles.length).toBeGreaterThan(0);
     
   });

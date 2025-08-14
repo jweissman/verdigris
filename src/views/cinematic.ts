@@ -56,11 +56,7 @@ export default class CinematicView extends View {
     // Check if scene has a specific background set
     const sceneBackground = this.sim.sceneBackground;
     
-    if (sceneBackground) {
-      this.renderSceneBackground(sceneBackground);
-    } else {
-      // this.renderProceduralBackground();
-    }
+    this.renderSceneBackground(sceneBackground);
   }
   
   private renderSceneBackground(backgroundType: string) {
@@ -80,111 +76,12 @@ export default class CinematicView extends View {
       const offsetY = (this.ctx.canvas.height - scaledHeight) / 2;
       
       this.ctx.drawImage(backgroundImage, offsetX, offsetY, scaledWidth, scaledHeight);
-    // } else {
-    //   // Fallback to procedural backgrounds
-    //   switch (backgroundType) {
-    //     case 'lake':
-    //       this.renderLakeBackground();
-    //       break;
-    //     case 'mountain':
-    //       this.renderMountainBackground();
-    //       break;
-        // case 'monastery':
-        //   // Add monastery procedural fallback if needed
-        //   this.renderProceduralBackground();
-        //   break;
-      //   default:
-      //     console.warn(`Unknown background type: ${backgroundType}`);
-      //     // this.renderProceduralBackground();
-      //     break;
-      // }
+    
     }
     
     this.ctx.restore();
   }
   
-  private renderLakeBackground() {
-    // Lake background - blues and reflections
-    const gradient = this.ctx.createLinearGradient(0, 0, 0, this.ctx.canvas.height);
-    gradient.addColorStop(0, '#87CEEB'); // Sky blue
-    gradient.addColorStop(0.3, '#E0F6FF'); // Light blue
-    gradient.addColorStop(0.7, '#4682B4'); // Steel blue (water)
-    gradient.addColorStop(1, '#2F4F4F'); // Dark slate gray (deep water)
-    
-    this.ctx.fillStyle = gradient;
-    this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-    
-    // Add some gentle ripples/texture
-    this.ctx.globalAlpha = 0.1;
-    for (let i = 0; i < 5; i++) {
-      const y = this.ctx.canvas.height * (0.6 + i * 0.05);
-      this.ctx.strokeStyle = '#FFFFFF';
-      this.ctx.lineWidth = 1;
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.ctx.canvas.width, y);
-      this.ctx.stroke();
-    }
-    this.ctx.globalAlpha = 1;
-  }
-  
-  private renderMountainBackground() {
-    // Mountain background - earth tones and peaks
-    const gradient = this.ctx.createLinearGradient(0, 0, 0, this.ctx.canvas.height);
-    gradient.addColorStop(0, '#87CEEB'); // Sky blue
-    gradient.addColorStop(0.4, '#DDA0DD'); // Plum (distant mountains)
-    gradient.addColorStop(0.7, '#8FBC8F'); // Dark sea green (hills)
-    gradient.addColorStop(1, '#556B2F'); // Dark olive green (foreground)
-    
-    this.ctx.fillStyle = gradient;
-    this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-    
-    // Add mountain silhouettes
-    this.ctx.globalAlpha = 0.3;
-    this.ctx.fillStyle = '#696969';
-    const peaks = [0.2, 0.35, 0.6, 0.8];
-    peaks.forEach(peak => {
-      const x = this.ctx.canvas.width * peak;
-      const baseY = this.ctx.canvas.height * 0.6;
-      const peakY = this.ctx.canvas.height * 0.3;
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(x - 50, baseY);
-      this.ctx.lineTo(x, peakY);
-      this.ctx.lineTo(x + 50, baseY);
-      this.ctx.closePath();
-      this.ctx.fill();
-    });
-    this.ctx.globalAlpha = 1;
-  }
-  
-  private renderProceduralBackground() {
-    // Original procedural background for fallback
-    this.ctx.save();
-    
-    // Mountains (triangular peaks)
-    this.ctx.fillStyle = '#ccc';
-    const mountainY = this.height * 0.5;
-    const numPeaks = 45;
-    for (let i = 0; i < numPeaks; i++) {
-      const peakX = ((this.width*2) / numPeaks) * i + Math.sin(i * 0.7) * 20;
-      const peakHeight = 40 + Math.sin(i * 1.2) * 20;
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(peakX - 30, mountainY);
-      this.ctx.lineTo(peakX, mountainY - peakHeight);
-      this.ctx.lineTo(peakX + 30, mountainY);
-      this.ctx.closePath();
-      this.ctx.fill();
-    }
-
-    // fill bottom area with a solid color
-    this.ctx.fillStyle = '#eee';
-    this.ctx.fillRect(0, mountainY, this.width, this.height - mountainY);
-    
-    this.ctx.restore();
-  }
-
   private showUnitCinematic(unit: Unit) {
     // Use centralized logic for determining if unit should render
     if (!this.unitRenderer.shouldRenderUnit(unit)) {

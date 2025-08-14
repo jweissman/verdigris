@@ -32,7 +32,7 @@ export class ChangeWeather extends Command {
             },
             vel: { x: 0, y: 1 + Simulator.rng.random() * 2 },
             radius: 1,
-            color: '#4488CC',
+            // No color - 1-bit aesthetic
             lifetime: 100
           });
         }
@@ -67,7 +67,7 @@ export class ChangeWeather extends Command {
             },
             vel: { x: 2 + Simulator.rng.random() * 3, y: (Simulator.rng.random() - 0.5) * 0.5 },
             radius: 0.5 + Simulator.rng.random() * 0.5,
-            color: '#D2691E',
+            // No color - 1-bit aesthetic
             lifetime: 100 + Simulator.rng.random() * 50
           });
         }
@@ -85,20 +85,21 @@ export class ChangeWeather extends Command {
         if (this.sim.setWeather) {
           this.sim.setWeather('leaves', durationValue, intensityValue);
         }
-        // Create leaf particles
-        for (let i = 0; i < durationValue; i++) {
+        // Create leaf particles spread across the full field
+        const particleCount = Math.min(durationValue * 2, 30); // Reasonable number of leaves
+        for (let i = 0; i < particleCount; i++) {
           this.sim.particles.push({
             id: `leaf_${Date.now()}_${i}`,
             type: 'leaf',
             pos: { 
-              x: Simulator.rng.random() * this.sim.fieldWidth, 
-              y: Simulator.rng.random() * this.sim.fieldHeight 
+              x: Simulator.rng.random() * this.sim.fieldWidth * 8, // Spread across full width
+              y: -Simulator.rng.random() * 20 // Start above the field
             },
-            vel: { x: Simulator.rng.random() * 0.2 - 0.1, y: 0.1 + Simulator.rng.random() * 0.1 },
-            z: 5 + Simulator.rng.random() * 10,
-            lifetime: 100 + Simulator.rng.random() * 100,
+            vel: { x: Simulator.rng.random() * 0.5 - 0.25, y: 0.2 + Simulator.rng.random() * 0.2 },
+            z: 10 + Simulator.rng.random() * 30, // Start high in the air
+            lifetime: 300 + Simulator.rng.random() * 200, // Longer lifetime to fall across field
             radius: 1,
-            color: '#8B4513'
+            // No color - 1-bit aesthetic
           });
         }
         this.sim.weather.current = 'leaves';

@@ -43,7 +43,7 @@ describe("Rainmaker Integration", () => {
     const rainDrop = rainParticles[0];
     expect(rainDrop.vel.x).toBeGreaterThan(0.2); // Minimum diagonal movement
     expect(rainDrop.vel.y).toBeGreaterThan(0.8); // Minimum downward movement
-    expect(rainDrop.color).toBe('#4A90E2'); // Blue rain color
+    // No color for 1-bit aesthetic - particles are always black
   });
 
   it("should increase humidity field during rain", () => {

@@ -195,14 +195,7 @@ describe('Lightning Storm Environmental System', () => {
     
     expect(typesFound).toBeGreaterThanOrEqual(3); // Should have variety of effects
     
-    // Check color variety
-    const colors = [...new Set(sim.particles.map(p => p.color))];
-    const lightningColors = colors.filter(c => 
-      c.includes('FF') || // Lightning whites/blues  
-      c.includes('88') || // Thunder/electric colors
-      c.includes('66')    // Storm cloud colors
-    );
-    expect(lightningColors.length).toBeGreaterThan(2);
+    // No color checks for 1-bit aesthetic - all particles are black
     
   });
 

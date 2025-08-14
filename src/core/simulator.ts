@@ -147,22 +147,10 @@ class Simulator {
     intensity: number; // 0-1 scale
   };
   
-  // Performance mode flag for aggressive optimizations
-  performanceMode: boolean = false;
-  
-  // Enable performance mode for tests
-  enablePerformanceMode(): void {
-    this.performanceMode = true;
-  }
-  
   // Environmental states
   winterActive?: boolean;
   lightningActive?: boolean;
   sandstormActive?: boolean;
-  
-  // Performance profiling
-  // profiler?: PerformanceProfiler;
-  // enableProfiling: boolean = false;
   
   // Transform for controlled mutations
   private transform: Transform;
@@ -248,7 +236,7 @@ class Simulator {
 
   parseCommand(inputString: string) {
     const parts = inputString.split(' ');
-    const type = parts[0];
+    let type = parts[0];
     const params: Record<string, any> = {};
     
     // Parse command-specific parameters directly
@@ -577,20 +565,29 @@ class Simulator {
     particle.pos.x += particle.vel.x;
     particle.pos.y += particle.vel.y;
     if (particle.z !== undefined) {
-      particle.z = Math.max(0, particle.z - particle.vel.y * 0.5); // Descend in 3D
+      // Descend in 3D - z decreases as particle falls (vel.y is positive when falling)
+      particle.z = Math.max(0, particle.z - Math.abs(particle.vel.y) * 0.5);
     }
     
-    // Wrap around field horizontally
-    if (particle.pos.x < 0) particle.pos.x = this.fieldWidth;
-    if (particle.pos.x > this.fieldWidth) particle.pos.x = 0;
+    // Wrap around field horizontally (in pixel coordinates)
+    const fieldWidthPixels = this.fieldWidth * 8;
+    if (particle.pos.x < 0) particle.pos.x = fieldWidthPixels + particle.pos.x;
+    if (particle.pos.x > fieldWidthPixels) particle.pos.x = particle.pos.x - fieldWidthPixels;
     
     // Land when reaching ground level
     if (particle.z !== undefined && particle.z <= 0) {
       particle.landed = true;
       particle.z = 0;
-      particle.vel.x = 0; // Stop all horizontal movement too
+      
+      // Snap to center of nearest grid cell
+      const gridX = Math.floor(particle.pos.x / 8);
+      const gridY = Math.floor(particle.pos.y / 8);
+      particle.pos.x = gridX * 8 + 4; // Center of cell
+      particle.pos.y = gridY * 8 + 4; // Center of cell
+      
+      particle.vel.x = 0; // Stop all movement
       particle.vel.y = 0;
-      particle.lifetime = Math.max(particle.lifetime, 200); // Stay visible longer when landed
+      particle.lifetime = Math.min(particle.lifetime, 60); // Rest for a moment before fading
     }
   }
   
@@ -628,17 +625,24 @@ class Simulator {
     if (particle.z !== undefined && particle.z <= 0) {
       particle.landed = true;
       particle.z = 0;
+      
+      // Snap to center of nearest grid cell
+      const gridX = Math.floor(particle.pos.x / 8);
+      const gridY = Math.floor(particle.pos.y / 8);
+      particle.pos.x = gridX * 8 + 4; // Center of cell
+      particle.pos.y = gridY * 8 + 4; // Center of cell
+      
       particle.vel.x = 0;
       particle.vel.y = 0;
       particle.lifetime = Math.min(particle.lifetime, 30); // Fade quickly when landed
       
-      // Add moisture to the field where rain lands
-      this.humidityField.addGradient(particle.pos.x, particle.pos.y, 1, 0.05);
+      // Add moisture to the field where rain lands (use grid coordinates)
+      this.humidityField.addGradient(gridX, gridY, 1, 0.05);
     }
   }
   
   spawnLeafParticle() {
-    const leafColors = ['#228B22', '#32CD32', '#90EE90', '#9ACD32', '#8FBC8F'];
+    // No colors - 1-bit aesthetic
     
     const particle: Particle = {
       pos: {
@@ -651,7 +655,7 @@ class Simulator {
       },
       radius: Simulator.rng.random() * 1.5 + 0.5, // Small leaf size
       lifetime: 1000 + Simulator.rng.random() * 500, // Long lifetime for drifting
-      color: leafColors[Math.floor(Simulator.rng.random() * leafColors.length)],
+      // No color property - particles are always black
       z: 10 + Simulator.rng.random() * 20, // Start at various heights
       type: 'leaf',
       landed: false
@@ -779,6 +783,9 @@ class Simulator {
       case 'storm':
         this.applyStormEffects();
         break;
+      case 'leaves':
+        this.applyLeavesEffects();
+        break;
     }
   }
   
@@ -820,6 +827,34 @@ class Simulator {
     }
   }
   
+  applyLeavesEffects() {
+    const intensity = this.weather.intensity;
+    
+    // Spawn new leaves periodically to keep them falling
+    if (Simulator.rng.random() < intensity * 0.3) { // 30% chance per tick at full intensity
+      // Spawn 1-3 leaves at a time
+      const leafCount = 1 + Math.floor(Simulator.rng.random() * 3);
+      for (let i = 0; i < leafCount; i++) {
+        this.particles.push({
+          id: `leaf_${Date.now()}_${this.ticks}_${i}`,
+          type: 'leaf',
+          pos: { 
+            x: Simulator.rng.random() * this.fieldWidth * 8, // Spread across full width
+            y: -10 - Simulator.rng.random() * 10 // Start above the field
+          },
+          vel: { 
+            x: Simulator.rng.random() * 0.5 - 0.25, // Gentle drift
+            y: 0.2 + Simulator.rng.random() * 0.2 // Slow fall
+          },
+          z: 15 + Simulator.rng.random() * 25, // Varying heights
+          lifetime: 400 + Simulator.rng.random() * 200, // Long lifetime to cross field
+          radius: 1,
+          color: 'green'
+        });
+      }
+    }
+  }
+  
   // Weather control methods
   setWeather(type: 'clear' | 'rain' | 'storm' | 'sandstorm' | 'leaves', duration: number = 80, intensity: number = 0.7): void {
     this.weather.current = type;
@@ -839,7 +874,7 @@ class Simulator {
       },
       radius: 0.5 + Simulator.rng.random() * 0.5, // Small drops
       lifetime: 50 + Simulator.rng.random() * 30, // Short lifetime
-      color: '#4A90E2', // Blue rain color
+      // No color - 1-bit aesthetic
       z: 5 + Simulator.rng.random() * 10, // Start at moderate height
       type: 'rain',
       landed: false
@@ -849,7 +884,7 @@ class Simulator {
   }
 
   spawnFireParticle(x: number, y: number) {
-    const fireColors = ['#FF4500', '#FF6347', '#FFD700', '#FF8C00', '#DC143C'];
+    // No colors - 1-bit aesthetic
     
     const particle: Particle = {
       pos: { x, y },
@@ -859,7 +894,7 @@ class Simulator {
       },
       radius: 0.8 + Simulator.rng.random() * 0.7, // Variable spark size
       lifetime: 30 + Simulator.rng.random() * 40, // Medium lifetime
-      color: fireColors[Math.floor(Simulator.rng.random() * fireColors.length)],
+      // No color - particles are always black
       z: Simulator.rng.random() * 3, // Start at ground level to low height
       type: 'debris', // Reuse debris type for now
       landed: false

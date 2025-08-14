@@ -47,29 +47,56 @@ export class SceneLoader {
     }
   }
 
-  defaultLegend: { [key: string]: string } = {
-    f: 'farmer', s: 'soldier', w: 'worm', p: 'priest', r: 'ranger', b: 'bombardier',
-    q: 'squirrel', t: 'tamer', Q: 'megasquirrel', W: 'bigworm', u: 'rainmaker',
-    d: 'demon', g: 'ghost', m: 'mimic-worm', k: 'skeleton', T: 'toymaker',
-    
-    // Desert Day creatures
-    M: 'desert-worm', G: 'grappler', X: 'mechatron',
-    H: 'worm-hunter', P: 'waterbearer', K: 'skirmisher',
-    L: 'giant-sandworm', I: 'sand-ant',
-    
-    // Forest Day creatures  
-    O: 'owl', // B conflicts with builder
-    V: 'bear', // Using V for bear since B is builder
-    v: 'bird', // Using lowercase v for bird since b is bombardier  
-    N: 'forest-squirrel', // N for nature squirrel
-    Y: 'tracker', // Y for tracker
-    
-    // Mechanist support units
-    B: 'builder', F: 'fueler', E: 'engineer', A: 'assembler',
-    
-    // Constructs  
-    C: 'clanker', Z: 'zapper', R: 'roller', S: 'spiker'
+  static defaultLegend: { [key: string]: string } = {
+    A: 'assembler',
+    a: "toymaker",
+    b: 'bombardier',
+    B: 'builder',
+    C: 'clanker',
+    D: 'deer',
+    d: 'demon',
+    E: 'engineer',
+    e: "tamer",
+    f: 'farmer',
+    F: 'fueler',
+    g: 'ghost',
+    G: 'grappler',
+    H: 'worm-hunter',
+    h: "bombardier",
+    I: 'sand-ant',
+    i: "farmer",
+    j: "mechatron",
+    J: "mechatronist",
+    k: 'skeleton',
+    K: 'skirmisher',
+    L: 'giant-sandworm',
+    M: 'desert-worm',
+    m: 'mimic-worm',
+    N: 'forest-squirrel',
+    n: "big-worm", 
+    O: 'owl',
+    o: 'desert-megaworm',
+    p: 'priest',
+    P: 'waterbearer',
+    Q: 'megasquirrel',
+    q: 'squirrel',
+    r: 'ranger',
+    R: 'roller',
+    s: 'soldier',
+    S: 'spiker',
+    t: 'tamer',
+    T: 'toymaker',
+    u: 'rainmaker',
+    V: 'bear',
+    v: 'bird',
+    W: 'bigworm',
+    w: 'worm',
+    X: 'mechatron',
+    Y: 'tracker',
+    Z: 'zapper',
+    z: "rainmaker",
   }
+  
 
   loadSimpleFormat(sceneText: string): void {
     this.sim.reset();
@@ -97,32 +124,20 @@ export class SceneLoader {
         
         if (char === ' ' || char === '.') continue;
         
-        const template = this.defaultLegend[char];
+        const template = SceneLoader.defaultLegend[char];
         if (template) {
           this.createUnit(template, x, y);
         }
       }
-
-      // console.log(`SceneLoader: Processed line ${y + 1}/${lines.length}`);
     }
     
-    // Process queued commands immediately
-    // console.log("SceneLoader: About to process queued commands");
     if (this.sim.queuedCommands && this.sim.queuedCommands.length > 0) {
-      // console.log(`SceneLoader: Processing ${this.sim.queuedCommands.length} queued commands`);
       const commandHandler = new CommandHandler(this.sim);
       commandHandler.apply();
-      // console.log("SceneLoader: Finished processing commands");
     }
     
-    // Initialize segmented creatures immediately after loading
-    // console.log("SceneLoader: About to initialize segmented creatures");
     const segmentedRule = new SegmentedCreatures(this.sim);
     segmentedRule.apply();
-    // console.log("SceneLoader: Finished initializing segmented creatures");
-
-
-    // console.debug("SceneLoader: Scene loaded successfully");
   }
   
   private parseMetadata(line: string): void {
@@ -133,36 +148,28 @@ export class SceneLoader {
     const command = parts[0];
     const args = parts.slice(1);
     
-    if (command === 'bg') {
+    // Handle scene rendering metadata directly for now
+    if (command === 'bg' || command === 'background') {
       (this.sim as any).background = args[0] || '';
       (this.sim as any).sceneBackground = args[0] || '';
       return;
     }
     
-    // Handle strip width metadata
     if (command === 'strip') {
       (this.sim as any).stripWidth = args[0] || '';
       return;
     }
     
-    // Handle battlefield height metadata
     if (command === 'height') {
       (this.sim as any).battleHeight = args[0] || '';
       return;
     }
     
-    // Everything else goes through the command queue - but only actual commands, not metadata
-    if (!this.sim.queuedCommands) {
-      this.sim.queuedCommands = [];
-    }
-    
-    // Only queue actual commands, not unrecognized metadata
-    // For now, use parseCommand for known command types
-    const knownCommands = ['weather', 'deploy', 'spawn', 'airdrop', 'drop', 'lightning', 'bolt', 'temperature', 'temp', 'grapple', 'pin'];
+    // Known commands go through parseCommand
+    const knownCommands = ['weather', 'deploy', 'spawn', 'airdrop', 'drop', 'lightning', 'bolt', 'temperature', 'temp', 'wander'];
     if (knownCommands.includes(command)) {
       this.sim.parseCommand(`${command} ${args.join(' ')}`);
     } else {
-      // Log unrecognized commands but don't fail - they might be custom metadata
       console.warn(`Scene loader: Unrecognized command '${command}' - ignoring`);
     }
   }
