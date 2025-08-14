@@ -11,13 +11,14 @@ import toymakerChallenge from './scenes/toymaker-challenge.battle.txt';
 import mechatronSolo from './scenes/mechatron-solo.battle.txt';
 import forestTracker from './scenes/forest-tracker.battle.txt';
 import forestDay from './scenes/forest-day.battle.txt';
+import simpleMesowormTest from './scenes/simple-mesoworm-test.battle.txt';
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { CommandHandler } from "../rules/command_handler";
 
 export class SceneLoader {
   static scenarios = { 
     simple, complex, healing, projectile, squirrel, chess, toymaker, desert, 
-    toymakerChallenge, mechatronSolo, forestTracker, forestDay
+    toymakerChallenge, mechatronSolo, forestTracker, forestDay, simpleMesowormTest
   };
   private unitCreationIndex: number = 0;
   
@@ -69,8 +70,8 @@ export class SceneLoader {
     k: 'skeleton',
     K: 'skirmisher',
     L: 'giant-sandworm',
-    M: 'desert-worm',
     m: 'mimic-worm',
+    M: 'desert-worm',
     N: 'forest-squirrel',
     n: "big-worm", 
     O: 'owl',
@@ -90,6 +91,7 @@ export class SceneLoader {
     v: 'bird',
     W: 'bigworm',
     w: 'worm',
+    x: 'mesoworm',
     X: 'mechatron',
     Y: 'tracker',
     Z: 'zapper',

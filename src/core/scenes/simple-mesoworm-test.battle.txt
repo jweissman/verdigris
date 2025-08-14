@@ -1,12 +1,6 @@
-# Simple Mesoworm Test
-# Clean test for mesoworm vs grappler pinning mechanics
-
-g.....m
+G.....x
 .......
 .......
 ---
-# g = grappler (should require multiple pins to disable mesoworm)
-# m = mesoworm (2 segments - head, body, tail)
-
 bg forest
 weather clear

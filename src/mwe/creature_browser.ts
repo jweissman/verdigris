@@ -26,7 +26,7 @@ export class CreatureBrowser {
     const creatureTypes = [
       'farmer', 'soldier', 'worm', 'priest', 'ranger', 'bombardier',
       'squirrel', 'tamer', 'megasquirrel', 'rainmaker', 'skeleton',
-      'demon', 'ghost', 'mimic-worm', 'big-worm', 'toymaker',
+      'demon', 'ghost', 'mimic-worm', 'big-worm', 'mesoworm', 'toymaker',
       'mechatron', 'grappler', 'desert-megaworm', 'builder', 'fueler',
       'mechanic', 'engineer', 'welder', 'assembler', 'clanker',
       'freezebot', 'spiker', 'swarmbot', 'roller', 'zapper',

@@ -894,7 +894,7 @@
   "dragon": {
     "intendedMove": { "x": 0, "y": 0 },
     "team": "hostile",
-    "sprite": "dragon",
+    "sprite": "dragon-head",
     "state": "idle",
     "hp": 400,
     "maxHp": 400,
@@ -912,6 +912,7 @@
       "fireImmune": true,
       "segmented": true,
       "segmentCount": 8,
+      "useCustomSegmentSprites": true,
       "z": 5
     }
   },
