@@ -33,6 +33,7 @@ import { FaceCommand } from "../commands/face";
 import { ForcesCommand } from "../commands/forces";
 import { AICommand } from "../commands/ai";
 import { SimulateCommand } from "../commands/simulate";
+import { Wander } from "../commands/wander";
 
 export type QueuedCommand = {
   type: string;
@@ -64,6 +65,7 @@ export class CommandHandler extends Rule {
     this.commands.set('pin', new Pin(sim, this.transform));
     this.commands.set('temperature', new Temperature(sim, this.transform));
     this.commands.set('temp', new Temperature(sim, this.transform)); // Alias
+    this.commands.set('wander', new Wander(sim, this.transform));
     // JSON Abilities commands
     this.commands.set('damage', new Damage(sim, this.transform));
     this.commands.set('heal', new Heal(sim, this.transform));

@@ -1,19 +1,23 @@
-import { Command } from "./command";
+import { Command } from "../rules/command";
 import { Simulator } from "../core/simulator";
 
 /**
  * Wander command - makes units move randomly
  * Parameters:
- *   team: string - Which team should wander (friendly, hostile, all)
+ *   team: string - Which team should wander (friendly, hostile, neutral, all)
  *   chance: number - Probability of wandering each tick (0-1)
  */
-export const wander: Command = {
-  execute(sim: Simulator, params: any): void {
+export class Wander extends Command {
+  constructor(sim: Simulator, transform?: any) {
+    super(sim);
+  }
+
+  execute(unitId: string | null, params: any): void {
     const team = params.team || 'all';
     const chance = parseFloat(params.chance) || 0.1;
     
     // Filter units by team
-    const units = sim.units.filter(u => {
+    const units = this.sim.units.filter(u => {
       if (team === 'all') return true;
       return u.team === team;
     });
@@ -23,7 +27,7 @@ export const wander: Command = {
       if (unit.state === 'dead') continue;
       
       // Only wander if not engaged in combat
-      const hasNearbyEnemy = sim.units.some(other => 
+      const hasNearbyEnemy = this.sim.units.some(other => 
         other.team !== unit.team && 
         other.state !== 'dead' &&
         Math.abs(other.pos.x - unit.pos.x) <= 3 &&
@@ -39,11 +43,11 @@ export const wander: Command = {
         const newX = unit.pos.x + dx;
         const newY = unit.pos.y + dy;
         
-        if (newX >= 0 && newX < sim.fieldWidth && 
-            newY >= 0 && newY < sim.fieldHeight) {
+        if (newX >= 0 && newX < this.sim.fieldWidth && 
+            newY >= 0 && newY < this.sim.fieldHeight) {
           unit.intendedMove = { x: dx, y: dy };
         }
       }
     }
   }
-};
+}

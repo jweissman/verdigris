@@ -267,9 +267,15 @@ class Simulator {
       case 'temp':
         params.amount = parts[1] ? parseFloat(parts[1]) : 20;
         break;
+      case 'wander':
+        params.team = parts[1] || 'all';
+        params.chance = parts[2] ? parseFloat(parts[2]) : 0.1;
+        break;
     }
     
-    this.queuedCommands.push({ type, params });
+    const command = { type, params };
+    this.queuedCommands.push(command);
+    return command;
   }
 
   paused: boolean = false;
