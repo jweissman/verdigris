@@ -1,0 +1,12 @@
+# Mesoworm vs Grappler Test
+# Visual test for mesoworm segmented mechanics
+
+g.......m
+.........
+.........
+---
+# g = grappler (desert nomad with rope)
+# m = mesoworm (2 segments, custom sprites)
+
+bg forest
+weather clear

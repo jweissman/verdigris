@@ -33,6 +33,8 @@ export class VoiceSynthesizer {
   private inversionStates: Map<string, number> = new Map();
   private bassPatternStates: Map<string, number> = new Map();
   private activeOscillators: Set<OscillatorNode> = new Set();
+  private effectsChain: GainNode | null = null;
+  private chorus: DelayNode | null = null;
   
   constructor() {}
   
@@ -66,6 +68,14 @@ export class VoiceSynthesizer {
     
     this.reverb = this.audioContext.createConvolver();
     this.reverb.buffer = impulse;
+    
+    // Setup simple chorus effect
+    this.chorus = this.audioContext.createDelay();
+    this.chorus.delayTime.value = 0.02; // 20ms delay
+    
+    // Setup main effects chain
+    this.effectsChain = this.audioContext.createGain();
+    this.effectsChain.gain.value = 1;
   }
   
   playNote(
@@ -141,16 +151,17 @@ export class VoiceSynthesizer {
         const voiceGain = this.audioContext!.createGain();
         const panner = this.audioContext!.createStereoPanner();
         
-        // Use sine wave with slight detune for warmth without pressure
-        osc.type = 'sine';
+        // Use varied waveforms for richness
+        const waveforms: OscillatorType[] = ['sine', 'triangle', 'sawtooth'];
+        osc.type = waveforms[noteIndex % waveforms.length];
         osc.frequency.value = noteFreq;
-        osc.detune.value = voice.detune * 0.5; // Less detune for cleaner sound
+        osc.detune.value = voice.detune * 0.5 + (Math.random() - 0.5) * 5; // Add randomness
         
-        // Add vibrato
+        // Add vibrato with variation
         const vibrato = this.audioContext!.createOscillator();
         const vibratoGain = this.audioContext!.createGain();
-        vibrato.frequency.value = 4.5;
-        vibratoGain.gain.value = noteFreq * 0.02;
+        vibrato.frequency.value = 4 + Math.random() * 2; // 4-6 Hz
+        vibratoGain.gain.value = noteFreq * (0.015 + Math.random() * 0.01); // Varied depth
         vibrato.connect(vibratoGain);
         vibratoGain.connect(osc.frequency);
         
@@ -255,26 +266,61 @@ export class VoiceSynthesizer {
     const now = this.audioContext.currentTime;
     const frequencies = Array.isArray(freq) ? freq : [freq];
     
-    // Arpeggiate chords
+    // Create shared nodes for effects
+    const masterGain = this.audioContext.createGain();
+    const reverbSend = this.audioContext.createGain();
+    const filter = this.audioContext.createBiquadFilter();
+    
+    // Configure filter for warmth
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2000, now);
+    filter.Q.setValueAtTime(1, now);
+    
+    // Set reverb amount (subtle)
+    reverbSend.gain.value = 0.15;
+    
+    // Connect signal chain
+    masterGain.connect(filter);
+    filter.connect(this.audioContext.destination);
+    
+    // Add reverb if available
+    if (this.reverb) {
+      filter.connect(reverbSend);
+      reverbSend.connect(this.reverb);
+      this.reverb.connect(this.audioContext.destination);
+    }
+    
+    // Arpeggiate chords with variations
     frequencies.forEach((noteFreq, i) => {
       const osc = this.audioContext!.createOscillator();
       const gain = this.audioContext!.createGain();
       const delay = i * 0.02;
       
-      osc.type = 'triangle';
+      // Vary waveform for texture
+      osc.type = i % 2 === 0 ? 'triangle' : 'sine';
       osc.frequency.value = noteFreq;
       
+      // Add subtle vibrato
+      const vibrato = this.audioContext!.createOscillator();
+      const vibratoGain = this.audioContext!.createGain();
+      vibrato.frequency.value = 4 + Math.random() * 2; // 4-6 Hz
+      vibratoGain.gain.value = 2 + Math.random() * 3; // 2-5 cents
+      vibrato.connect(vibratoGain);
+      vibratoGain.connect(osc.frequency);
+      
       // Very gentle pluck - fast attack, natural decay
-      const level = 0.03 / Math.sqrt(frequencies.length); // Much quieter for ambient feel
+      const level = 0.025 / Math.sqrt(frequencies.length); // Quieter base level
       gain.gain.setValueAtTime(0, now + delay);
-      gain.gain.linearRampToValueAtTime(level, now + delay + 0.002); // Slightly softer attack
-      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + duration * 0.7); // Quicker decay
+      gain.gain.linearRampToValueAtTime(level, now + delay + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + duration * 0.6);
       
       osc.connect(gain);
-      gain.connect(this.audioContext!.destination);
+      gain.connect(masterGain);
       
+      vibrato.start(now + delay);
       osc.start(now + delay);
       osc.stop(now + delay + duration);
+      vibrato.stop(now + delay + duration);
       
       // Track oscillator
       this.activeOscillators.add(osc);

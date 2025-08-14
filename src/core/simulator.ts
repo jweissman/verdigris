@@ -547,9 +547,10 @@ class Simulator {
   
   updateLeafParticle(particle: Particle) {
     if (particle.landed) {
-      // Landed leaves just sit there and fade - NO movement at all
+      // Landed leaves just sit there and fade quickly - NO movement at all
       particle.vel.x = 0;
       particle.vel.y = 0;
+      particle.lifetime -= 3; // Fade 4x faster when landed (including normal decrement)
       return;
     }
     
@@ -593,7 +594,7 @@ class Simulator {
       
       particle.vel.x = 0; // Stop all movement
       particle.vel.y = 0;
-      particle.lifetime = Math.min(particle.lifetime, 60); // Rest for a moment before fading
+      particle.lifetime = Math.min(particle.lifetime, 20); // Fade quickly after landing
     }
   }
   

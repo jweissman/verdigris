@@ -13,7 +13,6 @@ import forestTracker from './scenes/forest-tracker.battle.txt';
 import forestDay from './scenes/forest-day.battle.txt';
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { CommandHandler } from "../rules/command_handler";
-import { SegmentedCreatures } from "../rules/segmented_creatures";
 
 export class SceneLoader {
   static scenarios = { 
@@ -136,8 +135,7 @@ export class SceneLoader {
       commandHandler.apply();
     }
     
-    const segmentedRule = new SegmentedCreatures(this.sim);
-    segmentedRule.apply();
+    // Don't run segmented creatures rule here - let the normal rulebook handle it
   }
   
   private parseMetadata(line: string): void {

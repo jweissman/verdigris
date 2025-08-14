@@ -33,8 +33,18 @@ class MockAudioContext {
   createBiquadFilter() {
     return {
       type: 'lowpass',
-      frequency: { value: 1000 },
-      Q: { value: 1 },
+      frequency: { 
+        value: 1000,
+        setValueAtTime: () => {},
+        linearRampToValueAtTime: () => {},
+        exponentialRampToValueAtTime: () => {}
+      },
+      Q: { 
+        value: 1,
+        setValueAtTime: () => {},
+        linearRampToValueAtTime: () => {},
+        exponentialRampToValueAtTime: () => {}
+      },
       connect: () => {}
     };
   }
@@ -49,6 +59,13 @@ class MockAudioContext {
   createConvolver() {
     return {
       buffer: null,
+      connect: () => {}
+    };
+  }
+  
+  createDelay() {
+    return {
+      delayTime: { value: 0 },
       connect: () => {}
     };
   }

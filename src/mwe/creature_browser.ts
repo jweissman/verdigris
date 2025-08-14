@@ -31,7 +31,9 @@ export class CreatureBrowser {
       'mechanic', 'engineer', 'welder', 'assembler', 'clanker',
       'freezebot', 'spiker', 'swarmbot', 'roller', 'zapper',
       // Desert day creatures
-      'worm-hunter', 'waterbearer', 'skirmisher', 'desert-worm'
+      'worm-hunter', 'waterbearer', 'skirmisher', 'desert-worm',
+      // Dragon Day units
+      'dragon', 'lancer', 'miner', 'mindmender'
     ];
 
     this.creatures = creatureTypes.map(type => {

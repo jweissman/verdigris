@@ -39,7 +39,12 @@ class MockAudioContext {
         linearRampToValueAtTime: () => {},
         exponentialRampToValueAtTime: () => {}
       },
-      Q: { value: 1 },
+      Q: { 
+        value: 1,
+        setValueAtTime: () => {},
+        linearRampToValueAtTime: () => {},
+        exponentialRampToValueAtTime: () => {}
+      },
       connect: () => {}
     };
   }
@@ -54,6 +59,13 @@ class MockAudioContext {
   createConvolver() {
     return {
       buffer: null,
+      connect: () => {}
+    };
+  }
+  
+  createDelay() {
+    return {
+      delayTime: { value: 0 },
       connect: () => {}
     };
   }

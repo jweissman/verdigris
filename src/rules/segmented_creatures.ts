@@ -117,8 +117,8 @@ export class SegmentedCreatures extends Rule {
             segmentIndex: i,
             parentId: creature.id,
             facing: creature.meta.facing || 'right',
-            // Inherit huge status and dimensions from parent
-            huge: creature.meta.huge,
+            // Segments should not inherit huge status to avoid phantom explosion
+            // huge: creature.meta.huge,
             width: creature.meta.width,
             height: creature.meta.height
           }

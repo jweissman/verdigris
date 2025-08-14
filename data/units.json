@@ -1,5 +1,5 @@
 {
-    "worm": {
+  "worm": {
     "intendedMove": { "x": 0, "y": 0 },
     "team": "hostile",
     "sprite": "worm",
@@ -889,6 +889,49 @@
       "mindShieldDuration": 50,
       "confuseDuration": 30,
       "healAmount": 15
+    }
+  },
+  "dragon": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "hostile",
+    "sprite": "dragon",
+    "state": "idle",
+    "hp": 400,
+    "maxHp": 400,
+    "mass": 100,
+    "dmg": 25,
+    "tags": ["dragon", "flying", "mythic", "armored", "fire-breathing", "segmented"],
+    "abilities": ["dragonFire", "wingStorm", "terrifyingRoar"],
+    "meta": {
+      "facing": "right",
+      "flying": true,
+      "huge": true,
+      "width": 96,
+      "height": 64,
+      "armor": 10,
+      "fireImmune": true,
+      "segmented": true,
+      "segmentCount": 8,
+      "z": 5
+    }
+  },
+  "lancer": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "friendly",
+    "sprite": "lancer",
+    "state": "idle",
+    "hp": 45,
+    "maxHp": 45,
+    "mass": 1.2,
+    "dmg": 12,
+    "tags": ["specialist", "anti-armor", "dragon-hunter"],
+    "abilities": ["harpoonChain", "winchPull", "armorPierce"],
+    "meta": {
+      "facing": "right",
+      "harpoonRange": 12,
+      "chainLength": 15,
+      "armorPiercing": 8,
+      "winchSpeed": 2
     }
   }
 }
