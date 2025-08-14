@@ -1,0 +1,326 @@
+{
+  "groundPound": {
+    "name": "Ground Pound",
+    "cooldown": 80,
+    "description": "Slam the ground, stunning and damaging nearby enemies in a large radius",
+    "effects": [
+      {
+        "type": "knockback",
+        "radius": 4,
+        "force": 8,
+        "damage": 25,
+        "target": "nearbyEnemies(4)"
+      },
+      {
+        "type": "stun",
+        "duration": 30,
+        "radius": 4,
+        "target": "nearbyEnemies(4)"
+      },
+      {
+        "type": "cameraShake",
+        "intensity": 0.8,
+        "duration": 20
+      }
+    ]
+  },
+  "heroicLeap": {
+    "name": "Heroic Leap",
+    "cooldown": 60,
+    "description": "Leap to target location, dealing damage on landing",
+    "target": "cursor || closestEnemy(12)?.pos",
+    "effects": [
+      {
+        "type": "teleport",
+        "target": "target"
+      },
+      {
+        "type": "aoe",
+        "radius": 3,
+        "damage": 40,
+        "target": "target"
+      },
+      {
+        "type": "knockback",
+        "radius": 3,
+        "force": 6,
+        "target": "target"
+      }
+    ]
+  },
+  "battleCry": {
+    "name": "Battle Cry",
+    "cooldown": 120,
+    "description": "Rally nearby allies, boosting their damage and movement",
+    "effects": [
+      {
+        "type": "buff",
+        "radius": 8,
+        "target": "nearbyAllies(8)",
+        "effects": {
+          "damageBonus": 1.5,
+          "moveSpeed": 1.3,
+          "duration": 100
+        }
+      },
+      {
+        "type": "fear",
+        "radius": 6,
+        "target": "nearbyEnemies(6)",
+        "duration": 40
+      }
+    ]
+  },
+  "tripleFlip": {
+    "name": "Triple Flip",
+    "cooldown": 40,
+    "description": "Perform three acrobatic flips, becoming untargetable and dealing damage",
+    "effects": [
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "untargetable": true,
+          "dodgeChance": 1.0,
+          "duration": 25
+        }
+      },
+      {
+        "type": "multiHit",
+        "hits": 3,
+        "damage": 15,
+        "delay": 8,
+        "target": "nearbyEnemies(2)"
+      }
+    ]
+  },
+  "wallJump": {
+    "name": "Wall Jump",
+    "cooldown": 20,
+    "description": "Jump off walls and terrain for enhanced mobility",
+    "target": "cursor || self.pos + facing * 6",
+    "effects": [
+      {
+        "type": "dash",
+        "target": "target",
+        "speed": 3.0,
+        "throughEnemies": true
+      },
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "airborne": true,
+          "duration": 15
+        }
+      }
+    ]
+  },
+  "berserkerRage": {
+    "name": "Berserker Rage",
+    "cooldown": 90,
+    "description": "Enter berserk mode: take more damage but deal massive damage",
+    "effects": [
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "damageBonus": 2.5,
+          "attackSpeed": 2.0,
+          "damageTaken": 1.5,
+          "moveSpeed": 1.4,
+          "duration": 80
+        }
+      },
+      {
+        "type": "visualEffect",
+        "effect": "redAura",
+        "duration": 80
+      }
+    ]
+  },
+  "wildSwings": {
+    "name": "Wild Swings",
+    "cooldown": 50,
+    "description": "Unleash a flurry of attacks in all directions",
+    "effects": [
+      {
+        "type": "multiHit",
+        "hits": 6,
+        "damage": 20,
+        "delay": 5,
+        "radius": 3,
+        "target": "nearbyEnemies(3)"
+      },
+      {
+        "type": "knockback",
+        "radius": 3,
+        "force": 4,
+        "target": "nearbyEnemies(3)"
+      }
+    ]
+  },
+  "shadowStep": {
+    "name": "Shadow Step",
+    "cooldown": 30,
+    "description": "Teleport behind target enemy and gain stealth",
+    "target": "closestEnemy(8)",
+    "effects": [
+      {
+        "type": "teleport",
+        "target": "behind(target)"
+      },
+      {
+        "type": "backstab",
+        "damage": 60,
+        "target": "target"
+      },
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "stealth": true,
+          "duration": 40
+        }
+      }
+    ]
+  },
+  "criticalStrike": {
+    "name": "Critical Strike",
+    "cooldown": 35,
+    "description": "Next attack deals massive critical damage",
+    "effects": [
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "nextAttackCrit": true,
+          "critMultiplier": 4.0,
+          "duration": 60
+        }
+      }
+    ]
+  },
+  "shieldWall": {
+    "name": "Shield Wall",
+    "cooldown": 100,
+    "description": "Create a protective barrier for allies",
+    "effects": [
+      {
+        "type": "barrier",
+        "width": 6,
+        "height": 2,
+        "hp": 200,
+        "duration": 150,
+        "target": "inFrontOf(self)"
+      },
+      {
+        "type": "buff",
+        "target": "nearbyAllies(6)",
+        "effects": {
+          "damageReduction": 0.5,
+          "duration": 150
+        }
+      }
+    ]
+  },
+  "protectAllies": {
+    "name": "Protect Allies",
+    "cooldown": 60,
+    "description": "Redirect damage from nearby allies to self",
+    "effects": [
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "protectRadius": 5,
+          "damageRedirection": 0.8,
+          "duration": 100
+        }
+      }
+    ]
+  },
+  "evasionBoost": {
+    "name": "Evasion Boost",
+    "cooldown": 45,
+    "description": "Dramatically increase dodge chance and movement speed",
+    "effects": [
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "dodgeChance": 0.9,
+          "moveSpeed": 2.5,
+          "duration": 60
+        }
+      }
+    ]
+  },
+  "intimidate": {
+    "name": "Intimidate",
+    "cooldown": 70,
+    "description": "Terrify nearby enemies, reducing their damage and accuracy",
+    "effects": [
+      {
+        "type": "debuff",
+        "target": "nearbyEnemies(6)",
+        "effects": {
+          "damageReduction": 0.4,
+          "accuracy": 0.6,
+          "fear": true,
+          "duration": 80
+        }
+      }
+    ]
+  },
+  "taunt": {
+    "name": "Taunt",
+    "cooldown": 40,
+    "description": "Force nearby enemies to attack only you",
+    "effects": [
+      {
+        "type": "taunt",
+        "target": "nearbyEnemies(8)",
+        "duration": 50
+      },
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "damageReduction": 0.3,
+          "duration": 50
+        }
+      }
+    ]
+  },
+  "smokeBomb": {
+    "name": "Smoke Bomb",
+    "cooldown": 50,
+    "description": "Create concealing smoke, blinding enemies and enabling stealth",
+    "effects": [
+      {
+        "type": "smokeCloud",
+        "radius": 5,
+        "duration": 100,
+        "target": "self.pos"
+      },
+      {
+        "type": "buff",
+        "target": "self",
+        "effects": {
+          "stealth": true,
+          "duration": 100
+        }
+      },
+      {
+        "type": "debuff",
+        "target": "nearbyEnemies(5)",
+        "effects": {
+          "blind": true,
+          "accuracy": 0.2,
+          "duration": 100
+        }
+      }
+    ]
+  }
+}

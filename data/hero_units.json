@@ -1,0 +1,87 @@
+{
+  "champion": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "friendly",
+    "sprite": "champion",
+    "state": "idle",
+    "hp": 120,
+    "maxHp": 120,
+    "mass": 15,
+    "tags": ["hero", "warrior", "heavy", "champion"],
+    "abilities": ["groundPound", "heroicLeap", "battleCry"],
+    "meta": {
+      "facing": "right",
+      "heroType": "warrior",
+      "armor": 5,
+      "leadership": 3
+    }
+  },
+  "acrobat": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "friendly", 
+    "sprite": "acrobat",
+    "state": "idle",
+    "hp": 60,
+    "maxHp": 60,
+    "mass": 3,
+    "tags": ["hero", "agile", "acrobatic", "dodge"],
+    "abilities": ["tripleFlip", "wallJump", "evasionBoost"],
+    "meta": {
+      "facing": "right",
+      "heroType": "acrobat",
+      "dodgeChance": 0.4,
+      "moveSpeed": 1.8
+    }
+  },
+  "berserker": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "friendly",
+    "sprite": "berserker", 
+    "state": "idle",
+    "hp": 200,
+    "maxHp": 200,
+    "mass": 20,
+    "tags": ["hero", "berserker", "rage", "unstoppable"],
+    "abilities": ["berserkerRage", "wildSwings", "intimidate"],
+    "meta": {
+      "facing": "right",
+      "heroType": "berserker",
+      "rageStacks": 0,
+      "damageBonus": 0
+    }
+  },
+  "guardian": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "friendly",
+    "sprite": "guardian",
+    "state": "idle", 
+    "hp": 250,
+    "maxHp": 250,
+    "mass": 25,
+    "tags": ["hero", "tank", "protective", "shield"],
+    "abilities": ["shieldWall", "taunt", "protectAllies"],
+    "meta": {
+      "facing": "right",
+      "heroType": "guardian",
+      "armor": 8,
+      "blockChance": 0.6
+    }
+  },
+  "shadowBlade": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "friendly",
+    "sprite": "shadow-blade",
+    "state": "idle",
+    "hp": 45,
+    "maxHp": 45, 
+    "mass": 2,
+    "tags": ["hero", "assassin", "stealth", "critical"],
+    "abilities": ["shadowStep", "criticalStrike", "smokeBomb"],
+    "meta": {
+      "facing": "right",
+      "heroType": "assassin",
+      "stealth": false,
+      "critChance": 0.3
+    }
+  }
+}

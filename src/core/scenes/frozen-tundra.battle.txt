@@ -1,0 +1,23 @@
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+V..................................V
+V..................................V
+V.........kkkkkkkkkkkkkkkkkk.......V
+V.........k................k.......V
+V.........k................k.......V
+V.........k.......ç........k.......V
+V.........k................k.......V
+V.........k................k.......V
+V.........kkkkkkkkkkkkkkkkkk.......V
+V..................................V
+V..................................V
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+....................................
+....................................
+---
+bg arctic
+strip ultra-wide
+temperature -20
+weather blizzard 300 0.9
+# Frozen Tundra: Champion trapped in ice maze (k = ice wall, V = mountain)
+# Must break out before freezing to death
+# Environmental challenge focusing on movement and terrain destruction

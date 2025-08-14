@@ -12,13 +12,15 @@ import mechatronSolo from './scenes/mechatron-solo.battle.txt';
 import forestTracker from './scenes/forest-tracker.battle.txt';
 import forestDay from './scenes/forest-day.battle.txt';
 import simpleMesowormTest from './scenes/simple-mesoworm-test.battle.txt';
+import toymakerBalanced from './scenes/toymaker-balanced-challenge.battle.txt';
+import heroShowcase from './scenes/hero-showcase.battle.txt';
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { CommandHandler } from "../rules/command_handler";
 
 export class SceneLoader {
   static scenarios = { 
     simple, complex, healing, projectile, squirrel, chess, toymaker, desert, 
-    toymakerChallenge, mechatronSolo, forestTracker, forestDay, simpleMesowormTest
+    toymakerChallenge, mechatronSolo, forestTracker, forestDay, simpleMesowormTest, toymakerBalanced, heroShowcase
   };
   private unitCreationIndex: number = 0;
   
@@ -96,6 +98,12 @@ export class SceneLoader {
     Y: 'tracker',
     Z: 'zapper',
     z: "rainmaker",
+    // Hero units  
+    ç: 'champion',
+    α: 'acrobat', 
+    β: 'berserker', 
+    γ: 'guardian',
+    σ: 'shadowBlade',
   }
   
 
