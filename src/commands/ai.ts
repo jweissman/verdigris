@@ -16,6 +16,9 @@ export class AICommand extends Command {
   execute(unitId: string | null, params: Record<string, any>): void {
     // Always process AI for determinism
     this.processAllAI();
+    
+    // Woodland creatures occasionally summon friends
+    this.handleWoodlandSummoning();
   }
   
   private processAllAI(): void {
@@ -353,5 +356,77 @@ export class AICommand extends Command {
       // Set movement directly without command
       unit.intendedMove = intendedMove;
     }
+  }
+  
+  private handleWoodlandSummoning(): void {
+    // Only on peaceful scenes with woodland theme
+    const bg = (this.sim as any).sceneBackground || '';
+    if (!bg.includes('forest') && !bg.includes('title')) return;
+    
+    // Find woodland creatures
+    const woodlandTypes = ['squirrel', 'forest-squirrel', 'bird', 'deer'];
+    const woodlandCreatures = this.sim.units.filter(u => 
+      woodlandTypes.includes(u.type) && u.hp > 0 && u.team !== 'hostile'
+    );
+    
+    // Each woodland creature has a small chance to summon a friend
+    woodlandCreatures.forEach(creature => {
+      // Only if not too many already
+      if (woodlandCreatures.length >= 12) return;
+      
+      // 1% chance per creature per AI cycle (~every 10 ticks)
+      if (Math.random() < 0.01) {
+        this.summonWoodlandFriend(creature);
+      }
+    });
+  }
+  
+  private summonWoodlandFriend(summoner: any): void {
+    // Pick a friend type based on summoner
+    let friendType: string;
+    if (summoner.type.includes('squirrel')) {
+      friendType = Math.random() < 0.7 ? 'squirrel' : 'forest-squirrel';
+    } else if (summoner.type === 'bird') {
+      friendType = Math.random() < 0.8 ? 'bird' : 'squirrel';
+    } else if (summoner.type === 'deer') {
+      friendType = Math.random() < 0.5 ? 'deer' : 'forest-squirrel';
+    } else {
+      friendType = 'squirrel'; // default
+    }
+    
+    // Spawn near the summoner
+    const spawnPos = this.getNearbySpawnPosition(summoner.pos);
+    
+    this.sim.queuedCommands.push({
+      type: 'spawn',
+      params: { 
+        unitType: friendType, 
+        x: spawnPos.x, 
+        y: spawnPos.y,
+        team: 'neutral' // peaceful creatures
+      }
+    });
+    
+    // Add gentle summon effect
+    this.sim.queuedCommands.push({
+      type: 'effect',
+      params: {
+        type: 'gentle-summon',
+        x: spawnPos.x,
+        y: spawnPos.y,
+        color: '#90EE90'
+      }
+    });
+  }
+  
+  private getNearbySpawnPosition(center: { x: number; y: number }): { x: number; y: number } {
+    // Spawn 2-4 units away from summoner
+    const distance = 2 + Math.random() * 2;
+    const angle = Math.random() * 2 * Math.PI;
+    
+    return {
+      x: Math.max(1, Math.min(this.sim.width - 1, center.x + Math.cos(angle) * distance)),
+      y: Math.max(1, Math.min(this.sim.height - 1, center.y + Math.sin(angle) * distance))
+    };
   }
 }

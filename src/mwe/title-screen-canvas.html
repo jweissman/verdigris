@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verdigris - Main Menu</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: monospace;
+        }
+        
+        .game-container {
+            position: relative;
+            border: 2px solid #333;
+            background: #000;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="320" height="200"></canvas>
+        <div class="loading" id="loading">Loading...</div>
+        <div class="instructions">
+            Arrow keys to navigate • Enter to select • [HJSD] for quick access
+        </div>
+    </div>
+
+    <script type="module">
+        import { Simulator } from '../core/simulator.js';
+        import { SceneLoader } from '../core/scene_loader.js';
+        import { Game } from '../core/game.js';
+        import { createScaledRenderer } from '../render/scaled_renderer.js';
+
+        class ProperTitleScreen {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.loading = document.getElementById('loading');
+                
+                this.selectedOption = 0;
+                this.animFrame = 0;
+                this.isActive = true;
+                
+                this.menuOptions = [
+                    { text: 'Hero Showcase', key: 'H', scene: 'heroShowcase' },
+                    { text: 'Desert Battle', key: 'D', scene: 'desert' },
+                    { text: 'Siege Defense', key: 'S', scene: 'siegeDefense' },
+                    { text: 'Toymaker Challenge', key: 'T', scene: 'toymakerBalanced' },
+                    { text: 'Forest Wandering', key: 'F', scene: 'titleBackground' },
+                    { text: 'Quit Game', key: 'Q', scene: null }
+                ];
+                
+                this.initializeGame();
+            }
+            
+            async initializeGame() {
+                try {
+                    // Create simulation with creature spawning
+                    this.sim = new Simulator(40, 25);
+                    this.sceneLoader = new SceneLoader(this.sim);
+                    
+                    // Add cute animal spawning to UnitBehavior rule
+                    const behaviorRule = this.sim.rulebook.find(r => r.constructor.name === 'UnitBehavior');
+                    if (behaviorRule) {
+                        this.enhanceWithCuteAnimals(behaviorRule);
+                    }
+                    
+                    // Load peaceful title scene
+                    this.sceneLoader.loadScenario('titleBackground');
+                    
+                    // Load sprites and backgrounds
+                    const sprites = Game.loadSprites();
+                    const backgrounds = Game.loadBackgrounds();
+                    
+                    // Create renderer for 320x200
+                    this.renderer = createScaledRenderer(
+                        320, 200, this.canvas, this.sim, sprites, backgrounds
+                    );
+                    
+                    this.loading.style.display = 'none';
+                    this.setupControls();
+                    this.startMainLoop();
+                    
+                } catch (error) {
+                    console.error('Failed to initialize title screen:', error);
+                    this.loading.textContent = 'Failed to load. Check console for details.';
+                }
+            }
+            
+            enhanceWithCuteAnimals(behaviorRule) {
+                // Extend UnitBehavior to handle cute animal spawning
+                const originalApply = behaviorRule.apply.bind(behaviorRule);
+                let lastSpawn = 0;
+                
+                behaviorRule.apply = () => {
+                    originalApply();
+                    
+                    // Spawn cute animals occasionally
+                    if (this.sim.ticks - lastSpawn > 80) {
+                        this.spawnCuteAnimal();
+                        lastSpawn = this.sim.ticks;
+                    }
+                    
+                    // Make existing animals wander
+                    this.updateAnimalWandering();
+                };
+            }
+            
+            spawnCuteAnimal() {
+                const cuteTypes = ['squirrel', 'forest-squirrel', 'bird'];
+                const currentCute = this.sim.units.filter(u => 
+                    cuteTypes.includes(u.type) && u.hp > 0
+                ).length;
+                
+                if (currentCute < 8) { // max 8 cute animals
+                    const animalType = cuteTypes[Math.floor(Math.random() * cuteTypes.length)];
+                    const spawnPos = this.getEdgePosition();
+                    
+                    this.sim.parseCommand(`spawn ${animalType} ${spawnPos.x} ${spawnPos.y}`);
+                }
+            }
+            
+            getEdgePosition() {
+                const margin = 2;
+                const side = Math.floor(Math.random() * 4);
+                
+                switch (side) {
+                    case 0: return { x: Math.random() * this.sim.width, y: margin };
+                    case 1: return { x: this.sim.width - margin, y: Math.random() * this.sim.height };
+                    case 2: return { x: Math.random() * this.sim.width, y: this.sim.height - margin };
+                    case 3: return { x: margin, y: Math.random() * this.sim.height };
+                }
+            }
+            
+            updateAnimalWandering() {
+                const cuteAnimals = this.sim.units.filter(u => 
+                    ['squirrel', 'forest-squirrel', 'bird'].includes(u.type) && u.hp > 0
+                );
+                
+                cuteAnimals.forEach(animal => {
+                    if (!animal.meta.wanderTarget || Math.random() < 0.02) {
+                        animal.meta.wanderTarget = {
+                            x: 5 + Math.random() * (this.sim.width - 10),
+                            y: 5 + Math.random() * (this.sim.height - 10)
+                        };
+                    }
+                });
+            }
+            
+            setupControls() {
+                document.addEventListener('keydown', (e) => {
+                    if (!this.isActive) return;
+                    
+                    switch (e.key) {
+                        case 'ArrowUp':
+                            this.selectedOption = Math.max(0, this.selectedOption - 1);
+                            break;
+                        case 'ArrowDown':
+                            this.selectedOption = Math.min(this.menuOptions.length - 1, this.selectedOption + 1);
+                            break;
+                        case 'Enter':
+                            this.selectOption();
+                            break;
+                        default:
+                            // Check hotkeys
+                            const option = this.menuOptions.findIndex(opt => 
+                                opt.key.toLowerCase() === e.key.toLowerCase()
+                            );
+                            if (option >= 0) {
+                                this.selectedOption = option;
+                                this.selectOption();
+                            }
+                    }
+                });
+            }
+            
+            selectOption() {
+                const option = this.menuOptions[this.selectedOption];
+                
+                if (option.scene) {
+                    console.log(`Loading scene: ${option.scene}`);
+                    this.sceneLoader.loadScenario(option.scene);
+                } else if (option.text === 'Quit Game') {
+                    console.log('Goodbye!');
+                    this.isActive = false;
+                }
+            }
+            
+            startMainLoop() {
+                const loop = () => {
+                    if (!this.isActive) return;
+                    
+                    // Update simulation
+                    this.sim.step();
+                    
+                    // Render background simulation
+                    this.renderer.render();
+                    
+                    // Render title UI overlay
+                    this.renderTitleOverlay();
+                    
+                    this.animFrame++;
+                    requestAnimationFrame(loop);
+                };
+                
+                loop();
+            }
+            
+            renderTitleOverlay() {
+                const ctx = this.ctx;
+                
+                // Semi-transparent overlay
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                ctx.fillRect(0, 0, 320, 200);
+                
+                // Title
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 24px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('VERDIGRIS', 160, 40);
+                
+                // Subtitle
+                ctx.fillStyle = '#87CEEB';
+                ctx.font = '10px monospace';
+                ctx.fillText('Tactical Combat Simulation', 160, 55);
+                
+                // Menu
+                this.menuOptions.forEach((option, index) => {
+                    const y = 80 + index * 16;
+                    const isSelected = index === this.selectedOption;
+                    
+                    // Selection highlight
+                    if (isSelected) {
+                        ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+                        ctx.fillRect(60, y - 8, 200, 14);
+                    }
+                    
+                    // Option text
+                    ctx.fillStyle = isSelected ? '#FFD700' : '#FFFFFF';
+                    ctx.font = isSelected ? 'bold 12px monospace' : '12px monospace';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(option.text, 70, y);
+                    
+                    // Hotkey
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.font = '10px monospace';
+                    ctx.fillText(`[${option.key}]`, 220, y);
+                });
+                
+                // Stats
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(5, 5, 120, 50);
+                
+                ctx.fillStyle = '#90EE90';
+                ctx.font = '8px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('Background Sim:', 8, 15);
+                ctx.fillText(`Ticks: ${this.sim.ticks}`, 8, 25);
+                ctx.fillText(`Units: ${this.sim.units.length}`, 8, 35);
+                ctx.fillText(`Cute: ${this.sim.units.filter(u => ['squirrel', 'bird'].includes(u.type)).length}`, 8, 45);
+                
+                // Animated cursor
+                if (Math.floor(this.animFrame / 30) % 2) {
+                    const cursorY = 80 + this.selectedOption * 16;
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillText('►', 55, cursorY);
+                }
+            }
+        }
+        
+        // Start when page loads
+        window.addEventListener('load', () => {
+            new ProperTitleScreen();
+        });
+    </script>
+</body>
+</html>

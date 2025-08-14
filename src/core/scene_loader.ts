@@ -14,13 +14,14 @@ import forestDay from './scenes/forest-day.battle.txt';
 import simpleMesowormTest from './scenes/simple-mesoworm-test.battle.txt';
 import toymakerBalanced from './scenes/toymaker-balanced-challenge.battle.txt';
 import heroShowcase from './scenes/hero-showcase.battle.txt';
+import titleBackground from './scenes/title-background.battle.txt';
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { CommandHandler } from "../rules/command_handler";
 
 export class SceneLoader {
   static scenarios = { 
     simple, complex, healing, projectile, squirrel, chess, toymaker, desert, 
-    toymakerChallenge, mechatronSolo, forestTracker, forestDay, simpleMesowormTest, toymakerBalanced, heroShowcase
+    toymakerChallenge, mechatronSolo, forestTracker, forestDay, simpleMesowormTest, toymakerBalanced, heroShowcase, titleBackground
   };
   private unitCreationIndex: number = 0;
   
