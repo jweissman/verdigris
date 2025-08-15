@@ -294,9 +294,9 @@ describe('Grappling Mass Physics', () => {
       duration: 60
     });
 
-    grapplingPhysics.apply();
-    let commandHandler = new CommandHandler(sim);
-    commandHandler.apply();
+    // Add rules to simulator and run a step
+    sim.rulebook = [new CommandHandler(sim), grapplingPhysics];
+    sim.step();
 
     // Heavy unit should have some movement penalty from first grapple
     const updatedHeavy = sim.units.find(u => u.id === 'heavy');
@@ -318,9 +318,8 @@ describe('Grappling Mass Physics', () => {
     // Mark as grappled by multiple units
     heavy.meta.additionalGrapplers = ['g2'];
 
-    grapplingPhysics.apply();
-    commandHandler = new CommandHandler(sim);
-    commandHandler.apply();
+    // Run another step to process the second grappler
+    sim.step();
 
     // With two grapplers, the heavy unit should have increased movement penalty
     const finalHeavy = sim.units.find(u => u.id === 'heavy');

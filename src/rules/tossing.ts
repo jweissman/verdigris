@@ -7,7 +7,7 @@ export class Tossing extends Rule {
     // Process tossing for each unit
     const units = context.getAllUnits();
     for (const unit of units) {
-      if (unit.meta?.tossing) {
+      if (unit.meta.tossing) {
         this.processToss(context, unit as Unit);
       }
     }

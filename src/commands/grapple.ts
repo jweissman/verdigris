@@ -92,7 +92,7 @@ export class Grapple extends Command {
       id: `grapple_${grappler.id}_${this.sim.ticks}`,
       pos: { ...grappler.pos },
       vel,
-      radius: 1,
+      radius: 1.5,  // Larger radius to ensure collision detection with fast movement
       damage: 0,
       team: grappler.team,
       type: 'grapple',

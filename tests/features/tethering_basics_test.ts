@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 
 describe('Tethering Basics - Step by Step', () => {
   it('should fire a grapple projectile from grappler', () => {
@@ -54,41 +53,26 @@ describe('Tethering Basics - Step by Step', () => {
     sim.addUnit(grappler);
     sim.addUnit(immovableUnit);
     
-    // Add GrapplingPhysics rule to handle collisions
-    sim.rulebook.push(new GrapplingPhysics(sim));
+    // Use default rulebook which includes all necessary rules
     
     // Fire grapple at heavy unit using simulator
     sim.forceAbility(grappler.id, 'grapplingHook', immovableUnit);
     sim.step(); // Process the command to create projectile
     
-    // Simulate projectile travel and collision
+    // Simulate projectile travel and collision - ProjectileMotion will handle movement
     for (let i = 0; i < 20; i++) {
-      // Find the grapple projectile
-      const grapplesBeforeMove = sim.projectiles.filter(p => p.type === 'grapple');
-      
-      // Move projectiles toward their targets
-      sim.projectiles.forEach(p => {
-        if (p.type === 'grapple' && p.target) {
-          const dx = p.target.x - p.pos.x;
-          const dy = p.target.y - p.pos.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          if (dist > 0.5) {
-            p.pos.x += (dx / dist) * 0.5;
-            p.pos.y += (dy / dist) * 0.5;
-          } else {
-            // Projectile reached target - set exact position for collision detection
-            p.pos.x = p.target.x;
-            p.pos.y = p.target.y;
-          }
-        }
-      });
-      
       sim.step();
+      
+      // Check projectile status
+      const grappleProjectile = sim.projectiles.find(p => p.type === 'grapple');
+      if (grappleProjectile) {
+        console.log(`Step ${i+1}: Grapple at (${grappleProjectile.pos.x.toFixed(1)}, ${grappleProjectile.pos.y.toFixed(1)}), target at (10, 5)`);
+      }
       
       // Break early if grapple hit
       const heavyUnit = sim.units.find(u => u.id === 'heavy-1');
       if (heavyUnit?.meta?.grappled) {
+        console.log(`Grapple hit at step ${i+1}`);
         break;
       }
     }

@@ -245,8 +245,8 @@ export class EventHandler extends Rule {
               const direction = { x: dx / dist, y: dy / dist };
               context.queueCommand({
                 type: 'toss',
+                unitId: unit.id,  // unitId at command level, not in params
                 params: {
-                  unitId: unit.id,
                   direction: direction,
                   force: event.meta.force,
                   distance: Math.min(3, event.meta.force / 2)

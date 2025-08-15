@@ -43,9 +43,9 @@ describe('AI Behavior System', () => {
     
     UnitMovement.wanderRate = 1;
     
-    // Add worms with some distance between them
-    const worm1 = { ...Encyclopaedia.unit('worm'), pos: { x: 1, y: 1 } }; // Will try to move toward ally
-    const worm2 = { ...Encyclopaedia.unit('worm'), pos: { x: 4, y: 1 } }; // Target ally, within range 5
+    // Add worms with some distance between them - give them swarm tags for this test
+    const worm1 = { ...Encyclopaedia.unit('worm'), pos: { x: 1, y: 1 }, tags: ['swarm'] }; // Will try to move toward ally
+    const worm2 = { ...Encyclopaedia.unit('worm'), pos: { x: 4, y: 1 }, tags: ['swarm'] }; // Target ally, within range 5
     sim.addUnit(worm1);
     sim.addUnit(worm2);
     
@@ -101,16 +101,16 @@ describe('AI Behavior System', () => {
     
     UnitMovement.wanderRate = 1;
     
-    // Create a line of worms where middle one can't move
+    // Create a line of units with swarm behavior
     // Give them unique IDs to ensure proper tracking
-    const worm1 = { ...Encyclopaedia.unit('worm'), id: 'worm1', pos: { x: 1, y: 1 } }; // Will try to move right toward ally
-    const worm2 = { ...Encyclopaedia.unit('worm'), id: 'worm2', pos: { x: 2, y: 1 } }; // Blocks movement
-    const worm3 = { ...Encyclopaedia.unit('worm'), id: 'worm3', pos: { x: 3, y: 1 } }; // Target ally
+    const worm1 = { ...Encyclopaedia.unit('swarmbot'), id: 'swarm1', pos: { x: 1, y: 1 } }; // Will try to move toward center
+    const worm2 = { ...Encyclopaedia.unit('swarmbot'), id: 'swarm2', pos: { x: 2, y: 1 } }; // Center unit
+    const worm3 = { ...Encyclopaedia.unit('swarmbot'), id: 'swarm3', pos: { x: 3, y: 1 } }; // Will try to move toward center
     sim.addUnit(worm1);
     sim.addUnit(worm2);
     sim.addUnit(worm3);
     
-    const worms = sim.units.filter(u => u.sprite === 'worm');
+    const worms = sim.units.filter(u => u.sprite === 'swarmbot');
     expect(worms.length).toBe(3);
     
     const positions = worms.map(w => ({ x: w.pos.x, y: w.pos.y }));
@@ -137,7 +137,6 @@ describe('AI Behavior System', () => {
       // The collision system should separate them
       if (i === 4 && overlaps.length > 0) {
         // Only fail if overlaps persist until the end
-        console.log('Final overlaps:', overlaps);
         expect(overlaps.length).toBe(0);
       }
     }

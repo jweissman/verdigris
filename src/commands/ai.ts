@@ -73,7 +73,7 @@ export class AICommand extends Command {
   
   private processAIVectorizedOLD_REMOVED(arrays: any): void {
     const capacity = arrays.capacity;
-    const searchRadius = this.sim.performanceMode ? 5 : 15;
+    const searchRadius = 15; // performanceMode removed
     const MAX_SEARCH_RADIUS_SQ = searchRadius * searchRadius;
     
     // Pre-allocate arrays for targets (avoids allocation in hot loop)
@@ -223,7 +223,7 @@ export class AICommand extends Command {
     const targetMap = new Map<string, string | null>();
     const allyMap = new Map<string, string | null>();
     // In performance mode, use much smaller search radius
-    const searchRadius = this.sim.performanceMode ? 5 : 15;
+    const searchRadius = 15; // performanceMode removed
     const MAX_SEARCH_RADIUS = searchRadius * searchRadius;
     
     for (let i = 0; i < units.length; i++) {

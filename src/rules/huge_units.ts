@@ -6,7 +6,7 @@ export class HugeUnits extends Rule {
   execute(context: TickContext): void {
     // Find huge units that need phantom setup
     const hugeUnits = context.getAllUnits().filter(unit => 
-      unit.meta?.huge && !this.hasPhantoms(context, unit)
+      unit.meta.huge && !this.hasPhantoms(context, unit)
     );
 
     // Create phantoms for new huge units
@@ -23,7 +23,7 @@ export class HugeUnits extends Rule {
 
   private hasPhantoms(context: TickContext, hugeUnit: Unit): boolean {
     return context.getAllUnits().some(unit => 
-      unit.meta?.phantom && unit.meta.parentId === hugeUnit.id
+      unit.meta.phantom && unit.meta.parentId === hugeUnit.id
     );
   }
 
@@ -98,7 +98,7 @@ export class HugeUnits extends Rule {
     const pairs = new Map<string, Unit[]>();
     
     context.getAllUnits()
-      .filter(unit => unit.meta?.phantom && unit.meta.parentId)
+      .filter(unit => unit.meta.phantom && unit.meta.parentId)
       .forEach(phantom => {
         const meta = phantom.meta || {};
         const parentId = meta.parentId!;

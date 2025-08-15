@@ -467,17 +467,17 @@
     "trigger": "closest.ally()?.tags?.includes('construct')",
     "effects": [
       {
-        "type": "heal",
-        "target": "target",
-        "amount": 10
-      },
-      {
         "type": "buff",
         "target": "target",
         "buff": {
           "maxHp": "+10",
           "armor": "+1"
         }
+      },
+      {
+        "type": "heal",
+        "target": "target",
+        "amount": 10
       },
       {
         "type": "particles",

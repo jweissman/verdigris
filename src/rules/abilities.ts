@@ -196,7 +196,7 @@ export class Abilities extends Rule {
         this.cleanse(context, effect, caster, primaryTarget);
         break;
       case 'area_particles':
-        // NOTE: should be a real command???
+        this.createAreaParticles(context, effect, caster, primaryTarget);
         break;
       case 'reveal':
         this.reveal(context, effect, caster, primaryTarget);
@@ -325,7 +325,7 @@ export class Abilities extends Rule {
 
     const amount = this.resolveValue(context, effect.amount, caster, target);
     const aspect = effect.aspect || 'healing';
-
+    
     context.queueCommand({
       type: 'heal',
       params: {
@@ -582,15 +582,29 @@ export class Abilities extends Rule {
         if (typeof value === 'string' && value.startsWith('+')) {
           const increase = parseInt(value.substring(1));
           if (stat === 'maxHp') {
+            // For maxHp buffs, use heal command to update maxHp
+            // Do NOT heal here - let the separate heal effect handle that
             const oldMaxHp = target.maxHp || 0;
-            const oldHp = target.hp || 0;
-            // Queue command to update stats
+            
+            // Use heal command to update maxHp only
+            context.queueCommand({
+              type: 'heal',
+              params: {
+                targetId: target.id,
+                amount: 0,  // Don't heal here
+                newMaxHp: oldMaxHp + increase
+              }
+            });
+            
+            // Track the maxHp buff in meta
             context.queueCommand({
               type: 'meta',
               params: {
                 unitId: target.id,
-                maxHp: oldMaxHp + increase,
-                hp: oldHp + increase
+                meta: {
+                  maxHpBuffed: true,
+                  maxHpBonus: increase
+                }
               }
             });
           } else if (stat === 'armor') {
@@ -1140,6 +1154,40 @@ export class Abilities extends Rule {
     }
   }
 
+  private createAreaParticles(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const center = this.resolveTarget(context, effect.center || 'self.pos', caster, primaryTarget);
+    if (!center) return;
+    
+    const centerPos = center.pos || center;
+    const size = effect.size || '3x3';
+    const [width, height] = size.split('x').map(s => parseInt(s));
+    const particleType = effect.particleType || 'energy';
+    const color = effect.color || '#00CCFF';
+    const lifetime = effect.lifetime || 80;
+    
+    // Create a grid of particles
+    for (let dx = -Math.floor(width/2); dx <= Math.floor(width/2); dx++) {
+      for (let dy = -Math.floor(height/2); dy <= Math.floor(height/2); dy++) {
+        context.queueCommand({
+          type: 'particle',
+          params: {
+            particle: {
+              pos: { 
+                x: (centerPos.x + dx) * 8 + 4, 
+                y: (centerPos.y + dy) * 8 + 4 
+              },
+              vel: { x: 0, y: -0.1 },
+              radius: 2,
+              color: color,
+              lifetime: lifetime,
+              type: particleType
+            }
+          }
+        });
+      }
+    }
+  }
+  
   private createParticles(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(context, (effect as any).pos || effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;

@@ -113,6 +113,9 @@ export class CommandHandler extends Rule {
     
     // Effect commands
     this.commands.set('particle', new ParticleCommand(sim, this.transform));
+    
+    // Toss command
+    this.commands.set('toss', new Toss(sim, this.transform));
   }
 
   execute(context: TickContext): void {

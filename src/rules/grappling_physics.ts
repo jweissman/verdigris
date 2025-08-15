@@ -44,7 +44,7 @@ export class GrapplingPhysics extends Rule {
     const allUnits = context.getAllUnits();
     
     for (const unit of allUnits) {
-      if (unit.meta?.grappleHit) {
+      if (unit.meta.grappleHit) {
         this.processGrappleHit(context, unit);
       }
     }
@@ -52,7 +52,7 @@ export class GrapplingPhysics extends Rule {
   
   private processGrappleHit(context: TickContext, hitUnit: Unit) {
 
-    if (hitUnit.meta?.grappleHit) {
+    if (hitUnit.meta.grappleHit) {
       // Create grapple line from metadata
       const grapplerID = hitUnit.meta.grapplerID || 'unknown';
       const grappler = context.findUnitById(grapplerID);

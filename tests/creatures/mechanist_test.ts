@@ -146,7 +146,6 @@ describe('Mechanist Showcase', () => {
     const sim = new Simulator();
     sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
-    
     // Create builder and a construct to reinforce
     const builder = { ...Encyclopaedia.unit('builder'), pos: { x: 5, y: 5 } };
     const construct = { ...Encyclopaedia.unit('clanker'), pos: { x: 7, y: 5 } };
@@ -343,9 +342,9 @@ describe('Mechanist Showcase', () => {
     const repairedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
     expect(repairedConstruct).toBeDefined();
     
-    // Emergency repair heals to max (3 → 12), reinforcement heals 10 more but capped, then increases maxHp
-    expect(repairedConstruct!.hp).toBe(12); // Healed to current max, reinforcement heal also capped
-    expect(repairedConstruct!.maxHp).toBeGreaterThanOrEqual(originalMaxHp); // MaxHP should be increased or stay same
+    // Emergency repair heals to max (3 → 12), reinforcement increases maxHp and heals 10 more
+    expect(repairedConstruct!.hp).toBe(22); // Emergency repair to 12, then reinforce heals 10 more
+    expect(repairedConstruct!.maxHp).toBe(22); // MaxHP increased by 10 from reinforcement
     // Note: buff effects may need debugging, but healing works
   });
 
@@ -380,15 +379,32 @@ describe('Mechanist Showcase', () => {
     // Test power surge  
     // Set up cooldowns
     sim.ticks = 60;
-    simRoller.lastAbilityTick = { chargeAttack: 55 };
-    simZapper.lastAbilityTick = { zapHighest: 50 };
+    sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: simRoller.id,
+        meta: {
+          lastAbilityTick: { chargeAttack: 55 }
+        }
+      }
+    });
+    sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: simZapper.id,
+        meta: {
+          lastAbilityTick: { zapHighest: 50 }
+        }
+      }
+    });
+    sim.step(); // Process the meta commands
     
     sim.forceAbility(simAssembler.id, 'powerSurge', simAssembler.pos);
     sim.step();
     
     // Should reset cooldowns (abilities may immediately trigger after reset)
-    expect(simRoller.lastAbilityTick!.chargeAttack).toBeLessThanOrEqual(sim.ticks);
-    expect(simZapper.lastAbilityTick!.zapHighest).toBeLessThanOrEqual(sim.ticks + 1); // May trigger immediately
+    expect(simRoller.meta.lastAbilityTick?.chargeAttack).toBeLessThanOrEqual(sim.ticks);
+    expect(simZapper.meta.lastAbilityTick?.zapHighest).toBeLessThanOrEqual(sim.ticks + 1); // May trigger immediately
   });
 
   it('should verify mechanist synergy with constructs', () => {
