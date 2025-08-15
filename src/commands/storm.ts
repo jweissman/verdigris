@@ -17,9 +17,9 @@ export class StormCommand extends Command {
         this.sim.particleArrays.addParticle({
           pos: { 
             x: Math.random() * this.sim.fieldWidth * 8,
-            y: Math.random() * this.sim.fieldHeight * 8
+            y: 100 + Math.random() * (this.sim.fieldHeight * 8 - 200) // Keep away from edges
           },
-          vel: { x: (Math.random() - 0.5) * 0.2, y: -0.1 },
+          vel: { x: (Math.random() - 0.5) * 0.2, y: 0 }, // No vertical movement
           radius: 0.5,
           color: '#333366',
           lifetime: 120 + Math.random() * 60,

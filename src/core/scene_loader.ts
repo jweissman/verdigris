@@ -112,8 +112,6 @@ export class SceneLoader {
     this.sim.reset();
     const lines = sceneText.trim().split('\n');
     let inMetadata = false;
-    // console.log("SceneLoader: Processing lines", lines.length);
-    
     for (let y = 0; y < lines.length; y++) {
       const line = lines[y];
       if (!line.trim()) continue;

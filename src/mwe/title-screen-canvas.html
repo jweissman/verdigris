@@ -211,10 +211,8 @@
                 const option = this.menuOptions[this.selectedOption];
                 
                 if (option.scene) {
-                    console.log(`Loading scene: ${option.scene}`);
                     this.sceneLoader.loadScenario(option.scene);
                 } else if (option.text === 'Quit Game') {
-                    console.log('Goodbye!');
                     this.isActive = false;
                 }
             }

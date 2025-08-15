@@ -73,6 +73,9 @@ export class Transform {
       return;
     }
     
+    // Mark unit as dirty for delta tracking
+    this.sim.markDirty(unitId);
+    
     // Use the proxy manager's DataQuery interface to update
     const proxyManager = this.sim.getProxyManager();
     

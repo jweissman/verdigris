@@ -157,40 +157,33 @@ export class TitleScreen {
   }
 
   private startGame(): void {
-    console.log('🎮 Starting main game...');
     this.transitionToScene('simple');
   }
 
   private showHeroes(): void {
-    console.log('🦸 Showing hero showcase...');
     this.transitionToScene('heroShowcase');
   }
 
   private showDesert(): void {
-    console.log('🏜️ Loading desert battle...');
     this.transitionToScene('desert');
   }
 
   private showToymaker(): void {
-    console.log('🤖 Loading toymaker challenge...');
     this.transitionToScene('toymakerBalanced');
   }
 
   private showSettings(): void {
-    console.log('⚙️ Opening settings...');
     // Could transition to settings screen
     alert('Settings screen would open here');
   }
 
   private quit(): void {
-    console.log('👋 Goodbye!');
     this.isActive = false;
     // Could trigger application exit
     alert('Game would quit here');
   }
 
   private transitionToScene(sceneName: string): void {
-    console.log(`🎬 Transitioning to scene: ${sceneName}`);
     
     // Fade out title screen
     this.isActive = false;

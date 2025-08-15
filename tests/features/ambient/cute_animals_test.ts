@@ -1,55 +1,27 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import { SceneLoader } from '../../src/core/scene_loader';
-import { AmbientSpawning } from '../../src/rules/ambient_spawning';
-import { AmbientBehavior } from '../../src/rules/ambient_behavior';
+import { Simulator } from '../../../src/core/simulator';
+import { SceneLoader } from '../../../src/core/scene_loader';
+import { AmbientBehavior } from '../../../src/rules/ambient_behavior';
 
 describe('Cute Animals System', () => {
   it('should spawn cute animals in forest scenes', () => {
-    // console.log('🐿️ CUTE ANIMAL SPAWNING TEST');
-    
     const sim = new Simulator(20, 15);
-    
-    // Add ambient systems to rulebook
-    sim.rulebook.push(new AmbientSpawning(sim));
-    sim.rulebook.push(new AmbientBehavior(sim));
     
     // Set forest biome
     (sim as any).sceneBackground = 'title-forest';
     
-    // console.log(`Initial units: ${sim.units.length}`);
-    
     // Run simulation to trigger spawning
-    let spawnedAnimals = 0;
     for (let tick = 0; tick < 200; tick++) {
       sim.step();
-      
-      const ambientCreatures = sim.units.filter(u => u.meta?.isAmbient);
-      if (ambientCreatures.length > spawnedAnimals) {
-        spawnedAnimals = ambientCreatures.length;
-        // console.log(`Tick ${tick}: Spawned cute animal! Total: ${spawnedAnimals}`);
-        
-        const newest = ambientCreatures[ambientCreatures.length - 1];
-        // console.log(`  Type: ${newest.type}, Team: ${newest.team}, Pos: (${newest.pos.x.toFixed(1)}, ${newest.pos.y.toFixed(1)})`);
-      }
     }
     
     const finalAnimals = sim.units.filter(u => u.meta?.isAmbient);
-    // console.log(`\nFinal cute animals: ${finalAnimals.length}`);
-    
-    finalAnimals.forEach(animal => {
-      // console.log(`  ${animal.type}: (${animal.pos.x.toFixed(1)}, ${animal.pos.y.toFixed(1)}), facing ${animal.meta.facing || 'unknown'}`);
-    });
-    
     expect(finalAnimals.length).toBeGreaterThan(0);
     expect(finalAnimals.length).toBeLessThanOrEqual(10); // respects max limit
   });
   
   it('should make cute animals wander naturally', () => {
-    // console.log('\n🚶 CUTE ANIMAL BEHAVIOR TEST');
-    
     const sim = new Simulator(15, 10);
-    sim.rulebook.push(new AmbientBehavior(sim));
     
     // Manually spawn a squirrel
     const squirrel = {
@@ -68,8 +40,6 @@ describe('Cute Animals System', () => {
     };
     
     sim.addUnit(squirrel);
-    // console.log(`Initial squirrel position: (${squirrel.pos.x}, ${squirrel.pos.y})`);
-    // console.log(`Wander target: (${squirrel.meta.wanderTarget.x}, ${squirrel.meta.wanderTarget.y})`);
     
     // Track movement over time
     const positions: { x: number; y: number }[] = [];
@@ -81,9 +51,6 @@ describe('Cute Animals System', () => {
         const currentSquirrel = sim.units.find(u => u.id === 'test-squirrel');
         if (currentSquirrel) {
           positions.push({ x: currentSquirrel.pos.x, y: currentSquirrel.pos.y });
-          // console.log(`Tick ${tick}: squirrel at (${currentSquirrel.pos.x.toFixed(2)}, ${currentSquirrel.pos.y.toFixed(2)})`);
-          // console.log(`  Target: (${currentSquirrel.meta.wanderTarget.x.toFixed(2)}, ${currentSquirrel.meta.wanderTarget.y.toFixed(2)})`);
-          // console.log(`  Facing: ${currentSquirrel.meta.facing || 'none'}`);
         }
       }
     }
@@ -98,15 +65,11 @@ describe('Cute Animals System', () => {
       Math.pow(endPos.x - startPos.x, 2) + Math.pow(endPos.y - startPos.y, 2)
     );
     
-    // console.log(`\nTotal movement distance: ${totalMovement.toFixed(2)}`);
     expect(totalMovement).toBeGreaterThan(0.4); // Should have moved meaningfully
   });
   
   it('should handle social interactions between cute animals', () => {
-    // console.log('\n👥 CUTE ANIMAL SOCIAL TEST');
-    
     const sim = new Simulator(15, 10);
-    sim.rulebook.push(new AmbientBehavior(sim));
     
     // Spawn two squirrels near each other
     const squirrel1 = {
@@ -174,19 +137,9 @@ describe('Cute Animals System', () => {
     const sim = new Simulator(40, 20);
     const sceneLoader = new SceneLoader(sim);
     
-    // Add ambient systems
-    sim.rulebook.push(new AmbientSpawning(sim));
-    sim.rulebook.push(new AmbientBehavior(sim));
-    
     // Load title background scene
     sceneLoader.loadScenario('titleBackground');
     
-    // console.log(`Title scene loaded: ${sim.units.length} initial units`);
-    
-    // List initial creatures
-    sim.units.forEach(unit => {
-      // console.log(`  ${unit.type}: (${unit.pos.x}, ${unit.pos.y}), team=${unit.team}`);
-    });
     
     // Run for a while to see ambient spawning + existing creatures
     for (let tick = 0; tick < 300; tick++) {
@@ -209,9 +162,6 @@ describe('Cute Animals System', () => {
       ['squirrel', 'forest-squirrel', 'bird', 'deer'].includes(u.type) && u.hp > 0
     );
     const initialWoodlandCount = 21; // from scene
-    const newlySpawned = finalWoodlandCreatures.length - initialWoodlandCount;
-    
-    // console.log(`\nFinal woodland creatures: ${finalWoodlandCreatures.length} (${newlySpawned} newly spawned)`);
     
     expect(sim.units.length).toBeGreaterThan(0);
     expect(finalWoodlandCreatures.length).toBeGreaterThan(10); // Should have plenty of woodland creatures

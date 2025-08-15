@@ -34,7 +34,6 @@ export default class SingleCellLab {
   private testParticles: any[] = [];
   
   constructor() {
-    console.log('Initializing Single Cell Lab...');
     this.canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
     
@@ -194,7 +193,6 @@ export default class SingleCellLab {
     };
     
     this.sim.addUnit(this.testUnit);
-    console.log(`Spawned ${type} at cell (${this.currentCell.x}, ${this.currentCell.y})`);
   }
   
   private triggerCellEffect(effect: string) {
@@ -211,8 +209,6 @@ export default class SingleCellLab {
       duration: 60,
       intensity: 1.0
     });
-    
-    console.log(`Triggered ${effect} effect at cell (${this.currentCell.x}, ${this.currentCell.y})`);
   }
   
   private spawnTestParticle(type: string) {
@@ -231,18 +227,13 @@ export default class SingleCellLab {
     
     this.sim.particles.push(particle);
     this.testParticles.push(particle);
-    
-    console.log(`Spawned ${type} particle at cell (${this.currentCell.x}, ${this.currentCell.y})`);
   }
   
   private testAbility() {
     if (!this.testUnit) {
-      console.log('No test unit to trigger ability');
       return;
     }
     
-    // Trigger a simple ability
-    console.log(`Testing ability for unit at (${this.testUnit.pos.x}, ${this.testUnit.pos.y})`);
     
     // Change to attack state briefly
     this.testUnit.state = 'attack';
@@ -274,7 +265,6 @@ export default class SingleCellLab {
     
     this.testUnit = null;
     this.testEffect = null;
-    console.log(`Cleared cell (${this.currentCell.x}, ${this.currentCell.y})`);
   }
   
   private updateDisplay() {

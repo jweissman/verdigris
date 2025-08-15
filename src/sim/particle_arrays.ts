@@ -171,7 +171,11 @@ export class ParticleArrays {
       'test_particle': 10,
       'test': 11,
       'pin': 12,
-      'storm_cloud': 13
+      'storm_cloud': 13,
+      'lightning_branch': 14,
+      'electric_spark': 15,
+      'power_surge': 16,
+      'ground_burst': 17
     };
     return types[type || ''] || 0;
   }

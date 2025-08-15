@@ -60,31 +60,11 @@ class ScenarioViewer {
       this.currentScenario = scenario;
       
       this.sceneLoader.loadScenario(scenario);
-      
-      // Debug output for spawned creatures
-      console.log(`=== Scene "${scenario}" loaded ===`);
-      console.log(`Total units: ${this.sim.units.length}`);
-      
-      // Count by type
       const unitCounts = new Map<string, number>();
       this.sim.units.forEach(unit => {
         const type = unit.type || unit.sprite || 'unknown';
         unitCounts.set(type, (unitCounts.get(type) || 0) + 1);
       });
-      
-      console.log('Unit types spawned:');
-      unitCounts.forEach((count, type) => {
-        console.log(`  ${type}: ${count}`);
-      });
-      
-      // Check for sprite mismatches
-      const spriteMismatches = this.sim.units.filter(u => u.type && u.sprite && u.type !== u.sprite);
-      if (spriteMismatches.length > 0) {
-        console.log('Units with placeholder sprites:');
-        spriteMismatches.forEach(u => {
-          console.log(`  ${u.type} using sprite "${u.sprite}"`);
-        });
-      }
       
       this.draw();
       
@@ -195,10 +175,8 @@ window.onload = () => {
     if (selectedMusic) {
       viewer.currentMusic = selectedMusic;
       viewer.jukebox.playProgression(selectedMusic, true);
-      console.log(`🎵 Playing: ${selectedMusic}`);
     } else {
       viewer.currentMusic = '';
-      console.log('🔇 Music stopped');
     }
   });
   
@@ -206,10 +184,8 @@ window.onload = () => {
     viewer.musicEnabled = !viewer.musicEnabled;
     if (!viewer.musicEnabled) {
       viewer.jukebox.stopMusic();
-      console.log('⏸️ Music paused');
     } else if (viewer.currentMusic) {
       viewer.jukebox.playProgression(viewer.currentMusic, true);
-      console.log('▶️ Music resumed');
     }
   });
 
@@ -222,10 +198,7 @@ window.onload = () => {
     musicSelector.dispatchEvent(new Event('change'));
   });
 
-  console.log('Scene tester ready! Select a battle scenario to begin.');
-  
   const initialScene = (document.getElementById('scene-selector') as HTMLSelectElement).value;
-  console.log('Initial scene:', initialScene);
   if (initialScene) {
     (document.getElementById('scene-selector') as HTMLSelectElement).dispatchEvent(new Event('change'));
   }

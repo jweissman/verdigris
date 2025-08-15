@@ -10,42 +10,39 @@ export default class Particles extends Rule {
   }
   
   execute(context: TickContext): void {
-    // TODO: This should be refactored to use commands for particle updates
-    // For now, we need direct access to particles array
-    if (!this.sim.particles) return;
+    // Use the optimized particle physics from ParticleArrays
+    if (!this.sim.particleArrays) return;
     
-    for (const particle of this.sim.particles) {
-      if (!particle) {
-        console.error('Undefined particle in particles array!');
-        console.trace();
-        continue;
-      }
-      if (particle.state === 'dead') continue;
-
-      // Handle landed particles - they don't move
-      if (particle.landed) continue;
-
-      // Update particle position based on velocity
-      if (!particle.pos || !particle.vel) {
-        console.error('Particle missing pos or vel:', particle);
-        continue;
-      }
-      particle.pos.x += particle.vel.x;
-      particle.pos.y += particle.vel.y;
-
+    // NOTE: updatePhysics is already called in simulator.updateParticles()
+    // Don't double-call it here!
+    
+    // Apply gravity to non-landed particles
+    this.sim.particleArrays.applyGravity(0.1);
+    
+    // Handle special particle behaviors that need per-particle logic
+    const arrays = this.sim.particleArrays;
+    const fieldHeight = context.getFieldHeight() * 8; // Convert to pixel coords
+    const fieldWidth = context.getFieldWidth() * 8;
+    
+    for (let i = 0; i < arrays.capacity; i++) {
+      if (arrays.active[i] === 0) continue;
+      
       // Check for landing (snow particles)
-      if (particle.type === 'snow' && particle.pos && particle.vel && particle.pos.y >= context.getFieldHeight() - 1) {
-        particle.landed = true;
-        particle.pos.y = context.getFieldHeight() - 1;
-        particle.vel.x = 0;
-        particle.vel.y = 0;
-        continue;
+      const typeId = arrays.type[i];
+      if (typeId === 3 && arrays.posY[i] >= fieldHeight - 1) { // 3 = snow
+        arrays.landed[i] = 1;
+        arrays.posY[i] = fieldHeight - 1;
+        arrays.velX[i] = 0;
+        arrays.velY[i] = 0;
       }
-
-      // Check for boundary collisions
-      if (particle.pos && (particle.pos.x < 0 || particle.pos.x > context.getFieldWidth() ||
-          particle.pos.y < 0 || particle.pos.y > context.getFieldHeight())) {
-        particle.state = 'dead'; // Mark as dead if out of bounds
+      
+      // Check for boundary collisions - deactivate out of bounds particles
+      // Don't remove landed particles or storm clouds (which float around)
+      const isStormCloud = typeId === 13; // storm_cloud type
+      if (arrays.landed[i] === 0 && !isStormCloud &&
+          (arrays.posX[i] < -50 || arrays.posX[i] > fieldWidth + 50 ||
+           arrays.posY[i] < -50 || arrays.posY[i] > fieldHeight + 50)) { // Give generous buffer
+        arrays.removeParticle(i);
       }
     }
   }

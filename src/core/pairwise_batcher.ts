@@ -50,18 +50,14 @@ export class PairwiseBatcher {
     const activeCount = activeIndices.length;
     
     // Use optimized spatial adjacency for common cases (melee, knockback)
-    const hasMeleeOrKnockback = this.intents.some(i => 
-      i.ruleId === 'MeleeCombat' || i.ruleId === 'Knockback'
-    );
+    // const hasMeleeOrKnockback = this.intents.some(i => 
+    //   i.ruleId === 'MeleeCombat' || i.ruleId === 'Knockback'
+    // );
     
-    if (hasMeleeOrKnockback && activeCount > 10) {
-      // Use spatial optimization for larger unit counts
-      if (sim.enableProfiling) {
-        console.log(`Using spatial optimization for ${activeCount} units with intents: ${this.intents.map(i => i.ruleId).join(', ')}`);
-      }
-      this.processSpatialOptimized(arrays, sim, activeIndices);
-      return;
-    }
+    // if (hasMeleeOrKnockback && activeCount > 10) {
+    //   this.processSpatialOptimized(arrays, sim, activeIndices);
+    //   return;
+    // }
     
     // Single tight loop over all pairs with cache-friendly access
     for (let i = 0; i < activeCount; i++) {

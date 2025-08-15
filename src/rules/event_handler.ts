@@ -398,7 +398,7 @@ export class EventHandler extends Rule {
     // Terrain modifications would go here
     // For now, just log it
     if (event.meta?.terrainType) {
-      console.log(`Terrain change at ${event.target}: ${event.meta.terrainType}`);
+      // console.log(`Terrain change at ${event.target}: ${event.meta.terrainType}`);
     }
   }
 }

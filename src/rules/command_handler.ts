@@ -246,7 +246,7 @@ export class CommandHandler extends Rule {
         if (this.sim.enableProfiling && Object.keys(commandCounts).length > 0) {
           const total = Object.values(commandCounts).reduce((a, b) => a + b, 0);
           if (total > 0) { // Always log when profiling
-            // console.log(`[Step ${this.sim.ticks}] Processed ${total} commands:`, JSON.stringify(commandCounts));
+            console.debug(`[Step ${this.sim.ticks}] Processed ${total} commands:`, JSON.stringify(commandCounts));
           }
         }
         

@@ -26,11 +26,12 @@ describe('Toymaker Debug', () => {
     
     // Test DSL evaluation manually
     try {
-      const closestEnemy = DSL.evaluate('closest.enemy()', toymaker, sim);
+      const context = sim.getTickContext();
+      const closestEnemy = DSL.evaluate('closest.enemy()', toymaker, context);
       
-      const distance = DSL.evaluate('distance(closest.enemy()?.pos)', toymaker, sim);
+      const distance = DSL.evaluate('distance(closest.enemy()?.pos)', toymaker, context);
       
-      const triggerResult = DSL.evaluate('distance(closest.enemy()?.pos) <= 8', toymaker, sim);
+      const triggerResult = DSL.evaluate('distance(closest.enemy()?.pos) <= 8', toymaker, context);
     } catch (error) {
       console.error('DSL evaluation error:', error);
     }

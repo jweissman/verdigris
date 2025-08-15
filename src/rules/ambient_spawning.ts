@@ -9,8 +9,25 @@ export class AmbientSpawning extends Rule {
   execute(context: TickContext): void {
     if (context.getCurrentTick() - this.lastSpawnTick < this.spawnInterval) return;
     
+    // Don't spawn if there's active combat (units from different teams)
+    const allUnits = context.getAllUnits();
+    const teams = new Set(allUnits.filter(u => u.hp > 0).map(u => u.team));
+    if (teams.has('friendly') && teams.has('hostile')) {
+      return; // Active combat, don't spawn ambient creatures
+    }
+    
+    // Also don't spawn if we already have many units (likely a test scenario)
+    if (allUnits.length > 20) {
+      return; // Too many units, probably a test
+    }
+    
     const biome = this.detectBiome(context);
     const cuteAnimals = this.getCuteAnimalsForBiome(biome);
+    
+    // Don't spawn if no animals for this biome
+    if (cuteAnimals.length === 0) {
+      return;
+    }
     
     // Only spawn if we don't have too many cute animals already
     const currentCuteCount = context.getAllUnits().filter(u => 
@@ -25,8 +42,19 @@ export class AmbientSpawning extends Rule {
   }
   
   private detectBiome(context: TickContext): string {
-    // TODO: Need scene background access through context
-    // For now, default to forest
+    const background = context.getSceneBackground();
+    
+    // Map scene backgrounds to biomes
+    if (background.includes('desert') || background.includes('sand')) {
+      return 'desert';
+    } else if (background.includes('snow') || background.includes('arctic') || background.includes('winter')) {
+      return 'arctic';
+    } else if (background.includes('forest') || background.includes('tree')) {
+      return 'forest';
+    } else if (background.includes('arena') || background.includes('test') || background.includes('battle')) {
+      return 'none'; // No ambient spawning for test/battle scenes
+    }
+    
     return 'forest'; // default to forest
   }
   
@@ -38,6 +66,8 @@ export class AmbientSpawning extends Rule {
         return ['sand-ant']; // cute little desert creatures
       case 'arctic':
         return ['penguin']; // if we had penguins
+      case 'none':
+        return []; // No spawning for test/battle scenes
       default:
         return ['squirrel', 'bird'];
     }

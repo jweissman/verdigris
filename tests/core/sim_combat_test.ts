@@ -8,6 +8,7 @@ describe('End-to-end combat', () => {
   });
   it('giant defeats swarm of small creatures', () => {
     const sim = new Simulator();
+    sim.sceneBackground = 'arena'; // Non-ambient scene to prevent spawning
     let giant = sim.create({ 
       id: 'giant', 
       pos: { x: 0, y: 0 }, 

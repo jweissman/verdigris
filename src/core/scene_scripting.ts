@@ -157,7 +157,7 @@ export class SceneScripting {
         break;
         
       case 'announce':
-        console.log(`📢 ${action.params.message}`);
+        console.warn(`📢 ${action.params.message}`);
         // Could trigger UI announcement system here
         break;
         

@@ -19,6 +19,8 @@ import { GrapplingPhysics } from "../rules/grappling_physics";
 import { BiomeEffects } from "../rules/biome_effects";
 import { Perdurance } from "../rules/perdurance";
 import Particles from "../rules/particles";
+import { AmbientBehavior } from "../rules/ambient_behavior";
+import { AmbientSpawning } from "../rules/ambient_spawning";
 import { StatusEffects } from "../rules/status_effects";
 import { RNG } from "./rng";
 import { TickContext, TickContextImpl } from "./tick_context";
@@ -236,8 +238,6 @@ class Simulator {
     // Store original for potential restoration
     (Math as any)._originalRandom = originalRandom;
     Simulator.randomProtected = true;
-    
-    // console.log('Math.random() protection enabled - all randomness now deterministic');
   }
 
   constructor(fieldWidth = 128, fieldHeight = 128) {
@@ -250,6 +250,7 @@ class Simulator {
     // Initialize spatial hash for collision detection
     this.spatialHash = new SpatialHash(4); // 4x4 grid cells
     this.dirtyUnits = new Set();
+    this.changedUnits = new Set();
     
     // Initialize spatial query batcher
     this.spatialQueries = new SpatialQueryBatcher();
@@ -367,6 +368,8 @@ class Simulator {
       new MeleeCombat(),
       new AirdropPhysics(),
       new BiomeEffects(),
+      new AmbientSpawning(),
+      new AmbientBehavior(),
       new LightningStorm(),
       new AreaOfEffect(),
       new Knockback(),
@@ -688,10 +691,10 @@ class Simulator {
         arrays.velY[i] = 0.15;
       }
       
-      // Remove if lifetime expired or out of bounds
+      // Remove if lifetime expired or out of bounds (in pixels)
       if (arrays.lifetime[i] <= 0 || 
-          arrays.posY[i] > this.fieldHeight ||
-          arrays.posX[i] < 0 || arrays.posX[i] > this.fieldWidth) {
+          arrays.posY[i] > this.fieldHeight * 8 ||
+          arrays.posX[i] < 0 || arrays.posX[i] > this.fieldWidth * 8) {
         arrays.removeParticle(i);
       }
     }
@@ -700,7 +703,7 @@ class Simulator {
   }
   
   private getParticleTypeName(typeId: number): any {
-    const types = ['', 'leaf', 'rain', 'snow', 'debris', 'lightning', 'sand', 'energy', 'magic', 'grapple_line', 'test_particle', 'test', 'pin', 'storm_cloud'];
+    const types = ['', 'leaf', 'rain', 'snow', 'debris', 'lightning', 'sand', 'energy', 'magic', 'grapple_line', 'test_particle', 'test', 'pin', 'storm_cloud', 'lightning_branch', 'electric_spark', 'power_surge', 'ground_burst'];
     return types[typeId] || undefined;
   }
   
@@ -1001,6 +1004,9 @@ class Simulator {
     if (Simulator.rng.random() < intensity * 0.5) {
       this.spawnRainParticle();
     }
+    
+    // Rain can extinguish fires
+    this.extinguishFires();
   }
   
   applyStormEffects() {
@@ -1396,9 +1402,8 @@ class Simulator {
 
   // Update which units changed this frame for render optimization
   private updateChangedUnits(): void {
-    // COMPLETELY DISABLED - this is a massive performance hit!
-    // Creating proxies and copying all units every frame
-    this.changedUnits.clear();
+    // Delta tracking now handled by dirtyUnits/changedUnits swap in step()
+    // This method is kept for backward compatibility but does nothing
     return;
   }
   

@@ -62,12 +62,11 @@ export class PerformanceProfiler {
     const report = this.getReport();
     const totalTime = report.reduce((sum, r) => sum + r.totalTime, 0);
     
-    console.log('\n=== Performance Profile ===');
-    console.log(`Total time: ${totalTime.toFixed(2)}ms\n`);
+    console.warn(`Total time: ${totalTime.toFixed(2)}ms\n`);
     
     for (const timing of report) {
       const percentage = (timing.totalTime / totalTime * 100).toFixed(1);
-      console.log(
+      console.debug(
         `${timing.ruleName.padEnd(25)} | ` +
         `Total: ${timing.totalTime.toFixed(2)}ms (${percentage}%) | ` +
         `Avg: ${timing.avgTime.toFixed(2)}ms | ` +
