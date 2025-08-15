@@ -29,6 +29,16 @@ export class ForcesCommand extends Command {
     
     // Vectorized movement on typed arrays - this is where the speed comes from!
     const capacity = arrays.capacity;
+    const fieldWidth = this.sim.fieldWidth;
+    const fieldHeight = this.sim.fieldHeight;
+    
+    // Build occupancy grid before movement
+    const occupiedGrid = new Set<number>();
+    for (let i = 0; i < capacity; i++) {
+      if (arrays.active[i] === 0 || arrays.state[i] === 3 || arrays.hp[i] <= 0) continue;
+      const packedPos = Math.floor(arrays.posY[i]) * fieldWidth + Math.floor(arrays.posX[i]);
+      occupiedGrid.add(packedPos);
+    }
     
     // Process all units in tight loops over typed arrays
     for (let i = 0; i < capacity; i++) {
@@ -50,9 +60,23 @@ export class ForcesCommand extends Command {
       const newX = arrays.posX[i] + dx;
       const newY = arrays.posY[i] + dy;
       
-      // Clamp to field bounds (branchless min/max for performance)
-      arrays.posX[i] = Math.max(0, Math.min(this.sim.fieldWidth - 1, newX));
-      arrays.posY[i] = Math.max(0, Math.min(this.sim.fieldHeight - 1, newY));
+      // Check bounds
+      if (newX < 0 || newX >= fieldWidth || newY < 0 || newY >= fieldHeight) continue;
+      
+      // Check if destination is occupied
+      const oldPackedPos = Math.floor(arrays.posY[i]) * fieldWidth + Math.floor(arrays.posX[i]);
+      const newPackedPos = Math.floor(newY) * fieldWidth + Math.floor(newX);
+      
+      if (newPackedPos !== oldPackedPos && occupiedGrid.has(newPackedPos)) {
+        // Destination occupied, don't move
+        continue;
+      }
+      
+      // Apply movement
+      occupiedGrid.delete(oldPackedPos);
+      arrays.posX[i] = newX;
+      arrays.posY[i] = newY;
+      occupiedGrid.add(newPackedPos);
     }
     
     // Resolve collisions using SoA collision detection

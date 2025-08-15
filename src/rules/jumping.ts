@@ -17,6 +17,21 @@ export class Jumping extends Rule {
     const newProgress = (unit.meta.jumpProgress || 0) + 1;
 
     if (newProgress >= jumpDuration) {
+      // Landing - trigger AoE damage if configured
+      if (unit.meta.jumpDamage && unit.meta.jumpRadius) {
+        context.queueEvent({
+          kind: 'aoe',
+          source: unit.id,
+          target: unit.meta.jumpTarget || unit.pos,
+          meta: {
+            aspect: 'kinetic',
+            radius: unit.meta.jumpRadius,
+            amount: unit.meta.jumpDamage,
+            force: 3
+          }
+        });
+      }
+      
       // Queue landing
       context.queueCommand({
         type: 'meta',
@@ -25,7 +40,12 @@ export class Jumping extends Rule {
           meta: {
             ...unit.meta,
             jumping: false,
-            jumpProgress: 0
+            jumpProgress: 0,
+            z: 0,
+            jumpTarget: null,
+            jumpOrigin: null,
+            jumpDamage: null,
+            jumpRadius: null
           }
         }
       });

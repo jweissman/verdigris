@@ -543,17 +543,19 @@ export class BiomeEffects extends Rule {
       const x = area.pos.x + (context.getRandom() - 0.5) * 8; // Spread around sample point
       const y = particles.type === 'snow' ? 0 : area.pos.y;
       
-      context.queueEvent({
-        kind: 'particle',
-        meta: {
-          pos: { x: Math.max(0, Math.min(context.getFieldWidth() - 1, x)), y },
-          vel: particles.properties.vel,
-          radius: particles.properties.radius,
-          lifetime: particles.properties.lifetime,
-          color: particles.color,
-          z: particles.properties.z,
-          type: particles.type,
-          ...particles.properties
+      context.queueCommand({
+        type: 'particle',
+        params: {
+          particle: {
+            pos: { x: Math.max(0, Math.min(context.getFieldWidth() - 1, x)), y },
+            vel: particles.properties.vel,
+            radius: particles.properties.radius,
+            lifetime: particles.properties.lifetime,
+            color: particles.color,
+            z: particles.properties.z,
+            type: particles.type,
+            ...particles.properties
+          }
         }
       });
     }
@@ -652,19 +654,21 @@ export class BiomeEffects extends Rule {
       // Add extra particles
       if (context.getCurrentTick() % 2 === 0) {
         for (let i = 0; i < event.effects.particleBoost; i++) {
-          context.queueEvent({
-            kind: 'particle',
-            meta: {
-              pos: { 
-                x: context.getRandom() * context.getFieldWidth(), 
-                y: context.getRandom() * context.getFieldHeight() 
-              },
-              vel: { x: (context.getRandom() - 0.5) * 2, y: 0 },
-              radius: 0.3,
-              lifetime: 60,
-              color: '#D2B48C',
-              z: 2,
-              type: 'sand'
+          context.queueCommand({
+            type: 'particle',
+            params: {
+              particle: {
+                pos: { 
+                  x: context.getRandom() * context.getFieldWidth(), 
+                  y: context.getRandom() * context.getFieldHeight() 
+                },
+                vel: { x: (context.getRandom() - 0.5) * 2, y: 0 },
+                radius: 0.3,
+                lifetime: 60,
+                color: '#D2B48C',
+                z: 2,
+                type: 'sand'
+              }
             }
           });
         }

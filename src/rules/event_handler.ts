@@ -60,7 +60,8 @@ export class EventHandler extends Rule {
           this.handleTerrain(event, context);
           break;
         case 'particle':
-          this.handleParticle(event, context);
+          // Particles should be created via commands, not events
+          // Events are for observation only
           break;
         case 'moisture':
           // Moisture events are environmental - no direct handling needed
@@ -100,9 +101,13 @@ export class EventHandler extends Rule {
   private handleParticle(event: Action, context: TickContext) {
     if (!event.meta) return;
     
-    // Add particle to sim particles array
-    // TODO: Should queue a particle command instead
-    // Queue particle command
+    // Validate particle data
+    if (!event.meta.pos || !event.meta.vel) {
+      console.error('Particle event missing pos or vel:', event);
+      return;
+    }
+    
+    // Queue particle command with complete particle data
     context.queueCommand({
       type: 'particle',
       params: { particle: event.meta }

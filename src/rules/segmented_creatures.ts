@@ -263,16 +263,18 @@ export class SegmentedCreatures extends Rule {
           if (transferDamage > 0) {
             parent.hp -= transferDamage;
             
-            // Visual feedback - pain particles (queued as event)
-            context.queueEvent({
-              kind: 'particle',
-              meta: {
-                pos: { x: parent.pos.x * 8 + 4, y: parent.pos.y * 8 + 4 },
-                vel: { x: 0, y: -0.5 },
-                radius: 2,
-                color: '#FF0000',
-                lifetime: 15,
-                type: 'pain'
+            // Visual feedback - pain particles (queued as command)
+            context.queueCommand({
+              type: 'particle',
+              params: {
+                particle: {
+                  pos: { x: parent.pos.x * 8 + 4, y: parent.pos.y * 8 + 4 },
+                  vel: { x: 0, y: -0.5 },
+                  radius: 2,
+                  color: '#FF0000',
+                  lifetime: 15,
+                  type: 'pain'
+                }
               }
             });
           }

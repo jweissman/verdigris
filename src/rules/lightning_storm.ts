@@ -51,15 +51,17 @@ export class LightningStorm extends Rule {
 
     // Main lightning bolt - vertical streak
     for (let i = 0; i < 8; i++) {
-      context.queueEvent({
-        kind: 'particle',
-        meta: {
-          pos: { x: pixelX + (context.getRandom() - 0.5) * 3, y: pixelY - i * 4 },
-          vel: { x: 0, y: 0 },
-          radius: 1 + context.getRandom() * 2,
-          color: i < 2 ? '#FFFFFF' : (i < 4 ? '#CCCCFF' : '#8888FF'),
-          lifetime: 8 + context.getRandom() * 4, // Brief but intense
-          type: 'lightning'
+      context.queueCommand({
+        type: 'particle',
+        params: {
+          particle: {
+            pos: { x: pixelX + (context.getRandom() - 0.5) * 3, y: pixelY - i * 4 },
+            vel: { x: 0, y: 0 },
+            radius: 1 + context.getRandom() * 2,
+            color: i < 2 ? '#FFFFFF' : (i < 4 ? '#CCCCFF' : '#8888FF'),
+            lifetime: 8 + context.getRandom() * 4, // Brief but intense
+            type: 'lightning'
+          }
         }
       });
     }
@@ -70,18 +72,20 @@ export class LightningStorm extends Rule {
       const branchLength = 2 + context.getRandom() * 3;
       
       for (let i = 0; i < branchLength; i++) {
-        context.queueEvent({
-          kind: 'particle',
-          meta: {
-            pos: { 
-              x: pixelX + Math.cos(branchAngle) * i * 8,
-              y: pixelY + Math.sin(branchAngle) * i * 8
-            },
-            vel: { x: 0, y: 0 },
-            radius: 0.5 + context.getRandom(),
-            color: '#AAAAFF',
-            lifetime: 6 + context.getRandom() * 3,
-            type: 'lightning_branch'
+        context.queueCommand({
+          type: 'particle',
+          params: {
+            particle: {
+              pos: { 
+                x: pixelX + Math.cos(branchAngle) * i * 8,
+                y: pixelY + Math.sin(branchAngle) * i * 8
+              },
+              vel: { x: 0, y: 0 },
+              radius: 0.5 + context.getRandom(),
+              color: '#AAAAFF',
+              lifetime: 6 + context.getRandom() * 3,
+              type: 'lightning_branch'
+            }
           }
         });
       }
@@ -89,18 +93,20 @@ export class LightningStorm extends Rule {
 
     // Electric discharge particles
     for (let i = 0; i < 12; i++) {
-      context.queueEvent({
-        kind: 'particle',
-        meta: {
-          pos: { x: pixelX, y: pixelY },
-          vel: { 
-            x: (context.getRandom() - 0.5) * 2,
-            y: (context.getRandom() - 0.5) * 2
-          },
-          radius: 0.5,
-          color: '#CCCCFF',
-          lifetime: 15 + context.getRandom() * 10,
-          type: 'electric_spark'
+      context.queueCommand({
+        type: 'particle',
+        params: {
+          particle: {
+            pos: { x: pixelX, y: pixelY },
+            vel: { 
+              x: (context.getRandom() - 0.5) * 2,
+              y: (context.getRandom() - 0.5) * 2
+            },
+            radius: 0.5,
+            color: '#CCCCFF',
+            lifetime: 15 + context.getRandom() * 10,
+            type: 'electric_spark'
+          }
         }
       });
     }
@@ -166,15 +172,17 @@ export class LightningStorm extends Rule {
         });
         
         // Visual effect on boosted mechanists
-        context.queueEvent({
-          kind: 'particle',
-          meta: {
-            pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
-            vel: { x: 0, y: -1 },
-            radius: 3,
-            color: '#FFFF00',
-            lifetime: 30,
-            type: 'power_surge'
+        context.queueCommand({
+          type: 'particle',
+          params: {
+            particle: {
+              pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+              vel: { x: 0, y: -1 },
+              radius: 3,
+              color: '#FFFF00',
+              lifetime: 30,
+              type: 'power_surge'
+            }
           }
         });
       }
@@ -190,36 +198,40 @@ export class LightningStorm extends Rule {
       const angle = (i / 16) * Math.PI * 2;
       const radius = 2 + context.getRandom();
       
-      context.queueEvent({
-        kind: 'particle',
-        meta: {
-          pos: { x: pixelX, y: pixelY },
-          vel: { 
-            x: Math.cos(angle) * 0.5,
-            y: Math.sin(angle) * 0.5
-          },
-          radius: radius,
-          color: '#444488',
-          lifetime: 20 + context.getRandom() * 15,
-          type: 'thunder_ring'
+      context.queueCommand({
+        type: 'particle',
+        params: {
+          particle: {
+            pos: { x: pixelX, y: pixelY },
+            vel: { 
+              x: Math.cos(angle) * 0.5,
+              y: Math.sin(angle) * 0.5
+            },
+            radius: radius,
+            color: '#444488',
+            lifetime: 20 + context.getRandom() * 15,
+            type: 'thunder_ring'
+          }
         }
       });
     }
 
     // Ozone particles - lingering static effect
     for (let i = 0; i < 6; i++) {
-      context.queueEvent({
-        kind: 'particle',
-        meta: {
-          pos: { 
-            x: pixelX + (context.getRandom() - 0.5) * 16,
-            y: pixelY + (context.getRandom() - 0.5) * 16
-          },
-          vel: { x: 0, y: -0.1 },
-          radius: 1,
-          color: '#6666AA',
-          lifetime: 40 + context.getRandom() * 20,
-          type: 'ozone'
+      context.queueCommand({
+        type: 'particle',
+        params: {
+          particle: {
+            pos: { 
+              x: pixelX + (context.getRandom() - 0.5) * 16,
+              y: pixelY + (context.getRandom() - 0.5) * 16
+            },
+            vel: { x: 0, y: -0.1 },
+            radius: 1,
+            color: '#6666AA',
+            lifetime: 40 + context.getRandom() * 20,
+            type: 'ozone'
+          }
         }
       });
     }

@@ -383,15 +383,17 @@ export class GrapplingPhysics extends Rule {
         // Add slight sag for visual realism
         const sag = Math.sin(t * Math.PI) * (grappleLine.taut ? 0.1 : 0.3);
         
-        context.queueEvent({
-          kind: 'particle',
-          meta: {
-            pos: { x: x * 8, y: (y + sag) * 8 },
-            vel: { x: 0, y: 0 },
-            radius: grappleLine.taut ? 0.8 : 0.5,
-            color: grappleLine.pinned ? '#DD4400' : '#AA6600', // Red when pinned, brown when grappled
-            lifetime: 100, // Longer lifetime for rope climbing to work
-            type: 'grapple_line'
+        context.queueCommand({
+          type: 'particle',
+          params: {
+            particle: {
+              pos: { x: x * 8, y: (y + sag) * 8 },
+              vel: { x: 0, y: 0 },
+              radius: grappleLine.taut ? 0.8 : 0.5,
+              color: grappleLine.pinned ? '#DD4400' : '#AA6600', // Red when pinned, brown when grappled
+              lifetime: 100, // Longer lifetime for rope climbing to work
+              type: 'grapple_line'
+            }
           }
         });
       }

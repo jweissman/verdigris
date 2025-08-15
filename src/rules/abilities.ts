@@ -756,16 +756,17 @@ export class Abilities extends Rule {
           
           // Visual feedback - dust particles via event
           for (let i = 0; i < 3; i++) {
-            context.queueEvent({
-              kind: 'particle',
-              source: caster.id,
-              target: { x: x + context.getRandom(), y: y + context.getRandom() },
-              meta: {
-                vel: { x: (context.getRandom() - 0.5) * 0.2, y: -context.getRandom() * 0.3 },
-                radius: 0.5 + context.getRandom() * 0.5,
-                lifetime: 20 + context.getRandom() * 20,
-                color: '#8B4513', // Brown dust
-                type: 'debris' // Use debris for dust/dirt particles
+            context.queueCommand({
+              type: 'particle',
+              params: {
+                particle: {
+                  pos: { x: (x + context.getRandom()) * 8 + 4, y: (y + context.getRandom()) * 8 + 4 },
+                  vel: { x: (context.getRandom() - 0.5) * 0.2, y: -context.getRandom() * 0.3 },
+                  radius: 0.5 + context.getRandom() * 0.5,
+                  lifetime: 20 + context.getRandom() * 20,
+                  color: '#8B4513', // Brown dust
+                  type: 'debris' // Use debris for dust/dirt particles
+                }
               }
             });
           }
@@ -811,13 +812,11 @@ export class Abilities extends Rule {
           size: 0.5
         });
       }
-      // Queue particle events instead of direct push
+      // Queue particle commands directly
       for (const particle of particles) {
-        context.queueEvent({
-          kind: 'particle',
-          source: caster.id,
-          target: particle.pos,
-          meta: particle
+        context.queueCommand({
+          type: 'particle',
+          params: { particle }
         });
       }
     }
@@ -1070,19 +1069,20 @@ export class Abilities extends Rule {
     
     // Add taming particles
     for (let i = 0; i < 5; i++) {
-      context.queueEvent({
-        kind: 'particle',
-        source: caster.id,
-        target: { 
-          x: actualTarget.pos.x + (context.getRandom() - 0.5) * 2, 
-          y: actualTarget.pos.y + (context.getRandom() - 0.5) * 2 
-        },
-        meta: {
-          vel: { x: 0, y: -0.1 },
-          radius: 0.3,
-          lifetime: 20,
-          color: '#90EE90', // Light green
-          type: 'tame'
+      context.queueCommand({
+        type: 'particle',
+        params: {
+          particle: {
+            pos: { 
+              x: (actualTarget.pos.x + (context.getRandom() - 0.5) * 2) * 8 + 4, 
+              y: (actualTarget.pos.y + (context.getRandom() - 0.5) * 2) * 8 + 4
+            },
+            vel: { x: 0, y: -0.1 },
+            radius: 0.3,
+            lifetime: 20,
+            color: '#90EE90', // Light green
+            type: 'tame'
+          }
         }
       });
     }
@@ -1123,18 +1123,17 @@ export class Abilities extends Rule {
       // Add calm particles (only if not already created for this unit)
       const particleId = `calm_${unit.id}`;
       if (!unit.meta.calmed && !context.getParticles().some(p => p.id === particleId)) {
-        context.queueEvent({
-          kind: 'particle',
-          source: caster.id,
-          target: { x: unit.pos.x, y: unit.pos.y - 0.5 },
-          meta: {
-            vel: { x: 0, y: -0.05 },
-            ttl: 30,
-            color: '#ADD8E6', // Light blue
-            type: 'calm',
-            size: 0.4,
-            radius: 1,
-            lifetime: 30
+        context.queueCommand({
+          type: 'particle',
+          params: {
+            particle: {
+              pos: { x: unit.pos.x * 8 + 4, y: (unit.pos.y - 0.5) * 8 + 4 },
+              vel: { x: 0, y: -0.05 },
+              radius: 1,
+              lifetime: 30,
+              color: '#ADD8E6', // Light blue
+              type: 'calm'
+            }
           }
         });
       }
@@ -1152,24 +1151,23 @@ export class Abilities extends Rule {
 
     // Create multiple particles for visual effect
     for (let i = 0; i < count; i++) {
-      context.queueEvent({
-        kind: 'particle',
-        source: caster.id,
-        target: { 
-          x: pos.x + (context.getRandom() - 0.5) * 2, 
-          y: pos.y + (context.getRandom() - 0.5) * 2 
-        },
-        meta: {
-          vel: { 
-            x: (context.getRandom() - 0.5) * 0.2, 
-            y: (context.getRandom() - 0.5) * 0.2 
-          },
-          ttl: lifetime + context.getRandom() * 10,
-          color: color,
-          type: (effect as any).particleType || 'generic',
-          size: 0.3 + context.getRandom() * 0.2,
-          radius: 1,
-          lifetime
+      context.queueCommand({
+        type: 'particle',
+        params: {
+          particle: {
+            pos: { 
+              x: (pos.x + (context.getRandom() - 0.5) * 2) * 8 + 4, 
+              y: (pos.y + (context.getRandom() - 0.5) * 2) * 8 + 4 
+            },
+            vel: { 
+              x: (context.getRandom() - 0.5) * 0.2, 
+              y: (context.getRandom() - 0.5) * 0.2 
+            },
+            radius: 1,
+            lifetime: lifetime + context.getRandom() * 10,
+            color: color,
+            type: (effect as any).particleType || 'generic'
+          }
         }
       });
     }

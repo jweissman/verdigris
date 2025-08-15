@@ -48,16 +48,19 @@ describe('Miner and Mindmender Units', () => {
       const terrainEvents = sim.queuedEvents.filter(e => e.kind === 'terrain');
       expect(terrainEvents.length).toBeGreaterThan(0);
       
-      // Should create dust particles for visual feedback
-      expect(sim.particles.length).toBeGreaterThan(initialParticleCount);
-      const dustParticles = sim.particles.filter(p => p.type === 'debris' && p.color === '#8B4513');
-      expect(dustParticles.length).toBeGreaterThan(0);
-      
       // Check that terrain events have proper metadata
       const firstTerrainEvent = terrainEvents[0];
       expect(firstTerrainEvent.meta.terrainType).toBe('trench');
       expect(firstTerrainEvent.meta.defenseBonus).toBe(0.5);
       expect(firstTerrainEvent.meta.movementPenalty).toBe(0.3);
+      
+      // Process commands to create particles
+      sim.step();
+      
+      // Should create dust particles for visual feedback
+      expect(sim.particles.length).toBeGreaterThan(initialParticleCount);
+      const dustParticles = sim.particles.filter(p => p.type === 'debris' && p.color === '#8B4513');
+      expect(dustParticles.length).toBeGreaterThan(0);
     });
 
     it('should track ore collection', () => {

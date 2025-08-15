@@ -162,16 +162,17 @@ export class CreatureSpawning extends Rule {
       });
 
       // Add spawn effect
-      context.queueEvent({
-        kind: 'particle',
-        source: 'spawn',
-        meta: {
-          pos: { x: spawnPos.x * 8 + 4, y: spawnPos.y * 8 + 4 },
-          vel: { x: 0, y: -0.3 },
-          radius: 2,
-          color: '#88FF88',
-          lifetime: 20,
-          type: 'spawn_effect'
+      context.queueCommand({
+        type: 'particle',
+        params: {
+          particle: {
+            pos: { x: spawnPos.x * 8 + 4, y: spawnPos.y * 8 + 4 },
+            vel: { x: 0, y: -0.3 },
+            radius: 2,
+            color: '#88FF88',
+            lifetime: 20,
+            type: 'spawn_effect'
+          }
         }
       });
       

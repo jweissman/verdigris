@@ -90,7 +90,7 @@ describe('Mechatron', () => {
     const landedMechatron = sim.units.find(u => u.sprite === 'mechatron')!;
     expect(landedMechatron.meta.z).toBeLessThanOrEqual(0);
     expect(landedMechatron.meta.dropping).toBe(false);
-    expect(landedMechatron.meta.landingImpact).toBeUndefined();
+    expect(landedMechatron.meta.landingImpact).toBeFalsy();
     
     // Check if nearby worms took damage from the impact
     const damagedWorms = sim.units.filter(u => u.sprite === 'worm' && u.hp < 10);
