@@ -13,7 +13,7 @@ describe('Tossing mechanics', () => {
     const unit: Unit = {
       id: "target",
       team: 'friendly',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 10, maxHp: 10,
       pos: { x: 5, y: 5 },
@@ -49,7 +49,7 @@ describe('Tossing mechanics', () => {
     const unit: Unit = {
       id: "target",
       team: 'friendly',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 10, maxHp: 10,
       pos: { x: 10, y: 10 },
@@ -93,7 +93,7 @@ describe('Tossing mechanics', () => {
     const unit: Unit = {
       id: "target",
       team: 'friendly',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 10, maxHp: 10,
       pos: { x: 0, y: 0 },
@@ -133,7 +133,7 @@ describe('Tossing mechanics', () => {
     const unit: Unit = {
       id: "target",
       team: 'friendly',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 10, maxHp: 10,
       pos: { x: 8, y: 8 },
@@ -166,7 +166,7 @@ describe('Tossing mechanics', () => {
     const unit: Unit = {
       id: "target",
       team: 'friendly',
-      abilities: {},
+      abilities: [],
       state: 'dead',
       hp: 0, maxHp: 10,
       pos: { x: 5, y: 5 },
@@ -199,7 +199,7 @@ describe('Tossing mechanics', () => {
     const unit: Unit = {
       id: "target",
       team: 'friendly',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 10, maxHp: 10,
       pos: { x: 5, y: 5 },
@@ -220,14 +220,23 @@ describe('Tossing mechanics', () => {
 
     sim.tick(); // Process command
     
-    // Complete the toss
+    // Complete the toss, checking for AoE event generation
+    let aoeGenerated = false;
+    let aoeEvent = null;
+    
     for (let i = 0; i < 8; i++) {
       sim.tick();
+      // Check if AoE was generated this tick (before it gets processed)
+      if (!aoeGenerated && sim.queuedEvents.length > 0) {
+        aoeEvent = sim.queuedEvents.find(e => e.kind === 'aoe');
+        if (aoeEvent) {
+          aoeGenerated = true;
+        }
+      }
     }
 
-    // Should have queued an AoE event
-    expect(sim.queuedEvents.length).toBeGreaterThan(0);
-    const aoeEvent = sim.queuedEvents.find(e => e.kind === 'aoe');
+    // Should have generated an AoE event during landing
+    expect(aoeGenerated).toBe(true);
     expect(aoeEvent).toBeDefined();
     expect(aoeEvent?.meta.radius).toBe(1);
     expect(aoeEvent?.meta.amount).toBe(4); // force / 2
@@ -241,7 +250,7 @@ describe('Tossing mechanics', () => {
     const heavyUnit: Unit = {
       id: "heavy",
       team: 'friendly',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 20, maxHp: 20,
       pos: { x: 5, y: 5 },
@@ -255,7 +264,7 @@ describe('Tossing mechanics', () => {
     const lightUnit: Unit = {
       id: "light",
       team: 'hostile',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 15, maxHp: 15,
       pos: { x: 6, y: 5 },
@@ -268,14 +277,15 @@ describe('Tossing mechanics', () => {
     sim.addUnit(heavyUnit);
     sim.addUnit(lightUnit);
 
-    // Queue an AoE event from the heavy unit
+    // Queue an AoE event from the heavy unit with force
     sim.queuedEvents.push({
       kind: 'aoe',
       source: 'heavy',
       target: { x: 5, y: 5 },
       meta: {
         radius: 2,
-        amount: 5
+        amount: 5,
+        force: 8  // Add force to trigger toss based on mass difference
       }
     });
 
@@ -295,7 +305,7 @@ describe('Tossing mechanics', () => {
     const unit1: Unit = {
       id: "unit1",
       team: 'friendly',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 10, maxHp: 10,
       pos: { x: 5, y: 5 },
@@ -308,7 +318,7 @@ describe('Tossing mechanics', () => {
     const unit2: Unit = {
       id: "unit2",
       team: 'hostile',
-      abilities: {},
+      abilities: [],
       state: 'idle',
       hp: 10, maxHp: 10,
       pos: { x: 6, y: 5 },

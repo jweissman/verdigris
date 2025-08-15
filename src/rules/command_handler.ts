@@ -6,7 +6,8 @@ import { Toss } from "../commands/toss";
 import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
 import { Airdrop } from "../commands/airdrop";
-import { Lightning } from "../commands/lightning";
+import { BoltCommand } from "../commands/bolt";
+import { StormCommand } from "../commands/storm";
 import { Grapple } from "../commands/grapple";
 import { Pin } from "../commands/pin";
 import { Temperature } from "../commands/temperature";
@@ -64,8 +65,9 @@ export class CommandHandler extends Rule {
     this.commands.set('spawn', new Deploy(sim, this.transform)); // Alias for deploy
     this.commands.set('airdrop', new Airdrop(sim, this.transform));
     this.commands.set('drop', new Airdrop(sim, this.transform)); // Alias for airdrop
-    this.commands.set('lightning', new Lightning(sim, this.transform));
-    this.commands.set('bolt', new Lightning(sim, this.transform)); // Alias for lightning
+    this.commands.set('bolt', new BoltCommand(sim));
+    this.commands.set('lightning', new BoltCommand(sim)); // Alias for compatibility
+    this.commands.set('storm', new StormCommand(sim));
     this.commands.set('grapple', new Grapple(sim, this.transform));
     this.commands.set('hook', new Grapple(sim, this.transform)); // Alias for grapple
     this.commands.set('pin', new Pin(sim, this.transform));
@@ -351,6 +353,12 @@ export class CommandHandler extends Rule {
         return {
           x: args[0] ? parseFloat(args[0]) : undefined,
           y: args[1] ? parseFloat(args[1]) : undefined
+        };
+        
+      case 'storm':
+        // args: [action] - 'start' or 'stop'
+        return {
+          action: args[0] || 'start'
         };
         
       case 'jump':

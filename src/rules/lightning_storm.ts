@@ -5,30 +5,36 @@ import type { TickContext } from '../core/tick_context';
 // Position type removed - use Vec2 instead
 
 export class LightningStorm extends Rule {
-  private stormIntensity: number = 1;
-  private lastStrikeTime: number = 0;
-  private strikeCooldown: number = 8; // ~1 second between strikes at 8fps (faster for testing)
-
   constructor() {
     super();
   }
 
   execute(context: TickContext): void {
-    // Note: TickContext doesn't expose lightningActive, so we'll check for lightning meta on field
-    // For now, assume lightning is active if any unit has lightning-related metadata
-    const hasLightningActivity = context.getAllUnits().some(u => u.meta?.lightningBoost || u.meta?.lightningStorm);
-    if (!hasLightningActivity && context.getCurrentTick() % 60 !== 0) return;
+    // Check if lightning storm is active via simulator property
+    // This is a temporary solution until we have proper environmental state in context
+    const sim = (context as any).sim;
+    if (!sim?.lightningActive) return;
 
-    // Generate lightning strikes periodically
-    if (context.getCurrentTick() - this.lastStrikeTime >= this.strikeCooldown) {
-      this.generateLightningStrike(context);
-      this.lastStrikeTime = context.getCurrentTick();
+    // Generate lightning strikes periodically based on tick count
+    // Use deterministic timing based on tick number
+    const currentTick = context.getCurrentTick();
+    const strikeInterval = 8; // Base interval between strikes
+    
+    // Strike on intervals with some variation
+    if (currentTick % strikeInterval === 0) {
+      // Use tick-based randomness for position
+      const seed = currentTick * 31;
+      const x = (seed % context.getFieldWidth());
+      const y = ((seed * 17) % context.getFieldHeight());
       
-      // Vary the cooldown for dramatic effect (6-12 ticks)
-      this.strikeCooldown = 6 + context.getRandom() * 6;
+      // Queue a bolt command for the strike
+      context.queueCommand({
+        type: 'bolt',
+        params: { x, y }
+      });
     }
 
-    // Update existing lightning particles
+    // Update existing lightning effects
     this.updateLightningEffects(context);
   }
 

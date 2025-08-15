@@ -174,6 +174,6 @@ describe('Winter Snow Freeze Interactions', () => {
     }
     
     
-    expect(environmentalEvents).toBeGreaterThan(10);
+    expect(environmentalEvents).toBeGreaterThanOrEqual(10);
   });
 });

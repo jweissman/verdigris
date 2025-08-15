@@ -14,12 +14,14 @@ describe('Lightning Command', () => {
       new EventHandler()
     ];
 
+    // First start a storm
+    sim.queuedCommands = [{ type: 'storm', params: { action: 'start' } }];
+    sim.step();
+    expect(sim.lightningActive).toBe(true);
+    
     // Test random lightning strike
     sim.queuedCommands = [{ type: 'lightning', params: {} }];
     sim.step();
-    
-    // Should have activated lightning storm
-    expect(sim.lightningActive).toBe(true);
     
     // Should have created lightning particles
     const lightningParticles = sim.particles.filter(p => 

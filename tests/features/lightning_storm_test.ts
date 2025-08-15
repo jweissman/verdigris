@@ -14,8 +14,9 @@ describe('Lightning Storm Environmental System', () => {
     const sim = new Simulator();
     // Don't override rulebook - use default which includes LightningStorm
     
-    // Create lightning storm
-    LightningStorm.createLightningStorm(sim);
+    // Create lightning storm using command
+    sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
+    sim.step();
     
     // Verify storm state
     expect(sim.lightningActive).toBe(true);
@@ -158,8 +159,9 @@ describe('Lightning Storm Environmental System', () => {
     // Don't override rulebook - use default which includes LightningStorm
     
     
-    // Create lightning storm
-    LightningStorm.createLightningStorm(sim);
+    // Create lightning storm using command
+    sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
+    sim.step();
     
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     
@@ -206,8 +208,9 @@ describe('Lightning Storm Environmental System', () => {
     // Don't override rulebook - use default which includes LightningStorm
     
     
-    // Start storm
-    LightningStorm.createLightningStorm(sim);
+    // Start storm using command
+    sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
+    sim.step(); // Process the command
     expect(sim.lightningActive).toBe(true);
     
     // Let it run for a bit and count strikes
@@ -222,8 +225,9 @@ describe('Lightning Storm Environmental System', () => {
     }
     expect(strikeCount).toBeGreaterThan(0); // Some strikes occurred during storm
     
-    // End storm
-    LightningStorm.endLightningStorm(sim);
+    // End storm using command
+    sim.queuedCommands.push({ type: 'storm', params: { action: 'stop' } });
+    sim.step(); // Process the command
     expect(sim.lightningActive).toBe(false);
     
     // No new lightning strikes should occur after storm ends

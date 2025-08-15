@@ -209,6 +209,14 @@ export class ForcesCommand extends Command {
       positionMap.get(key)!.push(unit.id);
     }
     
+    // Build set of all occupied positions for checking
+    const occupiedPositions = new Set<string>();
+    for (const [pos, unitIds] of positionMap) {
+      if (unitIds.length > 0) {
+        occupiedPositions.add(pos);
+      }
+    }
+    
     // Separate overlapping units
     for (const [pos, unitIds] of positionMap) {
       if (unitIds.length <= 1) continue; // No collision
@@ -229,9 +237,11 @@ export class ForcesCommand extends Command {
         
         // Try to find an adjacent free position
         const displacements = [[1,0], [-1,0], [0,1], [0,-1], [1,1], [-1,1], [1,-1], [-1,-1]];
+        let displaced = false;
+        
         for (const [dx, dy] of displacements) {
-          const newX = unit.pos.x + dx;
-          const newY = unit.pos.y + dy;
+          const newX = Math.round(unit.pos.x + dx);
+          const newY = Math.round(unit.pos.y + dy);
           
           // Check bounds
           if (newX < 0 || newX >= this.sim.fieldWidth || newY < 0 || newY >= this.sim.fieldHeight) {
@@ -239,12 +249,20 @@ export class ForcesCommand extends Command {
           }
           
           // Check if position is free
-          const newKey = `${Math.round(newX)},${Math.round(newY)}`;
-          if (!positionMap.has(newKey) || positionMap.get(newKey)!.length === 0) {
+          const newKey = `${newX},${newY}`;
+          if (!occupiedPositions.has(newKey)) {
             // Move unit here
-            this.transform.updateUnit(unitIds[i], { pos: { x: newX, y: newY } });
+            this.transform.updateUnit(unit.id, { pos: { x: newX, y: newY } });
+            occupiedPositions.add(newKey); // Mark new position as occupied
+            displaced = true;
             break;
           }
+        }
+        
+        // If we couldn't displace the unit, it stays overlapped
+        // This shouldn't happen in normal gameplay but prevents infinite loops
+        if (!displaced) {
+          console.warn(`Could not displace unit ${unit.id} from position ${pos}`);
         }
       }
     }
@@ -274,20 +292,42 @@ export class ForcesCommand extends Command {
         const x = Math.floor(arrays.posX[toDisplace]);
         const y = Math.floor(arrays.posY[toDisplace]);
         
+        // Track if we found a new position
+        let displaced = false;
+        let newPackedPos = packedPos;
+        
         // Try cardinal directions first (most common case)
         if (x + 1 < fieldWidth && !grid.has(packedPos + 1)) {
           arrays.posX[toDisplace] = x + 1;
+          newPackedPos = packedPos + 1;
+          displaced = true;
         } else if (x - 1 >= 0 && !grid.has(packedPos - 1)) {
           arrays.posX[toDisplace] = x - 1;
+          newPackedPos = packedPos - 1;
+          displaced = true;
         } else if (y + 1 < this.sim.fieldHeight && !grid.has(packedPos + fieldWidth)) {
           arrays.posY[toDisplace] = y + 1;
+          newPackedPos = packedPos + fieldWidth;
+          displaced = true;
         } else if (y - 1 >= 0 && !grid.has(packedPos - fieldWidth)) {
           arrays.posY[toDisplace] = y - 1;
+          newPackedPos = packedPos - fieldWidth;
+          displaced = true;
         }
         
-        // Update grid with winner
+        // Update grid with both units' positions
         if (toDisplace === existing) {
-          grid.set(packedPos, i);
+          // Existing unit was displaced
+          grid.set(packedPos, i); // Winner takes original position
+          if (displaced) {
+            grid.set(newPackedPos, existing); // Displaced unit at new position
+          }
+        } else {
+          // New unit was displaced
+          if (displaced) {
+            grid.set(newPackedPos, i); // Displaced unit at new position
+          }
+          // Existing stays at packedPos (already in grid)
         }
       } else {
         grid.set(packedPos, i);

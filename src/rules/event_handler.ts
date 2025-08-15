@@ -232,6 +232,29 @@ export class EventHandler extends Rule {
             }
           });
         }
+        
+        // Check for force/knockback/toss based on mass difference
+        if (event.meta.force && sourceUnit) {
+          const massDiff = (sourceUnit.mass || 1) - (unit.mass || 1);
+          if (massDiff >= 3) {
+            // Significant mass difference - toss the lighter unit
+            const dx = unit.pos.x - target.x;
+            const dy = unit.pos.y - target.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 0) {
+              const direction = { x: dx / dist, y: dy / dist };
+              context.queueCommand({
+                type: 'toss',
+                params: {
+                  unitId: unit.id,
+                  direction: direction,
+                  force: event.meta.force,
+                  distance: Math.min(3, event.meta.force / 2)
+                }
+              });
+            }
+          }
+        }
       }
     }
 

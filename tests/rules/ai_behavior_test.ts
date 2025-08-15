@@ -98,14 +98,14 @@ describe('AI Behavior System', () => {
 
   it('swarm behavior handles blocked movement gracefully', () => {
     const sim = new Simulator();
-    sim.enableProfiling = true; // Enable debug output
     
     UnitMovement.wanderRate = 1;
     
     // Create a line of worms where middle one can't move
-    const worm1 = { ...Encyclopaedia.unit('worm'), pos: { x: 1, y: 1 } }; // Will try to move right toward ally
-    const worm2 = { ...Encyclopaedia.unit('worm'), pos: { x: 2, y: 1 } }; // Blocks movement
-    const worm3 = { ...Encyclopaedia.unit('worm'), pos: { x: 3, y: 1 } }; // Target ally
+    // Give them unique IDs to ensure proper tracking
+    const worm1 = { ...Encyclopaedia.unit('worm'), id: 'worm1', pos: { x: 1, y: 1 } }; // Will try to move right toward ally
+    const worm2 = { ...Encyclopaedia.unit('worm'), id: 'worm2', pos: { x: 2, y: 1 } }; // Blocks movement
+    const worm3 = { ...Encyclopaedia.unit('worm'), id: 'worm3', pos: { x: 3, y: 1 } }; // Target ally
     sim.addUnit(worm1);
     sim.addUnit(worm2);
     sim.addUnit(worm3);
@@ -118,17 +118,27 @@ describe('AI Behavior System', () => {
     // Simulate steps
     for (let i = 0; i < 5; i++) {
       sim.step();
-    }
-    
-    // Units should still be in valid positions (not overlapping)
-    const finalPositions = worms.map(w => ({ x: w.pos.x, y: w.pos.y }));
-    
-    // Check no two units occupy same cell
-    for (let i = 0; i < finalPositions.length; i++) {
-      for (let j = i + 1; j < finalPositions.length; j++) {
-        const same = finalPositions[i].x === finalPositions[j].x && 
-                    finalPositions[i].y === finalPositions[j].y;
-        expect(same).toBe(false);
+      
+      // Check positions after each step
+      const stepPositions = worms.map(w => ({ x: Math.floor(w.pos.x), y: Math.floor(w.pos.y) }));
+      
+      // Verify no overlaps at each step
+      const overlaps: string[] = [];
+      for (let j = 0; j < stepPositions.length; j++) {
+        for (let k = j + 1; k < stepPositions.length; k++) {
+          if (stepPositions[j].x === stepPositions[k].x && 
+              stepPositions[j].y === stepPositions[k].y) {
+            overlaps.push(`Step ${i+1}: Units ${j} and ${k} overlap at (${stepPositions[j].x}, ${stepPositions[j].y})`);
+          }
+        }
+      }
+      
+      // Allow overlaps, as long as they get resolved eventually
+      // The collision system should separate them
+      if (i === 4 && overlaps.length > 0) {
+        // Only fail if overlaps persist until the end
+        console.log('Final overlaps:', overlaps);
+        expect(overlaps.length).toBe(0);
       }
     }
   });
