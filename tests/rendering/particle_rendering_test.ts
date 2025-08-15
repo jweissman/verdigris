@@ -6,10 +6,11 @@ describe('Granular Cell-Based Particle Rendering', () => {
   it('should render particles at correct cell positions', () => {
     const sim = new Simulator(32, 24);
     
-    // Add a particle at a specific cell (using pixel coordinates as most rules do)
     const cellX = 10;
     const cellY = 12;
-    sim.particles.push({
+    
+    // Add particle directly to the arrays for now to test the getter
+    sim.particleArrays.addParticle({
       pos: { x: cellX * 8, y: cellY * 8 }, // Pixel coordinates
       vel: { x: 0, y: -1 },
       radius: 2,
@@ -37,7 +38,7 @@ describe('Granular Cell-Based Particle Rendering', () => {
     const targetCell = { x: 5, y: 5 };
     const rainHeight = 10; // Start 10 units above
     
-    sim.particles.push({
+    sim.particleArrays.addParticle({
       pos: { x: targetCell.x * 8, y: targetCell.y * 8 },
       vel: { x: 0, y: 1 }, // Falling down
       radius: 1,
@@ -100,7 +101,7 @@ describe('Granular Cell-Based Particle Rendering', () => {
     
     // Manually create a snow particle at a specific cell
     const snowCell = { x: 8, y: 6 };
-    sim.particles.push({
+    sim.particleArrays.addParticle({
       pos: { x: snowCell.x * 8, y: snowCell.y * 8 },
       vel: { x: Math.random() * 0.5 - 0.25, y: 0.5 },
       radius: 1.5,
@@ -167,7 +168,7 @@ describe('Granular Cell-Based Particle Rendering', () => {
       const x = startCell.x + (endCell.x - startCell.x) * t;
       const y = startCell.y + (endCell.y - startCell.y) * t;
       
-      sim.particles.push({
+      sim.particleArrays.addParticle({
         pos: { x: x * 8, y: y * 8 },
         vel: { x: 0, y: 0 },
         radius: 1,

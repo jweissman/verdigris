@@ -2,60 +2,62 @@ import { describe, it, expect } from 'bun:test';
 import { SceneLoader } from '../../src/core/scene_loader';
 import { Simulator } from '../../src/core/simulator';
 
-describe.skip('Performance Tests', () => {
+describe('Performance Tests', () => {
   const scenarios = ['simple', 'complex', 'healing', 'projectile', 'squirrel'];
-  const SIMULATION_STEPS = 500;
+  const SIMULATION_STEPS = 1500;
   const EXECUTION_TIME_PER_STEP = 0.15; // ms per step
   const MAX_EXECUTION_TIME = SIMULATION_STEPS * EXECUTION_TIME_PER_STEP + 10; // xms per step + 10ms buffer
 
   scenarios.forEach(scenario => {
-    it(`should run ${scenario} scenario for ${SIMULATION_STEPS} steps within ${MAX_EXECUTION_TIME}ms`, () => {
-      const sim = new Simulator(32, 32);
-      sim.enablePerformanceMode(); // Enable performance optimizations
+    describe.skip(scenario, () => {
+      it(`${scenario} run ${SIMULATION_STEPS} ticks by ${MAX_EXECUTION_TIME}ms`, () => {
+        const sim = new Simulator(32, 32);
+        // Performance should be good by default now
       
-      // // Detailed profiling for squirrel scenario
-      // if (scenario === 'squirrel') {
-      //   sim.enableProfiling = true;
-      // }
+        // // Detailed profiling for squirrel scenario
+        // if (scenario === 'squirrel') {
+        //   sim.enableProfiling = true;
+        // }
       
-      const loader = new SceneLoader(sim);
+        const loader = new SceneLoader(sim);
       
-      const startTime = performance.now();
+        const startTime = performance.now();
       
-      // Load the scenario
-      loader.loadScenario(scenario);
+        // Load the scenario
+        loader.loadScenario(scenario);
       
-      // Run simulation for specified steps
-      for (let step = 0; step < SIMULATION_STEPS; step++) {
-        sim.step();
+        // Run simulation for specified steps
+        for (let step = 0; step < SIMULATION_STEPS; step++) {
+          sim.step();
         
-        // Check for runaway unit creation
-        const currentUnits = sim.getRealUnits().length;
-        expect(currentUnits).toBeLessThan(100); // Sanity check - no unit explosion
-      }
+          // Check for runaway unit creation
+          const currentUnits = sim.getRealUnits().length;
+          expect(currentUnits).toBeLessThan(100); // Sanity check - no unit explosion
+        }
       
-      const endTime = performance.now();
-      const executionTime = endTime - startTime;
+        const endTime = performance.now();
+        const executionTime = endTime - startTime;
       
       
-      // Performance assertion
-      expect(executionTime).toBeLessThan(MAX_EXECUTION_TIME);
+        // Performance assertion
+        expect(executionTime).toBeLessThan(MAX_EXECUTION_TIME);
       
-      // Correctness assertions
-      const outOfBoundsX = sim.units.filter(u => u.pos.x < 0 || u.pos.x >= sim.fieldWidth);
-      const outOfBoundsY = sim.units.filter(u => u.pos.y < 0 || u.pos.y >= sim.fieldHeight);
+        // Correctness assertions
+        const outOfBoundsX = sim.units.filter(u => u.pos.x < 0 || u.pos.x >= sim.fieldWidth);
+        const outOfBoundsY = sim.units.filter(u => u.pos.y < 0 || u.pos.y >= sim.fieldHeight);
       
-      if (outOfBoundsX.length > 0) {
-        console.debug(`Units out of bounds X (field width=${sim.fieldWidth}):`, 
-          outOfBoundsX.map(u => ({id: u.id, x: u.pos.x, y: u.pos.y})));
-      }
-      if (outOfBoundsY.length > 0) {
-        console.debug(`Units out of bounds Y (field height=${sim.fieldHeight}):`, 
-          outOfBoundsY.map(u => ({id: u.id, x: u.pos.x, y: u.pos.y})));
-      }
+        if (outOfBoundsX.length > 0) {
+          console.debug(`Units out of bounds X (field width=${sim.fieldWidth}):`,
+            outOfBoundsX.map(u => ({ id: u.id, x: u.pos.x, y: u.pos.y })));
+        }
+        if (outOfBoundsY.length > 0) {
+          console.debug(`Units out of bounds Y (field height=${sim.fieldHeight}):`,
+            outOfBoundsY.map(u => ({ id: u.id, x: u.pos.x, y: u.pos.y })));
+        }
       
-      expect(sim.units.every(u => u.pos.x >= 0 && u.pos.x < sim.fieldWidth)).toBe(true);
-      expect(sim.units.every(u => u.pos.y >= 0 && u.pos.y < sim.fieldHeight)).toBe(true);
+        expect(sim.units.every(u => u.pos.x >= 0 && u.pos.x < sim.fieldWidth)).toBe(true);
+        expect(sim.units.every(u => u.pos.y >= 0 && u.pos.y < sim.fieldHeight)).toBe(true);
+      });
     });
   });
 
@@ -74,22 +76,7 @@ describe.skip('Performance Tests', () => {
         hp: 40,
         maxHp: 40,
         mass: 8,
-        abilities: {
-          jumps: {
-            name: 'Hurl Self',
-            cooldown: 100,
-            config: { height: 5, speed: 2, impact: { radius: 3, damage: 5 }, duration: 10 },
-            target: 'closest.enemy()?.pos',
-            trigger: 'distance(closest.enemy()?.pos) > 10',
-            effect: (u, t) => {
-              if (!t) return;
-              u.meta.jumping = true;
-              u.meta.jumpProgress = 0;
-              u.meta.jumpOrigin = { x: u.pos.x, y: u.pos.y };
-              u.meta.jumpTarget = t;
-            }
-          }
-        },
+        abilities: ['jumps'],
         meta: { huge: true }
       });
     }
@@ -106,7 +93,7 @@ describe.skip('Performance Tests', () => {
         hp: 10,
         maxHp: 10,
         mass: 1,
-        abilities: {},
+        abilities: [],
         meta: {}
       });
     }

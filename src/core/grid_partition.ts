@@ -58,6 +58,7 @@ export class GridPartition {
     const result: Unit[] = [];
     const radiusSq = radius * radius;
     
+    
     // Calculate which cells to check
     const { cx, cy } = this.getCellCoords(x, y);
     const cellRadius = Math.ceil(radius / this.cellSize);

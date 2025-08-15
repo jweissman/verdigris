@@ -14,7 +14,7 @@ export class StormCommand extends Command {
       
       // Add storm cloud particles for ambiance
       for (let i = 0; i < 8; i++) {
-        this.sim.particles.push({
+        this.sim.particleArrays.addParticle({
           pos: { 
             x: Math.random() * this.sim.fieldWidth * 8,
             y: Math.random() * this.sim.fieldHeight * 8

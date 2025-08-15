@@ -124,13 +124,13 @@ export class StatusEffects extends Rule {
         case 'burn':
           // Deal damage over time
           if (context.getCurrentTick() % 8 === 0) { // Every second
-            context.queueEvent({
-              kind: 'damage',
-              source: effect.source || 'burn',
-              target: unit.id,
-              meta: {
+            context.queueCommand({
+              type: 'damage',
+              params: {
+                targetId: unit.id,
+                amount: effect.intensity,
                 aspect: 'heat',
-                amount: effect.intensity
+                sourceId: effect.source || 'burn'
               }
             });
           }

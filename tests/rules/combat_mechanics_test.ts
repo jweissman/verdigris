@@ -27,7 +27,9 @@ describe("Combat Mechanics", () => {
       const fresh1 = sim.units.find(u => u.id === soldier1.id);
       const fresh2 = sim.units.find(u => u.id === soldier2.id);
       
-      if (fresh1 && fresh2 && (fresh1.hp < initialHp1 || fresh2.hp < initialHp2)) break;
+      if (fresh1 && fresh2 && (fresh1.hp < initialHp1 || fresh2.hp < initialHp2)) {
+        break;
+      }
     }
     
     // Get final fresh references

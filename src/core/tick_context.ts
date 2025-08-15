@@ -39,6 +39,8 @@ export interface TickContext {
  * Implementation of TickContext that delegates to the Simulator
  */
 export class TickContextImpl implements TickContext {
+  private unitCache: readonly Unit[] | null = null;
+  
   constructor(private sim: Simulator) {}
   
   findUnitsInRadius(center: Vec2, radius: number): Unit[] {
@@ -51,7 +53,11 @@ export class TickContextImpl implements TickContext {
   }
   
   getAllUnits(): readonly Unit[] {
-    return this.sim.units;
+    // Cache units for this tick to avoid recreating proxies
+    if (!this.unitCache) {
+      this.unitCache = this.sim.units;
+    }
+    return this.unitCache;
   }
   
   getUnitsInTeam(team: string): Unit[] {

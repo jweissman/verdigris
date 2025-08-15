@@ -10,20 +10,21 @@ export class MeleeCombat extends Rule {
     // Reset attack states
     const currentTick = context.getCurrentTick();
     
+    // Process attack resets every tick for correct behavior
     for (const unit of context.getAllUnits()) {
-      if (unit.state === 'attack' && unit.meta?.lastAttacked) {
-        const ticksSinceAttack = currentTick - unit.meta.lastAttacked;
-        if (ticksSinceAttack > 2) {
-          context.queueCommand({
-            type: 'meta',
-            params: {
-              unitId: unit.id,
-              state: 'idle'
-            }
-          });
+        if (unit.state === 'attack' && unit.meta?.lastAttacked) {
+          const ticksSinceAttack = currentTick - unit.meta.lastAttacked;
+          if (ticksSinceAttack > 2) {
+            context.queueCommand({
+              type: 'meta',
+              params: {
+                unitId: unit.id,
+                state: 'idle'
+              }
+            });
+          }
         }
       }
-    }
     
     this.engagements.clear();
     this.performMeleeCombat(context);
@@ -32,27 +33,37 @@ export class MeleeCombat extends Rule {
   private performMeleeCombat(context: TickContext): void {
     const meleeRange = 1.5;
     
-    // Use pairwise helper from base class
-    this.pairwise(context, (attacker, target) => {
+    // OPTIMIZATION: Use spatial queries instead of O(n²) pairwise
+    // Process each unit and find nearby enemies
+    const allUnits = context.getAllUnits();
+    for (const attacker of allUnits) {
       // Skip if attacker already engaged
-      if (this.engagements.has(attacker.id)) return;
+      if (this.engagements.has(attacker.id)) continue;
       
       // Skip invalid attackers
-      if (attacker.hp <= 0) return;
-      if (attacker.meta?.jumping) return;
-      if (attacker.tags?.includes('noncombatant')) return;
+      if (attacker.hp <= 0) continue;
+      if (attacker.meta?.jumping) continue;
+      if (attacker.tags?.includes('noncombatant')) continue;
       
-      // Skip invalid targets
-      if (target.hp <= 0) return;
-      if (target.meta?.jumping) return;
-      if (target.tags?.includes('noncombatant')) return;
+      // Find nearby targets using spatial query
+      const nearbyUnits = context.findUnitsInRadius(attacker.pos, meleeRange);
       
-      // Only attack enemies
-      if (attacker.team === target.team) return;
-      
-      // Process hit
-      this.processHit(context, attacker, target);
-    }, meleeRange);
+      for (const target of nearbyUnits) {
+        if (target.id === attacker.id) continue;
+        
+        // Skip invalid targets
+        if (target.hp <= 0) continue;
+        if (target.meta?.jumping) continue;
+        if (target.tags?.includes('noncombatant')) continue;
+        
+        // Only attack enemies
+        if (attacker.team === target.team) continue;
+        
+        // Process hit and stop checking more targets
+        this.processHit(context, attacker, target);
+        break; // Only attack one target per attacker
+      }
+    }
   }
 
   private processHit(context: TickContext, attacker: Unit, target: Unit): void {
@@ -77,14 +88,14 @@ export class MeleeCombat extends Rule {
       }
     });
     
-    // Queue damage event
-    context.queueEvent({
-      kind: 'damage',
-      source: attacker.id,
-      target: target.id,
-      meta: {
+    // Queue damage command (not event!)
+    context.queueCommand({
+      type: 'damage',
+      params: {
+        targetId: target.id,
         amount: attacker.dmg || 1,
-        aspect: 'impact'
+        aspect: 'physical',
+        sourceId: attacker.id
       }
     });
   }

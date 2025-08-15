@@ -74,7 +74,7 @@ export class Airdrop extends Command {
   private createAtmosphericEntry(x: number, y: number) {
     // Create dramatic smoke trail particles
     for (let i = 0; i < 12; i++) {
-      this.sim.particles.push({
+      this.sim.particleArrays.addParticle({
         pos: { 
           x: x + (Simulator.rng.random() - 0.5) * 3, 
           y: Simulator.rng.random() * 10 // Spread across upper atmosphere

@@ -21,10 +21,7 @@ export class ParticleCommand extends Command {
       return;
     }
 
-    // Add particle to simulator
-    if (!this.sim.particles) {
-      this.sim.particles = [];
-    }
-    this.sim.particles.push(particle);
+    // Add particle to SoA arrays
+    this.sim.particleArrays.addParticle(particle);
   }
 }

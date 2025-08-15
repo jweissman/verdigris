@@ -135,8 +135,8 @@ export class UnitProxyManager implements DataQuery {
   
   rebuildIndex(): void {
     this.idToIndex.clear();
-    for (let i = 0; i < this.arrays.capacity; i++) {
-      if (this.arrays.active[i] && this.arrays.unitIds[i]) {
+    for (const i of this.arrays.activeIndices) {
+      if (this.arrays.unitIds[i]) {
         this.idToIndex.set(this.arrays.unitIds[i], i);
       }
     }
@@ -370,28 +370,49 @@ export class UnitProxyManager implements DataQuery {
   }
   
   getProxyById(id: string): UnitProxy | undefined {
-    // O(N) search for now - could be optimized with id->index map
-    for (let i = 0; i < this.arrays.capacity; i++) {
-      if (this.arrays.active[i] && this.arrays.unitIds[i] === id) {
-        return this.getProxy(i);
-      }
+    // Use the index map for O(1) lookup
+    const index = this.idToIndex.get(id);
+    if (index !== undefined) {
+      return this.getProxy(index);
     }
     return undefined;
   }
   
+  // Cache the proxy array to avoid allocation overhead
+  private proxyArrayCache: UnitProxy[] | null = null;
+  
   getAllProxies(): UnitProxy[] {
-    const proxies: UnitProxy[] = [];
-    for (let i = 0; i < this.arrays.capacity; i++) {
-      if (this.arrays.active[i] && this.arrays.unitIds[i]) { // Only units with IDs
-        const proxy = this.getProxy(i);
-        proxies.push(proxy);
-      }
+    // If activeIndices is empty but we have active units, rebuild it
+    if (this.arrays.activeIndices.length === 0 && this.arrays.activeCount > 0) {
+      this.arrays.rebuildActiveIndices();
     }
+    
+    // If we have a cached array and no units have been added/removed, reuse it
+    if (this.proxyArrayCache) {
+      // Just update the array in place using activeIndices for O(n) instead of O(capacity)
+      let writeIndex = 0;
+      for (const i of this.arrays.activeIndices) {
+        const proxy = this.getProxy(i); // This is cached!
+        this.proxyArrayCache[writeIndex++] = proxy;
+      }
+      // Trim the array if needed
+      this.proxyArrayCache.length = writeIndex;
+      return this.proxyArrayCache;
+    }
+    
+    // First time or cache invalidated - create new array
+    const proxies: UnitProxy[] = [];
+    for (const i of this.arrays.activeIndices) {
+      const proxy = this.getProxy(i);
+      proxies.push(proxy);
+    }
+    this.proxyArrayCache = proxies;
     return proxies;
   }
   
   clearCache(): void {
     this.proxyCache.clear();
+    this.proxyArrayCache = null; // Invalidate array cache too
     this.rebuildIndex();
   }
   

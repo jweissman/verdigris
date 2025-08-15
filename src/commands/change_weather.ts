@@ -23,7 +23,7 @@ export class ChangeWeather extends Command {
         }
         // Create rain particles immediately
         for (let i = 0; i < Math.min(durationValue, 100); i++) {
-          this.sim.particles.push({
+          this.sim.particleArrays.addParticle({
             id: `rain_${Date.now()}_${i}`,
             type: 'rain',
             pos: { 
@@ -58,7 +58,7 @@ export class ChangeWeather extends Command {
         }
         
         for (let i = 0; i < Math.min(durationValue, 200); i++) {
-          this.sim.particles.push({
+          this.sim.particleArrays.addParticle({
             id: `sand_${Date.now()}_${i}`,
             type: 'sand',
             pos: { 
@@ -88,7 +88,7 @@ export class ChangeWeather extends Command {
         // Create leaf particles spread across the full field
         const particleCount = Math.min(durationValue * 2, 30); // Reasonable number of leaves
         for (let i = 0; i < particleCount; i++) {
-          this.sim.particles.push({
+          this.sim.particleArrays.addParticle({
             id: `leaf_${Date.now()}_${i}`,
             type: 'leaf',
             pos: { 

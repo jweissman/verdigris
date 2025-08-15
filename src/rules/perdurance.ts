@@ -40,15 +40,16 @@ export class Perdurance extends Rule {
     const modifiedAmount = this.modifyDamageAmount(context, unit, damageAmount, damageAspect);
     
     // Apply the damage
-    context.queueEvent({
-      kind: 'damage',
-      source: source,
-      target: unit.id,
-      meta: {
-        amount: modifiedAmount,
-        aspect: damageAspect
-      }
-    });
+    // NOTE: This method is unused - perdurance is handled in damage command
+    // context.queueCommand({
+    //   type: 'damage',
+    //   params: {
+    //     targetId: unit.id,
+    //     amount: modifiedAmount,
+    //     aspect: damageAspect,
+    //     sourceId: source
+    //   }
+    // });
     
     // Clear pending damage
     context.queueCommand({

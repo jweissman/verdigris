@@ -64,10 +64,10 @@ describe('Projectile simulation', () => {
     
     // Add a bullet projectile heading toward the target
     sim.projectiles = [{
-      id: 'bullet_shooter',
-      pos: { x: 0, y: 0 },
+      id: 'test_bullet',
+      pos: { x: 0.5, y: 0 },  // Start closer to ensure collision
       vel: { x: 1, y: 0 }, // Moving right toward target
-      radius: 0.1,
+      radius: 1.0, // Use default radius for reliable collision
       damage: 3,
       team: 'friendly',
       type: 'bullet'

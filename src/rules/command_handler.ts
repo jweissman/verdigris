@@ -39,6 +39,7 @@ import { SimulateCommand } from "../commands/simulate";
 import { Wander } from "../commands/wander";
 import { RemoveProjectileCommand } from "../commands/update_projectile";
 import { ParticleCommand } from "../commands/particle";
+import { ParticlesBatchCommand } from "../commands/particles_batch";
 
 export type QueuedCommand = {
   type: string;
@@ -113,6 +114,7 @@ export class CommandHandler extends Rule {
     
     // Effect commands
     this.commands.set('particle', new ParticleCommand(sim, this.transform));
+    this.commands.set('particles', new ParticlesBatchCommand(sim, this.transform));
     
     // Toss command
     this.commands.set('toss', new Toss(sim, this.transform));
@@ -228,6 +230,12 @@ export class CommandHandler extends Rule {
         
         // Process other commands
         for (const queuedCommand of otherCommands) {
+          // Handle particle commands directly (no Command class needed)
+          if (queuedCommand.type === 'particle' && queuedCommand.params?.particle) {
+            this.sim.particleArrays.addParticle(queuedCommand.params.particle);
+            continue;
+          }
+          
           const command = this.commands.get(queuedCommand.type);
           if (command) {
             command.execute(queuedCommand.unitId || null, queuedCommand.params);

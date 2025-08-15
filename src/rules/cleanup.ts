@@ -4,7 +4,7 @@ import type { TickContext } from "../core/tick_context";
 export default class Cleanup extends Rule {
   execute(context: TickContext): void {
     // Find dead units and queue remove commands for them
-    const deadUnits = context.getAllUnits().filter(unit => unit.state === 'dead');
+    const deadUnits = context.getAllUnits().filter(unit => unit.state === 'dead' || unit.hp <= 0);
     
     for (const unit of deadUnits) {
       context.queueCommand({

@@ -232,10 +232,8 @@ export class AICommand extends Command {
       // Skip phantom units - they don't need AI
       if (unit.meta.phantom) continue;
       
-      // Even when AI runs, skip some units to reduce load
-      if (this.sim.performanceMode && units.length > 50) {
-        if (i % 2 !== 0) continue;
-      }
+      // Skip some units to reduce load when many units
+      if (units.length > 100 && i % 3 !== 0) continue;
       
       let closestEnemy: any = null;
       let closestAlly: any = null;

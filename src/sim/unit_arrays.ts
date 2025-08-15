@@ -23,6 +23,7 @@ export class UnitArrays {
   // Track active units - NO object storage!
   active: Uint8Array; // 0=inactive, 1=active
   activeCount: number = 0;
+  activeIndices: number[] = []; // Track which indices are active for fast iteration
   
   // Map index to unit ID for lookups
   unitIds: string[];
@@ -90,6 +91,7 @@ export class UnitArrays {
     this.active[index] = 1;
     this.unitIds[index] = unit.id;
     this.activeCount++;
+    this.activeIndices.push(index); // Track active index
     
     return index;
   }
@@ -101,6 +103,12 @@ export class UnitArrays {
     this.active[index] = 0;
     this.unitIds[index] = '';
     this.activeCount--;
+    
+    // Remove from active indices
+    const idx = this.activeIndices.indexOf(index);
+    if (idx !== -1) {
+      this.activeIndices.splice(idx, 1);
+    }
   }
   
   
@@ -147,6 +155,17 @@ export class UnitArrays {
   clear(): void {
     this.active.fill(0);
     this.activeCount = 0;
+    this.activeIndices = [];
+  }
+  
+  // Rebuild active indices after bulk operations
+  rebuildActiveIndices(): void {
+    this.activeIndices = [];
+    for (let i = 0; i < this.capacity; i++) {
+      if (this.active[i]) {
+        this.activeIndices.push(i);
+      }
+    }
   }
   
   // Fast distance check using arrays

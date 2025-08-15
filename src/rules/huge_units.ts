@@ -4,9 +4,12 @@ import type { TickContext } from "../core/tick_context";
 
 export class HugeUnits extends Rule {
   execute(context: TickContext): void {
+    // OPTIMIZATION: Cache getAllUnits() result
+    const allUnits = context.getAllUnits();
+    
     // Find huge units that need phantom setup
-    const hugeUnits = context.getAllUnits().filter(unit => 
-      unit.meta.huge && !this.hasPhantoms(context, unit)
+    const hugeUnits = allUnits.filter(unit => 
+      unit.meta.huge && !this.hasPhantoms(allUnits, unit)
     );
 
     // Create phantoms for new huge units
@@ -15,14 +18,14 @@ export class HugeUnits extends Rule {
     }
 
     // Update phantom positions when parent moves
-    this.updatePhantomPositions(context);
+    this.updatePhantomPositions(context, allUnits);
 
     // Clean up orphaned phantoms
-    this.cleanupOrphanedPhantoms(context);
+    this.cleanupOrphanedPhantoms(context, allUnits);
   }
 
-  private hasPhantoms(context: TickContext, hugeUnit: Unit): boolean {
-    return context.getAllUnits().some(unit => 
+  private hasPhantoms(allUnits: readonly Unit[], hugeUnit: Unit): boolean {
+    return allUnits.some(unit => 
       unit.meta.phantom && unit.meta.parentId === hugeUnit.id
     );
   }
@@ -64,8 +67,8 @@ export class HugeUnits extends Rule {
     }
   }
 
-  private updatePhantomPositions(context: TickContext) {
-    const phantomPairs = this.getPhantomPairs(context);
+  private updatePhantomPositions(context: TickContext, allUnits: readonly Unit[]) {
+    const phantomPairs = this.getPhantomPairs(allUnits);
     
     for (const [parentId, phantoms] of phantomPairs) {
       const parent = context.findUnitById(parentId);
@@ -94,10 +97,10 @@ export class HugeUnits extends Rule {
     }
   }
 
-  private getPhantomPairs(context: TickContext): Map<string, Unit[]> {
+  private getPhantomPairs(allUnits: readonly Unit[]): Map<string, Unit[]> {
     const pairs = new Map<string, Unit[]>();
     
-    context.getAllUnits()
+    allUnits
       .filter(unit => unit.meta.phantom && unit.meta.parentId)
       .forEach(phantom => {
         const meta = phantom.meta || {};
@@ -116,8 +119,8 @@ export class HugeUnits extends Rule {
     return pairs;
   }
 
-  private cleanupOrphanedPhantoms(context: TickContext) {
-    const orphanedPhantoms = context.getAllUnits().filter(unit => {
+  private cleanupOrphanedPhantoms(context: TickContext, allUnits: readonly Unit[]) {
+    const orphanedPhantoms = allUnits.filter(unit => {
       const meta = unit.meta || {};
       return meta.phantom && 
              meta.parentId &&

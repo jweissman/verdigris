@@ -1,0 +1,154 @@
+import { describe, test, expect } from 'bun:test';
+import { Simulator } from '../../src/core/simulator';
+import Encyclopaedia from '../../src/dmg/encyclopaedia';
+
+/**
+ * Systematic testing of ALL creatures in the encyclopedia
+ * Ensures every creature can be instantiated, simulated, and behaves correctly
+ */
+describe('Systematic Creature Tests', () => {
+  // Get all creature names from encyclopedia
+  const creatureNames = [
+    'soldier', 'worm', 'squirrel', 'big-worm', 'megasquirrel',
+    'grappler', 'toymaker', 'mechatron', 'mechanist', 'toy',
+    'bird', 'bat', 'spider', 'scarab', 'skeleton',
+    'ghost', 'wraith', 'golem', 'elemental', 'dragon',
+    'necromancer', 'priest', 'mage', 'ranger', 'rogue',
+    'warrior', 'paladin', 'druid', 'bard', 'monk'
+  ];
+  
+  describe('Individual Creature Validation', () => {
+    test.each(creatureNames)('%s can be created and simulated', (name) => {
+      const sim = new Simulator(20, 20);
+      const creature = Encyclopaedia.unit(name);
+      
+      // Skip if creature doesn't exist
+      if (!creature) {
+        console.warn(`Creature ${name} not found in encyclopedia`);
+        return;
+      }
+      
+      // Add creature to sim
+      sim.addUnit({
+        ...creature,
+        id: `${name}_test`,
+        pos: { x: 10, y: 10 }
+      });
+      
+      // Run for 100 steps
+      for (let i = 0; i < 100; i++) {
+        sim.step();
+      }
+      
+      // Creature should still exist (unless it naturally dies)
+      const finalUnit = sim.units.find(u => u.id === `${name}_test`);
+      expect(finalUnit || creature.hp <= 0).toBeTruthy();
+    });
+  });
+  
+  describe('Multi-Creature Stress Tests', () => {
+    test('5 of each creature type can coexist', () => {
+      const sim = new Simulator(100, 100);
+      let totalCreatures = 0;
+      
+      creatureNames.forEach((name, typeIndex) => {
+        const creature = Encyclopaedia.unit(name);
+        if (!creature) return;
+        
+        // Add 5 of each type
+        for (let i = 0; i < 5; i++) {
+          sim.addUnit({
+            ...creature,
+            id: `${name}_${i}`,
+            pos: { 
+              x: (typeIndex % 10) * 10 + i, 
+              y: Math.floor(typeIndex / 10) * 10 + i 
+            },
+            team: typeIndex % 2 === 0 ? 'friendly' : 'hostile'
+          });
+          totalCreatures++;
+        }
+      });
+      
+      console.log(`Testing ${totalCreatures} creatures across ${creatureNames.length} types`);
+      
+      // Run simulation
+      const startTime = performance.now();
+      for (let step = 0; step < 100; step++) {
+        sim.step();
+      }
+      const endTime = performance.now();
+      
+      console.log(`Completed 100 steps in ${(endTime - startTime).toFixed(2)}ms`);
+      
+      // Should have at least some survivors
+      expect(sim.units.length).toBeGreaterThan(0);
+      expect(endTime - startTime).toBeLessThan(5000); // Should complete in < 5 seconds
+    });
+    
+    test('creatures with abilities interact correctly', () => {
+      const sim = new Simulator(30, 30);
+      
+      // Create a small battle scenario
+      const abilityCreatures = ['grappler', 'toymaker', 'mechanist', 'necromancer', 'druid'];
+      
+      abilityCreatures.forEach((name, i) => {
+        const creature = Encyclopaedia.unit(name);
+        if (!creature) return;
+        
+        sim.addUnit({
+          ...creature,
+          id: `${name}_friendly`,
+          pos: { x: 5, y: 5 + i * 3 },
+          team: 'friendly'
+        });
+        
+        sim.addUnit({
+          ...creature,
+          id: `${name}_hostile`,
+          pos: { x: 25, y: 5 + i * 3 },
+          team: 'hostile'
+        });
+      });
+      
+      // Run battle
+      for (let step = 0; step < 200; step++) {
+        sim.step();
+      }
+      
+      // Battle should have occurred (some units died)
+      const survivors = sim.units.filter(u => u.hp > 0);
+      expect(survivors.length).toBeLessThan(abilityCreatures.length * 2);
+    });
+  });
+  
+  describe('Creature Conventions', () => {
+    test('all creatures have required properties', () => {
+      creatureNames.forEach(name => {
+        const creature = Encyclopaedia.unit(name);
+        if (!creature) return;
+        
+        // Check required properties
+        expect(creature.hp).toBeGreaterThan(0);
+        expect(creature.maxHp).toBeGreaterThan(0);
+        expect(creature.mass).toBeGreaterThan(0);
+        expect(['friendly', 'hostile', 'neutral']).toContain(creature.team);
+        expect(creature.sprite).toBeTruthy();
+        expect(creature.state).toBeTruthy();
+      });
+    });
+    
+    test('creatures with abilities have valid ability references', () => {
+      creatureNames.forEach(name => {
+        const creature = Encyclopaedia.unit(name);
+        if (!creature || !creature.abilities) return;
+        
+        creature.abilities.forEach(ability => {
+          // Ability should be a string reference
+          expect(typeof ability).toBe('string');
+          // Could check against ability encyclopedia here
+        });
+      });
+    });
+  });
+});

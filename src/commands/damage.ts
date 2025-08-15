@@ -30,8 +30,29 @@ export class Damage extends Command {
     // Apply damage using Transform - use updateUnit for efficiency
     const transform = this.sim.getTransform();
     
-    // Damage amount has already been modified by Perdurance rule if needed
-    const newHp = Math.max(0, target.hp - amount); // Clamp HP to minimum 0
+    // Check perdurance for damage resistance
+    let finalDamage = amount;
+    const perdurance = target.meta?.perdurance;
+    if (perdurance) {
+      // Spectral units (ghosts) are immune to physical damage
+      if (perdurance === 'spectral' && aspect === 'physical') {
+        return; // No damage
+      }
+      // Undead units (skeletons) are immune to physical damage
+      if (perdurance === 'undead' && aspect === 'physical') {
+        return; // No damage
+      }
+      // Fiendish units (demons) resist physical and fire
+      if (perdurance === 'fiendish' && (aspect === 'physical' || aspect === 'fire')) {
+        finalDamage = Math.floor(finalDamage * 0.5); // 50% resistance
+      }
+      // Sturdiness caps all damage to 1
+      if (perdurance === 'sturdiness') {
+        finalDamage = 1;
+      }
+    }
+    
+    const newHp = Math.max(0, target.hp - finalDamage); // Clamp HP to minimum 0
     
     // Update target unit
     transform.updateUnit(targetId, {

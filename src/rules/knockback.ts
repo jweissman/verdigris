@@ -4,17 +4,25 @@ import type { Unit } from "../types/Unit";
 
 export class Knockback extends Rule {
   execute(context: TickContext): void {
-    // Register knockback checks as a batched intent
+    // OPTIMIZATION: Use spatial queries instead of O(n²) pairwise
     const knockbackRange = 1.1;
     
-    this.pairwise(context, (a, b) => {
+    
+    for (const unit of context.getAllUnits()) {
       // Skip dead units or units without mass
-      if (a.state === 'dead' || !a.mass) return;
-      if (b.state === 'dead' || !b.mass) return;
+      if (unit.state === 'dead' || !unit.mass) continue;
       
-      // Process knockback - method will determine who pushes whom
-      this.processKnockback(context, a, b);
-    }, knockbackRange);
+      // Find nearby units to potentially knockback
+      const nearbyUnits = context.findUnitsInRadius(unit.pos, knockbackRange);
+      
+      for (const other of nearbyUnits) {
+        if (other.id === unit.id) continue;
+        if (other.state === 'dead' || !other.mass) continue;
+        
+        // Process knockback - method will determine who pushes whom
+        this.processKnockback(context, unit, other);
+      }
+    }
   }
   
   private processKnockback(context: TickContext, a: Unit, b: Unit): void {

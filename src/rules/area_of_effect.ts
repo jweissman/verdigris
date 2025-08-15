@@ -89,13 +89,13 @@ export class AreaOfEffect extends Rule {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= radius) {
           if (effect === 'damage' && damage > 0) {
-            context.queueEvent({
-              kind: 'damage',
-              source: sourceUnit.id,
-              target: unit.id,
-              meta: {
+            context.queueCommand({
+              type: 'damage',
+              params: {
+                targetId: unit.id,
                 amount: damage,
-                aspect: aoeData.aspect || 'magic'
+                aspect: aoeData.aspect || 'magic',
+                sourceId: sourceUnit.id
               }
             });
           }

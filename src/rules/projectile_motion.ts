@@ -10,6 +10,7 @@ export class ProjectileMotion extends Rule {
     const projectiles = context.getProjectiles();
     const units = context.getAllUnits();
     
+    
     for (const projectile of projectiles) {
       // Special handling for grapple projectiles
       if (projectile.type === 'grapple') {
@@ -50,14 +51,16 @@ export class ProjectileMotion extends Rule {
             const dx = unit.pos.x - projectile.pos.x;
             const dy = unit.pos.y - projectile.pos.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
+            const collisionRadius = projectile.radius !== undefined ? projectile.radius : 1;
             
-            if (distance < (projectile.radius || 1)) {
-              // Hit! Queue damage event
-              context.queueEvent({
-                kind: 'damage',
-                source: projectile.id || 'projectile',
-                target: unit.id,
-                meta: {
+            if (distance < collisionRadius) {
+              // Hit! Queue damage command directly
+              
+              // Queue damage command
+              context.queueCommand({
+                type: 'damage',
+                params: {
+                  targetId: unit.id,
                   amount: projectile.damage || 10,
                   aspect: projectile.aspect || 'physical',
                   origin: projectile.pos

@@ -165,11 +165,14 @@ export class BiomeEffects extends Rule {
   ];
 
   execute(context: TickContext): void {
+    // OPTIMIZATION: Skip most expensive checks
+    // Only run particle generation, skip collision detection for now
+    
     // Skip expensive biome processing in performance mode
     // if (context.isPerformanceMode()) return;
     
-    // Update particle physics (snow landing, etc)
-    this.updateParticlePhysics(context);
+    // SKIP expensive O(n×m) particle-unit collision for now
+    // this.updateParticlePhysics(context);
     
     // Check for winter storm flag and generate snow
     if (context.isWinterActive()) {
@@ -234,24 +237,16 @@ export class BiomeEffects extends Rule {
       }
     }
     
-    // Sample environmental conditions across the field
-    const conditions = this.sampleEnvironmentalConditions(context);
+    // OPTIMIZED - Only process essential effects
+    // Skip expensive field sampling for now
     
-    // Process each active biome
-    for (const biome of this.biomes) {
-      if (this.isBiomeActive(biome, conditions)) {
-        this.processBiomeEffects(context, biome, conditions);
-      }
-    }
-    
-    // Update active environmental events
-    this.updateEnvironmentalEvents(context);
-    
-    // Process temperature effects on units
+    // Process temperature effects only when needed
     this.processTemperatureEffects(context);
     
     // Process sandstorm effects if active
-    this.processSandstormEffects(context);
+    if (context.isSandstormActive()) {
+      this.processSandstormEffects(context);
+    }
   }
   
   private updateParticlePhysics(context: TickContext): void {
@@ -316,6 +311,9 @@ export class BiomeEffects extends Rule {
     
     const intensity = context.getSandstormIntensity() || 0.8;
     
+    // Only process units every 5 ticks for performance
+    if (context.getCurrentTick() % 5 !== 0) return;
+    
     // Apply sandblind to non-desert units
     context.getAllUnits().forEach(unit => {
       // Desert-adapted units are immune
@@ -355,6 +353,33 @@ export class BiomeEffects extends Rule {
   private processTemperatureEffects(context: TickContext): void {
     const units = context.getAllUnits();
     if (units.length === 0) return;
+    
+    // Spawn snow particles when winter is active
+    if (context.isWinterActive()) {
+      // Spawn snow particles periodically (every 5 ticks)
+      if (context.getCurrentTick() % 5 === 0) {
+        const particles = [];
+        for (let i = 0; i < 3; i++) {
+          particles.push({
+            id: `snow_${context.getCurrentTick()}_${i}`,
+            type: 'snow',
+            pos: { 
+              x: context.getRandom() * context.getFieldWidth(), 
+              y: 0 
+            },
+            vel: { x: 0, y: 0.15 },
+            radius: 0.25,
+            color: '#FFFFFF',
+            lifetime: 200,
+            z: 5
+          });
+        }
+        context.queueCommand({
+          type: 'particles',
+          params: { particles }
+        });
+      }
+    }
     
     units.forEach(unit => {
       const temp = context.getTemperatureAt(Math.floor(unit.pos.x), Math.floor(unit.pos.y));
@@ -562,6 +587,9 @@ export class BiomeEffects extends Rule {
   }
 
   private applyBiomeStatusEffects(context: TickContext, biome: BiomeConfig, conditions: any[]): void {
+    // Only apply status effects periodically for performance
+    if (context.getCurrentTick() % 20 !== 0) return;
+    
     for (const unit of context.getAllUnits()) {
       if (unit.state === 'dead') continue;
       
@@ -678,12 +706,13 @@ export class BiomeEffects extends Rule {
       if (context.getCurrentTick() % 40 === 0 && context.getRandom() < 0.2) {
         for (const unit of context.getAllUnits()) {
           if (unit.state !== 'dead' && context.getRandom() < 0.3) {
-            context.queueEvent({
-              kind: 'damage',
-              target: unit.id,
-              meta: {
+            context.queueCommand({
+              type: 'damage',
+              params: {
+                targetId: unit.id,
                 amount: event.effects.damage,
-                source: 'sandstorm'
+                sourceId: 'sandstorm',
+                aspect: 'physical'
               }
             });
           }

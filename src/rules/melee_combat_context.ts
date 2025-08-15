@@ -81,14 +81,14 @@ export class MeleeCombatContext extends Rule {
       }
     });
     
-    // Queue damage event
-    context.queueEvent({
-      kind: 'damage',
-      source: attacker.id,
-      target: target.id,
-      meta: {
+    // Queue damage command
+    context.queueCommand({
+      type: 'damage',
+      params: {
+        targetId: target.id,
         amount: attacker.dmg || 1,
-        aspect: 'impact'
+        aspect: 'impact',
+        sourceId: attacker.id
       }
     });
   }

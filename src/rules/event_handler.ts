@@ -221,13 +221,13 @@ export class EventHandler extends Rule {
         const damage = Math.floor((event.meta.amount || 10) * damageMultiplier);
         
         if (damage > 0) {
-          context.queueEvent({
-            kind: 'damage',
-            source: event.source,
-            target: unit.id,
-            meta: {
+          context.queueCommand({
+            type: 'damage',
+            params: {
+              targetId: unit.id,
               amount: damage,
               aspect: event.meta.aspect || 'explosion',
+              sourceId: event.source,
               origin: event.target
             }
           });
@@ -294,52 +294,21 @@ export class EventHandler extends Rule {
       return;
     }
 
-    // Calculate actual damage
-    const aspect = event.meta.aspect || 'physical';
-    let damage = event.meta.amount;
-    
-    // Check perdurance - some units completely resist certain damage types
-    const perdurance = targetUnit.meta?.perdurance;
-    if (perdurance) {
-      // Spectral units (ghosts) are immune to physical damage
-      if (perdurance === 'spectral' && aspect === 'physical') {
-        return; // No damage
-      }
-      // Fiendish units (demons) resist physical and fire
-      if (perdurance === 'fiendish' && (aspect === 'physical' || aspect === 'fire')) {
-        damage = Math.floor(damage * 0.5); // 50% resistance
-      }
-      // Sturdiness caps all damage to 1
-      if (perdurance === 'sturdiness') {
-        damage = 1;
-      }
-    }
-
-    // Apply resistances/vulnerabilities
-    if (targetUnit.meta?.resistances?.[aspect]) {
-      damage = Math.floor(damage * (1 - targetUnit.meta.resistances[aspect]));
-    }
-    if (targetUnit.meta?.vulnerabilities?.[aspect]) {
-      damage = Math.floor(damage * targetUnit.meta.vulnerabilities[aspect]);
-    }
-
-    // Apply brittle modifier for frozen units
-    if (targetUnit.meta?.brittle) {
-      damage = Math.floor(damage * 1.5);
-    }
-
-    // Queue damage command
+    // Queue damage command - let the command handle all resistance logic
     context.queueCommand({
       type: 'damage',
       params: {
         targetId: targetUnit.id,
-        amount: damage,
-        aspect: aspect
+        amount: event.meta.amount,
+        aspect: event.meta.aspect || 'physical',
+        sourceId: event.source,
+        origin: event.meta.origin
       }
     });
 
     // Visual feedback
     const origin = event.meta.origin || targetUnit.pos;
+    const aspect = event.meta.aspect || 'physical';
     for (let i = 0; i < 5; i++) {
       context.queueCommand({
         type: 'particle',

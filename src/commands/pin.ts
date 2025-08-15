@@ -110,7 +110,7 @@ export class Pin extends Command {
     
     // Create pin visual effect
     for (let i = 0; i < 8; i++) {
-      this.sim.particles.push({
+      this.sim.particleArrays.addParticle({
         pos: { x: targetX * 8 + 4, y: targetY * 8 + 4 },
         vel: { x: (Simulator.rng.random() - 0.5) * 2, y: (Simulator.rng.random() - 0.5) * 2 },
         radius: 0.5 + Simulator.rng.random() * 0.5,
