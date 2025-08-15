@@ -18,6 +18,7 @@ import { SegmentedCreatures } from "../rules/segmented_creatures";
 import { GrapplingPhysics } from "../rules/grappling_physics";
 import { BiomeEffects } from "../rules/biome_effects";
 import { Perdurance } from "../rules/perdurance";
+import Particles from "../rules/particles";
 import { StatusEffects } from "../rules/status_effects";
 import { RNG } from "./rng";
 import { TickContext, TickContextImpl } from "./tick_context";
@@ -180,6 +181,11 @@ class Simulator {
   }
 
   public getTransform() { return this.transform; }
+  
+  // Called by CommandHandler after processing events
+  public recordProcessedEvents(events: Action[]): void {
+    this.processedEvents.push(...events);
+  }
   public getProxyManager() { return this.proxyManager; }
 
   private setupDeterministicRandomness(): void {
@@ -334,14 +340,15 @@ class Simulator {
       // Projectile handling - physics/motion first, then collision detection
       new Physics(this), // Updates projectile positions
       new ProjectileMotion(), // Handles collisions and damage
+      new Particles(this), // Handle particle physics (snow landing, etc)
 
       new Jumping(),
       new Tossing(), // Handle tossed units
       new StatusEffects(), // Handle status effects before damage processing
       new Perdurance(), // Process damage resistance before events are handled
-      this.createEventHandler(), // Convert events to commands
+      // EventHandler removed - CommandHandler processes events to fixpoint
       new Cleanup(), // No simulator reference!
-      new CommandHandler(this, this.transform) // Process ALL commands at the end
+      new CommandHandler(this, this.transform) // Process ALL commands AND events at the end
     ];
   }
 

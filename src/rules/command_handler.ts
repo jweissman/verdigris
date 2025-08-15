@@ -1,6 +1,7 @@
 import { Rule } from "./rule";
 import { Command } from "./command";
 import type { TickContext } from "../core/tick_context";
+import { EventHandler } from "./event_handler";
 import { Toss } from "../commands/toss";
 import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
@@ -248,12 +249,17 @@ export class CommandHandler extends Rule {
       // Process events (which may create new commands)
       if (this.sim.queuedEvents?.length > 0) {
         didWork = true;
-        const eventHandler = this.sim.rulebook.find(r => r.constructor.name === 'EventHandler');
-        if (eventHandler) {
-          eventHandler.execute(context);
-          // Clear events after processing
-          this.sim.queuedEvents = [];
-        }
+        // Store events before processing
+        const eventsToProcess = [...this.sim.queuedEvents];
+        
+        // Create a temporary EventHandler to process events
+        const eventHandler = new EventHandler();
+        eventHandler.execute(context);
+        
+        // Record processed events
+        this.sim.recordProcessedEvents(eventsToProcess);
+        // Clear events after processing
+        this.sim.queuedEvents = [];
       }
       
       // If nothing was processed, we're done

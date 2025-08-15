@@ -15,17 +15,26 @@ export default class Particles extends Rule {
     if (!this.sim.particles) return;
     
     for (const particle of this.sim.particles) {
+      if (!particle) {
+        console.error('Undefined particle in particles array!');
+        console.trace();
+        continue;
+      }
       if (particle.state === 'dead') continue;
 
       // Handle landed particles - they don't move
       if (particle.landed) continue;
 
       // Update particle position based on velocity
+      if (!particle.pos || !particle.vel) {
+        console.error('Particle missing pos or vel:', particle);
+        continue;
+      }
       particle.pos.x += particle.vel.x;
       particle.pos.y += particle.vel.y;
 
       // Check for landing (snow particles)
-      if (particle.type === 'snow' && particle.pos.y >= context.getFieldHeight() - 1) {
+      if (particle.type === 'snow' && particle.pos && particle.vel && particle.pos.y >= context.getFieldHeight() - 1) {
         particle.landed = true;
         particle.pos.y = context.getFieldHeight() - 1;
         particle.vel.x = 0;
@@ -34,8 +43,8 @@ export default class Particles extends Rule {
       }
 
       // Check for boundary collisions
-      if (particle.pos.x < 0 || particle.pos.x > context.getFieldWidth() ||
-          particle.pos.y < 0 || particle.pos.y > context.getFieldHeight()) {
+      if (particle.pos && (particle.pos.x < 0 || particle.pos.x > context.getFieldWidth() ||
+          particle.pos.y < 0 || particle.pos.y > context.getFieldHeight())) {
         particle.state = 'dead'; // Mark as dead if out of bounds
       }
     }
