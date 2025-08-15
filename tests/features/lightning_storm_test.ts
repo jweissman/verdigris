@@ -12,8 +12,7 @@ describe('Lightning Storm Environmental System', () => {
   // NOTE: flaky
   it('should create lightning storm and generate periodic strikes', () => {
     const sim = new Simulator();
-    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
-    
+    // Don't override rulebook - use default which includes LightningStorm
     
     // Create lightning storm
     LightningStorm.createLightningStorm(sim);
@@ -33,7 +32,8 @@ describe('Lightning Storm Environmental System', () => {
     
     if (lightningRule) {
       // Force a strike for testing
-      lightningRule.generateLightningStrike();
+      const context = sim.getTickContext();
+      lightningRule.generateLightningStrike(context);
       lightningStrikes++;
     }
     
@@ -73,8 +73,7 @@ describe('Lightning Storm Environmental System', () => {
 
   it('should stun non-mechanical units with EMP effects', () => {
     const sim = new Simulator();
-    const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
-    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim), new CommandHandler(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
     
     
     // Create test units - mix of mechanical and organic
@@ -90,7 +89,8 @@ describe('Lightning Storm Environmental System', () => {
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     if (lightningRule) {
       // Strike at position (6, 5) to affect the test units
-      lightningRule.generateLightningStrike({ x: 6, y: 5 });
+      const context = sim.getTickContext();
+      lightningRule.generateLightningStrike(context, { x: 6, y: 5 });
     }
     
     // Process the EMP event
@@ -113,7 +113,7 @@ describe('Lightning Storm Environmental System', () => {
   it('should boost mechanical units when lightning strikes nearby', () => {
     const sim = new Simulator();
     const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
-    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new LightningStorm(sim), new EventHandler(), new CommandHandler(sim)];
     
     
     // Create mechanical units
@@ -135,7 +135,8 @@ describe('Lightning Storm Environmental System', () => {
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     if (lightningRule) {
       // Strike near the mechanical units at (11, 10) to boost them
-      lightningRule.generateLightningStrike({ x: 11, y: 10 });
+      const context = sim.getTickContext();
+      lightningRule.generateLightningStrike(context, { x: 11, y: 10 });
     }
     
     // Process the lightning effects
@@ -154,7 +155,7 @@ describe('Lightning Storm Environmental System', () => {
 
   it('should create diverse lightning visual effects', () => {
     const sim = new Simulator();
-    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
+    // Don't override rulebook - use default which includes LightningStorm
     
     
     // Create lightning storm
@@ -165,7 +166,8 @@ describe('Lightning Storm Environmental System', () => {
     // Force multiple strikes to ensure we get variety of effects
     if (lightningRule) {
       for (let i = 0; i < 3; i++) {
-        lightningRule.generateLightningStrike();
+        const context = sim.getTickContext();
+        lightningRule.generateLightningStrike(context);
         sim.step(); // Process each strike
       }
     }
@@ -201,7 +203,7 @@ describe('Lightning Storm Environmental System', () => {
 
   it('should end lightning storm and clean up effects', () => {
     const sim = new Simulator();
-    sim.rulebook = [new LightningStorm(sim), new EventHandler(sim)];
+    // Don't override rulebook - use default which includes LightningStorm
     
     
     // Start storm

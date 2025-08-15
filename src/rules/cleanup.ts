@@ -1,12 +1,13 @@
 import { Rule } from "./rule";
+import type { TickContext } from "../core/tick_context";
 
 export default class Cleanup extends Rule {
-  apply = () => {
+  execute(context: TickContext): void {
     // Find dead units and queue remove commands for them
-    const deadUnits = this.sim.units.filter(unit => unit.state === 'dead');
+    const deadUnits = context.getAllUnits().filter(unit => unit.state === 'dead');
     
     for (const unit of deadUnits) {
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'remove',
         params: { unitId: unit.id }
       });

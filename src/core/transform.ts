@@ -1,15 +1,11 @@
 import { Unit } from "../types/Unit";
-import { Projectile } from "../types/Projectile";
-import { Action } from "../types/Action";
 import { Simulator } from "./simulator";
 
 /**
  * Transform object that provides controlled mutation access
- * Implements true double buffering - accumulate all changes then commit once
  */
 export class Transform {
   private sim: Simulator;
-  private workingUnits: Unit[] | null = null;
   
   constructor(simulator: Simulator) {
     this.sim = simulator;
@@ -31,31 +27,10 @@ export class Transform {
   }
   
   /**
-   * Set all units (complete replacement)
-   */
-  setUnits(units: Unit[]): void {
-    // Don't set directly - the units are already in the pending buffer
-    // The buffer swap will happen at endFrame
-  }
-  
-  /**
-   * Commit pending changes - write working copy back to simulator
-   * This is the ONLY place units are actually written back
+   * Commit pending changes - no-op now since changes are applied directly
    */
   commit(): void {
-    if (this.workingUnits !== null) {
-      this.sim.setUnitsFromTransform(this.workingUnits);
-      this.workingUnits = null;
-    }
-  }
-  
-  /**
-   * Transform all units with a mapping function
-   * DEPRECATED - DO NOT USE! This replaces proxies with plain objects
-   * Use updateUnit instead
-   */
-  mapUnits(fn: (unit: Unit) => Unit): void {
-    throw new Error('mapUnits is deprecated! It creates plain objects. Use updateUnit instead.');
+    // No-op - changes are applied directly through proxy manager
   }
   
   /**
@@ -90,15 +65,40 @@ export class Transform {
    * Update a specific unit - more efficient than mapUnits for single updates
    */
   updateUnit(unitId: string, changes: Partial<Unit>): void {
-    const units = this.getWorkingCopy();
-    const unit = units.find(u => u.id === unitId);
-    if (unit) {
-      // Merge metadata properly if updating meta
-      if (changes.meta && unit.meta) {
-        changes.meta = { ...unit.meta, ...changes.meta };
-      }
-      Object.assign(unit, changes);
-      // No need to call setUnits - we're mutating the pending buffer directly
+    // Check if unit exists first
+    const unit = this.sim.units.find(u => u.id === unitId);
+    if (!unit) {
+      // Unit doesn't exist yet (might be a segment that's queued for creation)
+      // Silently skip the update
+      return;
+    }
+    
+    // Use the proxy manager's DataQuery interface to update
+    const proxyManager = this.sim.getProxyManager();
+    
+    // Apply each change through the proper setter
+    if (changes.pos !== undefined) proxyManager.setPosition(unitId, changes.pos);
+    if (changes.intendedMove !== undefined) proxyManager.setIntendedMove(unitId, changes.intendedMove);
+    if (changes.hp !== undefined) proxyManager.setHp(unitId, changes.hp);
+    if (changes.maxHp !== undefined) proxyManager.setMaxHp(unitId, changes.maxHp);
+    if (changes.team !== undefined) proxyManager.setTeam(unitId, changes.team);
+    if (changes.state !== undefined) proxyManager.setState(unitId, changes.state);
+    if (changes.mass !== undefined) proxyManager.setMass(unitId, changes.mass);
+    if (changes.dmg !== undefined) proxyManager.setDamage(unitId, changes.dmg);
+    
+    // Cold data
+    if (changes.sprite !== undefined) proxyManager.setSprite(unitId, changes.sprite);
+    if (changes.abilities !== undefined) proxyManager.setAbilities(unitId, changes.abilities);
+    if (changes.tags !== undefined) proxyManager.setTags(unitId, changes.tags);
+    if (changes.type !== undefined) proxyManager.setType(unitId, changes.type);
+    if (changes.posture !== undefined) proxyManager.setPosture(unitId, changes.posture);
+    if (changes.intendedTarget !== undefined) proxyManager.setIntendedTarget(unitId, changes.intendedTarget);
+    if (changes.lastAbilityTick !== undefined) proxyManager.setLastAbilityTick(unitId, changes.lastAbilityTick);
+    
+    // Handle meta specially - merge with existing
+    if (changes.meta !== undefined) {
+      const existingMeta = proxyManager.getMeta(unitId);
+      proxyManager.setMeta(unitId, { ...existingMeta, ...changes.meta });
     }
   }
   

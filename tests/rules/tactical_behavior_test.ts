@@ -14,7 +14,7 @@ describe('Tactical Behavior Improvements', () => {
   });
   it('should make constructs hunt enemies aggressively', () => {
     const sim = new Simulator();
-    sim.rulebook = [new UnitBehavior(sim), new UnitMovement(sim), new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new UnitBehavior(sim), new UnitMovement(sim), new EventHandler(), new CommandHandler(sim)];
     
     
     // Create constructs and enemies
@@ -58,7 +58,7 @@ describe('Tactical Behavior Improvements', () => {
   // NOTE: very flaky somehow
   it('should limit toymaker deployment to prevent overload', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create toymaker 
@@ -107,7 +107,7 @@ describe('Tactical Behavior Improvements', () => {
   
   it('should allow deployment without enemies present', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create toymaker with NO enemies

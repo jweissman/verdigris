@@ -1,5 +1,6 @@
 import { Command, CommandParams } from "../rules/command";
 import { LightningStorm } from '../rules/lightning_storm';
+import { TickContextImpl } from '../core/tick_context';
 
 /**
  * Lightning command - creates a lightning strike
@@ -31,6 +32,7 @@ export class Lightning extends Command {
     }
     // Otherwise strike at random position (default behavior)
 
-    lightningRule.generateLightningStrike(targetPos);
+    const context = new TickContextImpl(this.sim);
+    lightningRule.generateLightningStrike(context, targetPos);
   }
 }

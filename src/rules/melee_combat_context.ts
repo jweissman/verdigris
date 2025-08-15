@@ -2,7 +2,11 @@ import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
 import type { Unit } from "../types/Unit";
 
-export class MeleeCombat extends Rule {
+/**
+ * MeleeCombat rule using TickContext
+ * No direct simulator access - only through context API
+ */
+export class MeleeCombatContext extends Rule {
   private engagements: Map<string, string> = new Map();
   private lastAttacks: Map<string, number> = new Map();
 

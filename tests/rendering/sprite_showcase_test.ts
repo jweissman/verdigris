@@ -15,7 +15,7 @@ describe('Sprite Showcase - Visual Testing', () => {
     sim.rulebook = [
       new CommandHandler(sim), 
       new Abilities(sim), 
-      new EventHandler(sim),
+      new EventHandler(),
       new HugeUnits(sim),
       new SegmentedCreatures(sim)
     ];

@@ -16,12 +16,6 @@ describe('Dynamic Grappling Scenarios', () => {
     
     [mediumWorm, largeWorm, grappler1, grappler2].forEach(u => sim.addUnit(u));
     
-    console.log('🔗 KINEMATIC CHAIN SETUP:');
-    console.log(`Medium worm: ${mediumWorm.mass} mass (grappable)`);
-    console.log(`Large worm: ${largeWorm.mass} mass (pinnable only)`);
-    console.log(`Distance grap1->medworm: ${Math.abs(grappler1.pos.x - mediumWorm.pos.x)}`);
-    console.log(`Distance grap2->bigworm: ${Math.abs(grappler2.pos.x - largeWorm.pos.x)}`);
-    
     // Create grapple lines manually for testing
     const grapplingPhysics = sim.rulebook[0] as GrapplingPhysics;
     
@@ -56,22 +50,23 @@ describe('Dynamic Grappling Scenarios', () => {
     largeWorm.meta.grappledBy = 'grap2';
     
     // Run physics
-    console.log('\n⚡ PHYSICS SIMULATION:');
+    // console.log('\n⚡ PHYSICS SIMULATION:');
     for (let step = 0; step < 3; step++) {
       const beforePos = sim.units.map(u => ({ id: u.id, pos: { ...u.pos }, mass: u.mass }));
       
-      grapplingPhysics.apply();
+      const context = sim.getTickContext();
+      grapplingPhysics.execute(context);
       
-      console.log(`\nStep ${step + 1}:`);
+      // console.log(`\nStep ${step + 1}:`);
       sim.units.forEach(u => {
         const before = beforePos.find(b => b.id === u.id);
         if (before) {
           const moved = before.pos.x !== u.pos.x || before.pos.y !== u.pos.y;
           if (moved) {
-            console.log(`  ${u.id} (${u.mass}mass): (${before.pos.x},${before.pos.y}) → (${u.pos.x},${u.pos.y})`);
+            // console.log(`  ${u.id} (${u.mass}mass): (${before.pos.x},${before.pos.y}) → (${u.pos.x},${u.pos.y})`);
           }
           if (u.meta.pinned) {
-            console.log(`  ${u.id}: PINNED`);
+            // console.log(`  ${u.id}: PINNED`);
           }
         }
       });
@@ -96,15 +91,15 @@ describe('Dynamic Grappling Scenarios', () => {
     sim.step();
     
     const segments = sim.units.filter(u => u.meta.segment && u.meta.parentId === 'worm1');
-    console.log(`\n🐍 WORM SEGMENT DYNAMICS:`);
-    console.log(`Created ${segments.length} segments for worm`);
+    // console.log(`\n🐍 WORM SEGMENT DYNAMICS:`);
+    // console.log(`Created ${segments.length} segments for worm`);
     
     // Try grappling different segments
     if (segments.length >= 2) {
       const firstSegment = segments[0];
       const lastSegment = segments[segments.length - 1];
       
-      console.log(`Grappling segment ${firstSegment.meta.segmentIndex} and ${lastSegment.meta.segmentIndex}`);
+      // console.log(`Grappling segment ${firstSegment.meta.segmentIndex} and ${lastSegment.meta.segmentIndex}`);
       
       // Apply grappling to segments
       firstSegment.meta.grappled = true;
@@ -119,8 +114,8 @@ describe('Dynamic Grappling Scenarios', () => {
       
       // Check if worm movement is affected
       const wormUnit = sim.units.find(u => u.id === 'worm1');
-      console.log(`Worm slowdown: ${wormUnit?.meta.segmentSlowdown || 0}`);
-      console.log(`Worm move speed: ${wormUnit?.meta.moveSpeed || 1.0}`);
+      // console.log(`Worm slowdown: ${wormUnit?.meta.segmentSlowdown || 0}`);
+      // console.log(`Worm move speed: ${wormUnit?.meta.moveSpeed || 1.0}`);
     }
     
     expect(segments.length).toBe(worm.meta.segmentCount);
@@ -144,22 +139,22 @@ describe('Dynamic Grappling Scenarios', () => {
     sim.addUnit(target);
     grapplers.forEach(g => sim.addUnit(g));
     
-    console.log('\n🎯 COORDINATED TAKEDOWN:');
-    console.log(`Target: ${target.hp}hp, ${target.mass} mass`);
-    console.log(`Grapplers: ${grapplers.length} units surrounding target`);
+    // console.log('\n🎯 COORDINATED TAKEDOWN:');
+    // console.log(`Target: ${target.hp}hp, ${target.mass} mass`);
+    // console.log(`Grapplers: ${grapplers.length} units surrounding target`);
     
     // Create segments first
     sim.step();
     
     const segments = sim.units.filter(u => u.meta.segment && u.meta.parentId === 'target');
-    console.log(`Target has ${segments.length} segments`);
+    // console.log(`Target has ${segments.length} segments`);
     
     // Simulate multiple grapples hitting different segments
     segments.forEach((segment, i) => {
       if (i < grapplers.length) {
         segment.meta.grappled = true;
         segment.meta.grappledBy = grapplers[i].id;
-        console.log(`Segment ${segment.meta.segmentIndex} grappled by ${grapplers[i].id}`);
+        // console.log(`Segment ${segment.meta.segmentIndex} grappled by ${grapplers[i].id}`);
       }
     });
     
@@ -169,7 +164,7 @@ describe('Dynamic Grappling Scenarios', () => {
       
       const targetUnit = sim.units.find(u => u.id === 'target');
       if (targetUnit?.meta.segmentSlowdown) {
-        console.log(`Step ${step + 1}: Target slowdown = ${targetUnit.meta.segmentSlowdown}`);
+        // console.log(`Step ${step + 1}: Target slowdown = ${targetUnit.meta.segmentSlowdown}`);
       }
     }
     

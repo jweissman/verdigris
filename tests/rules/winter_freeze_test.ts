@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { CommandHandler } from '../../src/rules/command_handler';
-import { WinterEffects } from '../../src/rules/winter_effects';
+import { BiomeEffects } from '../../src/rules/biome_effects';
 import { EventHandler } from '../../src/rules/event_handler';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
@@ -15,8 +15,8 @@ describe('Winter Snow Freeze Interactions', () => {
     const sim = new Simulator();
     sim.rulebook = [
       new CommandHandler(sim),
-      new WinterEffects(sim),
-      new EventHandler(sim)
+      new BiomeEffects(),
+      new EventHandler()
     ];
 
     // Deploy test units in the field - use simpler positions
@@ -41,9 +41,8 @@ describe('Winter Snow Freeze Interactions', () => {
       });
     }
 
-    // Activate winter weather
-    sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'winter' } }];
-    sim.step();
+    // Activate winter weather using BiomeEffects static method
+    BiomeEffects.createWinterStorm(sim);
     
 
     let frozenUnits = 0;
@@ -89,11 +88,10 @@ describe('Winter Snow Freeze Interactions', () => {
   it('should show field overlay integration with winter effects', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new WinterEffects(sim)];
+    sim.rulebook = [new CommandHandler(sim), new BiomeEffects()];
     
-    // Activate winter weather
-    sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'winter' } }];
-    sim.step();
+    // Activate winter weather using BiomeEffects static method
+    BiomeEffects.createWinterStorm(sim);
     
     // Check temperature field was affected by winter
     if (sim.temperatureField) {
@@ -121,11 +119,7 @@ describe('Winter Snow Freeze Interactions', () => {
   it('should demonstrate complete environmental system integration', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [
-      new CommandHandler(sim),
-      new WinterEffects(sim),
-      new EventHandler(sim)
-    ];
+    // Don't override rulebook - use default which includes BiomeEffects and EventHandler
     
     // Deploy diverse units
     const mechanistForce = [

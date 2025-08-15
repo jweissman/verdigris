@@ -114,9 +114,14 @@ describe("New Units Integration", () => {
     
     sim.setUnitOnFire(soldier);
     
-    expect(soldier.meta.onFire).toBe(true);
-    expect(soldier.meta.fireDuration).toBe(40);
-    expect(soldier.meta.fireTickDamage).toBe(2);
+    // Need to step to process the queued command
+    sim.step();
+    
+    // Get fresh reference after step
+    const updatedSoldier = sim.units.find(u => u.id === soldier.id);
+    expect(updatedSoldier?.meta.onFire).toBe(true);
+    expect(updatedSoldier?.meta.fireDuration).toBe(40);
+    expect(updatedSoldier?.meta.fireTickDamage).toBe(2);
   });
 
   it("should handle priest radiant abilities against undead", () => {

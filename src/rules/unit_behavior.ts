@@ -1,11 +1,12 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/Unit";
+import type { TickContext } from "../core/tick_context";
 
 // This rule interprets posture/tags and sets intendedMove for each unit
 export class UnitBehavior extends Rule {
-  apply = () => {
+  execute(context: TickContext): void {
     // Always use bulk AI command for consistent behavior
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'ai',
       params: {}
     });

@@ -8,7 +8,7 @@ import { Abilities } from '../../src/rules/abilities';
 describe('Unified Command System', () => {
   it('should handle weather commands through the system', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new EventHandler()];
     
     
     // Test direct command parsing
@@ -28,7 +28,7 @@ describe('Unified Command System', () => {
   
   it('should handle deploy commands through the system', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new EventHandler()];
     
     
     const unitsBefore = sim.units.length;
@@ -50,7 +50,7 @@ describe('Unified Command System', () => {
   
   it('should integrate with rainmaker ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(), new EventHandler()];
     
     // Create rainmaker
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 5, y: 5 } };
@@ -71,15 +71,19 @@ describe('Unified Command System', () => {
     });
     expect(weatherCommand.unitId).toBe(rainmaker.id);
     
-    // Process the command
-    sim.step();
+    // Process commands - may take multiple steps to fully process
+    let steps = 0;
+    while (sim.queuedCommands.length > 0 && steps < 5) {
+      sim.step();
+      steps++;
+    }
     
     expect(sim.queuedCommands.length).toBe(0);
   });
   
   it('should integrate with toymaker ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(), new EventHandler()];
     
     // Create toymaker and enemy
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };

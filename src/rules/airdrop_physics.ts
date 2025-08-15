@@ -1,38 +1,45 @@
 import { Rule } from "./rule";
+import type { TickContext } from '../core/tick_context';
 
 export class AirdropPhysics extends Rule {
-  apply = (): void => {
+  constructor() {
+    super();
+  }
+  execute(context: TickContext): void {
     // Handle units that are currently dropping from the sky
-    this.sim.units.forEach(unit => {
+    context.getAllUnits().forEach(unit => {
       if (unit.meta.dropping && unit.meta.z > 0) {
         // Unit is falling - update altitude
         const newZ = unit.meta.z - (unit.meta.dropSpeed || 0.5);
         
         // Add falling sound/visual effects
-        if (this.sim.ticks % 3 === 0) {
+        if (context.getCurrentTick() % 3 === 0) {
           // Create whistling wind particles
-          this.sim.particles.push({
-            pos: { 
-              x: unit.pos.x + (this.rng.random() - 0.5) * 2, 
-              y: unit.pos.y + (this.rng.random() - 0.5) * 2 
-            },
-            vel: { x: (this.rng.random() - 0.5) * 0.4, y: 0.8 },
-            radius: 0.5,
-            lifetime: 15,
-            color: '#AAAAAA',
-            z: unit.meta.z + 1,
-            type: 'debris',
-            landed: false
+          context.queueEvent({
+            kind: 'particle',
+            meta: {
+              pos: { 
+                x: unit.pos.x + (context.getRandom() - 0.5) * 2, 
+                y: unit.pos.y + (context.getRandom() - 0.5) * 2 
+              },
+              vel: { x: (context.getRandom() - 0.5) * 0.4, y: 0.8 },
+              radius: 0.5,
+              lifetime: 15,
+              color: '#AAAAAA',
+              z: unit.meta.z + 1,
+              type: 'debris',
+              landed: false
+            }
           });
         }
         
         // Check if unit has landed
         if (newZ <= 0) {
           // Landing - set z to 0 and handle impact
-          this.handleLanding(unit);
+          this.handleLanding(context, unit);
         } else {
           // Still falling - update altitude
-          this.sim.queuedCommands.push({
+          context.queueCommand({
             type: 'meta',
             params: {
               unitId: unit.id,
@@ -46,9 +53,9 @@ export class AirdropPhysics extends Rule {
     });
   }
   
-  private handleLanding(unit: any): void {
+  private handleLanding(context: TickContext, unit: any): void {
     // Queue landing update - clear all drop-related metadata
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'meta',
       params: {
         unitId: unit.id,
@@ -67,7 +74,7 @@ export class AirdropPhysics extends Rule {
       const impactRadius = unit.meta.huge ? 8 : 4; // Larger impact for huge units
       const impactDamage = unit.meta.huge ? 25 : 15;
       
-      this.sim.queuedEvents.push({
+      context.queueEvent({
         kind: 'aoe',
         source: unit.id,
         target: unit.pos,
@@ -84,23 +91,26 @@ export class AirdropPhysics extends Rule {
     // Create dust cloud particle effects
     for (let i = 0; i < 20; i++) {
       const angle = (Math.PI * 2 * i) / 20;
-      const distance = 2 + this.rng.random() * 3;
+      const distance = 2 + context.getRandom() * 3;
       
-      this.sim.particles.push({
-        pos: { 
-          x: unit.pos.x + Math.cos(angle) * distance,
-          y: unit.pos.y + Math.sin(angle) * distance
-        },
-        vel: { 
-          x: Math.cos(angle) * 0.8, 
-          y: Math.sin(angle) * 0.8 
-        },
-        radius: 1 + this.rng.random(),
-        lifetime: 30 + this.rng.random() * 20,
-        color: '#8B4513', // Brown dust
-        z: 0,
-        type: 'debris',
-        landed: false
+      context.queueEvent({
+        kind: 'particle',
+        meta: {
+          pos: { 
+            x: unit.pos.x + Math.cos(angle) * distance,
+            y: unit.pos.y + Math.sin(angle) * distance
+          },
+          vel: { 
+            x: Math.cos(angle) * 0.8, 
+            y: Math.sin(angle) * 0.8 
+          },
+          radius: 1 + context.getRandom(),
+          lifetime: 30 + context.getRandom() * 20,
+          color: '#8B4513', // Brown dust
+          z: 0,
+          type: 'debris',
+          landed: false
+        }
       });
     }
     

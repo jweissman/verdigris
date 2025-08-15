@@ -38,7 +38,7 @@ describe('Mechatronist Deployment System', () => {
 
   it('should call Mechatron airdrop when conditions are met', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Abilities(sim), new AirdropPhysics(sim), new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new AirdropPhysics(sim), new EventHandler(), new CommandHandler(sim)];
     
     
     // Create mechatronist and allies (need 2+ allies for trigger)
@@ -158,7 +158,7 @@ describe('Mechatronist Deployment System', () => {
 
   it('should verify tactical override boosts nearby mechanists', () => {
     const sim = new Simulator();  
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create multiple mechanists for synergy trigger

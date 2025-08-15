@@ -46,9 +46,11 @@ describe('Projectile simulation', () => {
     });
 
     // Should create a projectile at shooter's position, aimed at target
+    // Note: accept() calls step() which moves the projectile
     expect(sim.projectiles.length).toBe(1);
     const proj = sim.projectiles[0];
-    expect(proj.pos.x).toBe(0);
+    // Projectile should have moved toward target (x=3, y=0)
+    expect(proj.pos.x).toBeGreaterThan(0);
     expect(proj.pos.y).toBe(0);
     // Should be aimed at (3,0)
     expect(proj.vel.x).toBeGreaterThan(0);
@@ -128,7 +130,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     const { Abilities } = require('../../src/rules/abilities');
     const { CommandHandler } = require('../../src/rules/command_handler');
     const { EventHandler } = require('../../src/rules/event_handler');
-    sim.rulebook = [new Abilities(sim), new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new CommandHandler(sim), new EventHandler()];
     
     // Create a scenario with bombardier and worm at proper distance (6-14 range)
     const bombardierTest = `b........

@@ -49,7 +49,8 @@ describe('Abilities', () => {
     sim.addUnit(enemy);
 
     // Apply JSON abilities rule
-    abilities.apply();
+    const context = sim.getTickContext();
+    abilities.execute(context);
 
     // Should queue a projectile command and a cooldown update
     expect(sim.queuedCommands.length).toBe(2);
@@ -84,7 +85,8 @@ describe('Abilities', () => {
     sim.addUnit(wounded);
 
     // Apply JSON abilities rule
-    abilities.apply();
+    const context = sim.getTickContext();
+    abilities.execute(context);
 
     // Should queue a heal command and a cooldown update
     expect(sim.queuedCommands.length).toBe(2);
@@ -121,7 +123,8 @@ describe('Abilities', () => {
     sim.ticks = 3; // Only 3 ticks passed, but cooldown is 6
 
     // Apply JSON abilities rule
-    abilities.apply();
+    const context = sim.getTickContext();
+    abilities.execute(context);
 
     // Should NOT queue any commands due to cooldown
     expect(sim.queuedCommands.length).toBe(0);
@@ -147,7 +150,8 @@ describe('Abilities', () => {
     sim.addUnit(enemy);
 
     // Process commands
-    commandHandler.apply();
+    const ctx = sim.getTickContext();
+    commandHandler.execute(ctx);
 
     // Should have applied damage to the enemy
     const damagedEnemy = sim.units.find(u => u.id === 'enemy1');

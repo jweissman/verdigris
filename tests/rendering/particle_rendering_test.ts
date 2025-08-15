@@ -66,7 +66,8 @@ describe('Granular Cell-Based Particle Rendering', () => {
     sim.addHeat(hotCell.x, hotCell.y, 25, 1); // Add 25 degrees in a small radius
     
     // Apply desert effects which should create heat shimmer
-    desertEffects.apply();
+    const context = sim.getTickContext();
+    desertEffects.execute(context);
     
     // Should have created heat shimmer particles
     const shimmerParticles = sim.particles.filter(p => 

@@ -11,16 +11,16 @@ describe('Basic Segmented Creatures', () => {
     const mimicWorm = Encyclopaedia.unit('mimic-worm');
     const desertWorm = Encyclopaedia.unit('desert-worm');
     
-    console.log('🐛 EXISTING SEGMENTED WORMS:');
-    console.log(`Segmented-worm: ${regularWorm.hp}hp, ${regularWorm.meta.segmentCount} segments, mass ${regularWorm.mass}`);
-    console.log(`Mimic-worm: ${mimicWorm.hp}hp, ${mimicWorm.meta.segmentCount} segments, mass ${mimicWorm.mass}`);
-    console.log(`Desert-worm: ${desertWorm.hp}hp, ${desertWorm.meta.segmentCount} segments, mass ${desertWorm.mass}`);
+    // console.log('🐛 EXISTING SEGMENTED WORMS:');
+    // console.log(`Segmented-worm: ${regularWorm.hp}hp, ${regularWorm.meta.segmentCount} segments, mass ${regularWorm.mass}`);
+    // console.log(`Mimic-worm: ${mimicWorm.hp}hp, ${mimicWorm.meta.segmentCount} segments, mass ${mimicWorm.mass}`);
+    // console.log(`Desert-worm: ${desertWorm.hp}hp, ${desertWorm.meta.segmentCount} segments, mass ${desertWorm.mass}`);
     
     // Add a mid-sized worm to sim
     const testWorm = { ...desertWorm, id: 'testworm1', pos: { x: 10, y: 8 } };
     sim.addUnit(testWorm);
     
-    console.log('\n📊 SIMULATION STEP:');
+    // console.log('\n📊 SIMULATION STEP:');
     const unitsBefore = sim.units.map(u => ({ ...u, pos: { ...u.pos } }));
     
     sim.step();
@@ -32,7 +32,7 @@ describe('Basic Segmented Creatures', () => {
     const wormUnits = allUnits.filter(u => u.id.includes('testworm'));
     const segments = allUnits.filter(u => u.meta.segment && u.meta.parentId === 'testworm1');
     
-    console.log(`Created ${segments.length} segments for desert-worm`);
+    // console.log(`Created ${segments.length} segments for desert-worm`);
     
     expect(segments.length).toBe(desertWorm.meta.segmentCount);
     expect(wormUnits.length).toBe(desertWorm.meta.segmentCount + 1); // segments + head
@@ -48,9 +48,9 @@ describe('Basic Segmented Creatures', () => {
     sim.addUnit(worm);
     sim.addUnit(grappler);
     
-    console.log('\n🪝 GRAPPLING TEST:');
-    console.log(`Worm mass: ${worm.mass} (should be pullable since < 30)`);
-    console.log(`Grappler range: ${grappler.meta.grapplingRange}`);
+    // console.log('\n🪝 GRAPPLING TEST:');
+    // console.log(`Worm mass: ${worm.mass} (should be pullable since < 30)`);
+    // console.log(`Grappler range: ${grappler.meta.grapplingRange}`);
     
     // Run a few steps to create segments
     sim.step();
@@ -58,7 +58,7 @@ describe('Basic Segmented Creatures', () => {
     
     // Check if segments were created
     const segments = sim.units.filter(u => u.meta.segment && u.meta.parentId === 'worm1');
-    console.log(`Worm has ${segments.length} segments created`);
+    // console.log(`Worm has ${segments.length} segments created`);
     
     expect(worm.mass).toBeLessThan(30); // Should be grappable
     expect(segments.length).toBe(worm.meta.segmentCount);
@@ -76,11 +76,11 @@ describe('Basic Segmented Creatures', () => {
     const large = Encyclopaedia.unit('giant-sandworm');
     const massive = Encyclopaedia.unit('desert-megaworm');
     
-    console.log('\n🐍 WORM SIZE PROGRESSION:');
-    console.log(`Small: ${small.mass} mass, ${small.meta.segmentCount} segments, ${small.hp}hp`);
-    console.log(`Medium: ${medium.mass} mass, ${medium.meta.segmentCount} segments, ${medium.hp}hp`);
-    console.log(`Large: ${large.mass} mass, ${large.meta.segmentCount} segments, ${large.hp}hp`);
-    console.log(`Massive: ${massive.mass} mass, ${massive.meta.segmentCount} segments, ${massive.hp}hp`);
+    // console.log('\n🐍 WORM SIZE PROGRESSION:');
+    // console.log(`Small: ${small.mass} mass, ${small.meta.segmentCount} segments, ${small.hp}hp`);
+    // console.log(`Medium: ${medium.mass} mass, ${medium.meta.segmentCount} segments, ${medium.hp}hp`);
+    // console.log(`Large: ${large.mass} mass, ${large.meta.segmentCount} segments, ${large.hp}hp`);
+    // console.log(`Massive: ${massive.mass} mass, ${massive.meta.segmentCount} segments, ${massive.hp}hp`);
     
     // Verify progression makes sense
     expect(small.mass).toBeLessThan(medium.mass);
@@ -103,10 +103,16 @@ describe('Basic Segmented Creatures', () => {
     // Create segments
     sim.step();
     
-    // Move the worm and see if segments follow
+    // Move the worm using command system
     const wormUnit = sim.units.find(u => u.id === 'worm1');
     if (wormUnit) {
-      wormUnit.intendedMove = { x: 2, y: 1 };
+      sim.queuedCommands.push({
+        type: 'meta',
+        params: {
+          unitId: wormUnit.id,
+          intendedMove: { x: 2, y: 1 }
+        }
+      });
     }
     
     const segmentsBefore = sim.units
@@ -119,8 +125,8 @@ describe('Basic Segmented Creatures', () => {
     const segmentsAfter = sim.units
       .filter(u => u.meta.segment && u.meta.parentId === 'worm1');
     
-    console.log('\n🚶 SEGMENT MOVEMENT:');
-    console.log(`Segments following: ${segmentsAfter.length}`);
+    // console.log('\n🚶 SEGMENT MOVEMENT:');
+    // console.log(`Segments following: ${segmentsAfter.length}`);
     
     // Verify segments exist and are positioned
     expect(segmentsAfter.length).toBe(worm.meta.segmentCount);

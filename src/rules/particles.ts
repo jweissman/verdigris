@@ -1,7 +1,19 @@
 import { Rule } from "./rule";
+import type { TickContext } from "../core/tick_context";
 
 export default class Particles extends Rule {
-  apply = () => {
+  private sim: any; // Keep for direct particle access
+  
+  constructor(sim: any) {
+    super();
+    this.sim = sim;
+  }
+  
+  execute(context: TickContext): void {
+    // TODO: This should be refactored to use commands for particle updates
+    // For now, we need direct access to particles array
+    if (!this.sim.particles) return;
+    
     for (const particle of this.sim.particles) {
       if (particle.state === 'dead') continue;
 
@@ -10,8 +22,8 @@ export default class Particles extends Rule {
       particle.pos.y += particle.vel.y;
 
       // Check for boundary collisions
-      if (particle.pos.x < 0 || particle.pos.x > this.sim.width ||
-          particle.pos.y < 0 || particle.pos.y > this.sim.height) {
+      if (particle.pos.x < 0 || particle.pos.x > context.getFieldWidth() ||
+          particle.pos.y < 0 || particle.pos.y > context.getFieldHeight()) {
         particle.state = 'dead'; // Mark as dead if out of bounds
       }
     }

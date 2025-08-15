@@ -123,55 +123,29 @@ describe("Perdurance System", () => {
     soldier.pos = { x: 6, y: 5 };
     sim.addUnit(soldier);
     
-    let damageBlocked = 0;
-    let damageAllowed = 0;
+    const initialHp = demon.hp;
     
-    // Try multiple physical attacks to test 50% resistance
-    for (let i = 0; i < 20; i++) {
-      const initialHp = demon.hp;
-      
-      // Queue physical damage
-      sim.queuedEvents.push({
-        kind: 'damage',
-        source: soldier.id,
-        target: demon.id,
-        meta: {
-          aspect: 'physical',
-          amount: 5,
-          origin: soldier.pos
-        }
-      });
-      
-      sim.step();
-      
-      // Get fresh demon reference
-      const freshDemon = sim.units.find(u => u.id === demon.id);
-      
-      if (freshDemon && freshDemon.hp === initialHp) {
-        damageBlocked++;
-      } else {
-        damageAllowed++;
+    // Queue physical damage - demons have 50% resistance to physical
+    sim.queuedEvents.push({
+      kind: 'damage',
+      source: soldier.id,
+      target: demon.id,
+      meta: {
+        aspect: 'physical',
+        amount: 10,
+        origin: soldier.pos
       }
-      
-      // Reset HP for next test using fresh reference
-      if (freshDemon) {
-        freshDemon.hp = initialHp;
-      }
-    }
+    });
     
-    // Should have blocked some attacks (fiendish resistance is probabilistic)
-    // Note: This is random so we need to be careful. With 30% chance to block,
-    // getting 0 blocks out of 20 has probability ~0.0008% (0.7^20)
-    // But for test stability, let's just check the sum
-    expect(damageBlocked + damageAllowed).toBe(20); // All attacks accounted for
+    sim.step();
     
-    // If no damage was blocked at all, at least verify the demon has the right perdurance
-    if (damageBlocked === 0) {
-      const finalDemon = sim.units.find(u => u.id === demon.id);
-      expect(finalDemon?.meta.perdurance).toBe('fiendish');
-    } else {
-      expect(damageBlocked).toBeGreaterThan(0); // At least some resistance
-    }
+    // Get fresh demon reference
+    const freshDemon = sim.units.find(u => u.id === demon.id);
+    
+    // Demon should have taken half damage (5 instead of 10)
+    // since fiendish perdurance gives 50% resistance to physical
+    expect(freshDemon?.hp).toBe(initialHp - 5);
+    expect(freshDemon?.meta.perdurance).toBe('fiendish');
   });
 
   it("should allow skeletons to have undead perdurance", () => {
@@ -230,7 +204,7 @@ describe("Perdurance System", () => {
 
   it('should reduce all damage to 1 for sturdiness perdurance', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Perdurance(sim), new EventHandler(sim), new CommandHandler(sim)];
+    // Don't override rulebook - Simulator already includes all necessary rules
     
     // Add construct with sturdiness
     const construct = { ...Encyclopaedia.unit('freezebot'), pos: { x: 5, y: 5 } };
@@ -264,7 +238,7 @@ describe("Perdurance System", () => {
 
   it('should handle swarm perdurance differently', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Perdurance(sim), new EventHandler(sim), new CommandHandler(sim)];
+    // Don't override rulebook - Simulator already includes all necessary rules
     
     // Add swarmbot with population-based health
     const swarmbot = { ...Encyclopaedia.unit('swarmbot'), pos: { x: 5, y: 5 } };
@@ -293,7 +267,7 @@ describe("Perdurance System", () => {
 
   it('should allow multiple small hits to defeat sturdiness constructs', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Perdurance(sim), new EventHandler(sim), new CommandHandler(sim)];
+    // Don't override rulebook - Simulator already includes all necessary rules
     
     // Add construct with 8 HP and sturdiness
     const construct = { ...Encyclopaedia.unit('freezebot'), pos: { x: 5, y: 5 } };

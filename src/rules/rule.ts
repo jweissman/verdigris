@@ -1,62 +1,49 @@
-import { Simulator } from "../core/simulator";
+import { RNG } from "../core/rng";
+import type { TickContext } from "../core/tick_context";
 import type { Unit } from "../types/Unit";
 
+/**
+ * Base class for all rules
+ * Rules can ONLY access the simulator through the TickContext interface
+ * This enforces proper encapsulation and prevents direct access to internal state
+ */
 export abstract class Rule {
-  simulator: Simulator;
+  protected rng: RNG;
   
-  constructor(simulator: Simulator) {
-    this.simulator = simulator;
+  constructor(rng?: RNG) {
+    this.rng = rng || new RNG(12345);
   }
-
-  get rng() { return Simulator.rng }
  
-  execute(): void {
-    this.apply();
-  }
-
-  abstract apply(): void;
-
-  protected get sim(): Simulator {
-    return this.simulator;
-  }
-
-  // Register intent for pairwise operations (ACTUALLY batched now!)
-  protected pairwise(callback: (a: Unit, b: Unit) => void, maxDistance?: number): void {
-    if (this.sim.pairwiseBatcher) {
-      // Register the intent - it will be processed in a single pass later
-      const ruleId = this.constructor.name;
-      this.sim.pairwiseBatcher.register(ruleId, callback, maxDistance);
-    } else {
-      // Fallback to O(N²) if no batching available
-      for (let i = 0; i < this.sim.units.length; i++) {
-        for (let j = 0; j < this.sim.units.length; j++) {
-          if (i !== j) {
-            callback(this.sim.units[i], this.sim.units[j]);
-          }
+  abstract execute(context: TickContext): void;
+  
+  /**
+   * Helper for pairwise operations - processes all unit pairs
+   * NOTE: shouldn't this use pairwise batching since N^2???
+   */
+  protected pairwise(context: TickContext, callback: (a: Unit, b: Unit) => void, maxDistance?: number): void {
+    const units = context.getAllUnits();
+    const maxDistSq = maxDistance ? maxDistance * maxDistance : Infinity;
+    
+    for (let i = 0; i < units.length; i++) {
+      for (let j = i + 1; j < units.length; j++) {
+        const a = units[i];
+        const b = units[j];
+        
+        if (maxDistance) {
+          const dx = a.pos.x - b.pos.x;
+          const dy = a.pos.y - b.pos.y;
+          if (dx * dx + dy * dy > maxDistSq) continue;
         }
+        
+        callback(a, b);
       }
     }
   }
   
-  // Helper to find units within radius (batched)
-  protected unitsWithinRadius(center: { x: number, y: number }, radius: number, filter?: (unit: Unit) => boolean): Unit[] {
-    if (this.sim.spatialQueries) {
-      let result: Unit[] = [];
-      this.sim.spatialQueries.queryRadius(center, radius, (units) => {
-        result = units;
-      }, filter);
-      // Process immediately for now (until we properly integrate batching)
-      this.sim.spatialQueries.processQueries(this.sim.units);
-      return result;
-    }
-    
-    // Fallback to direct calculation
-    const radiusSq = radius * radius;
-    return this.sim.units.filter(unit => {
-      const dx = unit.pos.x - center.x;
-      const dy = unit.pos.y - center.y;
-      const distSq = dx * dx + dy * dy;
-      return distSq <= radiusSq && (!filter || filter(unit));
-    });
+  /**
+   * Helper to find units within radius
+   */
+  protected unitsWithinRadius(context: TickContext, center: { x: number, y: number }, radius: number): Unit[] {
+    return context.findUnitsInRadius(center, radius);
   }
 }

@@ -17,7 +17,7 @@ export class JumpCommand extends Command {
     const transform = new Transform(this.sim);
     
     // Get unit position before setting jump
-    const units = this.sim.getPendingUnits ? this.sim.getPendingUnits() : this.sim.units;
+    const units = this.sim.units;
     const unit = units.find(u => u.id === unitId);
     if (!unit) return;
     

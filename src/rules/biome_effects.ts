@@ -1,6 +1,7 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
+import type { TickContext } from '../core/tick_context';
 
 interface BiomeConfig {
   name: string;
@@ -42,6 +43,10 @@ interface BiomeConfig {
 export class BiomeEffects extends Rule {
   private activeEvents: Map<string, any> = new Map();
   
+  constructor() {
+    super();
+  }
+  
   // Compatibility methods for existing winter effects API
   static createWinterStorm(sim: any): void {
     // Lower temperature across the field - make it much colder
@@ -55,6 +60,24 @@ export class BiomeEffects extends Rule {
     
     // Add winter weather flag
     sim.winterActive = true;
+    
+    // Add initial snow particles for immediate visual feedback
+    for (let i = 0; i < 20; i++) {
+      sim.particles.push({
+        id: `snow_${Date.now()}_${i}`,
+        type: 'snow',
+        pos: { 
+          x: Math.random() * sim.fieldWidth * 8, 
+          y: Math.random() * 10 
+        },
+        vel: { x: 0, y: 0.15 },
+        radius: 0.25,
+        color: '#FFFFFF',
+        lifetime: 200,
+        z: 5,
+        landed: false
+      });
+    }
   }
   
   static endWinterStorm(sim: any): void {
@@ -67,6 +90,32 @@ export class BiomeEffects extends Rule {
     }
     
     sim.winterActive = false;
+  }
+
+  // Compatibility methods for desert effects API
+  static triggerSandstorm(sim: any, duration: number = 200, intensity: number = 0.8): void {
+    sim.sandstormActive = true;
+    sim.sandstormDuration = duration;
+    sim.sandstormIntensity = intensity;
+    
+    // Add initial sandstorm particles
+    for (let i = 0; i < 50 * intensity; i++) {
+      sim.particles.push({
+        id: `sand_${Date.now()}_${i}`,
+        type: 'sand',
+        pos: { 
+          x: -10 + Math.random() * (sim.fieldWidth + 20) * 8, 
+          y: Math.random() * sim.fieldHeight * 8 
+        },
+        vel: { 
+          x: 2 + Math.random() * 3 * intensity, 
+          y: (Math.random() - 0.5) * 0.5 
+        },
+        radius: 0.5 + Math.random() * 0.5,
+        color: '#CCAA66',
+        lifetime: 100 + Math.random() * 50
+      });
+    }
   }
   
   // Biome configurations - could be loaded from JSON
@@ -135,38 +184,290 @@ export class BiomeEffects extends Rule {
     }
   ];
 
-  apply = (): void => {
+  execute(context: TickContext): void {
     // Skip expensive biome processing in performance mode
-    if (this.sim.performanceMode) return;
+    if (context.isPerformanceMode()) return;
+    
+    // Update particle physics (snow landing, etc)
+    this.updateParticlePhysics(context);
+    
+    // Check for winter storm flag and generate snow
+    if (context.isWinterActive()) {
+      // Generate snow particles during winter storm
+      if (context.getCurrentTick() % 5 === 0) {
+        for (let i = 0; i < 3; i++) {
+          context.queueCommand({
+            type: 'particle',
+            params: {
+              particle: {
+                id: `snow_${Date.now()}_${i}`,
+                type: 'snow',
+                pos: { 
+                  x: Math.floor(context.getRandom() * context.getFieldWidth()) * 8, 
+                  y: 0 
+                },
+                vel: { x: 0, y: 0.15 },
+                radius: 0.25,
+                color: '#FFFFFF',
+                lifetime: 200,
+                z: 5,
+                landed: false
+              }
+            }
+          });
+        }
+      }
+    }
+    
+    // Check for sandstorm and generate sand particles
+    if (context.isSandstormActive()) {
+      const duration = context.getSandstormDuration();
+      if (duration > 0) {
+        // Note: Duration countdown handled by simulator itself
+        
+        // Generate sand particles during sandstorm
+        if (context.getCurrentTick() % 2 === 0) {
+          const intensity = context.getSandstormIntensity() || 0.8;
+          for (let i = 0; i < 2 * intensity; i++) {
+            context.queueCommand({
+              type: 'particle',
+              params: {
+                particle: {
+                  id: `sand_${Date.now()}_${i}`,
+                  type: 'sand',
+                  pos: { 
+                    x: -10 + context.getRandom() * 10, 
+                    y: context.getRandom() * context.getFieldHeight() * 8 
+                  },
+                  vel: { 
+                    x: 2 + context.getRandom() * 3 * intensity, 
+                    y: (context.getRandom() - 0.5) * 0.5 
+                  },
+                  radius: 0.5 + context.getRandom() * 0.5,
+                  color: '#CCAA66',
+                  lifetime: 100 + context.getRandom() * 50
+                }
+              }
+            });
+          }
+        }
+      }
+    }
     
     // Sample environmental conditions across the field
-    const conditions = this.sampleEnvironmentalConditions();
+    const conditions = this.sampleEnvironmentalConditions(context);
     
     // Process each active biome
     for (const biome of this.biomes) {
       if (this.isBiomeActive(biome, conditions)) {
-        this.processBiomeEffects(biome, conditions);
+        this.processBiomeEffects(context, biome, conditions);
       }
     }
     
     // Update active environmental events
-    this.updateEnvironmentalEvents();
+    this.updateEnvironmentalEvents(context);
+    
+    // Process temperature effects on units
+    this.processTemperatureEffects(context);
+    
+    // Process sandstorm effects if active
+    this.processSandstormEffects(context);
+  }
+  
+  private updateParticlePhysics(context: TickContext): void {
+    // Handle snow landing
+    const particles = context.getParticles();
+    particles.forEach(particle => {
+      if (particle.type === 'snow' && !particle.landed) {
+        // Check if snowflake should land
+        if (particle.pos.y >= context.getFieldHeight() - 1) {
+          // Queue command to land the particle
+          context.queueCommand({
+            type: 'land',
+            params: { 
+              particleId: particle.id,
+              y: context.getFieldHeight() - 1
+            }
+          });
+        }
+      }
+    });
+  }
+  
+  private processSandstormEffects(context: TickContext): void {
+    if (!context.isSandstormActive()) return;
+    
+    const intensity = context.getSandstormIntensity() || 0.8;
+    
+    // Apply sandblind to non-desert units
+    context.getAllUnits().forEach(unit => {
+      // Desert-adapted units are immune
+      const isDesertAdapted = unit.tags?.includes('desert') || 
+                             unit.type === 'grappler' || 
+                             unit.type === 'waterbearer';
+      
+      if (!isDesertAdapted && !unit.meta.sandBlinded) {
+        context.queueCommand({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              sandBlinded: true,
+              sandSlowed: true,
+              accuracy: 0.3, // Severely reduced accuracy
+              slowAmount: 0.5 // 50% speed reduction
+            }
+          }
+        });
+        
+        // Also deal damage over time
+        if (context.getCurrentTick() % 10 === 0) {
+          context.queueCommand({
+            type: 'damage',
+            params: {
+              targetId: unit.id,
+              amount: Math.floor(2 * intensity),
+              aspect: 'physical'
+            }
+          });
+        }
+      }
+    });
+  }
+  
+  private processTemperatureEffects(context: TickContext): void {
+    context.getAllUnits().forEach(unit => {
+      const temp = context.getTemperatureAt(Math.floor(unit.pos.x), Math.floor(unit.pos.y));
+      
+      // Freeze units in sub-zero temperatures
+      if (temp <= 0 && !unit.meta.frozen) {
+        context.queueCommand({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              frozen: true,
+              frozenDuration: 40,
+              brittle: true,
+              stunned: true
+            }
+          }
+        });
+        
+        // Halt movement
+        context.queueCommand({
+          type: 'halt',
+          params: { unitId: unit.id }
+        });
+        
+        // Create freeze visual effect
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          context.queueCommand({
+            type: 'particle',
+            params: {
+              particle: {
+                id: `freeze_${Date.now()}_${i}`,
+                type: 'freeze_impact',
+                pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+                vel: { 
+                  x: Math.cos(angle) * 0.5, 
+                  y: Math.sin(angle) * 0.5
+                },
+                radius: 1,
+                color: '#AADDFF',
+                lifetime: 20
+              }
+            }
+          });
+        }
+      }
+      // Chill units in cold temperatures
+      else if (temp > 0 && temp <= 5 && !unit.meta.chilled) {
+        context.queueCommand({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              chilled: true,
+              chilledDuration: 20,
+              slowAmount: 0.5
+            }
+          }
+        });
+      }
+      // Thaw frozen units if temperature rises
+      else if (temp > 0 && unit.meta.frozen) {
+        context.queueCommand({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              frozen: false,
+              brittle: false,
+              stunned: false
+            }
+          }
+        });
+      }
+    });
   }
 
-  private sampleEnvironmentalConditions() {
+  private sampleEnvironmentalConditions(context: TickContext) {
     // Sample key points across the field for efficiency
     const samples: Array<{pos: Vec2, temp: number, humidity?: number}> = [];
     
-    for (let x = 0; x < this.sim.fieldWidth; x += 4) {
-      for (let y = 0; y < this.sim.fieldHeight; y += 4) {
-        const temp = this.sim.temperatureField?.get(x, y) ?? 20;
-        const humidity = this.sim.humidityField?.get(x, y) ?? 0.5;
+    for (let x = 0; x < context.getFieldWidth(); x += 4) {
+      for (let y = 0; y < context.getFieldHeight(); y += 4) {
+        // Note: TickContext doesn't expose temperature/humidity fields directly
+        // We'll use default values for now, or derive from unit metadata
+        const temp = this.getTemperatureAtPosition(context, x, y);
+        const humidity = this.getHumidityAtPosition(context, x, y);
         samples.push({ pos: {x, y}, temp, humidity });
       }
     }
     
-    
     return samples;
+  }
+  
+  private getTemperatureAtPosition(context: TickContext, x: number, y: number): number {
+    // Check for units with temperature effects nearby
+    const nearbyUnits = context.getAllUnits().filter(unit => 
+      Math.abs(unit.pos.x - x) <= 2 && Math.abs(unit.pos.y - y) <= 2
+    );
+    
+    let baseTemp = 20; // Default temperature
+    
+    for (const unit of nearbyUnits) {
+      if (unit.meta?.temperature) {
+        baseTemp = unit.meta.temperature;
+      } else if (unit.meta?.winterActive) {
+        baseTemp = -5;
+      } else if (unit.meta?.desertActive) {
+        baseTemp = 35;
+      }
+    }
+    
+    return baseTemp;
+  }
+  
+  private getHumidityAtPosition(context: TickContext, x: number, y: number): number {
+    // Similar logic for humidity
+    const nearbyUnits = context.getAllUnits().filter(unit => 
+      Math.abs(unit.pos.x - x) <= 2 && Math.abs(unit.pos.y - y) <= 2
+    );
+    
+    let baseHumidity = 0.5; // Default humidity
+    
+    for (const unit of nearbyUnits) {
+      if (unit.meta?.humidity) {
+        baseHumidity = unit.meta.humidity;
+      } else if (unit.meta?.desertActive) {
+        baseHumidity = 0.1;
+      }
+    }
+    
+    return baseHumidity;
   }
 
   private isBiomeActive(biome: BiomeConfig, conditions: any[]): boolean {
@@ -187,27 +488,26 @@ export class BiomeEffects extends Rule {
     return isActive;
   }
 
-  private processBiomeEffects(biome: BiomeConfig, conditions: any[]): void {
+  private processBiomeEffects(context: TickContext, biome: BiomeConfig, conditions: any[]): void {
     // Add particles
-    if (biome.particles && this.sim.ticks % biome.particles.frequency === 0) {
-      this.addBiomeParticles(biome, conditions);
+    if (biome.particles && context.getCurrentTick() % biome.particles.frequency === 0) {
+      this.addBiomeParticles(context, biome, conditions);
     }
     
     // Apply status effects to units
     if (biome.statusEffects) {
-      this.applyBiomeStatusEffects(biome, conditions);
+      this.applyBiomeStatusEffects(context, biome, conditions);
     }
     
     // Trigger environmental events
     if (biome.events) {
-      this.processBiomeEvents(biome);
+      this.processBiomeEvents(context, biome);
     }
   }
 
-  private addBiomeParticles(biome: BiomeConfig, conditions: any[]): void {
+  private addBiomeParticles(context: TickContext, biome: BiomeConfig, conditions: any[]): void {
     const { particles } = biome;
     if (!particles) return;
-
 
     for (let i = 0; i < particles.count; i++) {
       // Choose spawn location based on biome activity
@@ -218,49 +518,52 @@ export class BiomeEffects extends Rule {
       
       if (activeAreas.length === 0) continue;
       
-      const area = activeAreas[Math.floor(this.rng.random() * activeAreas.length)];
-      const x = area.pos.x + (this.rng.random() - 0.5) * 8; // Spread around sample point
+      const area = activeAreas[Math.floor(context.getRandom() * activeAreas.length)];
+      const x = area.pos.x + (context.getRandom() - 0.5) * 8; // Spread around sample point
       const y = particles.type === 'snow' ? 0 : area.pos.y;
       
-      this.sim.particles.push({
-        pos: { x: Math.max(0, Math.min(this.sim.fieldWidth - 1, x)), y },
-        vel: particles.properties.vel,
-        radius: particles.properties.radius,
-        lifetime: particles.properties.lifetime,
-        color: particles.color,
-        z: particles.properties.z,
-        type: particles.type,
-        ...particles.properties
+      context.queueEvent({
+        kind: 'particle',
+        meta: {
+          pos: { x: Math.max(0, Math.min(context.getFieldWidth() - 1, x)), y },
+          vel: particles.properties.vel,
+          radius: particles.properties.radius,
+          lifetime: particles.properties.lifetime,
+          color: particles.color,
+          z: particles.properties.z,
+          type: particles.type,
+          ...particles.properties
+        }
       });
     }
   }
 
-  private applyBiomeStatusEffects(biome: BiomeConfig, conditions: any[]): void {
-    for (const unit of this.sim.units) {
+  private applyBiomeStatusEffects(context: TickContext, biome: BiomeConfig, conditions: any[]): void {
+    for (const unit of context.getAllUnits()) {
       if (unit.state === 'dead') continue;
       
       // Sample environment at unit position
-      const temp = this.sim.temperatureField?.get(unit.pos.x, unit.pos.y) ?? 20;
-      const humidity = this.sim.humidityField?.get(unit.pos.x, unit.pos.y) ?? 0.5;
+      const temp = this.getTemperatureAtPosition(context, unit.pos.x, unit.pos.y);
+      const humidity = this.getHumidityAtPosition(context, unit.pos.x, unit.pos.y);
       
       for (const effect of biome.statusEffects!) {
         if (effect.condition(temp, humidity)) {
-          this.applyStatusEffect(unit, effect);
+          this.applyStatusEffect(context, unit, effect);
         }
       }
     }
   }
 
-  private applyStatusEffect(unit: Unit, effect: any): void {
+  private applyStatusEffect(context: TickContext, unit: Unit, effect: any): void {
     // Unified status effect application
     switch (effect.effectType) {
       case 'freeze':
-        if (!unit.meta.frozen && this.rng.random() < effect.intensity) {
-          this.sim.queuedCommands.push({
+        if (!unit.meta.frozen && context.getRandom() < effect.intensity) {
+          context.queueCommand({
             type: 'meta',
             params: {
               unitId: unit.id,
-              updates: {
+              meta: {
                 frozen: true,
                 frozenDuration: effect.duration || 60,
                 brittle: true,
@@ -272,8 +575,8 @@ export class BiomeEffects extends Rule {
         break;
         
       case 'heat_stress':
-        if (this.sim.ticks % 8 === 0) { // Every second
-          this.sim.queuedCommands.push({
+        if (context.getCurrentTick() % 8 === 0) { // Every second
+          context.queueCommand({
             type: 'applyStatusEffect',
             params: {
               unitId: unit.id,
@@ -288,30 +591,30 @@ export class BiomeEffects extends Rule {
     }
   }
 
-  private processBiomeEvents(biome: BiomeConfig): void {
+  private processBiomeEvents(context: TickContext, biome: BiomeConfig): void {
     for (const event of biome.events!) {
       const eventKey = `${biome.name}_${event.type}`;
       
       if (!this.activeEvents.has(eventKey)) {
         // Check for event trigger
-        if (this.rng.random() < event.triggerChance) {
+        if (context.getRandom() < event.triggerChance) {
           const duration = event.duration[0] + 
-            Math.floor(this.rng.random() * (event.duration[1] - event.duration[0]));
+            Math.floor(context.getRandom() * (event.duration[1] - event.duration[0]));
           
           this.activeEvents.set(eventKey, {
             type: event.type,
             duration,
             effects: event.effects,
-            startTick: this.sim.ticks
+            startTick: context.getCurrentTick()
           });
         }
       }
     }
   }
 
-  private updateEnvironmentalEvents(): void {
+  private updateEnvironmentalEvents(context: TickContext): void {
     for (const [key, event] of this.activeEvents.entries()) {
-      const elapsed = this.sim.ticks - event.startTick;
+      const elapsed = context.getCurrentTick() - event.startTick;
       
       if (elapsed >= event.duration) {
         this.activeEvents.delete(key);
@@ -319,39 +622,44 @@ export class BiomeEffects extends Rule {
       }
       
       // Apply event effects
-      this.applyEventEffects(event);
+      this.applyEventEffects(context, event);
     }
   }
 
-  private applyEventEffects(event: any): void {
+  private applyEventEffects(context: TickContext, event: any): void {
     if (event.type === 'sandstorm') {
       // Add extra particles
-      if (this.sim.ticks % 2 === 0) {
+      if (context.getCurrentTick() % 2 === 0) {
         for (let i = 0; i < event.effects.particleBoost; i++) {
-          this.sim.particles.push({
-            pos: { 
-              x: this.rng.random() * this.sim.fieldWidth, 
-              y: this.rng.random() * this.sim.fieldHeight 
-            },
-            vel: { x: (this.rng.random() - 0.5) * 2, y: 0 },
-            radius: 0.3,
-            lifetime: 60,
-            color: '#D2B48C',
-            z: 2,
-            type: 'sand'
+          context.queueEvent({
+            kind: 'particle',
+            meta: {
+              pos: { 
+                x: context.getRandom() * context.getFieldWidth(), 
+                y: context.getRandom() * context.getFieldHeight() 
+              },
+              vel: { x: (context.getRandom() - 0.5) * 2, y: 0 },
+              radius: 0.3,
+              lifetime: 60,
+              color: '#D2B48C',
+              z: 2,
+              type: 'sand'
+            }
           });
         }
       }
       
       // Apply periodic damage
-      if (this.sim.ticks % 40 === 0 && this.rng.random() < 0.2) {
-        for (const unit of this.sim.units) {
-          if (unit.state !== 'dead' && this.rng.random() < 0.3) {
-            this.sim.queuedEvents.push({
+      if (context.getCurrentTick() % 40 === 0 && context.getRandom() < 0.2) {
+        for (const unit of context.getAllUnits()) {
+          if (unit.state !== 'dead' && context.getRandom() < 0.3) {
+            context.queueEvent({
               kind: 'damage',
               target: unit.id,
-              amount: event.effects.damage,
-              source: 'sandstorm'
+              meta: {
+                amount: event.effects.damage,
+                source: 'sandstorm'
+              }
             });
           }
         }

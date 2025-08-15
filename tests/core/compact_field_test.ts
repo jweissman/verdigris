@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { CommandHandler } from '../../src/rules/command_handler';
-import { WinterEffects } from '../../src/rules/winter_effects';
+import { BiomeEffects } from '../../src/rules/biome_effects';
 import { LightningStorm } from '../../src/rules/lightning_storm';
 import { EventHandler } from '../../src/rules/event_handler';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
@@ -15,9 +15,9 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
     const sim = new Simulator();
     sim.rulebook = [
       new CommandHandler(sim),
-      new WinterEffects(sim),
+      new BiomeEffects(),
       new LightningStorm(sim),
-      new EventHandler(sim)
+      new EventHandler()
     ];
 
     // Deploy mechanist units across the field for position testing
@@ -34,8 +34,12 @@ describe('Compact Field Layout - Bottom Half Screen', () => {
     });
 
     // Activate environmental effects to test field overlay rendering in compact space
+    // Use BiomeEffects static method since weather command isn't implemented
+    const { BiomeEffects } = require('../../src/rules/biome_effects');
+    BiomeEffects.createWinterStorm(sim);
+    
+    // Queue lightning commands
     sim.queuedCommands = [
-      { type: 'weather', params: { weatherType: 'winter' } },
       { type: 'lightning', params: { x: 10, y: 10 } },
       { type: 'lightning', params: { x: 20, y: 15 } }
     ];

@@ -45,7 +45,10 @@ export class Wander extends Command {
         
         if (newX >= 0 && newX < this.sim.fieldWidth && 
             newY >= 0 && newY < this.sim.fieldHeight) {
-          unit.intendedMove = { x: dx, y: dy };
+          // Use transform to mutate (proxies are read-only)
+          this.sim.getTransform().updateUnit(unit.id, {
+            intendedMove: { x: dx, y: dy }
+          });
         }
       }
     }

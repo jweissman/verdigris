@@ -32,7 +32,7 @@ export class ChangeWeather extends Command {
             },
             vel: { x: 0, y: 1 + Simulator.rng.random() * 2 },
             radius: 1,
-            // No color - 1-bit aesthetic
+            color: '#4444FF',
             lifetime: 100
           });
         }
@@ -67,7 +67,7 @@ export class ChangeWeather extends Command {
             },
             vel: { x: 2 + Simulator.rng.random() * 3, y: (Simulator.rng.random() - 0.5) * 0.5 },
             radius: 0.5 + Simulator.rng.random() * 0.5,
-            // No color - 1-bit aesthetic
+            color: '#CCAA66',
             lifetime: 100 + Simulator.rng.random() * 50
           });
         }
@@ -99,7 +99,7 @@ export class ChangeWeather extends Command {
             z: 10 + Simulator.rng.random() * 30, // Start high in the air
             lifetime: 300 + Simulator.rng.random() * 200, // Longer lifetime to fall across field
             radius: 1,
-            // No color - 1-bit aesthetic
+            color: '#88AA44'
           });
         }
         this.sim.weather.current = 'leaves';

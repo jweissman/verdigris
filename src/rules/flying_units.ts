@@ -1,5 +1,6 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/";
+import type { TickContext } from "../core/tick_context";
 
 /**
  * Flying Units Rule
@@ -13,24 +14,24 @@ export class FlyingUnits extends Rule {
   private flyingUnits: Set<string> = new Set();
   private animationFrame: number = 0;
   
-  update() {
+  execute(context: TickContext): void {
     this.animationFrame = (this.animationFrame + 1) % 60; // Cycle for animation
     
-    for (const unit of this.sim.units) {
+    for (const unit of context.getAllUnits()) {
       if (unit.tags?.includes('flying')) {
-        this.updateFlyingUnit(unit);
+        this.updateFlyingUnit(context, unit);
       }
     }
   }
   
-  private updateFlyingUnit(unit: Unit) {
+  private updateFlyingUnit(context: TickContext, unit: Unit) {
     // Check if unit should be flying
-    const shouldFly = this.shouldUnitFly(unit);
+    const shouldFly = this.shouldUnitFly(context, unit);
     
     if (shouldFly && !this.flyingUnits.has(unit.id)) {
       // Start flying
       this.flyingUnits.add(unit.id);
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'meta',
         params: {
           unitId: unit.id,
@@ -44,104 +45,73 @@ export class FlyingUnits extends Rule {
     } else if (!shouldFly && this.flyingUnits.has(unit.id)) {
       // Stop flying
       this.flyingUnits.delete(unit.id);
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'meta',
         params: {
           unitId: unit.id,
           meta: {
             flying: false,
+            flyingFrame: undefined,
             z: 0
           }
         }
       });
     }
     
-    // Update flying animation
-    if (unit.meta.flying) {
-      // Queue animation updates
-      const flyingFrame = 5 + Math.floor(this.animationFrame / 30) % 2;
-      const z = 3 + Math.sin(this.animationFrame * 0.1) * 0.5;
+    // Animate flying units
+    if (this.flyingUnits.has(unit.id)) {
+      // Alternate between frames 5 and 6 for wing flapping
+      const frame = Math.floor(this.animationFrame / 15) % 2 === 0 ? 5 : 6;
       
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'meta',
         params: {
           unitId: unit.id,
           meta: {
-            flyingFrame,
-            z
+            flyingFrame: frame
           }
         }
       });
       
-      // Flying units can move more freely
-      if (unit.sprite === 'bird') {
-        this.updateBirdMovement(unit);
-      }
-    }
-  }
-  
-  private shouldUnitFly(unit: Unit): boolean {
-    // Birds at field edges should fly
-    const atEdge = (
-      unit.pos.x <= 1 || 
-      unit.pos.x >= this.sim.fieldWidth - 2 ||
-      unit.pos.y <= 1 ||
-      unit.pos.y >= this.sim.fieldHeight - 2
-    );
-    
-    // Birds fly when idle at edges or when fleeing
-    if (unit.sprite === 'bird') {
-      return atEdge || unit.posture === 'flee' || unit.meta.startled;
-    }
-    
-    // Owls fly at night or when hunting
-    if (unit.sprite === 'owl') {
-      return unit.posture === 'pursue' || unit.meta.hunting;
-    }
-    
-    return false;
-  }
-  
-  private updateBirdMovement(unit: Unit) {
-    // Ambient birds at edges move in patterns
-    if (!unit.intendedTarget) {
-      const time = this.animationFrame * 0.05;
-      
-      // Circular flight pattern at edges
-      let intendedMove = null;
-      if (unit.pos.x <= 1 || unit.pos.x >= this.sim.fieldWidth - 2) {
-        intendedMove = {
-          x: 0,
-          y: Math.sin(time) * 0.3
-        };
-      } else if (unit.pos.y <= 1 || unit.pos.y >= this.sim.fieldHeight - 2) {
-        intendedMove = {
-          x: Math.cos(time) * 0.3,
-          y: 0
-        };
-      }
-      
-      if (intendedMove) {
-        // Queue move command
-        this.sim.queuedCommands.push({
-          type: 'move',
-          params: {
-            unitId: unit.id,
-            dx: intendedMove.x,
-            dy: intendedMove.y
+      // Add small hovering motion
+      const hoverOffset = Math.sin(this.animationFrame * 0.1) * 0.2;
+      context.queueCommand({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            hoverY: hoverOffset
           }
-        });
-      }
+        }
+      });
     }
   }
   
-  // Helper to check if a unit is currently flying
-  isFlying(unit: Unit): boolean {
-    return this.flyingUnits.has(unit.id) || unit.meta.flying === true;
-  }
-  
-  // Get the current animation frame for a flying unit
-  getFlyingFrame(unit: Unit): number {
-    return unit.meta.flyingFrame || 0;
+  private shouldUnitFly(context: TickContext, unit: Unit): boolean {
+    // Birds at edges should stay flying
+    const margin = 2;
+    const atEdge = unit.pos.x < margin || 
+                   unit.pos.x > context.getFieldWidth() - margin ||
+                   unit.pos.y < margin || 
+                   unit.pos.y > context.getFieldHeight() - margin;
+    
+    if (atEdge) return true;
+    
+    // Birds that are moving fast should fly
+    const isMoving = unit.intendedMove && 
+      (Math.abs(unit.intendedMove.x) > 0.5 || Math.abs(unit.intendedMove.y) > 0.5);
+    
+    if (isMoving) return true;
+    
+    // Birds that are in combat should fly
+    if (unit.state === 'attacking' || unit.state === 'fleeing') return true;
+    
+    // Birds that are stunned or frozen can't fly
+    if (unit.meta.stunned || unit.meta.frozen) return false;
+    
+    // Random chance to start/stop flying for variety
+    const randomFlyChance = context.getRandom() < 0.01; // 1% chance per tick
+    
+    return unit.meta.flying || randomFlyChance;
   }
 }

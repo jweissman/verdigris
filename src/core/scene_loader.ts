@@ -143,7 +143,9 @@ export class SceneLoader {
     
     if (this.sim.queuedCommands && this.sim.queuedCommands.length > 0) {
       const commandHandler = new CommandHandler(this.sim);
-      commandHandler.apply();
+      // Create a minimal context for command processing
+      const context = this.sim.getTickContext();
+      commandHandler.execute(context);
     }
     
     // Don't run segmented creatures rule here - let the normal rulebook handle it

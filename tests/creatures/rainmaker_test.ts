@@ -95,7 +95,12 @@ describe("Rainmaker Integration", () => {
     sim.addUnit(soldier);
     sim.setUnitOnFire(soldier);
     
-    expect(soldier.meta.onFire).toBe(true);
+    // Need to step to process the setUnitOnFire command
+    sim.step();
+    
+    // Get fresh reference after fire is set
+    const burningUnit = sim.units.find(u => u.id === soldier.id);
+    expect(burningUnit?.meta.onFire).toBe(true);
     
     // Start heavy rain and create ideal extinguishing conditions
     sim.setWeather('rain', 100, 1.0);

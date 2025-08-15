@@ -68,9 +68,10 @@ describe('Grappling Mass Physics', () => {
     const initialTargetX = target.pos.x;
 
     // Apply grappling physics and process commands
-    grapplingPhysics.apply();
+    const context = sim.getTickContext();
+    grapplingPhysics.execute(context);
     const commandHandler = new CommandHandler(sim);
-    commandHandler.apply();
+    commandHandler.execute(context);
 
     // Both should move toward each other
     const updatedGrappler = sim.units.find(u => u.id === 'grappler');
@@ -134,9 +135,10 @@ describe('Grappling Mass Physics', () => {
     const initialGrapplerX = lightGrappler.pos.x;
     const initialHeavyX = heavyTarget.pos.x;
 
-    grapplingPhysics.apply();
+    const context = sim.getTickContext();
+    grapplingPhysics.execute(context);
     const commandHandler = new CommandHandler(sim);
-    commandHandler.apply();
+    commandHandler.execute(context);
 
     // Grappler should move more than the heavy target
     const updatedGrappler = sim.units.find(u => u.id === 'grappler');
@@ -204,9 +206,10 @@ describe('Grappling Mass Physics', () => {
     const initialGrapplerX = grappler.pos.x;
     
     // Apply physics update
-    grapplingPhysics.apply();
+    const context = sim.getTickContext();
+    grapplingPhysics.execute(context);
     const commandHandler = new CommandHandler(sim);
-    commandHandler.apply();
+    commandHandler.execute(context);
 
     // Get the updated units from the sim
     const updatedWorm = sim.units.find(u => u.id === 'sandworm');
@@ -349,9 +352,10 @@ describe('Grappling Mass Physics', () => {
     
     // Apply movement with penalty
     const grapplingPhysics = new GrapplingPhysics(sim);
-    grapplingPhysics.apply();
+    const context = sim.getTickContext();
+    grapplingPhysics.execute(context);
     const commandHandler = new CommandHandler(sim);
-    commandHandler.apply();
+    commandHandler.execute(context);
     
     // Movement should be completely negated by penalty
     if (pinned.meta.movementPenalty === 1.0) {

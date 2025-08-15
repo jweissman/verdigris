@@ -11,7 +11,7 @@ describe('Lightning Command', () => {
     sim.rulebook = [
       new CommandHandler(sim), 
       new LightningStorm(sim),
-      new EventHandler(sim)
+      new EventHandler()
     ];
 
     // Test random lightning strike

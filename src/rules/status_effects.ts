@@ -1,5 +1,6 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/Unit";
+import type { TickContext } from '../core/tick_context';
 
 export interface StatusEffect {
   type: 'chill' | 'stun' | 'burn' | 'poison';
@@ -9,68 +10,97 @@ export interface StatusEffect {
 }
 
 export class StatusEffects extends Rule {
-  apply = (): void => {
-    // Process AoE events that apply status effects
-    this.sim.queuedEvents = this.sim.queuedEvents.filter(event => {
-      if (event.kind === 'aoe' && event.meta.aspect === 'chill') {
-        this.applyChill(event);
-        return false; // Remove the event since we handled it
+  constructor() {
+    super();
+  }
+  execute(context: TickContext): void {
+    // Note: TickContext doesn't expose queuedEvents directly
+    // We'll check for units with status effect triggers or existing effects
+    
+    // Check for units that need status effects applied or updated
+    for (const unit of context.getAllUnits()) {
+      // Apply status effects if unit has chill triggers
+      if (unit.meta.chillTrigger) {
+        this.applyChillFromTrigger(context, unit);
       }
-      return true;
-    });
-
-    // Update existing status effects on all units
-    // TODO: Convert to commands for status effect updates
-    for (const unit of this.sim.units) {
+      
+      // Update existing status effects
       if (unit.meta.statusEffects && unit.meta.statusEffects.length > 0) {
-        // Queue command to update status effects
-        this.sim.queuedCommands.push({
-          type: 'updateStatusEffects',
-          params: {
-            unitId: unit.id
-          }
-        });
+        this.updateStatusEffects(context, unit);
       }
+      
+      // Apply mechanics for active status effects
+      this.applyStatusEffectMechanics(context, unit);
     }
   }
 
-  private applyChill(event: any): void {
-    const centerPos = event.target;
-    const radius = event.meta.radius || 2;
+  private applyChillFromTrigger(context: TickContext, unit: Unit): void {
+    const trigger = unit.meta.chillTrigger;
+    const centerPos = trigger.position || unit.pos;
+    const radius = trigger.radius || 2;
 
-    const affectedUnits = this.sim.getRealUnits().filter(unit => {
+    const affectedUnits = context.getAllUnits().filter(target => {
       const distance = Math.sqrt(
-        Math.pow(unit.pos.x - centerPos.x, 2) + 
-        Math.pow(unit.pos.y - centerPos.y, 2)
+        Math.pow(target.pos.x - centerPos.x, 2) + 
+        Math.pow(target.pos.y - centerPos.y, 2)
       );
       return distance <= radius;
     });
 
-    affectedUnits.forEach(unit => {
+    affectedUnits.forEach(target => {
       // Queue command to apply chill effect
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'applyStatusEffect',
         params: {
-          unitId: unit.id,
+          unitId: target.id,
           effect: {
             type: 'chill',
             duration: 30, // 3.75 seconds at 8fps
             intensity: 0.5, // 50% movement speed reduction
-            source: event.source
+            source: unit.id
           }
         }
       });
     });
+    
+    // Clear the trigger
+    context.queueCommand({
+      type: 'meta',
+      params: {
+        unitId: unit.id,
+        meta: {
+          chillTrigger: undefined
+        }
+      }
+    });
   }
 
-  private applyStatusEffectMechanics(unit: Unit): void {
+  private updateStatusEffects(context: TickContext, unit: Unit): void {
+    const statusEffects = unit.meta.statusEffects || [];
+    const updatedEffects = statusEffects.map(effect => ({
+      ...effect,
+      duration: effect.duration - 1
+    })).filter(effect => effect.duration > 0);
+    
+    context.queueCommand({
+      type: 'meta',
+      params: {
+        unitId: unit.id,
+        meta: {
+          statusEffects: updatedEffects.length > 0 ? updatedEffects : undefined
+        }
+      }
+    });
+  }
+  
+  private applyStatusEffectMechanics(context: TickContext, unit: Unit): void {
     const statusEffects = unit.meta.statusEffects || [];
     
     statusEffects.forEach(effect => {
       switch (effect.type) {
         case 'chill':
           // Queue chill effect
-          this.sim.queuedCommands.push({
+          context.queueCommand({
             type: 'meta',
             params: {
               unitId: unit.id,
@@ -83,7 +113,7 @@ export class StatusEffects extends Rule {
           break;
         case 'stun':
           // Queue stun effect
-          this.sim.queuedCommands.push({
+          context.queueCommand({
             type: 'meta',
             params: {
               unitId: unit.id,
@@ -93,8 +123,8 @@ export class StatusEffects extends Rule {
           break;
         case 'burn':
           // Deal damage over time
-          if (this.sim.ticks % 8 === 0) { // Every second
-            this.sim.queuedEvents.push({
+          if (context.getCurrentTick() % 8 === 0) { // Every second
+            context.queueEvent({
               kind: 'damage',
               source: effect.source || 'burn',
               target: unit.id,
@@ -110,9 +140,17 @@ export class StatusEffects extends Rule {
 
     // Clean up expired status flags
     if (statusEffects.length === 0) {
-      delete unit.meta.chilled;
-      delete unit.meta.chillIntensity;
-      delete unit.meta.stunned;
+      context.queueCommand({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            chilled: undefined,
+            chillIntensity: undefined,
+            stunned: undefined
+          }
+        }
+      });
     }
   }
 }

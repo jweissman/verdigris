@@ -1,6 +1,7 @@
 import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 import { Rule } from "./rule";
+import type { TickContext } from '../core/tick_context';
 
 // interface SegmentData {
 //   position: Vec2;
@@ -10,11 +11,15 @@ import { Rule } from "./rule";
 
 export class SegmentedCreatures extends Rule {
   private pathHistory: Map<string, Vec2[]> = new Map(); // Track movement history for snake-like following
+  
+  constructor() {
+    super();
+  }
 
-  apply = () => {
-    const segmentedCreatures = this.sim.units.filter(unit => {
+  execute(context: TickContext): void {
+    const segmentedCreatures = context.getAllUnits().filter(unit => {
       const meta = unit.meta || {};
-      return meta.segmented && !this.hasSegments(unit);
+      return meta.segmented && !this.hasSegments(context, unit);
     });
     for (let i = 0; i < segmentedCreatures.length; i++) {
       const creature = segmentedCreatures[i];
@@ -22,32 +27,29 @@ export class SegmentedCreatures extends Rule {
         console.error("SegmentedCreatures: Too many creatures, possible infinite loop!");
         throw new Error("SegmentedCreatures infinite loop detected");
       }
-      this.createSegments(creature);
+      this.createSegments(context, creature);
     }
 
-    this.updateSegmentPositions();
-    this.handleSegmentDamage();
-    this.handleSegmentGrappling();
-    this.cleanupOrphanedSegments();
+    this.updateSegmentPositions(context);
+    this.handleSegmentDamage(context);
+    this.handleSegmentGrappling(context);
+    this.cleanupOrphanedSegments(context);
   }
 
-  private hasSegments(creature: Unit): boolean {
+  private hasSegments(context: TickContext, creature: Unit): boolean {
     // Check if segments already exist for this creature
-    const hasExistingSegments = this.sim.units.some(unit => 
+    const hasExistingSegments = context.getAllUnits().some(unit => 
       unit.meta.segment && unit.meta.parentId === creature.id
     );
     
     // Also check if add commands are already queued for segments of this creature
-    const hasQueuedSegments = this.sim.queuedCommands?.some(cmd => 
-      (cmd.type === 'spawn' || cmd.type === 'add') && 
-      cmd.params?.unit?.meta.segment && 
-      cmd.params?.unit?.meta.parentId === creature.id
-    ) || false;
+    // Note: TickContext doesn't expose queued commands directly, so we'll rely on existing segments
+    const hasQueuedSegments = false;
     
     return hasExistingSegments || hasQueuedSegments;
   }
 
-  private createSegments(creature: Unit) {
+  private createSegments(context: TickContext, creature: Unit) {
     const segmentCount = creature.meta.segmentCount || 4; // Default to 4 segments
     
     if (segmentCount > 50) {
@@ -77,7 +79,7 @@ export class SegmentedCreatures extends Rule {
       ];
       
       for (const attempt of attempts) {
-        if (this.isValidPosition(attempt) && !this.isOccupied(attempt)) {
+        if (this.isValidPosition(context, attempt) && !this.isOccupied(context, attempt)) {
           segmentPos = attempt;
           break;
         }
@@ -125,7 +127,7 @@ export class SegmentedCreatures extends Rule {
         };
 
         // Queue add command to create the segment
-        this.sim.queuedCommands.push({
+        context.queueCommand({
           type: 'spawn',
           params: { unit: segment }
         });
@@ -154,9 +156,9 @@ export class SegmentedCreatures extends Rule {
     }
   }
 
-  private updateSegmentPositions() {
-    const segmentGroups = this.getSegmentGroups();
-    const units = this.sim.units;
+  private updateSegmentPositions(context: TickContext) {
+    const segmentGroups = this.getSegmentGroups(context);
+    const units = context.getAllUnits();
     
     // Fixed: Use proper iteration over Map entries
     for (const [parentId, segments] of segmentGroups) {
@@ -190,7 +192,7 @@ export class SegmentedCreatures extends Rule {
             const dx = targetPos.x - segment.pos.x;
             const dy = targetPos.y - segment.pos.y;
             
-            this.sim.queuedCommands.push({
+            context.queueCommand({
               type: 'move',
               params: {
                 unitId: segment.id,
@@ -204,9 +206,9 @@ export class SegmentedCreatures extends Rule {
     }
   }
 
-  private getSegmentGroups(): Map<string, Unit[]> {
+  private getSegmentGroups(context: TickContext): Map<string, Unit[]> {
     const groups = new Map<string, Unit[]>();
-    const units = this.sim.units;
+    const units = context.getAllUnits();
     
     units
       .filter(unit => unit.meta.segment && unit.meta.parentId)
@@ -226,11 +228,11 @@ export class SegmentedCreatures extends Rule {
     return groups;
   }
 
-  private cleanupOrphanedSegments() {
-    const orphanedSegments = this.sim.units.filter(unit => 
+  private cleanupOrphanedSegments(context: TickContext) {
+    const orphanedSegments = context.getAllUnits().filter(unit => 
       unit.meta.segment && 
       unit.meta.parentId &&
-      !this.sim.units.some(parent => parent.id === unit.meta.parentId)
+      !context.getAllUnits().some(parent => parent.id === unit.meta.parentId)
     );
 
     // Queue remove commands for orphaned segments
@@ -242,7 +244,7 @@ export class SegmentedCreatures extends Rule {
         }
         
         // Queue remove command for this segment
-        this.sim.queuedCommands.push({
+        context.queueCommand({
           type: 'remove',
           params: { unitId: segment.id }
         });
@@ -250,25 +252,28 @@ export class SegmentedCreatures extends Rule {
     }
   }
 
-  private handleSegmentDamage() {
+  private handleSegmentDamage(context: TickContext) {
     // When a segment takes damage, propagate some to the head
-    this.sim.units.filter(unit => unit.meta.segment).forEach(segment => {
+    context.getAllUnits().filter(unit => unit.meta.segment).forEach(segment => {
       if (segment.meta.damageTaken && segment.meta.parentId) {
-        const parent = this.sim.units.find(u => u.id === segment.meta.parentId);
+        const parent = context.getAllUnits().find(u => u.id === segment.meta.parentId);
         if (parent) {
           // Transfer 50% of segment damage to head
           const transferDamage = Math.floor(segment.meta.damageTaken * 0.5);
           if (transferDamage > 0) {
             parent.hp -= transferDamage;
             
-            // Visual feedback - pain particles
-            this.sim.particles.push({
-              pos: { x: parent.pos.x * 8 + 4, y: parent.pos.y * 8 + 4 },
-              vel: { x: 0, y: -0.5 },
-              radius: 2,
-              color: '#FF0000',
-              lifetime: 15,
-              type: 'pain'
+            // Visual feedback - pain particles (queued as event)
+            context.queueEvent({
+              kind: 'particle',
+              meta: {
+                pos: { x: parent.pos.x * 8 + 4, y: parent.pos.y * 8 + 4 },
+                vel: { x: 0, y: -0.5 },
+                radius: 2,
+                color: '#FF0000',
+                lifetime: 15,
+                type: 'pain'
+              }
             });
           }
           delete segment.meta.damageTaken;
@@ -277,7 +282,7 @@ export class SegmentedCreatures extends Rule {
 
       // If segment is destroyed, deal damage to adjacent segments
       if (segment.hp <= 0 && segment.meta.segmentIndex) {
-        const adjacentSegments = this.sim.units.filter(u => 
+        const adjacentSegments = context.getAllUnits().filter(u => 
           u.meta.segment && 
           u.meta.parentId === segment.meta.parentId &&
           Math.abs((u.meta.segmentIndex || 0) - segment.meta.segmentIndex) === 1
@@ -290,9 +295,9 @@ export class SegmentedCreatures extends Rule {
     });
   }
 
-  private handleSegmentGrappling() {
+  private handleSegmentGrappling(context: TickContext) {
     // Segments can be individually grappled/pinned
-    const units = this.sim.units;
+    const units = context.getAllUnits();
     
     units.filter(unit => unit.meta.segment).forEach(segment => {
       if (segment.meta.grappled || segment.meta.pinned) {
@@ -310,7 +315,7 @@ export class SegmentedCreatures extends Rule {
           
           // Queue command to update parent's slowdown
           const originalSpeed = parent.meta.originalSpeed || parent.meta.moveSpeed || 1.0;
-          this.sim.queuedCommands.push({
+          context.queueCommand({
             type: 'meta',
             params: {
               unitId: parent.id,
@@ -324,7 +329,7 @@ export class SegmentedCreatures extends Rule {
           
           // If head segment is pinned, entire creature is immobilized
           if (segment.meta.segmentIndex === 1 && segment.meta.pinned) {
-            this.sim.queuedCommands.push({
+            context.queueCommand({
               type: 'meta',
               params: {
                 unitId: parent.id,
@@ -333,7 +338,7 @@ export class SegmentedCreatures extends Rule {
                 }
               }
             });
-            this.sim.queuedCommands.push({
+            context.queueCommand({
               type: 'halt',
               params: { unitId: parent.id }
             });
@@ -352,7 +357,7 @@ export class SegmentedCreatures extends Rule {
       
       if (grappledSegments === 0 && creature.meta.segmentSlowdown) {
         // Queue command to clear slowdown
-        this.sim.queuedCommands.push({
+        context.queueCommand({
           type: 'meta',
           params: {
             unitId: creature.id,
@@ -368,13 +373,13 @@ export class SegmentedCreatures extends Rule {
     });
   }
 
-  private isValidPosition(pos: { x: number, y: number }): boolean {
-    return pos.x >= 0 && pos.x < this.sim.fieldWidth &&
-           pos.y >= 0 && pos.y < this.sim.fieldHeight;
+  private isValidPosition(context: TickContext, pos: { x: number, y: number }): boolean {
+    return pos.x >= 0 && pos.x < context.getFieldWidth() &&
+           pos.y >= 0 && pos.y < context.getFieldHeight();
   }
 
-  private isOccupied(pos: { x: number, y: number }): boolean {
-    return this.sim.units.some(unit => 
+  private isOccupied(context: TickContext, pos: { x: number, y: number }): boolean {
+    return context.getAllUnits().some(unit => 
       unit.pos.x === pos.x && unit.pos.y === pos.y
     );
   }

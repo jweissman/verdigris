@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { SceneLoader } from '../../src/core/scene_loader';
-import { WinterEffects } from '../../src/rules/winter_effects';
+import { BiomeEffects } from '../../src/rules/biome_effects';
 
 describe('Toymaker Scene Integration', () => {
   it('should load toymaker scene with proper sprites and winter effects', () => {
@@ -22,7 +22,7 @@ describe('Toymaker Scene Integration', () => {
     expect(enemies.length).toBe(15);
     
     // Start winter effects
-    WinterEffects.createWinterStorm(sim);
+    BiomeEffects.createWinterStorm(sim);
     
     // Run a few simulation steps
     

@@ -22,18 +22,56 @@ export class AICommand extends Command {
   }
   
   private processAllAI(): void {
-    // USE TYPED ARRAYS DIRECTLY FOR MASSIVE PERFORMANCE GAINS!
-    const arrays = this.sim.unitArrays;
-    if (!arrays) {
+    // Use ProxyManager's batch operations for vectorized performance
+    // This is the PROPER way to get performance without breaking encapsulation
+    const proxyManager = this.sim.getProxyManager();
+    if (proxyManager) {
+      this.processAIBatched();
+    } else {
       this.processAllAILegacy();
-      return;
+    }
+  }
+
+  private processAIBatched(): void {
+    // Collect postures for all units
+    const postures = new Map<string, string>();
+    for (const unit of this.sim.units) {
+      if (unit.state !== 'dead') {
+        // Determine posture from explicit posture, meta, or tags
+        let posture = unit.posture || unit.meta?.posture;
+        if (!posture && unit.tags) {
+          // Infer posture from tags - use same names as legacy
+          if (unit.tags.includes('hunt')) posture = 'hunt';
+          else if (unit.tags.includes('guard')) posture = 'guard';
+          else if (unit.tags.includes('swarm')) posture = 'swarm';
+          else if (unit.tags.includes('wander')) posture = 'wander';
+          else if (unit.tags.includes('aggressive')) posture = 'bully';
+        }
+        postures.set(unit.id, posture || 'wait');
+      }
     }
     
-    // Vectorized AI on typed arrays - this is the fast path!
-    this.processAIVectorized(arrays);
+    // Use ProxyManager's batch AI processing - properly encapsulated!
+    const proxyManager = this.sim.getProxyManager();
+    if (!proxyManager) {
+      return;
+    }
+    const moves = proxyManager.batchProcessAI(postures);
+    
+    // Queue move commands for all units
+    for (const [unitId, move] of moves) {
+      if (move.dx !== 0 || move.dy !== 0) {
+        this.sim.queuedCommands.push({
+          type: 'move',
+          params: { unitId, dx: move.dx, dy: move.dy }
+        });
+      }
+    }
   }
   
-  private processAIVectorized(arrays: any): void {
+  // REMOVED: processAIVectorized - replaced with processAIBatched that uses ProxyManager
+  
+  private processAIVectorizedOLD_REMOVED(arrays: any): void {
     const capacity = arrays.capacity;
     const searchRadius = this.sim.performanceMode ? 5 : 15;
     const MAX_SEARCH_RADIUS_SQ = searchRadius * searchRadius;
@@ -127,7 +165,7 @@ export class AICommand extends Command {
       
       // Get unit metadata for posture
       const unitId = arrays.unitIds[i];
-      const meta = this.sim.unitColdData.get(unitId);
+      const meta = this.sim.getUnitColdData().get(unitId);
       const tags = meta?.tags;
       const posture = meta?.posture || meta?.meta?.posture;
       
@@ -253,10 +291,12 @@ export class AICommand extends Command {
       const targetId = targetMap.get(unit.id);
       const allyId = allyMap.get(unit.id);
       
-      // Set target directly without command
+      // Queue target command if target changed
       if (targetId !== unit.meta.intendedTarget) {
-        if (!unit.meta) unit.meta = {};
-        unit.meta.intendedTarget = targetId;
+        this.sim.queuedCommands.push({
+          type: 'target',
+          params: { unitId: unit.id, targetId }
+        });
       }
       
       // Calculate movement based on posture
@@ -353,8 +393,14 @@ export class AICommand extends Command {
         }
       }
       
-      // Set movement directly without command
-      unit.intendedMove = intendedMove;
+      // Queue move command if there's intended movement
+      if (intendedMove.x !== 0 || intendedMove.y !== 0) {
+        this.sim.queuedCommands.push({
+          type: 'move',
+          unitId: unit.id, // Move command expects unitId at top level
+          params: { unitId: unit.id, dx: intendedMove.x, dy: intendedMove.y }
+        });
+      }
     }
   }
   

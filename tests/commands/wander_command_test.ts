@@ -7,11 +7,12 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 describe('Wander Command', () => {
   beforeEach(() => {
     Encyclopaedia.counts = {}; // Reset unit counters
+    Simulator.rng.reset(12345);
   });
 
   it('should parse wander command with team and chance parameters', () => {
     const sim = new Simulator();
-    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new EventHandler(), new CommandHandler(sim)];
     
     // Parse wander command string
     const parsed = sim.parseCommand('wander friendly 0.3');
@@ -34,7 +35,7 @@ describe('Wander Command', () => {
 
   it('should make units wander randomly', () => {
     const sim = new Simulator();
-    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new EventHandler(), new CommandHandler(sim)];
     
     // Add test units
     const soldier1 = { ...Encyclopaedia.unit('soldier'), pos: { x: 5, y: 5 } };
@@ -64,7 +65,7 @@ describe('Wander Command', () => {
 
   it('should only affect specified team', () => {
     const sim = new Simulator();
-    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new EventHandler(), new CommandHandler(sim)];
     
     // Add units from different teams
     const friendlySoldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 5, y: 5 } };
@@ -93,7 +94,7 @@ describe('Wander Command', () => {
 
   it('should not make dead units wander', () => {
     const sim = new Simulator();
-    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new EventHandler(), new CommandHandler(sim)];
     
     // Add a dead unit
     const deadSoldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 5, y: 5 }, state: 'dead' as const };
@@ -116,7 +117,7 @@ describe('Wander Command', () => {
 
   it('should not wander units engaged in combat', () => {
     const sim = new Simulator();
-    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new EventHandler(), new CommandHandler(sim)];
     
     // Add units close together (in combat range)
     const friendlySoldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 5, y: 5 } };
@@ -147,7 +148,7 @@ describe('Wander Command', () => {
 
   it('should respect field boundaries', () => {
     const sim = new Simulator();
-    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new EventHandler(), new CommandHandler(sim)];
     
     // Add unit at edge of field
     const edgeUnit = { ...Encyclopaedia.unit('soldier'), pos: { x: 0, y: 0 } };
@@ -174,7 +175,7 @@ describe('Wander Command', () => {
 
   it('should work with neutral team units', () => {
     const sim = new Simulator();
-    sim.rulebook = [new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new EventHandler(), new CommandHandler(sim)];
     
     // Add neutral forest creatures
     const bear = { ...Encyclopaedia.unit('bear'), pos: { x: 5, y: 5 } };

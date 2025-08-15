@@ -16,7 +16,7 @@ describe('Mechanist Showcase', () => {
     sim.rulebook = [
       new CommandHandler(sim), 
       new Abilities(sim), 
-      new EventHandler(sim),
+      new EventHandler(),
       new LightningStorm(sim)
     ];
 
@@ -149,7 +149,7 @@ describe('Mechanist Showcase', () => {
 
   it('should test Builder reinforcement abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create builder and a construct to reinforce
@@ -182,7 +182,7 @@ describe('Mechanist Showcase', () => {
 
   it('should test Fueler power surge ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create fueler and mechanical units to boost
@@ -201,8 +201,20 @@ describe('Mechanist Showcase', () => {
     
     // Set up some cooldowns to test the reset
     sim.ticks = 100;
-    simConstruct1.lastAbilityTick = { freezeAura: 99 }; // Recently used (1 tick ago, still on cooldown)
-    simConstruct2.lastAbilityTick = { whipChain: 98 }; // Recently used (2 ticks ago, still on cooldown)
+    sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: simConstruct1.id,
+        lastAbilityTick: { freezeAura: 99 } // Recently used (1 tick ago, still on cooldown)
+      }
+    });
+    sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: simConstruct2.id,
+        lastAbilityTick: { whipChain: 98 } // Recently used (2 ticks ago, still on cooldown)
+      }
+    });
     
     console.debug(`Before: freezebot cooldown = ${simConstruct1.lastAbilityTick.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick.whipChain}`);
     
@@ -228,7 +240,7 @@ describe('Mechanist Showcase', () => {
 
   it('should test Mechanic emergency repair ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create mechanic and damaged units
@@ -266,7 +278,7 @@ describe('Mechanist Showcase', () => {
 
   it('should test Engineer shield generator ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create engineer and nearby enemy to trigger shield
@@ -287,7 +299,7 @@ describe('Mechanist Showcase', () => {
 
   it('should test Engineer system hack ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create engineer and enemy to hack
@@ -312,7 +324,7 @@ describe('Mechanist Showcase', () => {
 
   it('should test Welder dual abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     const welder = { ...Encyclopaedia.unit('welder'), pos: { x: 5, y: 5 } };
@@ -342,7 +354,7 @@ describe('Mechanist Showcase', () => {
 
   it('should test Assembler advanced construction abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     const assembler = { ...Encyclopaedia.unit('assembler'), pos: { x: 5, y: 5 } };
@@ -384,7 +396,7 @@ describe('Mechanist Showcase', () => {
 
   it('should verify mechanist synergy with constructs', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     // Create a diverse mechanist support team

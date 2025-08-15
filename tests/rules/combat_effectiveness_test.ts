@@ -15,7 +15,7 @@ describe('Combat Effectiveness Integration', () => {
       new CommandHandler(sim), 
       new Abilities(sim), 
       new AirdropPhysics(sim),
-      new EventHandler(sim)
+      new EventHandler()
     ];
     
     // Create enemy formation
@@ -76,7 +76,7 @@ describe('Combat Effectiveness Integration', () => {
   it('should test construct immediate engagement upon spawn', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new EventHandler()];
     
     // Create nearby enemy
     const enemy = { ...Encyclopaedia.unit('worm'), pos: { x: 12, y: 10 }, team: 'hostile' as const };
@@ -109,7 +109,7 @@ describe('Combat Effectiveness Integration', () => {
     sim.rulebook = [
       new CommandHandler(sim),
       new AirdropPhysics(sim), 
-      new EventHandler(sim),
+      new EventHandler(),
       new Abilities(sim)
     ];
     
@@ -153,7 +153,7 @@ describe('Combat Effectiveness Integration', () => {
   
   it('should test construct abilities in extended combat', () => {
     const sim = new Simulator();
-    sim.rulebook = [new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new Abilities(sim), new EventHandler()];
     
     // Create Mechatron with all abilities
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 15, y: 15 } };

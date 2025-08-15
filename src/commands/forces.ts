@@ -18,8 +18,10 @@ export class ForcesCommand extends Command {
   }
   
   private applyAllForces(): void {
-    // USE TYPED ARRAYS DIRECTLY FOR REAL PERFORMANCE!
-    const arrays = this.sim.unitArrays;
+    // Projectiles are now handled by Physics rule, not here
+    
+    // Try vectorized path first for performance
+    const arrays = this.sim.getUnitArrays();
     if (!arrays) {
       this.applyAllForcesLegacy();
       return;
@@ -35,7 +37,7 @@ export class ForcesCommand extends Command {
       
       // Skip units with special states (stored in metadata)
       const unitId = arrays.unitIds[i];
-      const meta = this.sim.unitColdData.get(unitId);
+      const meta = this.sim.getUnitColdData().get(unitId);
       if (meta?.meta?.jumping || meta?.meta?.phantom) continue;
       
       // Apply intended movement directly to position arrays
@@ -55,6 +57,38 @@ export class ForcesCommand extends Command {
     
     // Resolve collisions using SoA collision detection
     this.resolveCollisionsSoA(arrays);
+  }
+  
+  private updateProjectiles(): void {
+    if (!this.sim.projectiles) return;
+    
+    const toRemove: number[] = [];
+    
+    // Update all projectile positions in a single pass
+    for (let i = 0; i < this.sim.projectiles.length; i++) {
+      const p = this.sim.projectiles[i];
+      
+      // Update position
+      p.pos.x += p.vel.x;
+      p.pos.y += p.vel.y;
+      
+      // Apply gravity for bombs
+      if (p.type === 'bomb') {
+        p.vel.y += 0.2;
+        p.lifetime = (p.lifetime || 0) + 1;
+      }
+      
+      // Mark for removal if out of bounds
+      if (p.pos.x < 0 || p.pos.x >= this.sim.fieldWidth ||
+          p.pos.y < 0 || p.pos.y >= this.sim.fieldHeight) {
+        toRemove.push(i);
+      }
+    }
+    
+    // Remove out-of-bounds projectiles
+    for (let i = toRemove.length - 1; i >= 0; i--) {
+      this.sim.projectiles.splice(toRemove[i], 1);
+    }
   }
   
   private applyAllForcesLegacy(): void {

@@ -1,6 +1,7 @@
 import { Rule } from './rule';
 import { Simulator } from '../core/simulator';
 import { Vec2 } from '../types/Vec2';
+import type { TickContext } from '../core/tick_context';
 // Position type removed - use Vec2 instead
 
 export class LightningStorm extends Rule {
@@ -8,93 +9,105 @@ export class LightningStorm extends Rule {
   private lastStrikeTime: number = 0;
   private strikeCooldown: number = 8; // ~1 second between strikes at 8fps (faster for testing)
 
-  constructor(simulator: Simulator) {
-    super(simulator);
+  constructor() {
+    super();
   }
 
-  apply(): void {
-    if (!this.simulator.lightningActive) return;
+  execute(context: TickContext): void {
+    // Note: TickContext doesn't expose lightningActive, so we'll check for lightning meta on field
+    // For now, assume lightning is active if any unit has lightning-related metadata
+    const hasLightningActivity = context.getAllUnits().some(u => u.meta?.lightningBoost || u.meta?.lightningStorm);
+    if (!hasLightningActivity && context.getCurrentTick() % 60 !== 0) return;
 
     // Generate lightning strikes periodically
-    if (this.simulator.ticks - this.lastStrikeTime >= this.strikeCooldown) {
-      this.generateLightningStrike();
-      this.lastStrikeTime = this.simulator.ticks;
+    if (context.getCurrentTick() - this.lastStrikeTime >= this.strikeCooldown) {
+      this.generateLightningStrike(context);
+      this.lastStrikeTime = context.getCurrentTick();
       
       // Vary the cooldown for dramatic effect (6-12 ticks)
-      this.strikeCooldown = 6 + this.rng.random() * 6;
+      this.strikeCooldown = 6 + context.getRandom() * 6;
     }
 
     // Update existing lightning particles
-    this.updateLightningEffects();
+    this.updateLightningEffects(context);
   }
 
-  public generateLightningStrike(targetPos?: Vec2): void {
+  public generateLightningStrike(context: TickContext, targetPos?: Vec2): void {
     // Use specified position or pick random strike location
     const strikePos = targetPos || {
-      x: Math.floor(this.rng.random() * this.simulator.fieldWidth),
-      y: Math.floor(this.rng.random() * this.simulator.fieldHeight)
+      x: Math.floor(context.getRandom() * context.getFieldWidth()),
+      y: Math.floor(context.getRandom() * context.getFieldHeight())
     };
 
-    this.createLightningVisuals(strikePos);
-    this.createEmpBurst(strikePos);
-    this.boostMechanicalUnits(strikePos);
-    this.createAtmosphericEffects(strikePos);
+    this.createLightningVisuals(context, strikePos);
+    this.createEmpBurst(context, strikePos);
+    this.boostMechanicalUnits(context, strikePos);
+    this.createAtmosphericEffects(context, strikePos);
   }
 
-  private createLightningVisuals(pos: Vec2): void {
+  private createLightningVisuals(context: TickContext, pos: Vec2): void {
     const pixelX = pos.x * 8 + 4;
     const pixelY = pos.y * 8 + 4;
 
     // Main lightning bolt - vertical streak
     for (let i = 0; i < 8; i++) {
-      this.simulator.particles.push({
-        pos: { x: pixelX + (this.rng.random() - 0.5) * 3, y: pixelY - i * 4 },
-        vel: { x: 0, y: 0 },
-        radius: 1 + this.rng.random() * 2,
-        color: i < 2 ? '#FFFFFF' : (i < 4 ? '#CCCCFF' : '#8888FF'),
-        lifetime: 8 + this.rng.random() * 4, // Brief but intense
-        type: 'lightning'
+      context.queueEvent({
+        kind: 'particle',
+        meta: {
+          pos: { x: pixelX + (context.getRandom() - 0.5) * 3, y: pixelY - i * 4 },
+          vel: { x: 0, y: 0 },
+          radius: 1 + context.getRandom() * 2,
+          color: i < 2 ? '#FFFFFF' : (i < 4 ? '#CCCCFF' : '#8888FF'),
+          lifetime: 8 + context.getRandom() * 4, // Brief but intense
+          type: 'lightning'
+        }
       });
     }
 
     // Lightning branches - jagged extensions
     for (let branch = 0; branch < 4; branch++) {
-      const branchAngle = this.rng.random() * Math.PI * 2;
-      const branchLength = 2 + this.rng.random() * 3;
+      const branchAngle = context.getRandom() * Math.PI * 2;
+      const branchLength = 2 + context.getRandom() * 3;
       
       for (let i = 0; i < branchLength; i++) {
-        this.simulator.particles.push({
-          pos: { 
-            x: pixelX + Math.cos(branchAngle) * i * 8,
-            y: pixelY + Math.sin(branchAngle) * i * 8
-          },
-          vel: { x: 0, y: 0 },
-          radius: 0.5 + this.rng.random(),
-          color: '#AAAAFF',
-          lifetime: 6 + this.rng.random() * 3,
-          type: 'lightning_branch'
+        context.queueEvent({
+          kind: 'particle',
+          meta: {
+            pos: { 
+              x: pixelX + Math.cos(branchAngle) * i * 8,
+              y: pixelY + Math.sin(branchAngle) * i * 8
+            },
+            vel: { x: 0, y: 0 },
+            radius: 0.5 + context.getRandom(),
+            color: '#AAAAFF',
+            lifetime: 6 + context.getRandom() * 3,
+            type: 'lightning_branch'
+          }
         });
       }
     }
 
     // Electric discharge particles
     for (let i = 0; i < 12; i++) {
-      this.simulator.particles.push({
-        pos: { x: pixelX, y: pixelY },
-        vel: { 
-          x: (this.rng.random() - 0.5) * 2,
-          y: (this.rng.random() - 0.5) * 2
-        },
-        radius: 0.5,
-        color: '#CCCCFF',
-        lifetime: 15 + this.rng.random() * 10,
-        type: 'electric_spark'
+      context.queueEvent({
+        kind: 'particle',
+        meta: {
+          pos: { x: pixelX, y: pixelY },
+          vel: { 
+            x: (context.getRandom() - 0.5) * 2,
+            y: (context.getRandom() - 0.5) * 2
+          },
+          radius: 0.5,
+          color: '#CCCCFF',
+          lifetime: 15 + context.getRandom() * 10,
+          type: 'electric_spark'
+        }
       });
     }
   }
 
-  private createEmpBurst(pos: Vec2): void {
-    this.simulator.queuedEvents.push({
+  private createEmpBurst(context: TickContext, pos: Vec2): void {
+    context.queueEvent({
       kind: 'aoe',
       source: 'lightning',
       target: pos,
@@ -108,11 +121,9 @@ export class LightningStorm extends Rule {
     });
   }
 
-  private boostMechanicalUnits(pos: Vec2): void {
+  private boostMechanicalUnits(context: TickContext, pos: Vec2): void {
     // Find all mechanical units within range for power boost
-    // Use pending units during frame to see updates
-    const units = (this.simulator as any).inFrame ? this.simulator.getPendingUnits() : this.simulator.units;
-    const mechanicalUnits = units.filter(unit =>
+    const mechanicalUnits = context.getAllUnits().filter(unit =>
       unit.tags?.includes('mechanical') &&
       Math.abs(unit.pos.x - pos.x) <= 4 &&
       Math.abs(unit.pos.y - pos.y) <= 4 &&
@@ -121,7 +132,7 @@ export class LightningStorm extends Rule {
 
     mechanicalUnits.forEach(unit => {
       // Queue lightning supercharge effect
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'meta',
         params: {
           unitId: unit.id,
@@ -135,7 +146,7 @@ export class LightningStorm extends Rule {
       // Reduce all ability cooldowns by 50%
       if (unit.lastAbilityTick) {
         Object.keys(unit.lastAbilityTick).forEach(abilityName => {
-          let t: number = (this.simulator.ticks || 0);
+          let t: number = context.getCurrentTick();
           const ticksSinceUse = t - (unit.lastAbilityTick![abilityName] || 0);
           const boostAmount = Math.floor(ticksSinceUse * 0.5);
           unit.lastAbilityTick![abilityName] = Math.max(0, 
@@ -146,7 +157,7 @@ export class LightningStorm extends Rule {
 
       // Extra boost for mechanist units
       if (unit.tags?.includes('leader') || unit.tags?.includes('engineer')) {
-        this.sim.queuedCommands.push({
+        context.queueCommand({
           type: 'meta',
           params: {
             unitId: unit.id,
@@ -155,64 +166,90 @@ export class LightningStorm extends Rule {
         });
         
         // Visual effect on boosted mechanists
-        this.simulator.particles.push({
-          pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
-          vel: { x: 0, y: -1 },
-          radius: 3,
-          color: '#FFFF00',
-          lifetime: 30,
-          type: 'power_surge'
+        context.queueEvent({
+          kind: 'particle',
+          meta: {
+            pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+            vel: { x: 0, y: -1 },
+            radius: 3,
+            color: '#FFFF00',
+            lifetime: 30,
+            type: 'power_surge'
+          }
         });
       }
     });
   }
 
-  private createAtmosphericEffects(pos: Vec2): void {
+  private createAtmosphericEffects(context: TickContext, pos: Vec2): void {
     const pixelX = pos.x * 8 + 4;
     const pixelY = pos.y * 8 + 4;
 
     // Thunder rumble - expanding energy ring
     for (let i = 0; i < 16; i++) {
       const angle = (i / 16) * Math.PI * 2;
-      const radius = 2 + this.rng.random();
+      const radius = 2 + context.getRandom();
       
-      this.simulator.particles.push({
-        pos: { x: pixelX, y: pixelY },
-        vel: { 
-          x: Math.cos(angle) * 0.5,
-          y: Math.sin(angle) * 0.5
-        },
-        radius: radius,
-        color: '#444488',
-        lifetime: 20 + this.rng.random() * 15,
-        type: 'thunder_ring'
+      context.queueEvent({
+        kind: 'particle',
+        meta: {
+          pos: { x: pixelX, y: pixelY },
+          vel: { 
+            x: Math.cos(angle) * 0.5,
+            y: Math.sin(angle) * 0.5
+          },
+          radius: radius,
+          color: '#444488',
+          lifetime: 20 + context.getRandom() * 15,
+          type: 'thunder_ring'
+        }
       });
     }
 
     // Ozone particles - lingering static effect
     for (let i = 0; i < 6; i++) {
-      this.simulator.particles.push({
-        pos: { 
-          x: pixelX + (this.rng.random() - 0.5) * 16,
-          y: pixelY + (this.rng.random() - 0.5) * 16
-        },
-        vel: { x: 0, y: -0.1 },
-        radius: 1,
-        color: '#6666AA',
-        lifetime: 40 + this.rng.random() * 20,
-        type: 'ozone'
+      context.queueEvent({
+        kind: 'particle',
+        meta: {
+          pos: { 
+            x: pixelX + (context.getRandom() - 0.5) * 16,
+            y: pixelY + (context.getRandom() - 0.5) * 16
+          },
+          vel: { x: 0, y: -0.1 },
+          radius: 1,
+          color: '#6666AA',
+          lifetime: 40 + context.getRandom() * 20,
+          type: 'ozone'
+        }
       });
     }
   }
 
-  private updateLightningEffects(): void {
+  private updateLightningEffects(context: TickContext): void {
     // Decay lightning boost effects over time
-    this.simulator.units.forEach(unit => {
+    context.getAllUnits().forEach(unit => {
       if (unit.meta.lightningBoostDuration) {
-        unit.meta.lightningBoostDuration--;
-        if (unit.meta.lightningBoostDuration <= 0) {
-          delete unit.meta.lightningBoost;
-          delete unit.meta.lightningBoostDuration;
+        context.queueCommand({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              lightningBoostDuration: unit.meta.lightningBoostDuration - 1
+            }
+          }
+        });
+        
+        if (unit.meta.lightningBoostDuration <= 1) {
+          context.queueCommand({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: {
+                lightningBoost: undefined,
+                lightningBoostDuration: undefined
+              }
+            }
+          });
         }
       }
     });

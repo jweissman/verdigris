@@ -1,25 +1,26 @@
 import { Rule } from './rule';
 import { Unit } from '../types/Unit';
+import type { TickContext } from '../core/tick_context';
 
 export class Tossing extends Rule {
-  apply(): void {
+  execute(context: TickContext): void {
     // Process tossing for each unit
-    const units = this.sim.units;
+    const units = context.getAllUnits();
     for (const unit of units) {
-      if (unit.meta.tossing) {
-        this.processToss(unit as Unit);
+      if (unit.meta?.tossing) {
+        this.processToss(context, unit as Unit);
       }
     }
   }
 
-  private processToss(unit: Unit): void {
+  private processToss(context: TickContext, unit: Unit): void {
     const tossDuration = 8; // Fixed duration for toss (faster than jump)
     const tossProgress = (unit.meta.tossProgress || 0) + 1;
 
     if (tossProgress >= tossDuration) {
       // Toss completed - queue command to land at target
       // Complete toss: move to target and clear toss state
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'move',
         params: {
           unitId: unit.id,
@@ -29,7 +30,7 @@ export class Tossing extends Rule {
         }
       });
       
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'meta',
         params: {
           unitId: unit.id,
@@ -45,7 +46,7 @@ export class Tossing extends Rule {
 
       // Optional: Apply small AoE damage on landing (like jump)
       if (unit.meta.tossForce && unit.meta.tossForce > 3) {
-        this.sim.queuedEvents.push({
+        context.queueEvent({
           kind: 'aoe',
           source: unit.id,
           target: unit.pos,
@@ -70,7 +71,7 @@ export class Tossing extends Rule {
       const newZ = (maxHeight * Math.sin(progress * Math.PI)) * 2;
       
       // Update toss position and progress
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'move',
         params: {
           unitId: unit.id,
@@ -80,7 +81,7 @@ export class Tossing extends Rule {
         }
       });
       
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'meta',
         params: {
           unitId: unit.id,

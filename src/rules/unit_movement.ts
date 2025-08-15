@@ -1,13 +1,13 @@
 import { Rule } from "./rule";
 import { UnitOperations } from "../UnitOperations";
 import { Unit } from "../types/Unit";
-import { Simulator } from "../core/simulator";
+import type { TickContext } from "../core/tick_context";
 
 export class UnitMovement extends Rule {
   static wanderRate: number = 0.15; // Slower, more deliberate movement
-  apply = () => {
+  execute(context: TickContext): void {
     // Always use bulk forces command for consistent behavior
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'forces',
       params: {}
     });
@@ -259,7 +259,7 @@ export class UnitMovement extends Rule {
   }
   static resolveCollisions(sim: Simulator) {
     // Use SoA acceleration for any significant unit count
-    if (sim.unitArrays && sim.units.length > 20) {
+    if (sim.arrays && sim.units.length > 20) {
       return UnitMovement.resolveCollisionsSoA(sim);
     }
     
@@ -270,7 +270,7 @@ export class UnitMovement extends Rule {
   // Vectorized collision resolution using SoA - OPTIMIZED with spatial grid
   private static resolveCollisionsSoA(sim: Simulator) {
     // Sync to SoA for vectorized processing
-    const arrays = sim.unitArrays;
+    const arrays = sim.arrays;
     
     // Build spatial grid for O(1) collision checks
     const spatialGrid = new Map<string, number>();

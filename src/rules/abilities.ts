@@ -4,26 +4,27 @@ import { AbilityEffect } from "../types/AbilityEffect";
 import { Ability } from "../types/Ability";
 import { Unit } from "../types/Unit";
 import * as abilitiesJson from '../../data/abilities.json';
-import { Simulator } from '../core/simulator';
+import type { TickContext } from '../core/tick_context';
 
 export class Abilities extends Rule {
   // @ts-ignore
   static all: { [key: string]: Ability } = abilitiesJson as any;
 
-  constructor(sim: any) {
-    super(sim);
+  constructor() {
+    super();
   }
 
   ability = (name: string): Ability | undefined => Abilities.all[name];
 
-  apply = (): void => {
+  execute(context: TickContext): void {
     // Check for units that need to unburrow
-    this.sim.units.forEach(unit => {
-      if (unit.meta.burrowed && unit.meta.burrowStartTick !== undefined && unit.meta.burrowDuration !== undefined) {
-        const ticksBurrowed = this.sim.ticks - unit.meta.burrowStartTick;
+    const currentTick = context.getCurrentTick();
+    context.getAllUnits().forEach(unit => {
+      if (unit.meta?.burrowed && unit.meta.burrowStartTick !== undefined && unit.meta.burrowDuration !== undefined) {
+        const ticksBurrowed = currentTick - unit.meta.burrowStartTick;
         if (ticksBurrowed >= unit.meta.burrowDuration) {
           // Queue command to unburrow
-          this.sim.queuedCommands.push({
+          context.queueCommand({
             type: 'meta',
             params: {
               unitId: unit.id,
@@ -40,7 +41,7 @@ export class Abilities extends Rule {
     });
 
     // Process abilities for each unit
-    (this.sim.units as Unit[]).forEach(unit => {
+    context.getAllUnits().forEach(unit => {
       if (!unit.abilities || !Array.isArray(unit.abilities)) {
         return;
       }
@@ -52,7 +53,6 @@ export class Abilities extends Rule {
         }
 
         let lastTick = unit.lastAbilityTick ? unit.lastAbilityTick[abilityName] : undefined;
-        let currentTick = this.sim.ticks;
         let ready = lastTick === undefined || (currentTick - lastTick >= ability.cooldown);
 
         if (!ready) {
@@ -71,7 +71,7 @@ export class Abilities extends Rule {
         let shouldTrigger = true;
         if (ability.trigger) {
           try {
-            shouldTrigger = DSL.evaluate(ability.trigger, unit, this.sim);
+            shouldTrigger = DSL.evaluate(ability.trigger, unit, context);
           } catch (error) {
             console.error(`Error evaluating JSON ability trigger for ${abilityName}:`, error);
             shouldTrigger = false;
@@ -86,7 +86,7 @@ export class Abilities extends Rule {
         let target = unit; // Default to self
         if (ability.target && ability.target !== 'self') {
           try {
-            target = DSL.evaluate(ability.target, unit, this.sim);
+            target = DSL.evaluate(ability.target, unit, context);
           } catch (error) {
             console.error(`Error evaluating JSON ability target for ${abilityName}:`, error);
             continue;
@@ -99,18 +99,18 @@ export class Abilities extends Rule {
 
         // Process each effect by converting to commands
         for (const effect of ability.effects) {
-          this.processEffectAsCommand(effect, unit, target);
+          this.processEffectAsCommand(context, effect, unit, target);
         }
 
         // Update cooldown via command
-        this.sim.queuedCommands.push({
+        context.queueCommand({
           type: 'meta',
           params: {
             unitId: unit.id,
             meta: {
               lastAbilityTick: {
                 ...unit.lastAbilityTick,
-                [abilityName]: this.sim.ticks
+                [abilityName]: currentTick
               }
             }
           }
@@ -120,105 +120,101 @@ export class Abilities extends Rule {
     });
   }
 
-  processEffectAsCommand(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    if (!this.sim.queuedCommands) {
-      this.sim.queuedCommands = [];
-    }
-
+  processEffectAsCommand(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
     switch (effect.type) {
       case 'damage':
-        this.hurt(effect, caster, primaryTarget);
+        this.hurt(context, effect, caster, primaryTarget);
         break;
       case 'heal':
-        this.heal(effect, caster, primaryTarget);
+        this.heal(context, effect, caster, primaryTarget);
         break;
       case 'aoe':
-        this.areaOfEffect(effect, caster, primaryTarget);
+        this.areaOfEffect(context, effect, caster, primaryTarget);
         break;
       case 'projectile':
-        this.project(effect, caster, primaryTarget);
+        this.project(context, effect, caster, primaryTarget);
         break;
       case 'weather':
-        this.changeWeather(effect, caster, primaryTarget);
+        this.changeWeather(context, effect, caster, primaryTarget);
         break;
       case 'lightning':
-        this.bolt(effect, caster, primaryTarget);
+        this.bolt(context, effect, caster, primaryTarget);
         break;
       case 'jump':
-        this.leap(effect, caster, primaryTarget);
+        this.leap(context, effect, caster, primaryTarget);
         break;
       case 'heat':
-        this.adjustTemperature(effect, caster, primaryTarget);
+        this.adjustTemperature(context, effect, caster, primaryTarget);
         break;
       case 'deploy':
-        this.deploy(effect, caster, primaryTarget);
+        this.deploy(context, effect, caster, primaryTarget);
         break;
       case 'grapple':
-        this.grapply(effect, caster, primaryTarget);
+        this.grapply(context, effect, caster, primaryTarget);
         break;
       case 'pin':
-        this.pin(effect, caster, primaryTarget);
+        this.pin(context, effect, caster, primaryTarget);
         break;
       case 'airdrop':
-        this.airdrop(effect, caster, primaryTarget);
+        this.airdrop(context, effect, caster, primaryTarget);
         break;
       case 'buff':
         // Process buffs immediately so they affect subsequent heals
-        this.buff(effect, caster, primaryTarget);
+        this.buff(context, effect, caster, primaryTarget);
         break;
       case 'summon':
-        this.summon(effect, caster, primaryTarget);
+        this.summon(context, effect, caster, primaryTarget);
         break;
       case 'moisture':
-        this.adjustHumidity(effect, caster, primaryTarget);
+        this.adjustHumidity(context, effect, caster, primaryTarget);
         break;
       case 'toss':
-        this.toss(effect, caster, primaryTarget);
+        this.toss(context, effect, caster, primaryTarget);
         break;
       case 'setOnFire':
-        this.ignite(effect, caster, primaryTarget);
+        this.ignite(context, effect, caster, primaryTarget);
         break;
       case 'particles':
-        this.createParticles(effect, caster, primaryTarget);
+        this.createParticles(context, effect, caster, primaryTarget);
         break;
       case 'cone':
-        this.coneOfEffect(effect, caster, primaryTarget);
+        this.coneOfEffect(context, effect, caster, primaryTarget);
         break;
       case 'multiple_projectiles':
-        this.multiproject(effect, caster, primaryTarget);
+        this.multiproject(context, effect, caster, primaryTarget);
         break;
       case 'line_aoe':
-        this.lineOfEffect(effect, caster, primaryTarget);
+        this.lineOfEffect(context, effect, caster, primaryTarget);
         break;
       case 'area_buff':
-        this.domainBuff(effect, caster, primaryTarget);
+        this.domainBuff(context, effect, caster, primaryTarget);
         break;
       case 'debuff':
-        this.debuff(effect, caster, primaryTarget);
+        this.debuff(context, effect, caster, primaryTarget);
         break;
       case 'cleanse':
-        this.cleanse(effect, caster, primaryTarget);
+        this.cleanse(context, effect, caster, primaryTarget);
         break;
       case 'area_particles':
         // NOTE: should be a real command???
         break;
       case 'reveal':
-        this.reveal(effect, caster, primaryTarget);
+        this.reveal(context, effect, caster, primaryTarget);
         break;
       case 'burrow':
-        this.burrow(effect, caster, primaryTarget);
+        this.burrow(context, effect, caster, primaryTarget);
         break;
       case 'tame':
-        this.tame(effect, caster, primaryTarget);
+        this.tame(context, effect, caster, primaryTarget);
         break;
       case 'calm':
-        this.calm(effect, caster, primaryTarget);
+        this.calm(context, effect, caster, primaryTarget);
         break;
       case 'entangle':
-        this.tangle(effect, caster, primaryTarget);
+        this.tangle(context, effect, caster, primaryTarget);
         break;
       case 'terrain':
-        this.modifyTerrain(effect, caster, primaryTarget);
+        this.modifyTerrain(context, effect, caster, primaryTarget);
         break;
       default:
         console.warn(`Abilities: Unknown effect type ${effect.type}`);
@@ -226,26 +222,36 @@ export class Abilities extends Rule {
     }
   }
 
-  private resolveTarget(targetExpression: string | number | boolean | undefined, caster: any, primaryTarget: any): any {
+  private resolveTarget(context: TickContext, targetExpression: any, caster: any, primaryTarget: any): any {
     if (!targetExpression) return primaryTarget;
     if (targetExpression === 'self') return caster;
     if (targetExpression === 'target') return primaryTarget;
     if (targetExpression === 'self.pos') return caster.pos;
     if (targetExpression === 'target.pos') return primaryTarget.pos || primaryTarget;
     
-    try {
-      return DSL.evaluate(targetExpression.toString(), caster, this.sim);
-    } catch (error) {
-      console.warn(`Failed to resolve target '${targetExpression}':`, error);
-      return null;
+    // If it's already an object (like a position), return it directly
+    if (typeof targetExpression === 'object' && targetExpression !== null) {
+      return targetExpression;
     }
+    
+    // Only try DSL evaluation for strings
+    if (typeof targetExpression === 'string') {
+      try {
+        return DSL.evaluate(targetExpression, caster, context);
+      } catch (error) {
+        console.warn(`Failed to resolve target '${targetExpression}':`, error);
+        return null;
+      }
+    }
+    
+    return targetExpression;
   }
 
-  private resolveValue(value: any, caster: any, target: any): any {
+  private resolveValue(context: TickContext, value: any, caster: any, target: any): any {
     // Handle string DSL expressions
     if (typeof value === 'string') {
       try {
-        return DSL.evaluate(value, caster, this.sim, target);
+        return DSL.evaluate(value, caster, context, target);
       } catch (error) {
         console.warn(`Failed to resolve DSL value '${value}':`, error);
         return value; // fallback to literal
@@ -259,11 +265,11 @@ export class Abilities extends Rule {
       // Check if it's an array (random selection) or number range
       if (Array.isArray(value.$random)) {
         // Random selection from array
-        return value.$random[Math.floor(this.rng.random() * value.$random.length)];
+        return value.$random[Math.floor(context.getRandom() * value.$random.length)];
       } else if (value.$random.length === 2 && typeof value.$random[0] === 'number') {
         // Random number range
         const [min, max] = value.$random;
-        return Math.floor(min + this.rng.random() * (max - min + 1));
+        return Math.floor(min + context.getRandom() * (max - min + 1));
       }
     }
     
@@ -284,7 +290,7 @@ export class Abilities extends Rule {
         }
         
         // Fallback to DSL evaluation
-        const conditionResult = DSL.evaluate(condition, caster, this.sim);
+        const conditionResult = DSL.evaluate(condition, caster, context);
         return conditionResult ? value.$conditional.then : value.$conditional.else;
       } catch (error) {
         console.warn(`Failed to evaluate conditional: ${condition}`, error);
@@ -295,14 +301,14 @@ export class Abilities extends Rule {
     return value;
   }
 
-  private hurt(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target, caster, primaryTarget);
+  private hurt(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target, caster, primaryTarget);
     if (!target || !target.id) return;
 
-    const amount = this.resolveValue(effect.amount, caster, target);
+    const amount = this.resolveValue(context, effect.amount, caster, target);
     const aspect = effect.aspect || 'physical';
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'damage',
       params: {
         targetId: target.id,
@@ -313,14 +319,14 @@ export class Abilities extends Rule {
     });
   }
 
-  private heal(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target, caster, primaryTarget);
+  private heal(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target, caster, primaryTarget);
     if (!target || !target.id) return;
 
-    const amount = this.resolveValue(effect.amount, caster, target);
+    const amount = this.resolveValue(context, effect.amount, caster, target);
     const aspect = effect.aspect || 'healing';
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'heal',
       params: {
         targetId: target.id,
@@ -331,16 +337,16 @@ export class Abilities extends Rule {
     });
   }
 
-  private areaOfEffect(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target, caster, primaryTarget);
+  private areaOfEffect(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target, caster, primaryTarget);
     if (!target) return;
 
     const pos = target.pos || target;
-    const amount = this.resolveValue(effect.amount, caster, target);
-    const radius = this.resolveValue(effect.radius, caster, target);
+    const amount = this.resolveValue(context, effect.amount, caster, target);
+    const radius = this.resolveValue(context, effect.radius, caster, target);
     const aspect = effect.aspect || 'physical';
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'aoe',
       params: {
         x: pos.x,
@@ -348,20 +354,20 @@ export class Abilities extends Rule {
         radius: radius,
         damage: amount,
         type: aspect,
-        stunDuration: this.resolveValue((effect as any).stunDuration, caster, target)
+        stunDuration: this.resolveValue(context, (effect as any).stunDuration, caster, target)
       },
       unitId: caster.id
     });
   }
 
-  private project(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const startPos = this.resolveTarget(effect.pos || 'self.pos', caster, primaryTarget);
+  private project(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const startPos = this.resolveTarget(context, effect.pos || 'self.pos', caster, primaryTarget);
     if (!startPos) return;
 
     // Use 'id' field for projectileType if present, otherwise default to 'bullet'
     const projectileType = effect.projectileType || effect.id || 'bullet';
-    const damage = this.resolveValue(effect.damage, caster, primaryTarget) || 0;
-    const radius = this.resolveValue(effect.radius, caster, primaryTarget) || 1;
+    const damage = this.resolveValue(context, effect.damage, caster, primaryTarget) || 0;
+    const radius = this.resolveValue(context, effect.radius, caster, primaryTarget) || 1;
 
     const params: any = {
       x: startPos.x,
@@ -370,12 +376,12 @@ export class Abilities extends Rule {
       damage: damage,
       radius: radius,
       team: caster.team,
-      z: this.resolveValue((effect as any).z, caster, primaryTarget)
+      z: this.resolveValue(context, (effect as any).z, caster, primaryTarget)
     };
 
     // Add target position if specified
     if (effect.target) {
-      const target = this.resolveTarget(effect.target, caster, primaryTarget);
+      const target = this.resolveTarget(context, effect.target, caster, primaryTarget);
       if (target) {
         const targetPos = target.pos || target;
         if (targetPos && typeof targetPos.x === 'number' && typeof targetPos.y === 'number') {
@@ -389,19 +395,19 @@ export class Abilities extends Rule {
       params.targetY = primaryTarget.pos.y;
     }
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'projectile',
       params: params,
       unitId: caster.id
     });
   }
 
-  private changeWeather(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private changeWeather(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const weatherType = effect.weatherType || 'rain';
     const duration = effect.duration || 60;
     const intensity = effect.intensity || 0.5;
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'weather',
       params: {
         weatherType: weatherType,
@@ -412,8 +418,8 @@ export class Abilities extends Rule {
     });
   }
 
-  private bolt(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private bolt(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     
     const params: any = {};
     if (target) {
@@ -422,23 +428,23 @@ export class Abilities extends Rule {
       params.y = pos.y;
     }
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'lightning',
       params: params,
       unitId: caster.id
     });
   }
 
-  private leap(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private leap(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
     const pos = target.pos || target;
-    const height = this.resolveValue(effect.height, caster, target) || 5;
-    const damage = this.resolveValue(effect.damage, caster, target) || 5;
-    const radius = this.resolveValue(effect.radius, caster, target) || 3;
+    const height = this.resolveValue(context, effect.height, caster, target) || 5;
+    const damage = this.resolveValue(context, effect.damage, caster, target) || 5;
+    const radius = this.resolveValue(context, effect.radius, caster, target) || 3;
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'jump',
       params: {
         targetX: pos.x,
@@ -451,16 +457,16 @@ export class Abilities extends Rule {
     });
   }
 
-  private adjustTemperature(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private adjustTemperature(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
     const pos = target.pos || target;
-    const amount = this.resolveValue(effect.amount, caster, target) || 5;
-    const radius = this.resolveValue(effect.radius, caster, target) || 1;
+    const amount = this.resolveValue(context, effect.amount, caster, target) || 5;
+    const radius = this.resolveValue(context, effect.radius, caster, target) || 1;
 
     // Use temperature command if available
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'temperature',
       params: {
         x: pos.x,
@@ -472,12 +478,12 @@ export class Abilities extends Rule {
     });
   }
 
-  private deploy(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const constructType = this.resolveValue((effect as any).constructType, caster, primaryTarget) || 'clanker';
+  private deploy(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const constructType = this.resolveValue(context, (effect as any).constructType, caster, primaryTarget) || 'clanker';
 
     // Queue deploy command without position to let it calculate tactical placement
     // The deploy command will find the midpoint between deployer and nearest enemy
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'deploy',
       params: {
         unitType: constructType
@@ -491,13 +497,13 @@ export class Abilities extends Rule {
     caster.meta.deployBotUses++;
   }
 
-  private grapply(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private grapply(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
     // Grapple command expects x and y as separate arguments
     const pos = target.pos || target;
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'grapple',
       params: {
         x: pos.x,
@@ -507,15 +513,15 @@ export class Abilities extends Rule {
     });
   }
 
-  private pin(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private pin(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
     // Pin command expects x,y coordinates, not target ID
     const pos = target.pos || target;
     if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number') return;
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'pin',
       params: {
         x: pos.x,
@@ -525,8 +531,8 @@ export class Abilities extends Rule {
     });
   }
 
-  private airdrop(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
+  private airdrop(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
     // For mechatronist, calculate tactical midpoint between caster and target
@@ -552,7 +558,7 @@ export class Abilities extends Rule {
     
     const unitType = (effect as any).unit || 'mechatron';
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'airdrop',
       params: {
         unitType: unitType,
@@ -563,8 +569,8 @@ export class Abilities extends Rule {
     });
   }
 
-  private buff(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private buff(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
     
     // Apply buff directly to target
@@ -578,84 +584,120 @@ export class Abilities extends Rule {
           if (stat === 'maxHp') {
             const oldMaxHp = target.maxHp || 0;
             const oldHp = target.hp || 0;
-            target.maxHp = oldMaxHp + increase;
-            target.hp = oldHp + increase; // Also increase current HP
+            // Queue command to update stats
+            context.queueCommand({
+              type: 'meta',
+              params: {
+                unitId: target.id,
+                maxHp: oldMaxHp + increase,
+                hp: oldHp + increase
+              }
+            });
           } else if (stat === 'armor') {
-            target.meta.armor = (target.meta.armor || 0) + increase;
+            // Queue command to update armor
+            context.queueCommand({
+              type: 'meta',
+              params: {
+                unitId: target.id,
+                meta: {
+                  ...target.meta,
+                  armor: (target.meta.armor || 0) + increase
+                }
+              }
+            });
           } else if (stat === 'dmg') {
-            target.dmg = (target.dmg || 0) + increase;
+            // Queue command to update damage
+            context.queueCommand({
+              type: 'meta',
+              params: {
+                unitId: target.id,
+                dmg: (target.dmg || 0) + increase
+              }
+            });
           }
         } else {
-          // Direct assignment for non-numeric buffs
-          target.meta[stat] = value;
+          // Non-numeric buffs through command system
+          context.queueCommand({
+            type: 'meta',
+            params: {
+              unitId: target.id,
+              meta: {
+                ...target.meta,
+                [stat]: value
+              }
+            }
+          });
         }
       }
     }
     
     // Handle stat increases (reinforcement gives HP increase)
     if ((effect as any).hpIncrease) {
-      const increase = this.resolveValue((effect as any).hpIncrease, caster, target);
+      const increase = this.resolveValue(context, (effect as any).hpIncrease, caster, target);
       target.hp = Math.min(target.maxHp, target.hp + increase);
     }
     
     // Handle other buff effects
     if (effect.amount) {
-      const amount = this.resolveValue(effect.amount, caster, target);
+      const amount = this.resolveValue(context, effect.amount, caster, target);
       // For reinforcement/buff, amount could be HP increase
       target.hp = Math.min(target.maxHp, target.hp + amount);
     }
   }
 
-  private summon(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const unitType = this.resolveValue(effect.unit, caster, primaryTarget) || 'squirrel';
+  private summon(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const unitType = this.resolveValue(context, effect.unit, caster, primaryTarget) || 'squirrel';
     const pos = caster.pos;
 
     // Spawn the unit directly with metadata
     const Encyclopaedia = require('../dmg/encyclopaedia').default;
     const summonedUnit = {
       ...Encyclopaedia.unit(unitType),
-      id: `${unitType}_${caster.id}_${this.sim.ticks}`,
+      id: `${unitType}_${caster.id}_${context.getCurrentTick()}`,
       pos: { 
-        x: pos.x + (this.rng.random() - 0.5) * 2, 
-        y: pos.y + (this.rng.random() - 0.5) * 2 
+        x: pos.x + (context.getRandom() - 0.5) * 2, 
+        y: pos.y + (context.getRandom() - 0.5) * 2 
       },
       team: caster.team,
       meta: {
         summoned: true,
         summonedBy: caster.id,
-        summonTick: this.sim.ticks
+        summonTick: context.getCurrentTick()
       }
     };
     
     // Queue add command to create the summoned unit
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'spawn',
       params: { unit: summonedUnit }
     });
   }
 
-  private adjustHumidity(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private adjustHumidity(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Similar to heat but for moisture
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target) return;
 
     const pos = target.pos || target;
-    const amount = this.resolveValue(effect.amount, caster, target) || 1.0;
-    const radius = this.resolveValue(effect.radius, caster, target) || 5;
+    const amount = this.resolveValue(context, effect.amount, caster, target) || 1.0;
+    const radius = this.resolveValue(context, effect.radius, caster, target) || 5;
 
-    // Use temperature command with negative value for cooling
-    if (this.sim.addMoisture) {
-      this.sim.addMoisture(pos.x, pos.y, amount, radius);
-    }
+    // Queue moisture event - context should handle this
+    context.queueEvent({
+      kind: 'moisture',
+      source: caster.id,
+      target: pos,
+      meta: { amount, radius }
+    });
   }
 
-  private toss(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private toss(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
-    const distance = this.resolveValue((effect as any).distance, caster, target) || 5;
+    const distance = this.resolveValue(context, (effect as any).distance, caster, target) || 5;
 
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'toss',
       params: {
         targetId: target.id,
@@ -665,18 +707,25 @@ export class Abilities extends Rule {
     });
   }
 
-  private ignite(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private ignite(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
-    // Set the unit on fire
-    if (!target.meta) target.meta = {};
-    target.meta.onFire = true;
-    target.meta.onFireDuration = 30;
+    // Queue command to set unit on fire
+    context.queueCommand({
+      type: 'meta',
+      params: {
+        unitId: target.id,
+        meta: {
+          onFire: true,
+          onFireDuration: 30
+        }
+      }
+    });
   }
   
-  private modifyTerrain(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const pos = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
+  private modifyTerrain(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const pos = this.resolveTarget(context, effect.target || 'self.pos', caster, primaryTarget);
     if (!pos) return;
     
     const terrainType = (effect as any).terrainType;
@@ -691,10 +740,9 @@ export class Abilities extends Rule {
           const x = Math.floor(pos.x + dx);
           const y = Math.floor(pos.y + dy);
           
-          // Check if position is valid
-          if (x >= 0 && x < this.sim.fieldWidth && y >= 0 && y < this.sim.fieldHeight) {
-            // Queue a terrain modification event
-            this.sim.queuedEvents.push({
+          // Check if position is valid - don't check bounds, let context handle it
+          // Queue a terrain modification event
+          context.queueEvent({
               kind: 'terrain',
               source: caster.id,
               target: { x, y }, // Position goes in target, not meta
@@ -705,34 +753,37 @@ export class Abilities extends Rule {
                 movementPenalty: 0.3 // 30% slower movement
               }
             });
-            
-            // Visual feedback - dust particles
-            for (let i = 0; i < 3; i++) {
-              this.sim.particles.push({
-                pos: { x: x + this.rng.random(), y: y + this.rng.random() },
-                vel: { x: (this.rng.random() - 0.5) * 0.2, y: -this.rng.random() * 0.3 },
-                radius: 0.5 + this.rng.random() * 0.5,
-                lifetime: 20 + this.rng.random() * 20,
+          
+          // Visual feedback - dust particles via event
+          for (let i = 0; i < 3; i++) {
+            context.queueEvent({
+              kind: 'particle',
+              source: caster.id,
+              target: { x: x + context.getRandom(), y: y + context.getRandom() },
+              meta: {
+                vel: { x: (context.getRandom() - 0.5) * 0.2, y: -context.getRandom() * 0.3 },
+                radius: 0.5 + context.getRandom() * 0.5,
+                lifetime: 20 + context.getRandom() * 20,
                 color: '#8B4513', // Brown dust
                 type: 'debris' // Use debris for dust/dirt particles
-              });
-            }
+              }
+            });
           }
         }
       }
     }
   }
 
-  private tangle(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private tangle(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target) return;
     
-    const duration = this.resolveValue(effect.duration, caster, target) || 30;
-    const radius = this.resolveValue(effect.radius, caster, target) || 3;
+    const duration = this.resolveValue(context, effect.duration, caster, target) || 30;
+    const radius = this.resolveValue(context, effect.radius, caster, target) || 3;
     
     // Apply entangle/pin effect to target using meta command
     if (target.id) {
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'meta',
         params: {
           unitId: target.id,
@@ -748,10 +799,10 @@ export class Abilities extends Rule {
       const particles = [];
       for (let i = 0; i < 8; i++) {
         particles.push({
-          id: `entangle_${caster.id}_${this.sim.ticks}_${i}`,
+          id: `entangle_${caster.id}_${context.getCurrentTick()}_${i}`,
           pos: { 
-            x: target.pos.x + (this.rng.random() - 0.5) * radius, 
-            y: target.pos.y + (this.rng.random() - 0.5) * radius 
+            x: target.pos.x + (context.getRandom() - 0.5) * radius, 
+            y: target.pos.y + (context.getRandom() - 0.5) * radius 
           },
           vel: { x: 0, y: 0 },
           ttl: duration,
@@ -760,11 +811,19 @@ export class Abilities extends Rule {
           size: 0.5
         });
       }
-      this.sim.particles.push(...particles);
+      // Queue particle events instead of direct push
+      for (const particle of particles) {
+        context.queueEvent({
+          kind: 'particle',
+          source: caster.id,
+          target: particle.pos,
+          meta: particle
+        });
+      }
     }
   }
 
-  private coneOfEffect(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private coneOfEffect(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Cone attacks affect multiple targets in a cone shape
     const direction = caster.facing || { x: 1, y: 0 };
     const range = effect.range || 4;
@@ -774,7 +833,7 @@ export class Abilities extends Rule {
     if (effect.effects) {
       for (const nestedEffect of effect.effects) {
         // Apply to all units in cone area
-        const unitsInCone = this.sim.getRealUnits().filter(u => {
+        const unitsInCone = context.getAllUnits().filter(u => {
           if (u.id === caster.id || u.team === caster.team) return false;
           // Simple cone check - could be more sophisticated
           const dist = Math.sqrt(Math.pow(u.pos.x - caster.pos.x, 2) + Math.pow(u.pos.y - caster.pos.y, 2));
@@ -782,7 +841,7 @@ export class Abilities extends Rule {
         });
 
         for (const unit of unitsInCone) {
-          this.processEffectAsCommand(nestedEffect, caster, unit);
+          this.processEffectAsCommand(context, nestedEffect, caster, unit);
         }
       }
     }
@@ -817,13 +876,13 @@ export class Abilities extends Rule {
     }
   }
 
-  private lineOfEffect(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private lineOfEffect(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
     // Line AoE from start to end
-    const start = this.resolveTarget((effect as any).start || 'self.pos', caster, primaryTarget);
-    const end = this.resolveTarget((effect as any).end || 'target', caster, primaryTarget);
+    const start = this.resolveTarget(context, (effect as any).start || 'self.pos', caster, primaryTarget);
+    const end = this.resolveTarget(context, (effect as any).end || 'target', caster, primaryTarget);
     if (!start || !end) return;
 
-    const amount = this.resolveValue(effect.amount, caster, primaryTarget);
+    const amount = this.resolveValue(context, effect.amount, caster, primaryTarget);
     const aspect = effect.aspect || 'physical';
 
     // For now, implement as multiple AoE effects along the line
@@ -833,7 +892,7 @@ export class Abilities extends Rule {
       const x = start.x + (end.x - start.x) * t;
       const y = start.y + (end.y - start.y) * t;
       
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'aoe',
         params: {
           x: x,
@@ -847,7 +906,7 @@ export class Abilities extends Rule {
     }
   }
 
-  private domainBuff(effect: AbilityEffect, caster: any, primaryTarget: any): void {
+  private domainBuff(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
     const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
@@ -855,7 +914,7 @@ export class Abilities extends Rule {
     const radius = this.resolveValue(effect.radius, caster, target) || 3;
 
     // Apply buff to all units in area, filtering by condition if specified
-    const unitsInArea = this.sim.getRealUnits().filter(u => {
+    const unitsInArea = context.getAllUnits().filter(u => {
       const dist = Math.sqrt(Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2));
       if (dist > radius) return false;
       
@@ -905,8 +964,8 @@ export class Abilities extends Rule {
     }
   }
 
-  private debuff(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private debuff(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
     // Apply debuff
@@ -916,8 +975,8 @@ export class Abilities extends Rule {
     }
   }
 
-  private cleanse(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private cleanse(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
     // Remove specified effects
@@ -928,15 +987,15 @@ export class Abilities extends Rule {
     }
   }
 
-  private reveal(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
+  private reveal(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
     const pos = target.pos || target;
     const radius = effect.radius || 6;
 
     // Reveal hidden/invisible units in radius
-    const unitsInArea = this.sim.getRealUnits().filter(u => {
+    const unitsInArea = context.getAllUnits().filter(u => {
       const dist = Math.sqrt(Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2));
       return dist <= (typeof radius === 'number' ? radius : Number(radius));
     });
@@ -944,7 +1003,7 @@ export class Abilities extends Rule {
     for (const unit of unitsInArea) {
       if (unit.meta.hidden || unit.meta.invisible) {
         // Queue command to reveal the unit
-        this.sim.queuedCommands.push({
+        context.queueCommand({
           type: 'meta',
           params: {
             unitId: unit.id,
@@ -959,8 +1018,8 @@ export class Abilities extends Rule {
     }
   }
 
-  private burrow(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'self', caster, primaryTarget);
+  private burrow(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'self', caster, primaryTarget);
     if (!target) return;
 
     const duration = effect.duration || 15;
@@ -970,15 +1029,15 @@ export class Abilities extends Rule {
     target.meta.burrowed = true;
     target.meta.invisible = true;
     target.meta.burrowDuration = duration;
-    target.meta.burrowStartTick = this.sim.ticks;
+    target.meta.burrowStartTick = context.getCurrentTick();
   }
 
-  private tame(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'target', caster, primaryTarget);
+  private tame(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'target', caster, primaryTarget);
     if (!target || !target.id) return;
 
     // Find the actual unit in the sim
-    const actualTarget = this.sim.units.find(u => u.id === target.id);
+    const actualTarget = context.findUnitById(target.id);
     if (!actualTarget) return;
 
     // Check if this is tameMegabeast ability which requires mass >= 10
@@ -988,7 +1047,7 @@ export class Abilities extends Rule {
     }
 
     // Queue command to tame the target
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'meta',
       params: {
         unitId: actualTarget.id,
@@ -1001,7 +1060,7 @@ export class Abilities extends Rule {
     });
     
     // Queue command to change team
-    this.sim.queuedCommands.push({
+    context.queueCommand({
       type: 'changeTeam',
       unitId: actualTarget.id,
       params: {
@@ -1011,38 +1070,41 @@ export class Abilities extends Rule {
     
     // Add taming particles
     for (let i = 0; i < 5; i++) {
-      this.sim.particles.push({
-        id: `tame_${caster.id}_${this.sim.ticks}_${i}`,
-        pos: { 
-          x: actualTarget.pos.x + (this.rng.random() - 0.5) * 2, 
-          y: actualTarget.pos.y + (this.rng.random() - 0.5) * 2 
+      context.queueEvent({
+        kind: 'particle',
+        source: caster.id,
+        target: { 
+          x: actualTarget.pos.x + (context.getRandom() - 0.5) * 2, 
+          y: actualTarget.pos.y + (context.getRandom() - 0.5) * 2 
         },
-        vel: { x: 0, y: -0.1 },
-        radius: 0.3,
-        lifetime: 20,
-        color: '#90EE90', // Light green
-        type: 'tame'
+        meta: {
+          vel: { x: 0, y: -0.1 },
+          radius: 0.3,
+          lifetime: 20,
+          color: '#90EE90', // Light green
+          type: 'tame'
+        }
       });
     }
   }
 
-  private calm(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget(effect.target || 'self.pos', caster, primaryTarget);
+  private calm(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
     const pos = target.pos || target;
-    const radius = this.resolveValue(effect.radius, caster, primaryTarget) || 5;
+    const radius = this.resolveValue(context, effect.radius, caster, primaryTarget) || 5;
 
     // Calm all beasts/animals in radius - check for animal tag or beast-like sprites
     const beastSprites = ['bear', 'owl', 'wolf', 'fox', 'deer', 'rabbit', 'squirrel', 'bird'];
-    const unitsInArea = this.sim.getRealUnits().filter(u => {
+    const unitsInArea = context.getAllUnits().filter(u => {
       const dist = Math.sqrt(Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2));
       return dist <= radius && (u.tags?.includes('animal') || u.tags?.includes('beast') || beastSprites.includes(u.sprite));
     });
 
     for (const unit of unitsInArea) {
       // Queue command to calm unit
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'meta',
         params: {
           unitId: unit.id,
@@ -1053,7 +1115,7 @@ export class Abilities extends Rule {
         }
       });
       // Queue halt command
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'halt',
         params: { unitId: unit.id }
       });
@@ -1061,47 +1123,54 @@ export class Abilities extends Rule {
       // Add calm particles (only if not already created for this unit)
       const particleId = `calm_${unit.id}`;
       if (!unit.meta.calmed && !this.sim.particles.some(p => p.id === particleId)) {
-        this.sim.particles.push({
-          id: particleId,
-          pos: { x: unit.pos.x, y: unit.pos.y - 0.5 },
-          vel: { x: 0, y: -0.05 },
-          ttl: 30,
-          color: '#ADD8E6', // Light blue
-          type: 'calm',
-          size: 0.4,
-          radius: 1,
-          lifetime: 30
+        context.queueEvent({
+          kind: 'particle',
+          source: caster.id,
+          target: { x: unit.pos.x, y: unit.pos.y - 0.5 },
+          meta: {
+            vel: { x: 0, y: -0.05 },
+            ttl: 30,
+            color: '#ADD8E6', // Light blue
+            type: 'calm',
+            size: 0.4,
+            radius: 1,
+            lifetime: 30
+          }
         });
       }
     }
   }
 
-  private createParticles(effect: AbilityEffect, caster: any, primaryTarget: any): void {
-    const target = this.resolveTarget((effect as any).pos || effect.target || 'self.pos', caster, primaryTarget);
+  private createParticles(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
+    const target = this.resolveTarget(context, (effect as any).pos || effect.target || 'self.pos', caster, primaryTarget);
     if (!target) return;
 
     const pos = target.pos || target;
     const color = (effect as any).color || '#FFFFFF';
-    const lifetime = this.resolveValue((effect as any).lifetime, caster, target) || 20;
-    const count = this.resolveValue((effect as any).count, caster, target) || 5;
+    const lifetime = this.resolveValue(context, (effect as any).lifetime, caster, target) || 20;
+    const count = this.resolveValue(context, (effect as any).count, caster, target) || 5;
 
     // Create multiple particles for visual effect
     for (let i = 0; i < count; i++) {
-      this.sim.particles.push({
-        pos: { 
-          x: pos.x + (this.rng.random() - 0.5) * 2, 
-          y: pos.y + (this.rng.random() - 0.5) * 2 
+      context.queueEvent({
+        kind: 'particle',
+        source: caster.id,
+        target: { 
+          x: pos.x + (context.getRandom() - 0.5) * 2, 
+          y: pos.y + (context.getRandom() - 0.5) * 2 
         },
-        vel: { 
-          x: (this.rng.random() - 0.5) * 0.2, 
-          y: (this.rng.random() - 0.5) * 0.2 
-        },
-        ttl: lifetime + this.rng.random() * 10,
-        color: color,
-        type: (effect as any).particleType || 'generic',
-        size: 0.3 + this.rng.random() * 0.2,
-        radius: 1,
-        lifetime
+        meta: {
+          vel: { 
+            x: (context.getRandom() - 0.5) * 0.2, 
+            y: (context.getRandom() - 0.5) * 0.2 
+          },
+          ttl: lifetime + context.getRandom() * 10,
+          color: color,
+          type: (effect as any).particleType || 'generic',
+          size: 0.3 + context.getRandom() * 0.2,
+          radius: 1,
+          lifetime
+        }
       });
     }
   }

@@ -1,14 +1,14 @@
-import { Simulator } from "../core/simulator";
+import type { TickContext } from "../core/tick_context";
 import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 
 export default class DSL {
 
-  static evaluate(expression: string, subject: Unit, sim: Simulator, target?: any): any {
+  static evaluate(expression: string, subject: Unit, context: TickContext, target?: any): any {
     // Core unit getters
-    let allies = () => sim.getRealUnits().filter(u => u.team === subject.team && u.state !== 'dead' && u.id !== subject.id);
-    let enemies = () => sim.getRealUnits().filter(u => u.team !== subject.team && u.state !== 'dead');
-    let all = () => sim.getRealUnits().filter(u => u.state !== 'dead');
+    let allies = () => context.getAllUnits().filter(u => u.team === subject.team && u.state !== 'dead' && u.id !== subject.id);
+    let enemies = () => context.getAllUnits().filter(u => u.team !== subject.team && u.state !== 'dead');
+    let all = () => context.getAllUnits().filter(u => u.state !== 'dead');
     
     // Distance utility
     let distance = (target: Vec2 | Unit | null) => {
@@ -87,26 +87,26 @@ export default class DSL {
     // Random selections
     let random = {
       position: () => ({
-        x: Math.round(Simulator.rng.random() * sim.fieldWidth),
-        y: Math.round(Simulator.rng.random() * sim.fieldHeight)
+        x: Math.round(context.getRandom() * context.getFieldWidth()),
+        y: Math.round(context.getRandom() * context.getFieldHeight())
       }),
       ally: () => {
         const units = allies();
-        return units.length > 0 ? units[Math.floor(Simulator.rng.random() * units.length)] : null;
+        return units.length > 0 ? units[Math.floor(context.getRandom() * units.length)] : null;
       },
       enemy: () => {
         const units = enemies();
-        return units.length > 0 ? units[Math.floor(Simulator.rng.random() * units.length)] : null;
+        return units.length > 0 ? units[Math.floor(context.getRandom() * units.length)] : null;
       }
     };
     
     // Unit lookup
-    let unit = (id: string) => sim.roster[id] || null;
+    let unit = (id: string) => context.findUnitById(id) || null;
     
     // Simple random utilities
-    let randomFloat = (min: number, max: number) => min + Simulator.rng.random() * (max - min);
+    let randomFloat = (min: number, max: number) => min + context.getRandom() * (max - min);
     let randomInt = (min: number, max: number) => Math.floor(randomFloat(min, max + 1));
-    let pick = (array: any[]) => array[Math.floor(Simulator.rng.random() * array.length)];
+    let pick = (array: any[]) => array[Math.floor(context.getRandom() * array.length)];
     let randomPos = (centerX: number, centerY: number, range: number) => ({
       x: centerX + randomFloat(-range, range),
       y: centerY + randomFloat(-range, range)

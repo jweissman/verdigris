@@ -8,7 +8,7 @@ export interface Projectile {
   radius: number;
   damage: number;
   team: 'friendly' | 'hostile' | 'neutral';
-  type: 'bullet' | 'bomb' | 'grapple';
+  type: 'bullet' | 'bomb' | 'grapple' | 'laser_beam';
   sourceId?: string; // ID of unit that created the projectile
   // For bomb projectiles with arc motion
   target?: Vec2;

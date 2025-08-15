@@ -4,7 +4,7 @@ import { SceneLoader } from '../../src/core/scene_loader';
 
 describe('Hero Units', () => {
   it('should load and test basic hero unit functionality', () => {
-    console.log('🦸 HERO UNITS TEST');
+    // console.log('🦸 HERO UNITS TEST');
     
     const sim = new Simulator(20, 15);
     
@@ -19,23 +19,23 @@ describe('Hero Units', () => {
       const heroUnits = JSON.parse(fs.readFileSync(heroUnitsPath, 'utf8'));
       const heroAbilities = JSON.parse(fs.readFileSync(heroAbilitiesPath, 'utf8'));
       
-      console.log(`✅ Loaded ${Object.keys(heroUnits).length} hero unit types`);
-      console.log(`✅ Loaded ${Object.keys(heroAbilities).length} hero abilities`);
+      // console.log(`✅ Loaded ${Object.keys(heroUnits).length} hero unit types`);
+      // console.log(`✅ Loaded ${Object.keys(heroAbilities).length} hero abilities`);
       
       // Test each hero type
       Object.entries(heroUnits).forEach(([heroType, heroData]: [string, any]) => {
-        console.log(`\n🎯 ${heroType.toUpperCase()}:`);
-        console.log(`  HP: ${heroData.hp}, Mass: ${heroData.mass}`);
-        console.log(`  Abilities: [${heroData.abilities.join(', ')}]`);
-        console.log(`  Tags: [${heroData.tags.join(', ')}]`);
-        console.log(`  Hero Type: ${heroData.meta.heroType}`);
+        // console.log(`\n🎯 ${heroType.toUpperCase()}:`);
+        // console.log(`  HP: ${heroData.hp}, Mass: ${heroData.mass}`);
+        // console.log(`  Abilities: [${heroData.abilities.join(', ')}]`);
+        // console.log(`  Tags: [${heroData.tags.join(', ')}]`);
+        // console.log(`  Hero Type: ${heroData.meta.heroType}`);
         
         // Check if abilities exist
         const missingAbilities = heroData.abilities.filter((ability: string) => !heroAbilities[ability]);
         if (missingAbilities.length > 0) {
-          console.log(`  ❌ Missing abilities: ${missingAbilities.join(', ')}`);
+          // console.log(`  ❌ Missing abilities: ${missingAbilities.join(', ')}`);
         } else {
-          console.log(`  ✅ All abilities defined`);
+          // console.log(`  ✅ All abilities defined`);
         }
       });
       
@@ -43,47 +43,47 @@ describe('Hero Units', () => {
       expect(Object.keys(heroAbilities).length).toBeGreaterThan(10);
       
     } catch (e) {
-      console.log(`❌ Error loading hero data: ${e}`);
+      // console.log(`❌ Error loading hero data: ${e}`);
       expect(e).toBeUndefined();
     }
   });
   
   it('should test hero showcase scene loading', () => {
-    console.log('\n🎬 HERO SHOWCASE SCENE TEST');
+    // console.log('\n🎬 HERO SHOWCASE SCENE TEST');
     
     const sim = new Simulator(40, 15);
     const sceneLoader = new SceneLoader(sim);
     
     try {
-      console.log('Loading hero showcase scene...');
+      // console.log('Loading hero showcase scene...');
       sceneLoader.loadScenario('heroShowcase');
       
-      console.log(`✅ Scene loaded with ${sim.units.length} units`);
+      // console.log(`✅ Scene loaded with ${sim.units.length} units`);
       
       // Count hero types
       const heroTypes = ['champion', 'acrobat', 'berserker', 'guardian', 'shadowBlade'];
       const heroes = sim.units.filter(u => heroTypes.includes(u.type));
       const enemies = sim.units.filter(u => u.team === 'hostile');
       
-      console.log(`Heroes: ${heroes.length}`);
-      console.log(`Enemies: ${enemies.length}`);
+      // console.log(`Heroes: ${heroes.length}`);
+      // console.log(`Enemies: ${enemies.length}`);
       
       heroes.forEach(hero => {
-        console.log(`  ${hero.type}: HP=${hero.hp}, abilities=[${hero.abilities}]`);
+        // console.log(`  ${hero.type}: HP=${hero.hp}, abilities=[${hero.abilities}]`);
       });
       
       expect(heroes.length).toBe(5);
       expect(enemies.length).toBeGreaterThan(10);
       
     } catch (e) {
-      console.log(`❌ Error loading hero showcase: ${e}`);
+      // console.log(`❌ Error loading hero showcase: ${e}`);
       // Scene loading might fail if hero units aren't in main encyclopedia yet
-      console.log('This is expected - hero units need to be integrated into main units.json');
+      // console.log('This is expected - hero units need to be integrated into main units.json');
     }
   });
   
   it('should test hero abilities design concepts', () => {
-    console.log('\n💫 HERO ABILITIES DESIGN TEST');
+    // console.log('\n💫 HERO ABILITIES DESIGN TEST');
     
     // Test key concepts for first-person style gameplay
     const abilityFeatures = {
@@ -95,9 +95,9 @@ describe('Hero Units', () => {
       'shieldWall': ['barrier creation', 'ally protection', 'positioning']
     };
     
-    console.log('🎮 First-person style ability features:');
+    // console.log('🎮 First-person style ability features:');
     Object.entries(abilityFeatures).forEach(([ability, features]) => {
-      console.log(`  ${ability}: ${features.join(', ')}`);
+      // console.log(`  ${ability}: ${features.join(', ')}`);
     });
     
     // Test targeting systems
@@ -109,16 +109,16 @@ describe('Hero Units', () => {
       'self-targeting (buffs, transformations)'
     ];
     
-    console.log('\n🎯 Targeting systems implemented:');
+    // console.log('\n🎯 Targeting systems implemented:');
     targetingSystems.forEach(system => {
-      console.log(`  ✅ ${system}`);
+      // console.log(`  ✅ ${system}`);
     });
     
     expect(Object.keys(abilityFeatures).length).toBeGreaterThan(5);
   });
   
   it('should test hero vs swarm combat simulation', () => {
-    console.log('\n⚔️ HERO COMBAT SIMULATION');
+    // console.log('\n⚔️ HERO COMBAT SIMULATION');
     
     const sim = new Simulator(20, 10);
     
@@ -155,8 +155,8 @@ describe('Hero Units', () => {
       sim.addUnit(worm);
     }
     
-    console.log(`Initial: Champion vs ${sim.units.filter(u => u.team === 'hostile').length} worms`);
-    console.log(`Champion: ${champion.hp} HP, abilities: [${champion.abilities}]`);
+    // console.log(`Initial: Champion vs ${sim.units.filter(u => u.team === 'hostile').length} worms`);
+    // console.log(`Champion: ${champion.hp} HP, abilities: [${champion.abilities}]`);
     
     // Run simulation
     let step = 0;
@@ -165,14 +165,14 @@ describe('Hero Units', () => {
       const aliveHeroes = sim.units.filter(u => u.type === 'champion' && u.hp > 0);
       
       if (step % 20 === 0 || aliveWorms.length === 0 || aliveHeroes.length === 0) {
-        console.log(`Step ${step}: Champion HP=${aliveHeroes[0]?.hp || 0}, Worms alive=${aliveWorms.length}`);
+        // console.log(`Step ${step}: Champion HP=${aliveHeroes[0]?.hp || 0}, Worms alive=${aliveWorms.length}`);
       }
       
       if (aliveWorms.length === 0) {
-        console.log(`🏆 HERO VICTORY at step ${step}!`);
+        // console.log(`🏆 HERO VICTORY at step ${step}!`);
         break;
       } else if (aliveHeroes.length === 0) {
-        console.log(`💀 HERO DEFEAT at step ${step}!`);
+        // console.log(`💀 HERO DEFEAT at step ${step}!`);
         break;
       }
       
@@ -181,7 +181,7 @@ describe('Hero Units', () => {
     }
     
     if (step >= 100) {
-      console.log(`⏰ TIMEOUT after ${step} steps`);
+      // console.log(`⏰ TIMEOUT after ${step} steps`);
     }
     
     expect(sim.units.length).toBeGreaterThan(0);

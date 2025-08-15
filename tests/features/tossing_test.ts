@@ -235,7 +235,7 @@ describe('Tossing mechanics', () => {
 
   it('should generate toss commands from AoE with mass difference', () => {
     const sim = new Simulator(128, 128);
-    sim.rulebook = [new CommandHandler(sim), new Tossing(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Tossing(sim), new EventHandler()];
 
     // Heavy unit (mass 4)
     const heavyUnit: Unit = {
@@ -289,7 +289,7 @@ describe('Tossing mechanics', () => {
 
   it('should not toss units with insufficient mass difference', () => {
     const sim = new Simulator(128, 128);
-    sim.rulebook = [new EventHandler(sim)];
+    sim.rulebook = [new EventHandler()];
 
     // Two units with similar mass
     const unit1: Unit = {

@@ -9,7 +9,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should allow deployment commands even without enemies present', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     // Deploy toymaker with NO enemies on field
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 20, y: 10 } };
@@ -32,7 +32,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test supportive abilities work without combat targets', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     // Create Mechatron with shield recharge ability
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 15, y: 10 } };
@@ -60,7 +60,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test area effect abilities can trigger in empty areas', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     // Create Mechatron in empty field
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 20, y: 15 } };
@@ -103,7 +103,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should verify toymaker deployment limits work during solo play', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     // Create toymaker in peaceful field
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 15, y: 15 } };
@@ -134,7 +134,7 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test environmental abilities work without combat context', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     // Create rainmaker for environmental effects
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 20, y: 20 } };

@@ -3,7 +3,8 @@ import { Transform } from "../core/transform";
 
 export class MoveCommand extends Command {
   execute(unitId: string | null, params: Record<string, any>): void {
-    const targetId = params.unitId as string;
+    // Use the unitId parameter directly, not params.unitId
+    const targetId = unitId || (params.unitId as string);
     
     if (!targetId) return;
     

@@ -15,7 +15,7 @@ describe('Field Overlays - Environmental Visualization', () => {
     sim.rulebook = [
       new CommandHandler(sim),
       new LightningStorm(sim),
-      new EventHandler(sim)
+      new EventHandler()
     ];
 
     // Test temperature field exists and can be modified
@@ -50,7 +50,7 @@ describe('Field Overlays - Environmental Visualization', () => {
     sim.rulebook = [
       new CommandHandler(sim),
       new LightningStorm(sim),  
-      new EventHandler(sim)
+      new EventHandler()
     ];
 
     // Trigger lightning strikes at specific locations
@@ -79,7 +79,7 @@ describe('Field Overlays - Environmental Visualization', () => {
   it('should demonstrate weather interaction with field overlays', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new EventHandler()];
     
     // Trigger winter weather
     sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'winter' } }];
@@ -104,7 +104,7 @@ describe('Field Overlays - Environmental Visualization', () => {
   it('should test environmental effects on units', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new EventHandler()];
     
     // Create test units at different positions
     const coldUnit = { 

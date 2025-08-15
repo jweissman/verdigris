@@ -9,7 +9,7 @@ import DSL from '../../src/rules/dsl';
 describe('Toymaker Debug', () => {
   it('should debug why toymaker is not summoning constructs', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     // Create toymaker and enemy manually
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };

@@ -1,5 +1,6 @@
 import { Rule } from "./rule";
 import { Command } from "./command";
+import type { TickContext } from "../core/tick_context";
 import { Toss } from "../commands/toss";
 import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
@@ -34,6 +35,8 @@ import { ForcesCommand } from "../commands/forces";
 import { AICommand } from "../commands/ai";
 import { SimulateCommand } from "../commands/simulate";
 import { Wander } from "../commands/wander";
+import { RemoveProjectileCommand } from "../commands/update_projectile";
+import { ParticleCommand } from "../commands/particle";
 
 export type QueuedCommand = {
   type: string;
@@ -46,9 +49,11 @@ export type QueuedCommand = {
 export class CommandHandler extends Rule {
   private commands: Map<string, Command> = new Map();
   private transform: any; // Transform object for mutations
+  private sim: any;
 
   constructor(sim: any, transform?: any) {
-    super(sim);
+    super();
+    this.sim = sim;
     this.transform = transform || sim.getTransform();
     
     // Register available commands - pass transform to each
@@ -99,9 +104,15 @@ export class CommandHandler extends Rule {
     this.commands.set('forces', new ForcesCommand(sim, this.transform));
     this.commands.set('ai', new AICommand(sim, this.transform));
     this.commands.set('simulate', new SimulateCommand(sim, this.transform));
+    
+    // Projectile commands
+    this.commands.set('removeProjectile', new RemoveProjectileCommand(sim, this.transform));
+    
+    // Effect commands
+    this.commands.set('particle', new ParticleCommand(sim, this.transform));
   }
 
-  apply = () => {
+  execute(context: TickContext): void {
     // Early exit if nothing to process
     if (!this.sim.queuedCommands?.length && !this.sim.queuedEvents?.length) {
       return;
@@ -183,17 +194,12 @@ export class CommandHandler extends Rule {
           }
         }
         
-        // Process batched move commands with vectorization
-        if (Object.keys(moveBatch).length > 10 && this.sim.unitArrays) {
-          // Use vectorized movement for large batches
-          this.processMovementsBatch(moveBatch);
-        } else {
-          // Use individual move commands for small batches
-          const moveCommand = this.commands.get('move');
-          if (moveCommand) {
-            for (const [unitId, params] of Object.entries(moveBatch)) {
-              moveCommand.execute(unitId, params);
-            }
+        // Process batched move commands
+        // TODO: Consider adding a batch move API to Transform for performance
+        const moveCommand = this.commands.get('move');
+        if (moveCommand) {
+          for (const [unitId, params] of Object.entries(moveBatch)) {
+            moveCommand.execute(unitId, params);
           }
         }
         
@@ -213,7 +219,8 @@ export class CommandHandler extends Rule {
           }
         }
         
-        this.sim.queuedCommands = commandsToKeep;
+        // Merge commands to keep with any new commands added during processing
+        this.sim.queuedCommands = [...commandsToKeep, ...this.sim.queuedCommands.filter(c => !commandsToProcess.includes(c) && !commandsToKeep.includes(c))];
         
         // Commit Transform changes after processing commands
         if (this.transform) {
@@ -226,7 +233,9 @@ export class CommandHandler extends Rule {
         didWork = true;
         const eventHandler = this.sim.rulebook.find(r => r.constructor.name === 'EventHandler');
         if (eventHandler) {
-          eventHandler.apply();
+          eventHandler.execute(context);
+          // Clear events after processing
+          this.sim.queuedEvents = [];
         }
       }
       
@@ -354,51 +363,4 @@ export class CommandHandler extends Rule {
     }
   }
   
-  /**
-   * Vectorized movement processing for massive performance gains
-   */
-  private processMovementsBatch(moveBatch: { [unitId: string]: any }): void {
-    const arrays = this.sim.unitArrays;
-    
-    // Build unit ID to index lookup
-    const idToIndex = new Map<string, number>();
-    for (let i = 0; i < arrays.capacity; i++) {
-      if (arrays.active[i] && arrays.unitIds[i]) {
-        idToIndex.set(arrays.unitIds[i], i);
-      }
-    }
-    
-    // Process all movements vectorized
-    for (const [unitId, params] of Object.entries(moveBatch)) {
-      const index = idToIndex.get(unitId);
-      if (index === undefined) continue;
-      
-      let newX: number, newY: number;
-      
-      // Handle both relative (dx/dy) and absolute (x/y) positioning
-      if (params.x !== undefined && params.y !== undefined) {
-        newX = params.x;
-        newY = params.y;
-      } else {
-        const dx = params.dx || 0;
-        const dy = params.dy || 0;
-        newX = arrays.posX[index] + dx;
-        newY = arrays.posY[index] + dy;
-      }
-      
-      // Clamp to field bounds
-      newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, newX));
-      newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, newY));
-      
-      // Update position in SoA (vectorized)
-      arrays.posX[index] = newX;
-      arrays.posY[index] = newY;
-      
-      // Clear intended move
-      arrays.intendedMoveX[index] = 0;
-      arrays.intendedMoveY[index] = 0;
-    }
-    
-    // No need to sync - positions are already in arrays
-  }
 }

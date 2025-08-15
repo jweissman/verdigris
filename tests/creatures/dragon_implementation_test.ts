@@ -40,7 +40,7 @@ describe('Dragon Implementation', () => {
     const allUnits = sim.units;
     const dragonUnits = allUnits.filter(u => u.id.includes('dragon') && !u.meta.phantom);
     expect(dragonUnits.length).toBe(9); // 1 head + 8 segments
-    console.log(`Dragon units found: ${dragonUnits.length}, total units: ${allUnits.length}`);
+    // console.log(`Dragon units found: ${dragonUnits.length}, total units: ${allUnits.length}`);
     
     // Check segments have armor
     const segments = allUnits.filter(u => u.meta.segment && u.meta.parentId === 'dragon1');
@@ -87,10 +87,10 @@ describe('Dragon Implementation', () => {
     
     [dragon, lancer1, lancer2, wormHunter].forEach(u => sim.addUnit(u));
     
-    console.log('🐉 DRAGON ENCOUNTER SETUP:');
-    console.log(`Dragon: ${dragon.hp}hp, ${dragon.meta.segmentCount} segments, armor ${dragon.meta.armor}`);
-    console.log(`Lancers: ${lancer1.hp}hp, range ${lancer1.meta.harpoonRange}, piercing ${lancer1.meta.armorPiercing}`);
-    console.log(`Worm-hunter: ${wormHunter.hp}hp, can climb: ${wormHunter.meta.canClimbGrapples}`);
+    // console.log('🐉 DRAGON ENCOUNTER SETUP:');
+    // console.log(`Dragon: ${dragon.hp}hp, ${dragon.meta.segmentCount} segments, armor ${dragon.meta.armor}`);
+    // console.log(`Lancers: ${lancer1.hp}hp, range ${lancer1.meta.harpoonRange}, piercing ${lancer1.meta.armorPiercing}`);
+    // console.log(`Worm-hunter: ${wormHunter.hp}hp, can climb: ${wormHunter.meta.canClimbGrapples}`);
     
     // Run a few steps to see segmentation
     for (let i = 0; i < 3; i++) {
@@ -99,7 +99,7 @@ describe('Dragon Implementation', () => {
       const after = sim.units.length;
       
       if (after > before) {
-        console.log(`Step ${i + 1}: ${after - before} segments created`);
+        // console.log(`Step ${i + 1}: ${after - before} segments created`);
       }
     }
     
@@ -107,6 +107,6 @@ describe('Dragon Implementation', () => {
     const dragonSegments = sim.units.filter(u => u.meta.segment && u.meta.parentId === 'dragon1');
     expect(dragonSegments.length).toBe(8);
     
-    console.log(`Final unit count: ${sim.units.length} (including ${dragonSegments.length} dragon segments)`);
+    // console.log(`Final unit count: ${sim.units.length} (including ${dragonSegments.length} dragon segments)`);
   });
 });

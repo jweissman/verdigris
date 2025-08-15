@@ -1,62 +1,96 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/Unit";
+import type { TickContext } from '../core/tick_context';
 
 export class Perdurance extends Rule {
-  apply = () => {
-    // Process damage events and apply perdurance rules
-    this.sim.queuedEvents = this.sim.queuedEvents.map(event => {
-      if (event.kind === 'damage') {
-        // Ensure meta exists
-        if (!event.meta) {
-          event.meta = { amount: 1, aspect: 'physical' };
-        }
-        const target = this.sim.units.find(u => u.id === event.target);
-        if (target) {
-          // Check if damage should be blocked completely
-          if (this.shouldBlockDamage(target, event.meta.aspect)) {
-            return null; // Block this damage event
+  constructor() {
+    super();
+  }
+  execute(context: TickContext): void {
+    // Perdurance damage resistance is now handled directly in EventHandler.handleDamage()
+    // This rule is kept for backwards compatibility but does nothing
+    return;
+  }
+  
+  private processPendingDamage(context: TickContext, unit: Unit): void {
+    const damage = unit.meta.pendingDamage;
+    if (!damage) return;
+    
+    // Ensure meta exists
+    const damageAmount = damage.amount || 1;
+    const damageAspect = damage.aspect || 'physical';
+    const source = damage.source || 'unknown';
+    
+    // Check if damage should be blocked completely
+    if (this.shouldBlockDamage(context, unit, damageAspect)) {
+      // Block damage - clear pending damage
+      context.queueCommand({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            pendingDamage: undefined
           }
-          // Modify damage amount based on perdurance type
-          const modifiedEvent = this.modifyDamage(event, target);
-          return modifiedEvent;
+        }
+      });
+      return;
+    }
+    
+    // Modify damage amount based on perdurance type
+    const modifiedAmount = this.modifyDamageAmount(context, unit, damageAmount, damageAspect);
+    
+    // Apply the damage
+    context.queueEvent({
+      kind: 'damage',
+      source: source,
+      target: unit.id,
+      meta: {
+        amount: modifiedAmount,
+        aspect: damageAspect
+      }
+    });
+    
+    // Clear pending damage
+    context.queueCommand({
+      type: 'meta',
+      params: {
+        unitId: unit.id,
+        meta: {
+          pendingDamage: undefined
         }
       }
-      return event; // Allow other events through unchanged
-    }).filter(event => event !== null); // Remove blocked events
+    });
   }
 
-  private modifyDamage(event: any, target: Unit): any {
+  private modifyDamageAmount(context: TickContext, target: Unit, amount: number, aspect: string): number {
     const perdurance = target.meta.perdurance;
-    if (!perdurance) return event;
-
-    const modifiedEvent = { 
-      ...event,
-      meta: { ...event.meta } // Deep clone the meta object
-    };
+    let modifiedAmount = amount;
     
-    switch (perdurance) {
-      case 'sturdiness':
-        // Cap all damage to maximum 1 (resistant to burst, weak to chip)
-        if (modifiedEvent.meta.amount > 1) {
-          modifiedEvent.meta.amount = 1;
-        }
-        break;
-      
-      case 'swarm':
-        // NOTE: Swarm units should attack with population damage so we do actually need to track it here?
-        // how are we even tracking swarm population if this is empty rule??
-        break;
+    if (perdurance) {
+      switch (perdurance) {
+        case 'sturdiness':
+          // Cap all damage to maximum 1 (resistant to burst, weak to chip)
+          if (modifiedAmount > 1) {
+            modifiedAmount = 1;
+          }
+          break;
+        
+        case 'swarm':
+          // NOTE: Swarm units should attack with population damage so we do actually need to track it here?
+          // how are we even tracking swarm population if this is empty rule??
+          break;
+      }
     }
     
     // Handle brittle (frozen) units - take double damage
     if (target.meta.brittle) {
-      modifiedEvent.meta.amount *= 2;
+      modifiedAmount *= 2;
     }
     
-    return modifiedEvent;
+    return modifiedAmount;
   }
 
-  private shouldBlockDamage(unit: Unit, damageAspect?: string): boolean {
+  private shouldBlockDamage(context: TickContext, unit: Unit, damageAspect?: string): boolean {
     const perdurance = unit.meta.perdurance;
     if (!perdurance) return false; // No special resistance
 
@@ -76,7 +110,7 @@ export class Perdurance extends Rule {
         if (damageAspect === 'radiant') return false; // Allow radiant damage  
         if (damageAspect === 'physical' || !damageAspect) {
           // 50% chance to resist physical damage
-          return this.rng.random() < 0.5;
+          return context.getRandom() < 0.5;
         }
         return false; // Allow other damage
 

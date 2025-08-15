@@ -4,7 +4,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { CommandHandler } from '../../src/rules/command_handler';
 import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
-import { WinterEffects } from '../../src/rules/winter_effects';
+import { BiomeEffects } from '../../src/rules/biome_effects';
 import { StatusEffects } from '../../src/rules/status_effects';
 import { Perdurance } from '../../src/rules/perdurance';
 
@@ -16,14 +16,14 @@ describe('Toysday Winter Integration', () => {
     sim.rulebook = [
       new CommandHandler(sim),
       new Abilities(sim),
-      new EventHandler(sim),
-      new WinterEffects(sim),
+      new EventHandler(),
+      new BiomeEffects(),
       new StatusEffects(sim),
       new Perdurance(sim)
     ];
     
     // Create winter battlefield
-    WinterEffects.createWinterStorm(sim);
+    BiomeEffects.createWinterStorm(sim);
     
     // Add toymaker and enemy
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };

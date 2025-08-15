@@ -10,9 +10,9 @@ describe('Dragon vs Sandworm Mechanics', () => {
     const giantSandworm = Encyclopaedia.unit('giant-sandworm');
     const desertMegaworm = Encyclopaedia.unit('desert-megaworm');
     
-    console.log('🐛 SANDWORM ANALYSIS:');
-    console.log(`Giant Sandworm: ${giantSandworm.hp}hp, mass ${giantSandworm.mass}, ${giantSandworm.meta.segmentCount} segments`);
-    console.log(`Desert Megaworm: ${desertMegaworm.hp}hp, mass ${desertMegaworm.mass}, ${desertMegaworm.meta.segmentCount} segments`);
+    // console.log('🐛 SANDWORM ANALYSIS:');
+    // console.log(`Giant Sandworm: ${giantSandworm.hp}hp, mass ${giantSandworm.mass}, ${giantSandworm.meta.segmentCount} segments`);
+    // console.log(`Desert Megaworm: ${desertMegaworm.hp}hp, mass ${desertMegaworm.mass}, ${desertMegaworm.meta.segmentCount} segments`);
     
     // Model a theoretical dragon (different from worms)
     const dragonTemplate = {
@@ -49,9 +49,9 @@ describe('Dragon vs Sandworm Mechanics', () => {
     expect(sandworm.meta.canBurrow).toBe(true);
     expect(dragon.mass).toBeGreaterThan(sandworm.mass);
 
-    console.log('\n🐉 DRAGON VS SANDWORM:');
-    console.log(`Dragon: Flying=${dragon.meta.flying}, Segmented=${dragon.meta.segmented}, Mass=${dragon.mass}`);
-    console.log(`Sandworm: Burrowing=${sandworm.meta.canBurrow}, Segmented=${sandworm.meta.segmented}, Mass=${sandworm.mass}`);
+    // console.log('\n🐉 DRAGON VS SANDWORM:');
+    // console.log(`Dragon: Flying=${dragon.meta.flying}, Segmented=${dragon.meta.segmented}, Mass=${dragon.mass}`);
+    // console.log(`Sandworm: Burrowing=${sandworm.meta.canBurrow}, Segmented=${sandworm.meta.segmented}, Mass=${sandworm.mass}`);
 
     // Both should be unpullable by grapplers due to mass
     expect(dragon.mass).toBeGreaterThan(30); // Pinned only
@@ -68,7 +68,7 @@ describe('Dragon vs Sandworm Mechanics', () => {
     sim.addUnit(grappler);
     sim.addUnit(sandworm);
 
-    console.log('\n📊 USING _debugUnits TO TRACK CHANGES:');
+    // console.log('\n📊 USING _debugUnits TO TRACK CHANGES:');
     
     // Capture state before step
     const unitsBefore = sim.units.map(u => ({ ...u, pos: { ...u.pos }, meta: { ...u.meta } }));
@@ -96,9 +96,9 @@ describe('Dragon vs Sandworm Mechanics', () => {
     const mindmender = Encyclopaedia.unit('mindmender');
     expect(mindmender.tags).toContain('psychic');
     
-    console.log('\n⛰️  MOUNTAIN DWARF UNITS:');
-    console.log(`Miner: ${miner.hp}hp, can burrow: ${miner.meta.canBurrow}, ore capacity: ${miner.meta.oreCarryCapacity}`);
-    console.log(`Mindmender: ${mindmender.hp}hp, psychic range: ${mindmender.meta.psychicRange}`);
+    // console.log('\n⛰️  MOUNTAIN DWARF UNITS:');
+    // console.log(`Miner: ${miner.hp}hp, can burrow: ${miner.meta.canBurrow}, ore capacity: ${miner.meta.oreCarryCapacity}`);
+    // console.log(`Mindmender: ${mindmender.hp}hp, psychic range: ${mindmender.meta.psychicRange}`);
     
     // Create a small mountain scene
     const units = [

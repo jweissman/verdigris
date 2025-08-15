@@ -30,7 +30,7 @@ describe('Toymaker System', () => {
     const sim = new Simulator();
     
     // Use minimal rulebook for focused testing
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     // Add toymaker (uses new JSON ability system, no need for addEffectsToUnit)
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
@@ -91,7 +91,7 @@ describe('Toymaker System', () => {
 
   it('should place deployed constructs between toymaker and target', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler(sim)];
+    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     // Set up specific positions for predictable deployment
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 2, y: 5 } };

@@ -8,7 +8,7 @@ import { CommandHandler } from '../../src/rules/command_handler';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { Abilities } from '../../src/rules/abilities';
-import { DesertEffects } from '../../src/rules/desert_effects';
+import { BiomeEffects } from '../../src/rules/biome_effects';
 import { EventHandler } from '../../src/rules/event_handler';
 
 function getAverageTemperature(sim: any): number {
@@ -161,7 +161,7 @@ describe('Desert', () => {
 
   it('should allow grappling and pinning worm segments', () => {
     const sim = new Simulator();
-    sim.rulebook = [new SegmentedCreatures(sim), new GrapplingPhysics(sim), new Abilities(sim), new CommandHandler(sim)];
+    sim.rulebook = [new SegmentedCreatures(sim), new GrapplingPhysics(sim), new Abilities(), new CommandHandler(sim)];
 
     // Create a grappler
     const grappler = {
@@ -284,7 +284,8 @@ describe('Desert', () => {
 
     // Create segments for sandworm
     const segRule = new SegmentedCreatures(sim);
-    segRule.apply();
+    const context = sim.getTickContext();
+    segRule.execute(context);
 
     // Get the actual grappler from sim to ensure it has abilities
     const actualGrappler = sim.units.find(u => u.id === 'grappler-1');
@@ -306,7 +307,7 @@ describe('Desert', () => {
     const sim = new Simulator();
 
     // Add grappling physics and abilities rules
-    sim.rulebook = [new CommandHandler(sim), new GrapplingPhysics(sim), new Abilities(sim)];
+    sim.rulebook = [new CommandHandler(sim), new GrapplingPhysics(sim), new Abilities()];
 
     // Create grappler unit
     const grappler = {
@@ -396,7 +397,7 @@ describe('Desert', () => {
     sim.addUnit(spy);
 
     // Use detect ability through the abilities system
-    sim.rulebook = [new Abilities(sim), new CommandHandler(sim)];
+    sim.rulebook = [new Abilities(), new CommandHandler(sim)];
     sim.step(); // Let abilities system detect and reveal the spy
 
     // Check spy was revealed
@@ -430,7 +431,7 @@ describe('Desert', () => {
     sim.addUnit(enemy);
 
     // Use dual knife dance through abilities system
-    sim.rulebook = [new Abilities(sim), new EventHandler(sim), new CommandHandler(sim)];
+    sim.rulebook = [new Abilities(), new EventHandler(), new CommandHandler(sim)];
 
     // Track enemy HP to verify dual strike
     const initialEnemyHp = enemy.hp;
@@ -507,8 +508,7 @@ describe('Desert', () => {
     const sim = new Simulator();
 
     // Add desert effects rule
-    const desertRule = new DesertEffects(sim);
-    sim.rulebook = [desertRule, new CommandHandler(sim)];
+    sim.rulebook = [new BiomeEffects(), new CommandHandler(sim)];
 
     // Create desert-adapted unit
     const grappler = {
@@ -527,7 +527,7 @@ describe('Desert', () => {
     sim.addUnit(soldier);
 
     // Start sandstorm
-    desertRule.triggerSandstorm(100, 0.8);
+    BiomeEffects.triggerSandstorm(sim, 100, 0.8);
 
     // Simulate for a bit
     for (let i = 0; i < 10; i++) {
@@ -589,7 +589,7 @@ describe('Desert', () => {
     const sim = new Simulator();
 
     // Add desert effects and Abilities for burrow handling
-    sim.rulebook = [new Abilities(sim), new DesertEffects(sim), new CommandHandler(sim)];
+    sim.rulebook = [new Abilities(), new BiomeEffects(), new CommandHandler(sim)];
 
     // Create desert worm
     const worm = {
@@ -641,11 +641,11 @@ describe('Desert', () => {
     // Add necessary rules for desert mechanics
     sim.rulebook = [
       new CommandHandler(sim),
-      new DesertEffects(sim),
+      new BiomeEffects(),
       new GrapplingPhysics(sim),
       new SegmentedCreatures(sim),
-      new Abilities(sim),
-      new EventHandler(sim)
+      new Abilities(),
+      new EventHandler()
     ];
     
     // Load the desert scene
@@ -714,7 +714,7 @@ describe('Desert', () => {
     
     sim.rulebook = [
       new CommandHandler(sim),
-      new EventHandler(sim)
+      new EventHandler()
     ];
     
     // Load scene (which includes temperature 35 command)
@@ -733,18 +733,17 @@ describe('Desert', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);
     
-    const desertRule = new DesertEffects(sim);
     sim.rulebook = [
       new CommandHandler(sim),
-      desertRule,
-      new EventHandler(sim)
+      new BiomeEffects(),
+      new EventHandler()
     ];
     
     // Load scene
     loader.loadScene('desert');
     
     // Manually trigger sandstorm
-    desertRule.triggerSandstorm(100, 0.8);
+    BiomeEffects.triggerSandstorm(sim, 100, 0.8);
     
     // Step once to process
     sim.step();
@@ -759,8 +758,8 @@ describe('Desert', () => {
     
     sim.rulebook = [
       new GrapplingPhysics(sim),
-      new Abilities(sim),
-      new EventHandler(sim)
+      new Abilities(),
+      new EventHandler()
     ];
     
     // Load scene
@@ -797,8 +796,8 @@ describe('Desert', () => {
     const loader = new SceneLoader(sim);
     
     sim.rulebook = [
-      new Abilities(sim),
-      new EventHandler(sim)
+      new Abilities(),
+      new EventHandler()
     ];
     
     // Add a hidden enemy

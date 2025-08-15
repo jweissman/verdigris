@@ -1,12 +1,14 @@
 import { MeleeCombat } from "../rules/melee_combat";
 import { Knockback } from "../rules/knockback";
 import { ProjectileMotion } from "../rules/projectile_motion";
+import { Physics } from "../rules/physics";
 import { UnitMovement } from "../rules/unit_movement";
 import { AreaOfEffect } from "../rules/area_of_effect";
 import { Rule } from "../rules/rule";
 import { UnitBehavior } from "../rules/unit_behavior";
 import Cleanup from "../rules/cleanup";
 import { Jumping } from "../rules/jumping";
+import { AirdropPhysics } from "../rules/airdrop_physics";
 import { Tossing } from "../rules/tossing";
 import { Abilities } from "../rules/abilities";
 import { EventHandler } from "../rules/event_handler";
@@ -18,62 +20,53 @@ import { BiomeEffects } from "../rules/biome_effects";
 import { Perdurance } from "../rules/perdurance";
 import { StatusEffects } from "../rules/status_effects";
 import { RNG } from "./rng";
+import { TickContext, TickContextImpl } from "./tick_context";
+import { ContextRule } from "../rules/context_rule";
 import { LightningStorm } from "../rules/lightning_storm";
 import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
+import { Vec2 } from "../types/Vec2";
 import { Particle } from "../types/Particle";
 import { Action } from "../types/Action";
 import { SpatialHash } from "../sim/double_buffer";
-import { PerformanceProfiler } from "./performance_profiler";
 import { Transform } from "./transform";
 import { SpatialQueryBatcher } from "./spatial_queries";
 import { PairwiseBatcher } from "./pairwise_batcher";
 import { UnitArrays } from "../sim/unit_arrays";
 import { UnitProxy, UnitProxyManager } from "../sim/unit_proxy";
+import { UnitDataStore } from "../sim/unit_data_store";
 import { GridPartition } from "./grid_partition";
 import { ScalarField } from "./ScalarField";
 import { TargetCache } from "./target_cache";
 
 class Simulator {
-  sceneBackground: string = 'winter';  // burning-city';
-
-  fieldWidth: number;
-  fieldHeight: number;
-
-  private unitArrays: UnitArrays;
+  public sceneBackground: string = 'winter'; 
+  public fieldWidth: number;
+  public fieldHeight: number;
   
-  // Cold storage for non-performance-critical unit data
-  private unitColdData: Map<string, {
+  // Aliases for backward compatibility  
+  get width() { return this.fieldWidth; }
+  get height() { return this.fieldHeight; }
+
+  private readonly unitArrays: UnitArrays;
+  private readonly unitColdData: Map<string, {
     sprite: string;
     abilities: any[];
     tags?: string[];
     meta: Record<string, any>;
-    intendedTarget?: string;
+    intendedTarget?: string | Vec2;
     posture?: string;
     type?: string;
     lastAbilityTick?: Record<string, number>;
   }> = new Map();
   
-  // No more _units array! Units are proxies to SoA
   private spatialHash: SpatialHash;
   private dirtyUnits: Set<string> = new Set();
-  
-  // Position occupancy map for O(1) collision checks
   private positionMap: Map<string, Set<Unit>> = new Map();
-  
-  // Spatial query batcher for optimized distance/collision checks
   public spatialQueries: SpatialQueryBatcher;
-  
-  // Pairwise operation batcher - the REAL optimization
   public pairwiseBatcher: PairwiseBatcher;
-  
-  // Target cache for centralized enemy/ally finding
   public targetCache: TargetCache;
-  
-  // Centralized RNG for determinism - static for global access
   public static rng: RNG = new RNG(12345);
-  
-  // Flag to track if Math.random has been protected
   private static randomProtected: boolean = false;
   
   // Track units that changed this frame for render deltas
@@ -85,18 +78,33 @@ class Simulator {
   private gridPartition: GridPartition;
   
   // Proxy cache to avoid recreating them
-  private proxyManager: UnitProxyManager;
+  public proxyManager: UnitProxyManager;
+  private unitDataStore: UnitDataStore;
   private proxyCache: UnitProxy[] = [];
   private proxyCacheValid = false;
   
   // Return proxies that wrap the SoA arrays
   get units(): readonly Unit[] {
     if (!this.proxyCacheValid) {
+      // TRANSITION: Use old proxy manager for now during migration
+      // TODO: Switch to clean proxies from unitDataStore
       this.proxyCache = this.proxyManager.getAllProxies();
       this.proxyCacheValid = true;
     }
     return this.proxyCache;
   }
+  
+  
+  // Arrays are now fully encapsulated in ProxyManager
+  // Use ProxyManager.batchMove(), batchFindTargets(), etc for performance
+  getUnitArrays(): any {
+    return null; // Force fallback to non-array paths
+  }
+  
+  getUnitColdData(): Map<string, any> {
+    return this.unitColdData; // Still needed for now
+  }
+  
   
   // Get units for Transform
   getUnitsForTransform(): Unit[] {
@@ -118,6 +126,9 @@ class Simulator {
         // Mark as inactive in arrays
         this.unitArrays.active[i] = 0;
         this.unitArrays.activeCount--;
+        
+        // Notify proxy manager
+        this.proxyManager.notifyUnitRemoved(unitId);
         this.unitCache.delete(unitId);
         this.unitColdData.delete(unitId);
         
@@ -130,6 +141,7 @@ class Simulator {
   
   projectiles: Projectile[];
   rulebook: Rule[];
+  contextRules: ContextRule[] = []; // New rules using TickContext
   queuedEvents: Action[] = [];
   processedEvents: Action[] = [];
   queuedCommands: QueuedCommand[] = [];
@@ -160,11 +172,17 @@ class Simulator {
     return new CommandHandler(this, this.transform);
   }
   
+  // Get a TickContext for this simulator
+  getTickContext(): TickContext {
+    return new TickContextImpl(this);
+  }
+  
   createEventHandler() {
-    return new EventHandler(this);
+    return new EventHandler();
   }
 
-  protected getTransform() { return this.transform; }
+  public getTransform() { return this.transform; }
+  public getProxyManager() { return this.proxyManager; }
 
   private setupDeterministicRandomness(): void {
     if (Simulator.randomProtected) return;
@@ -213,7 +231,10 @@ class Simulator {
     // Initialize cold data storage
     this.unitColdData = new Map();
     
-    // Initialize proxy manager
+    // Initialize data store - the ONLY place that knows about SoA
+    this.unitDataStore = new UnitDataStore(this.unitArrays, this.unitColdData);
+    
+    // Initialize proxy manager (for backward compatibility during transition)
     this.proxyManager = new UnitProxyManager(this.unitArrays, this.unitColdData);
     
     // Initialize transform for controlled mutations
@@ -298,29 +319,31 @@ class Simulator {
     this.processedEvents = [];
     this.queuedCommands = [];
     this.rulebook = [
-      new Abilities(this),
-      new UnitBehavior(this),
-      new UnitMovement(this),
-      new HugeUnits(this), // Handle huge unit phantoms after movement
-      new SegmentedCreatures(this), // Handle segmented creatures after movement
-      new GrapplingPhysics(this), // Handle grappling hook physics
-      new MeleeCombat(this),
-
-      new LightningStorm(this),
+      new Abilities(),
+      new UnitBehavior(),
+      new UnitMovement(),
+      new HugeUnits(), // Handle huge unit phantoms after movement
+      new SegmentedCreatures(), // Handle segmented creatures after movement
+      new GrapplingPhysics(), // Handle grappling hook physics
+      new MeleeCombat(),
+      new AirdropPhysics(), // Handle units dropping from the sky
+      new BiomeEffects(), // Handle winter/desert/biome effects
+      new LightningStorm(),
 
       // not sure i trust either of these yet
-      new AreaOfEffect(this),
-      new Knockback(this),
-      // or this honestly
-      new ProjectileMotion(this),
+      new AreaOfEffect(),
+      new Knockback(),
+      // Projectile handling - physics/motion first, then collision detection
+      new Physics(this), // Updates projectile positions
+      new ProjectileMotion(), // Handles collisions and damage
 
-      new Jumping(this),
-      new Tossing(this), // Handle tossed units
-      new StatusEffects(this), // Handle status effects before damage processing
-      new BiomeEffects(this), // Handle all environmental biome effects (winter, desert, etc.)
-      new Perdurance(this), // Process damage resistance before events are handled
+      new Jumping(),
+      new Tossing(), // Handle tossed units
+      new StatusEffects(), // Handle status effects before damage processing
+      new BiomeEffects(), // Handle all environmental biome effects (winter, desert, etc.)
+      new Perdurance(), // Process damage resistance before events are handled
       this.createEventHandler(), // Convert events to commands
-      new Cleanup(this),
+      new Cleanup(), // No simulator reference!
       new CommandHandler(this, this.transform) // Process ALL commands at the end
     ];
   }
@@ -358,6 +381,9 @@ class Simulator {
       lastAbilityTick: u.lastAbilityTick
     });
     
+    // Notify proxy manager about the new unit
+    this.proxyManager.notifyUnitAdded(u.id, index);
+    
     // Invalidate proxy cache
     this.proxyCacheValid = false;
     
@@ -382,6 +408,9 @@ class Simulator {
       type: newUnit.type,
       lastAbilityTick: newUnit.lastAbilityTick
     });
+    
+    // Notify proxy manager about the new unit
+    this.proxyManager.notifyUnitAdded(newUnit.id, index);
     
     this.dirtyUnits.add(newUnit.id); // Mark as dirty for rendering
     
@@ -455,8 +484,8 @@ class Simulator {
     // Skip expensive double buffering - just work on the main array
     // The overliteral double buffer was hurting performance
     
-    // Rebuild spatial structures for collision detection only if not in performance mode
-    if (!this.performanceMode) {
+    // Rebuild spatial structures for collision detection
+    {
       this.spatialHash.clear();
       this.positionMap.clear();
       this.gridPartition.clear();
@@ -479,20 +508,23 @@ class Simulator {
           this.positionMap.get(key)!.add(unit);
         }
       });
-    } else {
-      // Minimal spatial tracking in performance mode
-      this.unitCache.clear();
-      this.units.forEach(unit => {
-        this.unitCache.set(unit.id, unit);
-      });
     }
     
+      // Execute rules - all rules use context now
+      const context = new TickContextImpl(this);
       for (const rule of this.rulebook) {
-        rule.execute();
+        rule.execute(context);
+      }
+      
+      // Execute context-only rules (deprecated, use main rulebook)
+      if (this.contextRules.length > 0) {
+        for (const rule of this.contextRules) {
+          rule.execute(context);
+        }
       }
     
     // Phase 2: Process ALL pairwise intents in a single pass
-    if (this.pairwiseBatcher && !this.performanceMode) {
+    if (this.pairwiseBatcher) {
       // Always process to update target cache, even if no intents
       this.pairwiseBatcher.process(this.units, this);
       // Copy the populated target cache to simulator
@@ -502,8 +534,8 @@ class Simulator {
     // Track changed units for render deltas
     this.updateChangedUnits();
     
-    // Skip expensive environmental updates in performance mode
-    if (!this.performanceMode) {
+    // Process environmental updates
+    {
       // Update particles
       this.updateParticles();
       
@@ -911,20 +943,49 @@ class Simulator {
   }
 
   setUnitOnFire(unit: Unit) {
-    if (!unit.meta) unit.meta = {}; // Ensure meta exists
-    if (unit.meta.onFire) return; // Already on fire
-    unit.meta.onFire = true;
-    unit.meta.fireDuration = 40; // Burn for 5 seconds at 8fps
-    unit.meta.fireTickDamage = 2; // Damage per tick while burning
+    if (unit.meta?.onFire) return; // Already on fire
+    
+    // Set on fire through command system
+    this.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: unit.id,
+        meta: {
+          ...unit.meta,
+          onFire: true,
+          fireDuration: 40, // Burn for 5 seconds at 8fps
+          fireTickDamage: 2 // Damage per tick while burning
+        }
+      }
+    });
   }
 
   // Process fire effects on burning units
   processFireEffects() {
     for (const unit of this.units) {
       if (unit.meta && unit.meta.onFire && unit.meta.fireDuration > 0) {
-        // Apply fire damage
-        unit.hp -= unit.meta.fireTickDamage || 2;
-        unit.meta.fireDuration--;
+        // Apply fire damage through event system
+        this.queuedEvents.push({
+          kind: 'damage',
+          source: 'fire',
+          target: unit.id,
+          meta: {
+            amount: unit.meta.fireTickDamage || 2,
+            aspect: 'fire'
+          }
+        });
+        
+        // Update fire duration through command
+        this.queuedCommands.push({
+          type: 'meta',
+          params: {
+            unitId: unit.id,
+            meta: {
+              ...unit.meta,
+              fireDuration: unit.meta.fireDuration - 1
+            }
+          }
+        });
         
         // Spawn fire particles around burning unit
         if (Simulator.rng.random() < 0.3) {
@@ -950,15 +1011,25 @@ class Simulator {
   extinguishFires() {
     if (this.weather.current === 'rain' || this.weather.current === 'storm') {
       for (const unit of this.units) {
-        if (unit.meta.onFire) {
+        if (unit.meta?.onFire) {
           const humidity = this.getHumidity(unit.pos.x, unit.pos.y);
           const temperature = this.getTemperature(unit.pos.x, unit.pos.y);
           
           // High humidity and lower temperature can extinguish fires
           if (humidity > 0.6 && temperature < 30) {
-            unit.meta.onFire = false;
-            delete unit.meta.fireDuration;
-            delete unit.meta.fireTickDamage;
+            // Extinguish fire through command system
+            this.queuedCommands.push({
+              type: 'meta',
+              params: {
+                unitId: unit.id,
+                meta: {
+                  ...unit.meta,
+                  onFire: false,
+                  fireDuration: undefined,
+                  fireTickDamage: undefined
+                }
+              }
+            });
           }
         }
       }
@@ -986,8 +1057,8 @@ class Simulator {
   }
 
   accept(input) {
-    this.step();
     this.handleInput(input);
+    this.step();
     return this;
   }
 
@@ -996,7 +1067,22 @@ class Simulator {
     // Clone units via SoA
     for (let i = 0; i < this.unitArrays.capacity; i++) {
       if (this.unitArrays.active[i] === 0) continue;
-      newSimulator.unitArrays.add(this.unitArrays.units[i]);
+      // Reconstruct unit from arrays
+      const unit = {
+        id: this.unitArrays.unitIds[i],
+        pos: { x: this.unitArrays.posX[i], y: this.unitArrays.posY[i] },
+        intendedMove: { x: this.unitArrays.intendedMoveX[i], y: this.unitArrays.intendedMoveY[i] },
+        hp: this.unitArrays.hp[i],
+        maxHp: this.unitArrays.maxHp[i],
+        team: ['friendly', 'hostile', 'neutral'][this.unitArrays.team[i]],
+        state: ['idle', 'walk', 'attack', 'dead'][this.unitArrays.state[i]],
+        mass: this.unitArrays.mass[i],
+        dmg: this.unitArrays.damage[i],
+        sprite: this.unitColdData.get(this.unitArrays.unitIds[i])?.sprite || 'default',
+        abilities: this.unitColdData.get(this.unitArrays.unitIds[i])?.abilities || [],
+        meta: this.unitColdData.get(this.unitArrays.unitIds[i])?.meta || {}
+      } as Unit;
+      newSimulator.addUnit(unit);
     }
     return newSimulator;
   }
@@ -1236,7 +1322,17 @@ class Simulator {
       if (command) {
         for (const cmd of command) {
           if (cmd.action === 'move') {
-            unit.intendedMove = { x: 1, y: 0 };
+            // Set intendedMove based on target
+            if (cmd.target) {
+              // Find unit in arrays and update intendedMove
+              for (let i = 0; i < this.unitArrays.capacity; i++) {
+                if (this.unitArrays.unitIds[i] === unit.id && this.unitArrays.active[i] === 1) {
+                  this.unitArrays.intendedMoveX[i] = cmd.target.x;
+                  this.unitArrays.intendedMoveY[i] = cmd.target.y;
+                  break;
+                }
+              }
+            }
           }
           if (cmd.action === 'fire' && cmd.target) {
             // Find target unit
@@ -1301,71 +1397,50 @@ class Simulator {
       return;
     }
 
-    // Process the ability effects directly
+    // Create a basic TickContext for processing the ability
+    const context = {
+      findUnitsInRadius: (center: any, radius: number) => this.getUnitsNear(center.x, center.y, radius),
+      findUnitById: (id: string) => this.units.find(u => u.id === id),
+      getAllUnits: () => this.units as readonly any[],
+      getUnitsInTeam: (team: string) => this.units.filter(u => u.team === team),
+      getUnitsAt: (pos: any) => this.units.filter(u => 
+        Math.floor(u.pos.x) === Math.floor(pos.x) && 
+        Math.floor(u.pos.y) === Math.floor(pos.y)
+      ),
+      getUnitsInRect: (x: number, y: number, width: number, height: number) => 
+        this.units.filter(u => 
+          u.pos.x >= x && u.pos.x < x + width &&
+          u.pos.y >= y && u.pos.y < y + height
+        ),
+      queueCommand: (cmd: any) => this.queuedCommands.push(cmd),
+      queueEvent: (event: any) => this.queuedEvents.push(event),
+      getRandom: () => Math.random(), // TODO: Use deterministic RNG
+      getCurrentTick: () => this.ticks,
+      getFieldWidth: () => this.fieldWidth,
+      getFieldHeight: () => this.fieldHeight,
+      getProjectiles: () => this.projectiles as readonly any[],
+      getParticles: () => this.particles as readonly any[],
+      getTemperatureAt: (x: number, y: number) => this.temperatureField?.get?.(x, y) || 20,
+      getSceneBackground: () => this.sceneBackground
+    };
+
+    // Process the ability effects through the rule
     const primaryTarget = target || unit;
     for (const effect of jsonAbility.effects) {
-      (abilitiesRule as Abilities).processEffectAsCommand(effect, unit, primaryTarget);
+      (abilitiesRule as Abilities).processEffectAsCommand(context, effect, unit, primaryTarget);
     }
 
-    // Update cooldown
-    if (!unit.lastAbilityTick) unit.lastAbilityTick = {};
-    unit.lastAbilityTick[abilityName] = this.ticks;
-  }
-
-  // Legacy forceAbility implementation (to be removed)
-  _legacyForceAbility(unitId: string, abilityName: string, target?: any): void {
-    const unit = this.units.find(u => u.id === unitId);
-    if (!unit || !unit.abilities[abilityName]) return;
-
-    // Initialize queued commands if needed
-    if (!this.queuedCommands) this.queuedCommands = [];
-
-    // Queue the appropriate command based on ability name
-    switch (abilityName) {
-      case 'grapplingHook':
-        const grappleTarget = target || { x: unit.pos.x + 5, y: unit.pos.y };
-        this.queuedCommands.push({
-          type: 'grapple',
-          params: { x: grappleTarget.x, y: grappleTarget.y },
-          unitId: unit.id
-        });
-        break;
-      
-      case 'makeRain':
-        this.queuedCommands.push({
-          type: 'weather',
-          params: { weatherType: 'rain', duration: 80, intensity: 0.8 },
-          unitId: unit.id
-        });
-        break;
-      
-      case 'deployBot':
-        const deployTarget = target || { x: unit.pos.x + 3, y: unit.pos.y };
-        this.queuedCommands.push({
-          type: 'deploy',
-          params: { unitType: 'clanker', x: deployTarget.x, y: deployTarget.y },
-          unitId: unit.id
-        });
-        break;
-      
-      default:
-        // For other abilities, try to use Abilities
-        const jsonAbilitiesRule = this.rulebook.find(r => r.constructor.name === 'Abilities');
-        if (jsonAbilitiesRule) {
-          // Reset cooldown
-          if (!unit.lastAbilityTick) unit.lastAbilityTick = {};
-          unit.lastAbilityTick[abilityName] = -9999;
-          
-          // Store target in unit meta temporarily
-          unit.meta._testTarget = target;
-          
-          // Run Abilities
-          jsonAbilitiesRule.apply();
-          
-          // Clean up
-          delete unit.meta._testTarget;
+    // Update cooldown through command system (can't directly mutate proxy)
+    this.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: unit.id,
+        lastAbilityTick: {
+          ...unit.lastAbilityTick,
+          [abilityName]: this.ticks
         }
-    }
+      }
+    });
   }
 }
 

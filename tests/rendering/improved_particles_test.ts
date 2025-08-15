@@ -6,7 +6,7 @@ import { EventHandler } from '../../src/rules/event_handler';
 describe('Improved Particle System', () => {
   it('should create single-pixel snowflakes with vertical fall', () => {
     const sim = new Simulator();
-    sim.rulebook = [new WinterEffects(sim), new EventHandler(sim)];
+    // Don't override rulebook - use default integrated rulebook
     for (let tick = 0; tick < 10; tick++) {
       sim.step();
     }
@@ -24,7 +24,7 @@ describe('Improved Particle System', () => {
   
   it('should make snowflakes land at specific cells', () => {
     const sim = new Simulator();
-    sim.rulebook = [new WinterEffects(sim), new EventHandler(sim)];
+    // Don't override rulebook - use default integrated rulebook
     
     // Create a snowflake manually at almost-landed position
     sim.particles.push({

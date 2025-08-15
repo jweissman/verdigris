@@ -1,23 +1,24 @@
 import { Rule } from './rule';
+import type { TickContext } from "../core/tick_context";
 
 export class AmbientBehavior extends Rule {
-  apply(): void {
+  execute(context: TickContext): void {
     // Find all ambient creatures
-    const ambientCreatures = this.sim.units.filter(u => 
+    const ambientCreatures = context.getAllUnits().filter(u => 
       u.meta?.isAmbient && u.hp > 0 && u.team === 'neutral'
     );
     
     for (const creature of ambientCreatures) {
-      this.updateAmbientBehavior(creature);
+      this.updateAmbientBehavior(context, creature);
     }
   }
   
-  private updateAmbientBehavior(creature: any): void {
+  private updateAmbientBehavior(context: TickContext, creature: any): void {
     // Gentle wandering behavior
     if (!creature.meta.wanderTarget || this.isNearTarget(creature)) {
       // Pick new wander target
-      creature.meta.wanderTarget = this.getNewWanderTarget(creature);
-      creature.meta.lastWanderUpdate = this.sim.ticks;
+      creature.meta.wanderTarget = this.getNewWanderTarget(context, creature);
+      creature.meta.lastWanderUpdate = context.getCurrentTick();
     }
     
     // Move slowly toward wander target
@@ -31,7 +32,7 @@ export class AmbientBehavior extends Rule {
       const moveX = (dx / distance) * speed;
       const moveY = (dy / distance) * speed;
       
-      this.sim.queuedCommands.push({
+      context.queueCommand({
         type: 'move',
         params: {
           unitId: creature.id,
@@ -42,8 +43,8 @@ export class AmbientBehavior extends Rule {
     }
     
     // Occasionally change direction (adds naturalism)
-    if (Math.random() < 0.02) { // 2% chance each tick
-      creature.meta.wanderTarget = this.getNewWanderTarget(creature);
+    if (context.getRandom() < 0.02) { // 2% chance each tick
+      creature.meta.wanderTarget = this.getNewWanderTarget(context, creature);
     }
     
     // Face movement direction (for sprites)
@@ -52,7 +53,7 @@ export class AmbientBehavior extends Rule {
     }
     
     // Cute animal interactions
-    this.handleCuteInteractions(creature);
+    this.handleCuteInteractions(context, creature);
   }
   
   private isNearTarget(creature: any): boolean {
@@ -64,29 +65,29 @@ export class AmbientBehavior extends Rule {
     return Math.sqrt(dx * dx + dy * dy) < 1.0;
   }
   
-  private getNewWanderTarget(creature: any): { x: number; y: number } {
+  private getNewWanderTarget(context: TickContext, creature: any): { x: number; y: number } {
     // Stay within reasonable bounds
     const margin = 3;
-    const maxX = this.sim.width - margin;
-    const maxY = this.sim.height - margin;
+    const maxX = context.getFieldWidth() - margin;
+    const maxY = context.getFieldHeight() - margin;
     
     // Prefer staying in central area (avoid edges)
     const centerBias = 0.7;
-    const centerX = this.sim.width / 2;
-    const centerY = this.sim.height / 2;
+    const centerX = context.getFieldWidth() / 2;
+    const centerY = context.getFieldHeight() / 2;
     
     let targetX, targetY;
     
-    if (Math.random() < centerBias) {
+    if (context.getRandom() < centerBias) {
       // Bias toward center
-      const radius = Math.min(this.sim.width, this.sim.height) * 0.3;
-      const angle = Math.random() * 2 * Math.PI;
-      targetX = centerX + Math.cos(angle) * radius * Math.random();
-      targetY = centerY + Math.sin(angle) * radius * Math.random();
+      const radius = Math.min(context.getFieldWidth(), context.getFieldHeight()) * 0.3;
+      const angle = context.getRandom() * 2 * Math.PI;
+      targetX = centerX + Math.cos(angle) * radius * context.getRandom();
+      targetY = centerY + Math.sin(angle) * radius * context.getRandom();
     } else {
       // Random within bounds
-      targetX = margin + Math.random() * (maxX - margin);
-      targetY = margin + Math.random() * (maxY - margin);
+      targetX = margin + context.getRandom() * (maxX - margin);
+      targetY = margin + context.getRandom() * (maxY - margin);
     }
     
     return {
@@ -95,9 +96,9 @@ export class AmbientBehavior extends Rule {
     };
   }
   
-  private handleCuteInteractions(creature: any): void {
+  private handleCuteInteractions(context: TickContext, creature: any): void {
     // Find nearby cute animals
-    const nearbyAnimals = this.sim.units.filter(other => 
+    const nearbyAnimals = context.getAllUnits().filter(other => 
       other.id !== creature.id &&
       other.meta?.isAmbient &&
       other.hp > 0 &&
@@ -105,49 +106,49 @@ export class AmbientBehavior extends Rule {
     );
     
     // Social flocking behavior
-    if (nearbyAnimals.length > 0 && Math.random() < 0.05) {
+    if (nearbyAnimals.length > 0 && context.getRandom() < 0.05) {
       const friend = nearbyAnimals[0];
       
       // Sometimes follow friends
       if (creature.type === friend.type) {
         creature.meta.wanderTarget = {
-          x: friend.pos.x + (Math.random() - 0.5) * 2,
-          y: friend.pos.y + (Math.random() - 0.5) * 2
+          x: friend.pos.x + (context.getRandom() - 0.5) * 2,
+          y: friend.pos.y + (context.getRandom() - 0.5) * 2
         };
       }
     }
     
     // Special squirrel behavior - occasionally "gather" near trees
-    if (creature.type.includes('squirrel') && Math.random() < 0.01) {
+    if (creature.type.includes('squirrel') && context.getRandom() < 0.01) {
       // Look for tree-like positions (could be enhanced with actual tree data)
-      const treeSpot = this.findNearestTreeSpot(creature.pos);
+      const treeSpot = this.findNearestTreeSpot(context, creature.pos);
       if (treeSpot) {
         creature.meta.wanderTarget = treeSpot;
       }
     }
     
     // Birds occasionally "perch" by staying still
-    if (creature.type === 'bird' && Math.random() < 0.005) {
-      creature.meta.perchTime = this.sim.ticks + 50; // perch for 50 ticks
+    if (creature.type === 'bird' && context.getRandom() < 0.005) {
+      creature.meta.perchTime = context.getCurrentTick() + 50; // perch for 50 ticks
       creature.meta.wanderTarget = creature.pos; // stop moving
     }
     
     // End perching
-    if (creature.meta.perchTime && this.sim.ticks > creature.meta.perchTime) {
+    if (creature.meta.perchTime && context.getCurrentTick() > creature.meta.perchTime) {
       delete creature.meta.perchTime;
-      creature.meta.wanderTarget = this.getNewWanderTarget(creature);
+      creature.meta.wanderTarget = this.getNewWanderTarget(context, creature);
     }
   }
   
-  private findNearestTreeSpot(pos: { x: number; y: number }): { x: number; y: number } | null {
+  private findNearestTreeSpot(context: TickContext, pos: { x: number; y: number }): { x: number; y: number } | null {
     // Simple heuristic: areas away from edges might have "trees"
-    const centerX = this.sim.width / 2;
-    const centerY = this.sim.height / 2;
+    const centerX = context.getFieldWidth() / 2;
+    const centerY = context.getFieldHeight() / 2;
     
     // Bias toward center-ish areas
     return {
-      x: centerX + (Math.random() - 0.5) * this.sim.width * 0.5,
-      y: centerY + (Math.random() - 0.5) * this.sim.height * 0.5
+      x: centerX + (context.getRandom() - 0.5) * context.getFieldWidth() * 0.5,
+      y: centerY + (context.getRandom() - 0.5) * context.getFieldHeight() * 0.5
     };
   }
   
