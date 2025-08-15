@@ -216,9 +216,25 @@ export class ForcesCommand extends Command {
         occupiedPositions.add(pos);
       }
     }
-    
+
+    this.separateOverlapping(positionMap, occupiedPositions);
+
+    // let attempts = 0;
+    // let isSettled = false;
+    // // We want to separate overlapping units in a loop like this
+    // // this.separateOverlapping(positionMap, occupiedPositions);
+
+    // while (!isSettled && attempts < 100) {
+    //   attempts++;
+
+    //   // Try to separate overlapping units
+    //   isSettled = this.separateOverlapping(positionMap, occupiedPositions);
+    // }
+  }
+
+  separateOverlapping(positionMap: Map<string, string[]>, occupiedPositions: Set<string>): boolean {
     // Separate overlapping units
-    for (const [pos, unitIds] of positionMap) {
+    for (const [_pos, unitIds] of positionMap) {
       if (unitIds.length <= 1) continue; // No collision
       
       // Sort by priority (mass * 10 + hp) to determine who stays
@@ -262,10 +278,12 @@ export class ForcesCommand extends Command {
         // If we couldn't displace the unit, it stays overlapped
         // This shouldn't happen in normal gameplay but prevents infinite loops
         if (!displaced) {
-          console.warn(`Could not displace unit ${unit.id} from position ${pos}`);
+          // console.warn(`Could not displace unit ${unit.id} from position ${pos}`);
+          return false; 
         }
       }
     }
+    return true;
   }
   
   private resolveCollisionsSoA(arrays: any): void {

@@ -5,11 +5,9 @@ import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { CommandHandler } from '../../src/rules/command_handler';
 
 describe('Grappling Mass Physics', () => {
-  let sim: Simulator;
+  let sim: Simulator = new Simulator(40, 20);
 
-  beforeEach(() => {
-    sim = new Simulator(40, 25);
-  });
+  beforeEach(() => sim.reset());
 
   test('light units can pull each other', () => {
     // Two units with equal mass should pull each other equally
@@ -23,7 +21,7 @@ describe('Grappling Mass Physics', () => {
       hp: 40,
       maxHp: 40,
       mass: 5,
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {}
     };
@@ -38,39 +36,33 @@ describe('Grappling Mass Physics', () => {
       hp: 30,
       maxHp: 30,
       mass: 5,
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {
-        grappled: true,
-        grappledBy: 'grappler',
-        tetherPoint: { x: 5, y: 5 },
-        grappledDuration: 60
+        grappleHit: true, // Mark as hit by grapple
+        grapplerID: 'grappler',
+        grappleOrigin: { x: 5, y: 5 },
+        pinDuration: 60
       }
     };
 
     sim.addUnit(grappler);
     sim.addUnit(target);
 
-    // Create grapple line manually for test
-    const grapplingPhysics = new GrapplingPhysics(sim);
-    (grapplingPhysics as any).grappleLines.set('grappler_target', {
-      grapplerID: 'grappler',
-      targetID: 'target',
-      startPos: { x: 5, y: 5 },
-      endPos: { x: 10, y: 5 },
-      length: 5,
-      taut: true,
-      pinned: false,
-      duration: 60
-    });
-
     const initialGrapplerX = grappler.pos.x;
     const initialTargetX = target.pos.x;
 
-    // Apply grappling physics and process commands
+    // Apply grappling physics to process the grapple hit
+    const grapplingPhysics = new GrapplingPhysics();
     const context = sim.getTickContext();
+    
+    // First execute to process the grappleHit and create the grapple line
     grapplingPhysics.execute(context);
     const commandHandler = new CommandHandler(sim);
+    commandHandler.execute(context);
+    
+    // Now the grapple line should be established, execute again to apply taut effects
+    grapplingPhysics.execute(context);
     commandHandler.execute(context);
 
     // Both should move toward each other
@@ -91,7 +83,7 @@ describe('Grappling Mass Physics', () => {
       hp: 40,
       maxHp: 40,
       mass: 5,
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {}
     };
@@ -106,7 +98,7 @@ describe('Grappling Mass Physics', () => {
       hp: 80,
       maxHp: 80,
       mass: 20, // 4x the grappler's mass
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {
         grappled: true,
@@ -120,7 +112,7 @@ describe('Grappling Mass Physics', () => {
     sim.addUnit(heavyTarget);
 
     // Create grapple line
-    const grapplingPhysics = new GrapplingPhysics(sim);
+    const grapplingPhysics = new GrapplingPhysics();
     (grapplingPhysics as any).grappleLines.set('grappler_heavy', {
       grapplerID: 'grappler',
       targetID: 'heavy',
@@ -160,7 +152,7 @@ describe('Grappling Mass Physics', () => {
       hp: 40,
       maxHp: 40,
       mass: 5,
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {}
     };
@@ -175,7 +167,7 @@ describe('Grappling Mass Physics', () => {
       hp: 120,
       maxHp: 120,
       mass: 50, // Massive creature
-      abilities: {},
+      abilities: [],
       tags: ['titan'],
       meta: {
         grappled: true,
@@ -190,7 +182,7 @@ describe('Grappling Mass Physics', () => {
     sim.addUnit(massiveWorm);
 
     // Create grapple line
-    const grapplingPhysics = new GrapplingPhysics(sim);
+    const grapplingPhysics = new GrapplingPhysics();
     (grapplingPhysics as any).grappleLines.set('grappler_sandworm', {
       grapplerID: 'grappler',
       targetID: 'sandworm',
@@ -237,7 +229,7 @@ describe('Grappling Mass Physics', () => {
       hp: 80,
       maxHp: 80,
       mass: 25,
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {
         grappled: true,
@@ -257,7 +249,7 @@ describe('Grappling Mass Physics', () => {
       hp: 40,
       maxHp: 40,
       mass: 5,
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {}
     };
@@ -272,7 +264,7 @@ describe('Grappling Mass Physics', () => {
       hp: 40,
       maxHp: 40,
       mass: 5,
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {}
     };
@@ -281,21 +273,13 @@ describe('Grappling Mass Physics', () => {
     sim.addUnit(grappler1);
     sim.addUnit(grappler2);
 
-    // Create first grapple line
-    const grapplingPhysics = new GrapplingPhysics(sim);
-    (grapplingPhysics as any).grappleLines.set('g1_heavy', {
-      grapplerID: 'g1',
-      targetID: 'heavy',
-      startPos: { x: 5, y: 10 },
-      endPos: { x: 10, y: 10 },
-      length: 5,
-      taut: true,
-      pinned: false,
-      duration: 60
-    });
-
-    // Add rules to simulator and run a step
-    sim.rulebook = [new CommandHandler(sim), grapplingPhysics];
+    // Set up first grapple via metadata (simulate grapple hit)
+    const heavyUnit = sim.units.find(u => u.id === 'heavy')!;
+    heavyUnit.meta.grappleHit = true;
+    heavyUnit.meta.grapplerID = 'g1';
+    heavyUnit.meta.grappleOrigin = { x: 5, y: 10 };
+    
+    // Use default rulebook which includes GrapplingPhysics
     sim.step();
 
     // Heavy unit should have some movement penalty from first grapple
@@ -303,21 +287,12 @@ describe('Grappling Mass Physics', () => {
     const firstPenalty = updatedHeavy!.meta.movementPenalty || 0;
     expect(firstPenalty).toBeGreaterThan(0);
 
-    // Add second grappler
-    (grapplingPhysics as any).grappleLines.set('g2_heavy', {
-      grapplerID: 'g2',
-      targetID: 'heavy',
-      startPos: { x: 15, y: 10 },
-      endPos: { x: 10, y: 10 },
-      length: 5,
-      taut: true,
-      pinned: false,
-      duration: 60
-    });
-
-    // Mark as grappled by multiple units
-    heavy.meta.additionalGrapplers = ['g2'];
-
+    // Clear the first grapple hit flag and add second grapple
+    updatedHeavy!.meta.grappleHit = true;
+    updatedHeavy!.meta.grapplerID = 'g2';
+    updatedHeavy!.meta.grappleOrigin = { x: 15, y: 10 };
+    updatedHeavy!.meta.additionalGrapplers = ['g2'];
+    
     // Run another step to process the second grappler
     sim.step();
 
@@ -337,33 +312,34 @@ describe('Grappling Mass Physics', () => {
       hp: 30,
       maxHp: 30,
       mass: 5,
-      abilities: {},
+      abilities: [],
       tags: [],
       meta: {
         pinned: true,
+        pinDuration: 10, // Pinned for 10 ticks
         movementPenalty: 1.0 // Completely immobilized
       }
     };
 
     sim.addUnit(pinned);
     
-    const initialPos = { ...pinned.pos };
+    const initialX = pinned.pos.x;
+    const initialY = pinned.pos.y;
     
-    // Apply movement with penalty
-    const grapplingPhysics = new GrapplingPhysics(sim);
+    // Apply grappling physics which should handle pinned units
+    const grapplingPhysics = new GrapplingPhysics();
     const context = sim.getTickContext();
     grapplingPhysics.execute(context);
     const commandHandler = new CommandHandler(sim);
     commandHandler.execute(context);
     
-    // Movement should be completely negated by penalty
-    if (pinned.meta.movementPenalty === 1.0) {
-      pinned.intendedMove.x = 0;
-      pinned.intendedMove.y = 0;
-    }
-
+    // Get the updated unit
+    const updatedPinned = sim.units.find(u => u.id === 'pinned');
+    
     // Unit should not have moved at all
-    expect(pinned.intendedMove.x).toBe(0);
-    expect(pinned.intendedMove.y).toBe(0);
+    expect(updatedPinned!.pos.x).toBe(initialX);
+    expect(updatedPinned!.pos.y).toBe(initialY);
+    // Also check the halt command was applied
+    expect(updatedPinned!.meta.stunned).toBe(true);
   });
 });

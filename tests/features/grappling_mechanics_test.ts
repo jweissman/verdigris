@@ -133,6 +133,7 @@ describe('Grappling Mechanics - Core Physics', () => {
     );
     
     expect(segment1).toBeDefined();
+    console.log('Segment initial hp:', segment1!.hp);
     const initialSegmentHp = segment1!.hp;
     
     // Fire grapple using command
