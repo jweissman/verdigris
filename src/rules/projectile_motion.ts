@@ -11,32 +11,66 @@ export class ProjectileMotion extends Rule {
     const units = context.getAllUnits();
     
     for (const projectile of projectiles) {
-      // Check collision with units
-      for (const unit of units) {
-        if (unit.team !== projectile.team && unit.hp > 0) {
-          const dx = unit.pos.x - projectile.pos.x;
-          const dy = unit.pos.y - projectile.pos.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance < (projectile.radius || 1)) {
-            // Hit! Queue damage event
-            context.queueEvent({
-              kind: 'damage',
-              source: projectile.id || 'projectile',
-              target: unit.id,
-              meta: {
-                amount: projectile.damage || 10,
-                aspect: projectile.aspect || 'physical',
-                origin: projectile.pos
-              }
-            });
+      // Special handling for grapple projectiles
+      if (projectile.type === 'grapple') {
+        // Check collision with any unit (friendly or enemy)
+        for (const unit of units) {
+          if (unit.hp > 0) {
+            const dx = unit.pos.x - projectile.pos.x;
+            const dy = unit.pos.y - projectile.pos.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
             
-            // Queue command to remove projectile
-            context.queueCommand({
-              type: 'removeProjectile', 
-              params: { id: projectile.id }
-            });
-            break;
+            if (distance < (projectile.radius || 1)) {
+              // Grapple hit! Set metadata for GrapplingPhysics to process
+              context.queueCommand({
+                type: 'meta',
+                params: {
+                  unitId: unit.id,
+                  meta: {
+                    grappleHit: true,
+                    grapplerID: projectile.sourceId || 'unknown',
+                    grappleOrigin: { ...projectile.pos }
+                  }
+                }
+              });
+              
+              // Remove the grapple projectile
+              context.queueCommand({
+                type: 'removeProjectile',
+                params: { id: projectile.id }
+              });
+              break;
+            }
+          }
+        }
+      } else {
+        // Normal projectile handling (damage)
+        for (const unit of units) {
+          if (unit.team !== projectile.team && unit.hp > 0) {
+            const dx = unit.pos.x - projectile.pos.x;
+            const dy = unit.pos.y - projectile.pos.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < (projectile.radius || 1)) {
+              // Hit! Queue damage event
+              context.queueEvent({
+                kind: 'damage',
+                source: projectile.id || 'projectile',
+                target: unit.id,
+                meta: {
+                  amount: projectile.damage || 10,
+                  aspect: projectile.aspect || 'physical',
+                  origin: projectile.pos
+                }
+              });
+              
+              // Queue command to remove projectile
+              context.queueCommand({
+                type: 'removeProjectile', 
+                params: { id: projectile.id }
+              });
+              break;
+            }
           }
         }
       }

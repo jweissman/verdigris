@@ -258,9 +258,38 @@ export class BiomeEffects extends Rule {
     // Handle snow landing via update_projectile command
     // This maintains immutability - CommandHandler will process the updates
     const particles = context.getParticles();
+    const units = context.getAllUnits();
+    
     particles.forEach(particle => {
       if (particle.type === 'snow' && !particle.landed) {
-        // Check if snowflake should land
+        // Check if snowflake hits a unit
+        for (const unit of units) {
+          const dx = unit.pos.x - particle.pos.x;
+          const dy = unit.pos.y - particle.pos.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < 1 && !unit.meta.frozen) {
+            // Snow particle hits unit - freeze them!
+            context.queueCommand({
+              type: 'meta',
+              params: {
+                unitId: unit.id,
+                meta: {
+                  frozen: true,
+                  frozenDuration: 40,
+                  brittle: true,
+                  stunned: true
+                }
+              }
+            });
+            
+            // Remove snow particle after it hits (can't update it through commands)
+            // This would need a removeParticle command or similar
+            break;
+          }
+        }
+        
+        // Check if snowflake should land on ground
         if (particle.pos.y >= context.getFieldHeight() - 1) {
           // Queue particle update command
           context.queueCommand({

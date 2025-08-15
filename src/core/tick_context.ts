@@ -12,47 +12,26 @@ import type { Simulator } from "./simulator";
  * Rules receive this context in their execute() method.
  */
 export interface TickContext {
-  // Unit queries
   findUnitsInRadius(center: Vec2, radius: number): Unit[];
   findUnitById(id: string): Unit | undefined;
   getAllUnits(): readonly Unit[];
   getUnitsInTeam(team: string): Unit[];
-  
-  // Spatial queries
   getUnitsAt(pos: Vec2): Unit[];
   getUnitsInRect(x: number, y: number, width: number, height: number): Unit[];
-  
-  // Command and event queuing
   queueCommand(command: { type: string; params: any }): void;
   queueEvent(event: { kind: string; source?: string; target?: any; meta?: any }): void;
-  
-  // Random number generation
   getRandom(): number;
-  
-  // Time information
   getCurrentTick(): number;
-  
-  // Field information
   getFieldWidth(): number;
   getFieldHeight(): number;
-  
-  // Projectiles (read-only view)
   getProjectiles(): readonly Projectile[];
-  
-  // Particles (read-only view)
   getParticles(): readonly Particle[];
-  
-  // Environment queries
   getTemperatureAt(x: number, y: number): number;
   getSceneBackground(): string;
-  
-  // Weather state (read-only)
   isWinterActive(): boolean;
   isSandstormActive(): boolean;
   getSandstormIntensity(): number;
   getSandstormDuration(): number;
-  
-  // Event querying  
   getQueuedEvents(): readonly any[];
 }
 

@@ -6,6 +6,7 @@
     "lib": ["ES2022", "DOM"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "downlevelIteration": true,
     "resolveJsonModule": true,
     "strict": false,
     "skipLibCheck": true,

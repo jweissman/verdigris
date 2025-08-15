@@ -150,8 +150,6 @@ describe('Mechanist Showcase', () => {
     // Create builder and a construct to reinforce
     const builder = { ...Encyclopaedia.unit('builder'), pos: { x: 5, y: 5 } };
     const construct = { ...Encyclopaedia.unit('clanker'), pos: { x: 7, y: 5 } };
-    const originalHp = construct.hp;
-    const originalMaxHp = construct.maxHp;
     
     sim.addUnit(builder);
     sim.addUnit(construct);
@@ -159,6 +157,10 @@ describe('Mechanist Showcase', () => {
     // Get references to the actual units in the simulator
     const simBuilder = sim.units.find(u => u.sprite === 'builder')!;
     const simConstruct = sim.units.find(u => u.sprite === 'clanker')!;
+    
+    // Get original values from the simulator proxy
+    const originalHp = simConstruct.hp;
+    const originalMaxHp = simConstruct.maxHp;
     
     // Force the reinforcement ability
     sim.forceAbility(simBuilder.id, 'reinforceConstruct', simConstruct);
@@ -182,46 +184,46 @@ describe('Mechanist Showcase', () => {
     
     // Create fueler and mechanical units to boost
     const fueler = { ...Encyclopaedia.unit('fueler'), pos: { x: 5, y: 5 } };
-    const construct1 = { ...Encyclopaedia.unit('freezebot'), pos: { x: 7, y: 5 } };
-    const construct2 = { ...Encyclopaedia.unit('spiker'), pos: { x: 6, y: 7 } };
+    const freezeBot = { ...Encyclopaedia.unit('freezebot'), pos: { x: 7, y: 5 } };
+    const spikerBot = { ...Encyclopaedia.unit('spiker'), pos: { x: 6, y: 7 } };
     
     sim.addUnit(fueler);
-    sim.addUnit(construct1);
-    sim.addUnit(construct2);
+    sim.addUnit(freezeBot);
+    sim.addUnit(spikerBot);
     
     // Get the actual units from the simulator
-    const simFueler = sim.units.find(u => u.sprite === 'fueler')!;
-    const simConstruct1 = sim.units.find(u => u.sprite === 'freezebot')!;
-    const simConstruct2 = sim.units.find(u => u.sprite === 'spikebot')!;
+    const fuelerMechanist = sim.units.find(u => u.sprite === 'fueler')!;
+    const simFreezeBot = sim.units.find(u => u.sprite === 'freezebot')!;
+    const simSpikerBot = sim.units.find(u => u.sprite === 'spikebot')!;
     
     // Set up some cooldowns to test the reset
     sim.ticks = 100;
     sim.queuedCommands.push({
       type: 'meta',
       params: {
-        unitId: simConstruct1.id,
+        unitId: simFreezeBot.id,
         lastAbilityTick: { freezeAura: 99 } // Recently used (1 tick ago, still on cooldown)
       }
     });
     sim.queuedCommands.push({
       type: 'meta',
       params: {
-        unitId: simConstruct2.id,
+        unitId: simSpikerBot.id,
         lastAbilityTick: { whipChain: 98 } // Recently used (2 ticks ago, still on cooldown)
       }
     });
     
-    console.debug(`Before: freezebot cooldown = ${simConstruct1.lastAbilityTick.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick.whipChain}`);
+    console.debug(`Before: freezebot cooldown = ${simFreezeBot.lastAbilityTick?.freezeAura}, spiker cooldown = ${simSpikerBot.lastAbilityTick?.whipChain}`);
     
     // Force the power surge ability - this should reset cooldowns
-    sim.forceAbility(simFueler.id, 'powerSurge', simFueler);
+    sim.forceAbility(fuelerMechanist.id, 'powerSurge', fuelerMechanist);
     
-    console.debug(`After power surge (before step): freezebot cooldown = ${simConstruct1.lastAbilityTick?.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick?.whipChain}`);
+    console.debug(`After power surge (before step): freezebot cooldown = ${simFreezeBot.lastAbilityTick?.freezeAura}, spiker cooldown = ${simSpikerBot.lastAbilityTick?.whipChain}`);
     
     // Process the power surge command
     sim.step();
     
-    console.debug(`After step: freezebot cooldown = ${simConstruct1.lastAbilityTick?.freezeAura}, spiker cooldown = ${simConstruct2.lastAbilityTick?.whipChain}`);
+    console.debug(`After step: freezebot cooldown = ${simFreezeBot.lastAbilityTick?.freezeAura}, spiker cooldown = ${simSpikerBot.lastAbilityTick?.whipChain}`);
     
     // The test should check that the power surge reset effect worked
     // If abilities are triggering automatically during step, we should at least see that 
@@ -353,21 +355,21 @@ describe('Mechanist Showcase', () => {
     
     
     const assembler = { ...Encyclopaedia.unit('assembler'), pos: { x: 5, y: 5 } };
-    const construct1 = { ...Encyclopaedia.unit('roller'), pos: { x: 6, y: 5 } };
-    const construct2 = { ...Encyclopaedia.unit('zapper'), pos: { x: 7, y: 6 } };
+    const roller = { ...Encyclopaedia.unit('roller'), pos: { x: 6, y: 5 } };
+    const zapper = { ...Encyclopaedia.unit('zapper'), pos: { x: 7, y: 6 } };
     
     sim.addUnit(assembler);
-    sim.addUnit(construct1);
-    sim.addUnit(construct2);
+    sim.addUnit(roller);
+    sim.addUnit(zapper);
     
     // Get the actual units from the simulator
     const simAssembler = sim.units.find(u => u.sprite === 'assembler')!;
-    const simConstruct1 = sim.units.find(u => u.sprite === 'jumpbot')!;
-    const simConstruct2 = sim.units.find(u => u.sprite === 'zapper')!;
+    const simRoller = sim.units.find(u => u.sprite === 'jumpbot')!;
+    const simZapper = sim.units.find(u => u.sprite === 'zapper')!;
     
     // Test reinforcement
-    const beforeHp = simConstruct1.hp;
-    sim.forceAbility(simAssembler.id, 'reinforceConstruct', simConstruct1);
+    const beforeHp = simRoller.hp;
+    sim.forceAbility(simAssembler.id, 'reinforceConstruct', simRoller);
     sim.step(); // Process command
     sim.step(); // Process heal event and command
     
@@ -378,15 +380,15 @@ describe('Mechanist Showcase', () => {
     // Test power surge  
     // Set up cooldowns
     sim.ticks = 60;
-    simConstruct1.lastAbilityTick = { chargeAttack: 55 };
-    simConstruct2.lastAbilityTick = { zapHighest: 50 };
+    simRoller.lastAbilityTick = { chargeAttack: 55 };
+    simZapper.lastAbilityTick = { zapHighest: 50 };
     
     sim.forceAbility(simAssembler.id, 'powerSurge', simAssembler.pos);
     sim.step();
     
     // Should reset cooldowns (abilities may immediately trigger after reset)
-    expect(simConstruct1.lastAbilityTick!.chargeAttack).toBeLessThanOrEqual(sim.ticks);
-    expect(simConstruct2.lastAbilityTick!.zapHighest).toBeLessThanOrEqual(sim.ticks + 1); // May trigger immediately
+    expect(simRoller.lastAbilityTick!.chargeAttack).toBeLessThanOrEqual(sim.ticks);
+    expect(simZapper.lastAbilityTick!.zapHighest).toBeLessThanOrEqual(sim.ticks + 1); // May trigger immediately
   });
 
   it('should verify mechanist synergy with constructs', () => {

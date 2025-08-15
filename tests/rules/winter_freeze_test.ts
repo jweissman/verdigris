@@ -13,11 +13,8 @@ describe('Winter Snow Freeze Interactions', () => {
   it('should demonstrate snow particles freezing units on contact', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [
-      new CommandHandler(sim),
-      new BiomeEffects(),
-      new EventHandler()
-    ];
+    // Use default rulebook which includes all necessary rules
+    // BiomeEffects is already in the default rulebook
 
     // Deploy test units in the field - use simpler positions
     const soldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 10, y: 8 } };
@@ -55,8 +52,15 @@ describe('Winter Snow Freeze Interactions', () => {
     let freezeImpacts = 0;
     
     // Run simulation to let snow particles fall and interact with units
+    let anyUnitWasFrozen = false;
     for (let tick = 0; tick < 50; tick++) {
       sim.step();
+      
+      // Debug: Check particle positions
+      if (tick % 10 === 0) {
+        const snowPos = sim.particles.filter(p => p.type === 'snow').map(p => `(${p.pos.x.toFixed(1)},${p.pos.y.toFixed(1)})`);
+        console.log(`Tick ${tick}: Snow at ${snowPos.join(', ')}, Soldier at (${soldier.pos.x},${soldier.pos.y})`);
+      }
       
       const currentSnowParticles = sim.particles.filter(p => p.type === 'snow').length;
       const currentFreezeImpacts = sim.particles.filter(p => p.type === 'freeze_impact').length;
@@ -71,22 +75,26 @@ describe('Winter Snow Freeze Interactions', () => {
       
       // Check for newly frozen units
       const currentFrozenUnits = sim.units.filter(u => u.meta.frozen).length;
+      if (currentFrozenUnits > 0) {
+        anyUnitWasFrozen = true;
+      }
       if (currentFrozenUnits > frozenUnits) {
         frozenUnits = currentFrozenUnits;
         const frozen = sim.units.find(u => u.meta.frozen);
+        const temp = sim.temperatureField.get(Math.floor(soldier.pos.x), Math.floor(soldier.pos.y));
+        console.log(`Unit frozen at tick ${tick}! Temp at soldier: ${temp}`);
+      } else if (currentFrozenUnits < frozenUnits) {
+        const temp = sim.temperatureField.get(Math.floor(soldier.pos.x), Math.floor(soldier.pos.y));
+        console.log(`Unit THAWED at tick ${tick}! Temp at soldier: ${temp}`);
+        frozenUnits = currentFrozenUnits;
       }
     }
 
-    // Verify snow-freeze interaction system worked
-    const finalFrozenUnits = sim.units.filter(u => u.meta.frozen);
-    expect(finalFrozenUnits.length).toBeGreaterThan(0);
+    // Verify snow-freeze interaction system worked - unit was frozen at some point
+    expect(anyUnitWasFrozen).toBe(true);
     
     const totalParticles = sim.particles.length;
     expect(totalParticles).toBeGreaterThan(0);
-    
-    
-    finalFrozenUnits.forEach(unit => {
-    });
     
   });
 

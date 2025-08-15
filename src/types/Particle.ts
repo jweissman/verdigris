@@ -7,7 +7,7 @@ export interface Particle {
   radius: number;
   lifetime: number; // in ticks
   ttl?: number; // Time to live (alias for lifetime)
-  color: string; // CSS color string
+  color?: string; // CSS color string (optional - 1-bit aesthetic)
   z?: number; // Height above ground for 3D effect
   size?: number; // Particle size/scale
   intensity?: number; // Visual intensity for effects

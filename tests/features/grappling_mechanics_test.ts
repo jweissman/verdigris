@@ -67,15 +67,27 @@ describe('Grappling Mechanics - Core Physics', () => {
     
     // Fire grapple using Abilities
     sim.step(); // Abilities queues the grapple command
+    
+    // Check if a grapple projectile was created
+    const grapplesAfterStep = sim.projectiles.filter(p => p.type === 'grapple');
+    console.log('Grapple projectiles after first step:', grapplesAfterStep.length);
+    
     sim.step(); // CommandHandler processes the grapple command
     
     // Process grapple projectile movement and collision
     for (let i = 0; i < 20; i++) {
       sim.step();
       
+      // Check if any unit has grappleHit flag
+      const hitUnits = sim.units.filter(u => u.meta.grappleHit);
+      if (hitUnits.length > 0) {
+        console.log('Units with grappleHit:', hitUnits.map(u => u.id));
+      }
+      
       // Check if tether was established
       const g = sim.units.find(u => u.id === 'grappler-1');
       if (g?.meta.grapplingTarget === 'target-1') {
+        console.log('Tether established at step', i);
         break;
       }
     }
@@ -86,13 +98,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should damage and pin segments when grappling segmented creature', () => {
     const sim = new Simulator();
-    sim.rulebook = [
-      new SegmentedCreatures(sim), // Add segmented creatures rule first
-      new CommandHandler(sim), 
-      new Abilities(sim), 
-      new ProjectileMotion(sim), 
-      new GrapplingPhysics(sim)
-    ];
+    // Use default rulebook which has all necessary rules
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),

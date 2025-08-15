@@ -688,7 +688,7 @@ class Simulator {
       },
       radius: Simulator.rng.random() * 1.5 + 0.5, // Small leaf size
       lifetime: 1000 + Simulator.rng.random() * 500, // Long lifetime for drifting
-      // No color property - particles are always black
+      // No color - 1-bit aesthetic
       z: 10 + Simulator.rng.random() * 20, // Start at various heights
       type: 'leaf',
       landed: false
@@ -927,7 +927,7 @@ class Simulator {
       },
       radius: 0.8 + Simulator.rng.random() * 0.7, // Variable spark size
       lifetime: 30 + Simulator.rng.random() * 40, // Medium lifetime
-      // No color - particles are always black
+      // No color - 1-bit aesthetic
       z: Simulator.rng.random() * 3, // Start at ground level to low height
       type: 'debris', // Reuse debris type for now
       landed: false
@@ -1423,15 +1423,18 @@ class Simulator {
     for (const effect of jsonAbility.effects) {
       (abilitiesRule as Abilities).processEffectAsCommand(context, effect, unit, primaryTarget);
     }
-
-    // Update cooldown through command system (can't directly mutate proxy)
+    
+    // Update lastAbilityTick through command to prevent re-firing
+    // Note: This will be processed after abilities run, so forceAbility + step() may double-fire
     this.queuedCommands.push({
       type: 'meta',
       params: {
         unitId: unit.id,
-        lastAbilityTick: {
-          ...unit.lastAbilityTick,
-          [abilityName]: this.ticks
+        meta: {
+          lastAbilityTick: {
+            ...unit.lastAbilityTick,
+            [abilityName]: this.ticks
+          }
         }
       }
     });

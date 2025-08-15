@@ -17,9 +17,21 @@ export default class Particles extends Rule {
     for (const particle of this.sim.particles) {
       if (particle.state === 'dead') continue;
 
+      // Handle landed particles - they don't move
+      if (particle.landed) continue;
+
       // Update particle position based on velocity
       particle.pos.x += particle.vel.x;
       particle.pos.y += particle.vel.y;
+
+      // Check for landing (snow particles)
+      if (particle.type === 'snow' && particle.pos.y >= context.getFieldHeight() - 1) {
+        particle.landed = true;
+        particle.pos.y = context.getFieldHeight() - 1;
+        particle.vel.x = 0;
+        particle.vel.y = 0;
+        continue;
+      }
 
       // Check for boundary collisions
       if (particle.pos.x < 0 || particle.pos.x > context.getFieldWidth() ||

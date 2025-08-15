@@ -13,7 +13,7 @@ export class UnitBehavior extends Rule {
     return;
     
     // REMOVED: Traditional per-unit processing - keeping code below for reference but unreachable
-    (this.sim.units as Unit[]).forEach(unit => {
+    (context.getAllUnits() as Unit[]).forEach(unit => {
       if (unit.state === 'dead' || unit.hp == 0) return;
       
       // Don't change behavior for jumping units - they're in the air!
