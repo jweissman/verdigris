@@ -13,12 +13,7 @@ describe('Mechanist Showcase', () => {
 
   it('should deploy the complete mechanist force', () => {
     const sim = new Simulator();
-    sim.rulebook = [
-      new CommandHandler(sim), 
-      new Abilities(sim), 
-      new EventHandler(),
-      new LightningStorm(sim)
-    ];
+    // Don't override rulebook - use default which includes all necessary rules
 
     // Deploy Mechatronist commander
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 10, y: 5 } };
@@ -422,8 +417,24 @@ describe('Mechanist Showcase', () => {
     const simConstruct2 = sim.units.find(u => u.sprite === 'freezebot')!;
     
     // Damage one construct after getting the sim reference
-    simConstruct1.hp = 2;
-    simConstruct1.meta.stunned = true;
+    sim.queuedCommands.push({
+      type: 'damage',
+      params: {
+        targetId: simConstruct1.id,
+        amount: simConstruct1.hp - 2,
+        aspect: 'test'
+      }
+    });
+    sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: simConstruct1.id,
+        meta: {
+          stunned: true
+        }
+      }
+    });
+    sim.step(); // Process the damage and meta commands
     
     let synergisticActions = 0;
     
@@ -443,7 +454,16 @@ describe('Mechanist Showcase', () => {
     
     // Test power boost synergy
     sim.ticks = 30;
-    simConstruct2.lastAbilityTick = { freezeAura: 25 };
+    sim.queuedCommands.push({
+      type: 'meta',
+      params: {
+        unitId: simConstruct2.id,
+        meta: {
+          lastAbilityTick: { freezeAura: 25 }
+        }
+      }
+    });
+    sim.step(); // Process the meta command
     sim.forceAbility(simFueler.id, 'powerSurge', simFueler.pos);
     sim.step();
     if (simConstruct2.lastAbilityTick!.freezeAura <= sim.ticks) synergisticActions++; // Abilities may fire after reset

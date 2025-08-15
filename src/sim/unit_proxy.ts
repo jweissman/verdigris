@@ -133,7 +133,7 @@ export class UnitProxyManager implements DataQuery {
     this.rebuildIndex();
   }
   
-  private rebuildIndex(): void {
+  rebuildIndex(): void {
     this.idToIndex.clear();
     for (let i = 0; i < this.arrays.capacity; i++) {
       if (this.arrays.active[i] && this.arrays.unitIds[i]) {
@@ -143,9 +143,14 @@ export class UnitProxyManager implements DataQuery {
   }
   
   private getIndex(unitId: string): number {
-    const index = this.idToIndex.get(unitId);
+    let index = this.idToIndex.get(unitId);
     if (index === undefined) {
-      throw new Error(`Unit ${unitId} not found`);
+      // Try rebuilding index in case new units were added
+      this.rebuildIndex();
+      index = this.idToIndex.get(unitId);
+      if (index === undefined) {
+        throw new Error(`Unit ${unitId} not found`);
+      }
     }
     return index;
   }

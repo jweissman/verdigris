@@ -186,33 +186,25 @@ export class SceneLoader {
   }
 
   private createUnit(unitName: string, x: number, y: number): void {
-    const unitData = Encyclopaedia.unit(unitName);
-    const unitWithPos = { ...unitData, pos: { x, y } };
-    
-    // Ensure meta is preserved - deep copy if it exists
-    if (unitData.meta) {
-      unitWithPos.meta = { ...unitData.meta };
-    }
-    
-    // Stagger ability cooldowns to prevent simultaneous mass abilities
-    // Particularly important for jump abilities to prevent mutual destruction
-    if (unitWithPos.abilities && unitWithPos.abilities.includes('jumps')) {
-      // Spread jumps across 100 ticks to prevent mass mutual destruction
-      const offset = (this.unitCreationIndex % 20) * 10; // 0, 10, 20... up to 190
-      unitWithPos.lastAbilityTick = {
-        jumps: -50 + offset // Some can jump immediately, others wait up to 140 ticks
-      };
-      this.unitCreationIndex++;
-    }
-    
-    // Queue add command instead of directly adding
+    // Use SpawnCommand's unitType path for deterministic ID generation
+    // This ensures consistent unit creation across all code paths
     if (!this.sim.queuedCommands) {
       this.sim.queuedCommands = [];
     }
+    
     this.sim.queuedCommands.push({
       type: 'spawn',
-      params: { unit: unitWithPos }
+      params: { 
+        unitType: unitName,
+        x: x,
+        y: y
+        // Use team from units.json data instead of overriding
+      }
     });
+    
+    // Note: Special handling for jumping abilities should be moved to
+    // SpawnCommand or handled via separate commands after spawn
+    // This keeps unit creation pipeline unified
   }
 
 }

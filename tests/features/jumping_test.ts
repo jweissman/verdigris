@@ -58,12 +58,7 @@ describe('Jumping mechanics', () => {
 
   it('worm should deal AoE damage on landing', () => {
     const sim = new Simulator(16, 16);
-    sim.rulebook = [
-      new CommandHandler(sim),
-      new Abilities(sim),
-      new Jumping(sim),
-      new EventHandler()
-    ];
+    // Don't override rulebook - use default which includes all necessary rules
 
     const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 8, y: 8 } };
     worm.abilities = ['jumps'];

@@ -18,4 +18,10 @@ export interface Projectile {
   z?: number;
   // For AoE on impact
   aoeRadius?: number;
+  // Projectile lifetime and decay
+  lifetime?: number;
+  // Visual/effect aspect
+  aspect?: string;
+  // Alternative to aoeRadius for explosions
+  explosionRadius?: number;
 }

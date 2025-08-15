@@ -10,7 +10,7 @@ import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 describe('Grappling Mechanics - Core Physics', () => {
   it('should create a grapple projectile when grappler fires hook', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
     
     // Create grappler unit
     const grappler = {
@@ -46,7 +46,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should establish tether when grapple hits target unit', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
@@ -150,7 +150,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should limit grappler to maximum simultaneous grapples', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new ProjectileMotion(sim), new GrapplingPhysics(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),

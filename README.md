@@ -75,7 +75,7 @@ The engine prioritizes testability:
 
 ## Development Philosophy
 
-- **Living Documentation**: Code and tests serve as the primary specification
+- **Living Documentation**: Code and tests serve as the primary specification (but see [`arch decision record`](docs/ARCHITECTURE.md) and [`design bible`](docs/design-bible.md) etc)
 - **Interpretable Mechanics**: Every stat has in-world justification
 - **Emergent Depth**: Simple rules create complex interactions
 - **Constraints as Creativity**: Technical limits inspire innovative solutions

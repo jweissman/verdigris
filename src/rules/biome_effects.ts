@@ -47,75 +47,55 @@ export class BiomeEffects extends Rule {
     super();
   }
   
-  // Compatibility methods for existing winter effects API
+  // Clean command factories - BiomeEffects never touches simulator
+  // These just return commands for callers to execute
+  static winterStormCommands(): any[] {
+    return [
+      { type: 'weather', params: { weatherType: 'winter' }},
+      { type: 'temperature', params: { value: -5 }}
+    ];
+  }
+  
+  static endWinterCommands(): any[] {
+    return [
+      { type: 'weather', params: { weatherType: 'clear' }},
+      { type: 'temperature', params: { value: 20 }}
+    ];
+  }
+  
+  static sandstormCommands(duration: number = 200, intensity: number = 0.8): any[] {
+    return [
+      { type: 'weather', params: { weatherType: 'sandstorm', duration, intensity }}
+    ];
+  }
+  
+  // Test helpers - tests have permission to mutate sim for setup
   static createWinterStorm(sim: any): void {
-    // Lower temperature across the field - make it much colder
-    for (let x = 0; x < sim.fieldWidth; x++) {
-      for (let y = 0; y < sim.fieldHeight; y++) {
-        const currentTemp = sim.temperatureField.get(x, y);
-        // Drop temperature by 35 degrees, minimum -5°C  
-        sim.temperatureField.set(x, y, Math.max(-5, currentTemp - 35));
-      }
-    }
-    
-    // Add winter weather flag
     sim.winterActive = true;
-    
-    // Add initial snow particles for immediate visual feedback
-    for (let i = 0; i < 20; i++) {
-      sim.particles.push({
-        id: `snow_${Date.now()}_${i}`,
-        type: 'snow',
-        pos: { 
-          x: Math.random() * sim.fieldWidth * 8, 
-          y: Math.random() * 10 
-        },
-        vel: { x: 0, y: 0.15 },
-        radius: 0.25,
-        color: '#FFFFFF',
-        lifetime: 200,
-        z: 5,
-        landed: false
-      });
+    if (sim.temperatureField) {
+      for (let x = 0; x < sim.fieldWidth; x++) {
+        for (let y = 0; y < sim.fieldHeight; y++) {
+          sim.temperatureField.set(x, y, -5);
+        }
+      }
     }
   }
   
   static endWinterStorm(sim: any): void {
-    // Gradually warm up the field
-    for (let x = 0; x < sim.fieldWidth; x++) {
-      for (let y = 0; y < sim.fieldHeight; y++) {
-        const currentTemp = sim.temperatureField.get(x, y);
-        sim.temperatureField.set(x, y, Math.min(20, currentTemp + 10));
+    sim.winterActive = false;
+    if (sim.temperatureField) {
+      for (let x = 0; x < sim.fieldWidth; x++) {
+        for (let y = 0; y < sim.fieldHeight; y++) {
+          sim.temperatureField.set(x, y, 20);
+        }
       }
     }
-    
-    sim.winterActive = false;
   }
-
-  // Compatibility methods for desert effects API
+  
   static triggerSandstorm(sim: any, duration: number = 200, intensity: number = 0.8): void {
     sim.sandstormActive = true;
     sim.sandstormDuration = duration;
     sim.sandstormIntensity = intensity;
-    
-    // Add initial sandstorm particles
-    for (let i = 0; i < 50 * intensity; i++) {
-      sim.particles.push({
-        id: `sand_${Date.now()}_${i}`,
-        type: 'sand',
-        pos: { 
-          x: -10 + Math.random() * (sim.fieldWidth + 20) * 8, 
-          y: Math.random() * sim.fieldHeight * 8 
-        },
-        vel: { 
-          x: 2 + Math.random() * 3 * intensity, 
-          y: (Math.random() - 0.5) * 0.5 
-        },
-        radius: 0.5 + Math.random() * 0.5,
-        color: '#CCAA66',
-        lifetime: 100 + Math.random() * 50
-      });
-    }
   }
   
   // Biome configurations - could be loaded from JSON
@@ -186,7 +166,7 @@ export class BiomeEffects extends Rule {
 
   execute(context: TickContext): void {
     // Skip expensive biome processing in performance mode
-    if (context.isPerformanceMode()) return;
+    // if (context.isPerformanceMode()) return;
     
     // Update particle physics (snow landing, etc)
     this.updateParticlePhysics(context);
@@ -275,18 +255,26 @@ export class BiomeEffects extends Rule {
   }
   
   private updateParticlePhysics(context: TickContext): void {
-    // Handle snow landing
+    // Handle snow landing via update_projectile command
+    // This maintains immutability - CommandHandler will process the updates
     const particles = context.getParticles();
     particles.forEach(particle => {
       if (particle.type === 'snow' && !particle.landed) {
         // Check if snowflake should land
         if (particle.pos.y >= context.getFieldHeight() - 1) {
-          // Queue command to land the particle
+          // Queue particle update command
           context.queueCommand({
-            type: 'land',
-            params: { 
-              particleId: particle.id,
-              y: context.getFieldHeight() - 1
+            type: 'update_projectile',
+            params: {
+              id: particle.id,
+              updates: {
+                landed: true,
+                pos: { 
+                  x: particle.pos.x,
+                  y: context.getFieldHeight() - 1 
+                },
+                vel: { x: 0, y: 0 }
+              }
             }
           });
         }
@@ -336,21 +324,25 @@ export class BiomeEffects extends Rule {
   }
   
   private processTemperatureEffects(context: TickContext): void {
-    context.getAllUnits().forEach(unit => {
+    const units = context.getAllUnits();
+    if (units.length === 0) return;
+    
+    units.forEach(unit => {
       const temp = context.getTemperatureAt(Math.floor(unit.pos.x), Math.floor(unit.pos.y));
       
-      // Freeze units in sub-zero temperatures
+      // Freeze units in sub-zero temperatures  
       if (temp <= 0 && !unit.meta.frozen) {
+        const metaUpdate = {
+          frozen: true,
+          frozenDuration: 40,
+          brittle: true,
+          stunned: true
+        };
         context.queueCommand({
           type: 'meta',
           params: {
             unitId: unit.id,
-            meta: {
-              frozen: true,
-              frozenDuration: 40,
-              brittle: true,
-              stunned: true
-            }
+            meta: metaUpdate
           }
         });
         

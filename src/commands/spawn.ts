@@ -29,12 +29,12 @@ export class SpawnCommand extends Command {
         
         unit = {
           ...unitData,
-          id: `${params.unitType}_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+          id: this.sim.units.length === 0 ? params.unitType as string : `${params.unitType}${this.sim.units.length}`,
           pos: {
-            x: params.x as number || Math.floor(Math.random() * this.sim.fieldWidth),
-            y: params.y as number || Math.floor(Math.random() * this.sim.fieldHeight)
+            x: params.x !== undefined ? params.x as number : Math.floor(Math.random() * this.sim.fieldWidth),
+            y: params.y !== undefined ? params.y as number : Math.floor(Math.random() * this.sim.fieldHeight)
           },
-          team: (params.team || 'neutral') as 'friendly' | 'hostile' | 'neutral'
+          team: (params.team || unitData.team || 'neutral') as 'friendly' | 'hostile' | 'neutral'
         };
       } catch (e) {
         console.warn(`SpawnCommand: Failed to create unit of type '${params.unitType}':`, e);

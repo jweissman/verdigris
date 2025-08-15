@@ -75,7 +75,7 @@ describe('Toymaker Scene Integration', () => {
 
   it('should verify snowflake physics and rendering properties', () => {
     const sim = new Simulator();
-    sim.rulebook = [new WinterEffects(sim)];
+    sim.winterActive = true; // Enable winter effects without overriding rulebook
     
     // Run until we have snowflakes
     for (let i = 0; i < 10; i++) {

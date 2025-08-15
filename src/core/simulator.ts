@@ -21,7 +21,6 @@ import { Perdurance } from "../rules/perdurance";
 import { StatusEffects } from "../rules/status_effects";
 import { RNG } from "./rng";
 import { TickContext, TickContextImpl } from "./tick_context";
-import { ContextRule } from "../rules/context_rule";
 import { LightningStorm } from "../rules/lightning_storm";
 import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
@@ -141,7 +140,6 @@ class Simulator {
   
   projectiles: Projectile[];
   rulebook: Rule[];
-  contextRules: ContextRule[] = []; // New rules using TickContext
   queuedEvents: Action[] = [];
   processedEvents: Action[] = [];
   queuedCommands: QueuedCommand[] = [];
@@ -327,7 +325,7 @@ class Simulator {
       new GrapplingPhysics(), // Handle grappling hook physics
       new MeleeCombat(),
       new AirdropPhysics(), // Handle units dropping from the sky
-      new BiomeEffects(), // Handle winter/desert/biome effects
+      new BiomeEffects(), // Handle all environmental biome effects (winter, desert, etc.)
       new LightningStorm(),
 
       // not sure i trust either of these yet
@@ -340,7 +338,6 @@ class Simulator {
       new Jumping(),
       new Tossing(), // Handle tossed units
       new StatusEffects(), // Handle status effects before damage processing
-      new BiomeEffects(), // Handle all environmental biome effects (winter, desert, etc.)
       new Perdurance(), // Process damage resistance before events are handled
       this.createEventHandler(), // Convert events to commands
       new Cleanup(), // No simulator reference!
@@ -368,6 +365,8 @@ class Simulator {
     // Add to SoA storage (stores full unit AND breaks out hot data)
     const index = this.unitArrays.addUnit(u);
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
+    this.proxyCacheValid = false; // Invalidate proxy cache
+    this.proxyManager.rebuildIndex(); // Ensure proxy index is updated
     
     // Store cold data separately
     this.unitColdData.set(u.id, {
@@ -517,11 +516,6 @@ class Simulator {
       }
       
       // Execute context-only rules (deprecated, use main rulebook)
-      if (this.contextRules.length > 0) {
-        for (const rule of this.contextRules) {
-          rule.execute(context);
-        }
-      }
     
     // Phase 2: Process ALL pairwise intents in a single pass
     if (this.pairwiseBatcher) {

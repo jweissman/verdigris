@@ -127,7 +127,8 @@ export class EventHandler extends Rule {
     const affectedUnits = context.getAllUnits().filter(unit => {
       const dx = unit.pos.x - target.x;
       const dy = unit.pos.y - target.y;
-      const inRange = Math.sqrt(dx * dx + dy * dy) <= (event.meta.radius || 5);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const inRange = distance <= (event.meta.radius || 5);
       
       if (isHealing) {
         return inRange && unit.team === sourceUnit?.team && unit.hp < unit.maxHp;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import { DesertEffects } from '../../src/rules/desert_effects';
-import { WinterEffects } from '../../src/rules/winter_effects';
+import { BiomeEffects } from '../../src/rules/biome_effects';
 
 describe('Granular Cell-Based Particle Rendering', () => {
   it('should render particles at correct cell positions', () => {
@@ -58,7 +57,7 @@ describe('Granular Cell-Based Particle Rendering', () => {
   
   it('should create heat shimmer particles at hot cells', () => {
     const sim = new Simulator(32, 24);
-    const desertEffects = new DesertEffects(sim);
+    // BiomeEffects handles desert now
     
     // Set high temperature at a specific cell
     const hotCell = { x: 15, y: 10 };
@@ -67,7 +66,8 @@ describe('Granular Cell-Based Particle Rendering', () => {
     
     // Apply desert effects which should create heat shimmer
     const context = sim.getTickContext();
-    desertEffects.execute(context);
+    const biomeEffects = new BiomeEffects(sim);
+    biomeEffects.execute(context);
     
     // Should have created heat shimmer particles
     const shimmerParticles = sim.particles.filter(p => 
@@ -89,7 +89,7 @@ describe('Granular Cell-Based Particle Rendering', () => {
   
   it('should create snow particles at specific cells', () => {
     const sim = new Simulator(32, 24);
-    const winterEffects = new WinterEffects(sim);
+    // Use BiomeEffects which handles winter now
     
     // Set cold temperature using temperature field
     for (let x = 0; x < sim.fieldWidth; x++) {

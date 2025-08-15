@@ -73,9 +73,9 @@ export class ChangeWeather extends Command {
         }
         
         // Also trigger desert effects rule if available
-        let desertRule = this.sim.rulebook?.find(r => r.constructor.name === 'DesertEffects');
-        if (desertRule && (desertRule as any).triggerSandstorm) {
-          (desertRule as any).triggerSandstorm(durationValue, intensityValue);
+        let biomeRule = this.sim.rulebook?.find(r => r.constructor.name === 'BiomeEffects');
+        if (biomeRule && (biomeRule as any).triggerSandstorm) {
+          (biomeRule as any).triggerSandstorm(durationValue, intensityValue);
         }
         break;
         

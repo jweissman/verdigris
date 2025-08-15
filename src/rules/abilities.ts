@@ -1122,7 +1122,7 @@ export class Abilities extends Rule {
       
       // Add calm particles (only if not already created for this unit)
       const particleId = `calm_${unit.id}`;
-      if (!unit.meta.calmed && !this.sim.particles.some(p => p.id === particleId)) {
+      if (!unit.meta.calmed && !context.getParticles().some(p => p.id === particleId)) {
         context.queueEvent({
           kind: 'particle',
           source: caster.id,

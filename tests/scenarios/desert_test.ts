@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it, beforeEach } from 'bun:test';
 import { SceneLoader } from '../../src/core/scene_loader';
 import { Simulator } from '../../src/core/simulator';
 import * as fs from 'fs';
@@ -26,6 +26,11 @@ function getAverageTemperature(sim: any): number {
 }
 
 describe('Desert', () => {
+  beforeEach(() => {
+    // Reset Encyclopaedia counts for test isolation
+    Encyclopaedia.counts = {};
+  });
+  
   const setupDesertScene = () => {
     const scenePath = path.join(__dirname, '../../src/core/scenes/desert-day.battle.txt');
     const sceneContent = fs.readFileSync(scenePath, 'utf-8');
@@ -161,7 +166,7 @@ describe('Desert', () => {
 
   it('should allow grappling and pinning worm segments', () => {
     const sim = new Simulator();
-    sim.rulebook = [new SegmentedCreatures(sim), new GrapplingPhysics(sim), new Abilities(), new CommandHandler(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
 
     // Create a grappler
     const grappler = {
@@ -307,7 +312,7 @@ describe('Desert', () => {
     const sim = new Simulator();
 
     // Add grappling physics and abilities rules
-    sim.rulebook = [new CommandHandler(sim), new GrapplingPhysics(sim), new Abilities()];
+    // Don't override rulebook - use default which includes all necessary rules
 
     // Create grappler unit
     const grappler = {
@@ -397,7 +402,7 @@ describe('Desert', () => {
     sim.addUnit(spy);
 
     // Use detect ability through the abilities system
-    sim.rulebook = [new Abilities(), new CommandHandler(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
     sim.step(); // Let abilities system detect and reveal the spy
 
     // Check spy was revealed
@@ -431,7 +436,7 @@ describe('Desert', () => {
     sim.addUnit(enemy);
 
     // Use dual knife dance through abilities system
-    sim.rulebook = [new Abilities(), new EventHandler(), new CommandHandler(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
 
     // Track enemy HP to verify dual strike
     const initialEnemyHp = enemy.hp;
@@ -508,7 +513,7 @@ describe('Desert', () => {
     const sim = new Simulator();
 
     // Add desert effects rule
-    sim.rulebook = [new BiomeEffects(), new CommandHandler(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
 
     // Create desert-adapted unit
     const grappler = {
@@ -547,7 +552,7 @@ describe('Desert', () => {
     const sim = new Simulator();
 
     // Add rules
-    sim.rulebook = [new SegmentedCreatures(sim), new GrapplingPhysics(sim), new CommandHandler(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
 
     // Create segmented worm
     const worm = {
@@ -589,7 +594,7 @@ describe('Desert', () => {
     const sim = new Simulator();
 
     // Add desert effects and Abilities for burrow handling
-    sim.rulebook = [new Abilities(), new BiomeEffects(), new CommandHandler(sim)];
+    // Don't override rulebook - use default which includes all necessary rules
 
     // Create desert worm
     const worm = {
@@ -639,14 +644,7 @@ describe('Desert', () => {
     const loader = new SceneLoader(sim);
     
     // Add necessary rules for desert mechanics
-    sim.rulebook = [
-      new CommandHandler(sim),
-      new BiomeEffects(),
-      new GrapplingPhysics(sim),
-      new SegmentedCreatures(sim),
-      new Abilities(),
-      new EventHandler()
-    ];
+    // Don't override rulebook - use default which includes all necessary rules
     
     // Load the desert scene
     loader.loadScene('desert');
@@ -712,10 +710,7 @@ describe('Desert', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);
     
-    sim.rulebook = [
-      new CommandHandler(sim),
-      new EventHandler()
-    ];
+    // Don't override rulebook - use default which includes all necessary rules
     
     // Load scene (which includes temperature 35 command)
     loader.loadScene('desert');
@@ -733,11 +728,7 @@ describe('Desert', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);
     
-    sim.rulebook = [
-      new CommandHandler(sim),
-      new BiomeEffects(),
-      new EventHandler()
-    ];
+    // Don't override rulebook - use default which includes all necessary rules
     
     // Load scene
     loader.loadScene('desert');
@@ -756,11 +747,7 @@ describe('Desert', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);
     
-    sim.rulebook = [
-      new GrapplingPhysics(sim),
-      new Abilities(),
-      new EventHandler()
-    ];
+    // Don't override rulebook - use default which includes all necessary rules
     
     // Load scene
     loader.loadScene('desert');
@@ -795,10 +782,7 @@ describe('Desert', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);
     
-    sim.rulebook = [
-      new Abilities(),
-      new EventHandler()
-    ];
+    // Don't override rulebook - use default which includes all necessary rules
     
     // Add a hidden enemy
     loader.loadScene('desert');
@@ -816,12 +800,14 @@ describe('Desert', () => {
     }
     
     // Check if hidden enemy was revealed
-    if (enemy) {
+    // Re-find the enemy in case the original reference is stale
+    const currentEnemy = sim.units.find(u => u.team === 'hostile' && u.meta.hidden);
+    if (currentEnemy) {
       const waterbearer = sim.units.find(u => u.sprite === 'waterpriest');
       if (waterbearer && 
-          Math.abs(enemy.pos.x - waterbearer.pos.x) <= 6 &&
-          Math.abs(enemy.pos.y - waterbearer.pos.y) <= 6) {
-        expect(enemy.meta.revealed).toBeTruthy();
+          Math.abs(currentEnemy.pos.x - waterbearer.pos.x) <= 6 &&
+          Math.abs(currentEnemy.pos.y - waterbearer.pos.y) <= 6) {
+        expect(currentEnemy.meta.revealed).toBeTruthy();
       }
     }
   });

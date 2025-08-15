@@ -170,8 +170,19 @@ export class CommandHandler extends Rule {
             if (!metaBatch[unitId]) {
               metaBatch[unitId] = { meta: {}, state: null };
             }
-            if (queuedCommand.params.meta) {
-              Object.assign(metaBatch[unitId].meta, queuedCommand.params.meta);
+            if (queuedCommand.params.meta !== undefined) {
+              // Filter out undefined values that would delete properties
+              const cleanMeta = {};
+              for (const [key, value] of Object.entries(queuedCommand.params.meta)) {
+                if (value !== undefined) {
+                  cleanMeta[key] = value;
+                }
+              }
+              
+              // Only assign if there are actual values to update
+              if (Object.keys(cleanMeta).length > 0) {
+                Object.assign(metaBatch[unitId].meta, cleanMeta);
+              }
             }
             if (queuedCommand.params.state) {
               metaBatch[unitId].state = queuedCommand.params.state;
@@ -190,7 +201,13 @@ export class CommandHandler extends Rule {
         const metaCommand = this.commands.get('meta');
         if (metaCommand) {
           for (const [unitId, updates] of Object.entries(metaBatch)) {
-            metaCommand.execute(unitId, updates);
+            // MetaCommand expects params format with unitId and meta properties
+            const params = {
+              unitId: unitId,
+              meta: updates.meta,
+              state: updates.state
+            };
+            metaCommand.execute(null, params);
           }
         }
         

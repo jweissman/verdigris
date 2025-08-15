@@ -289,7 +289,16 @@ export class SegmentedCreatures extends Rule {
         );
         
         adjacentSegments.forEach(adj => {
-          adj.hp -= 5;
+          if (adj.id) {
+            context.queueCommand({
+              type: 'damage',
+              params: {
+                unitId: adj.id,
+                damage: 5,
+                source: 'segment_damage'
+              }
+            });
+          }
         });
       }
     });

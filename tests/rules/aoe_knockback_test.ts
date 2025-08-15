@@ -13,6 +13,7 @@ describe('AOE and Knockback', () => {
     });
 
     sim.step();
+    sim.step(); // Additional step to process queued damage events
 
     // Both worms should take damage and be knocked back
     // With falloff: distance 1, radius 2, damage 5 * 0.75 = 3.75 -> 3
@@ -20,7 +21,7 @@ describe('AOE and Knockback', () => {
     expect(sim.roster.worm2.hp).toBe(7); // 10 - 3
     // Knockback: worm1 should move left, worm2 should move right (radial from impact)
     expect(sim.roster.worm1.pos.x).toBeLessThan(3);
-    expect(sim.roster.worm2.pos.x).toBeGreaterThan(4);
+    expect(sim.roster.worm2.pos.x).toBeGreaterThan(5);
   });
 
   // note: not technically an aoe knock test?

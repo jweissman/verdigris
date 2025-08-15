@@ -14,7 +14,7 @@ export default class Encyclopaedia {
     this.counts = this.counts || {};
     let count = (this.counts[seriesName] || 0);
     this.counts[seriesName] = count + 1;
-    return count || "";
+    return count === 0 ? "" : count.toString();
   }
 
   static unit(beast: string): Unit {

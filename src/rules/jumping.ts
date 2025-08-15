@@ -58,7 +58,8 @@ export class Jumping extends Rule {
             meta: {
               ...unit.meta,
               jumpProgress: newProgress,
-              jumpHeight: height
+              jumpHeight: height,
+              z: height // Also set z for compatibility with tests
             }
           }
         });

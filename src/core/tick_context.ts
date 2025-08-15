@@ -54,10 +54,6 @@ export interface TickContext {
   
   // Event querying  
   getQueuedEvents(): readonly any[];
-  
-  // Performance information
-  // NOTE: deprecated, do not create weird secondary 'performance' modes!
-  // isPerformanceMode(): boolean;
 }
 
 /**
@@ -165,9 +161,5 @@ export class TickContextImpl implements TickContext {
   
   getQueuedEvents(): readonly any[] {
     return this.sim.queuedEvents || [];
-  }
-  
-  isPerformanceMode(): boolean {
-    return (this.sim as any).performanceMode || false;
   }
 }
