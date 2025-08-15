@@ -134,22 +134,46 @@ describe('Grappling Mechanics - Core Physics', () => {
     
     expect(segment1).toBeDefined();
     console.log('Segment initial hp:', segment1!.hp);
+    console.log('Segment id:', segment1!.id);
     const initialSegmentHp = segment1!.hp;
+    const segmentId = segment1!.id;
     
-    // Fire grapple using command
-    sim.queuedCommands.push({
-      type: 'grapple',
-      unitId: 'grappler-1',
-      params: { targetX: worm.pos.x, targetY: worm.pos.y }
-    });
+    // Use the actual grapple ability
+    sim.forceAbility('grappler-1', 'grapplingHook', worm);
     
-    // Process grapple
+    // Process grapple - use debugging to track changes
     for (let i = 0; i < 20; i++) {
+      // Track segment before step
+      const segmentBefore = sim.units.find(u => u.id === segmentId);
+      const wormBefore = sim.units.find(u => u.id === 'worm-1');
+      
       sim.step();
+      
+      // Track segment after step
+      const segmentAfter = sim.units.find(u => u.id === segmentId);
+      const wormAfter = sim.units.find(u => u.id === 'worm-1');
+      
+      // Log deltas for first few steps and when damage occurs
+      if (i < 3 || (segmentBefore && segmentAfter && segmentBefore.hp !== segmentAfter.hp)) {
+        console.log(`\n=== Step ${i} ===`);
+        if (segmentBefore && segmentAfter) {
+          console.log(`Segment HP: ${segmentBefore.hp} -> ${segmentAfter.hp}`);
+          console.log(`Segment pinned: ${segmentBefore.meta?.pinned} -> ${segmentAfter.meta?.pinned}`);
+        }
+        if (wormBefore && wormAfter) {
+          console.log(`Worm grappleHit: ${wormBefore.meta?.grappleHit} -> ${wormAfter.meta?.grappleHit}`);
+          console.log(`Worm grappled: ${wormBefore.meta?.grappled} -> ${wormAfter.meta?.grappled}`);
+        }
+      }
+      
+      if (!segmentAfter) {
+        console.log(`\nSegment died at step ${i}, had ${segmentBefore?.hp} HP before death`);
+        break;
+      }
     }
     
     // Check if segment was damaged
-    const finalSegment = sim.units.find(u => u.id === segment1!.id);
+    const finalSegment = sim.units.find(u => u.id === segmentId);
     expect(finalSegment).toBeDefined();
     expect(finalSegment!.hp).toBeLessThan(initialSegmentHp);
     expect(finalSegment!.meta?.pinned).toBe(true);

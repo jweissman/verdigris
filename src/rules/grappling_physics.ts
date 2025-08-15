@@ -85,7 +85,7 @@ export class GrapplingPhysics extends Rule {
               grappledBy: grapplerID,
               grappledDuration: hitUnit.meta.pinDuration || 60,
               tetherPoint: grapplerPos,
-              grappleHit: undefined // Clear the hit flag
+              grappleHit: false // Clear the hit flag by setting to false
             }
           }
         });
