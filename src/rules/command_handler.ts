@@ -84,18 +84,18 @@ export class CommandHandler {
     this.commands.set("projectile", new Projectile(sim, this.transform));
     this.commands.set("jump", new JumpCommand(sim, this.transform));
 
-    this.commands.set("cleanup", new CleanupCommand(sim, this.transform));
-    this.commands.set("remove", new RemoveCommand(sim, this.transform));
-    this.commands.set("move", new MoveCommand(sim, this.transform));
-    this.commands.set("knockback", new KnockbackCommand(sim, this.transform));
+    this.commands.set("cleanup", new CleanupCommand(sim));
+    this.commands.set("remove", new RemoveCommand(sim));
+    this.commands.set("move", new MoveCommand(sim));
+    this.commands.set("knockback", new KnockbackCommand(sim));
 
     this.commands.set(
       "applyStatusEffect",
-      new ApplyStatusEffectCommand(sim, this.transform),
+      new ApplyStatusEffectCommand(sim),
     );
     this.commands.set(
       "updateStatusEffects",
-      new UpdateStatusEffectsCommand(sim, this.transform),
+      new UpdateStatusEffectsCommand(sim),
     );
     this.commands.set("markDead", new Kill(sim, this.transform));
     this.commands.set("halt", new HaltCommand(sim, this.transform));
@@ -278,7 +278,12 @@ export class CommandHandler {
         const eventsToProcess = [...this.sim.queuedEvents];
 
         const eventHandler = new EventHandler();
-        eventHandler.execute(context);
+        const eventCommands = eventHandler.execute(context);
+        
+        // Add the generated commands back to the queue for processing
+        if (eventCommands && eventCommands.length > 0) {
+          this.sim.queuedCommands.push(...eventCommands);
+        }
 
         this.sim.recordProcessedEvents(eventsToProcess);
 

@@ -8,6 +8,7 @@ export class AirdropPhysics extends Rule {
     super();
   }
   execute(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     context.getAllUnits().forEach((unit) => {
       if (unit.meta.dropping && unit.meta.z > 0) {
         const newZ = unit.meta.z - (unit.meta.dropSpeed || 0.5);
@@ -34,7 +35,7 @@ export class AirdropPhysics extends Rule {
         }
 
         if (newZ <= 0) {
-          this.handleLanding(context, unit);
+          this.handleLanding(context, unit, commands);
         } else {
           commands.push({
             type: "meta",
@@ -48,12 +49,10 @@ export class AirdropPhysics extends Rule {
         }
       }
     });
-    const commands: QueuedCommand[] = [];
-    // TODO: Implement actual logic
     return commands;
   }
 
-  private handleLanding(context: TickContext, unit: any): void {
+  private handleLanding(context: TickContext, unit: any, commands: QueuedCommand[]): void {
     const shouldApplyImpact = unit.meta.landingImpact;
 
     commands.push({

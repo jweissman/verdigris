@@ -8,24 +8,26 @@ export class AmbientSpawning extends Rule {
   private spawnInterval = 100;
 
   execute(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
+    
     if (context.getCurrentTick() - this.lastSpawnTick < this.spawnInterval)
-      return;
+      return commands;
 
     const allUnits = context.getAllUnits();
     const teams = new Set(allUnits.filter((u) => u.hp > 0).map((u) => u.team));
     if (teams.has("friendly") && teams.has("hostile")) {
-      return; // Active combat, don't spawn ambient creatures
+      return commands; // Active combat, don't spawn ambient creatures
     }
 
     if (allUnits.length > 20) {
-      return; // Too many units, probably a test
+      return commands; // Too many units, probably a test
     }
 
     const biome = this.detectBiome(context);
     const cuteAnimals = this.getCuteAnimalsForBiome(biome);
 
     if (cuteAnimals.length === 0) {
-      return;
+      return commands;
     }
 
     const currentCuteCount = context
@@ -33,10 +35,11 @@ export class AmbientSpawning extends Rule {
       .filter((u) => cuteAnimals.includes(u.type) && u.hp > 0).length;
 
     if (currentCuteCount < 10) {
-      this.spawnCuteAnimal(context, cuteAnimals, biome);
+      this.spawnCuteAnimal(context, cuteAnimals, biome, commands);
     }
 
     this.lastSpawnTick = context.getCurrentTick();
+    return commands;
   }
 
   private detectBiome(context: TickContext): string {
@@ -72,9 +75,7 @@ export class AmbientSpawning extends Rule {
       case "arctic":
         return ["penguin"];
       case "none":
-        const commands: QueuedCommand[] = [];
-        // TODO: Implement actual logic
-        return commands; // No spawning for test/battle scenes
+        return []; // No spawning for test/battle scenes
       default:
         return ["squirrel", "bird"];
     }
@@ -84,6 +85,7 @@ export class AmbientSpawning extends Rule {
     context: TickContext,
     animalTypes: string[],
     biome: string,
+    commands: QueuedCommand[],
   ): void {
     const animalType =
       animalTypes[Math.floor(context.getRandom() * animalTypes.length)];

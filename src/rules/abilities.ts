@@ -23,14 +23,19 @@ export class Abilities extends Rule {
     this.commands = [];
 
     const currentTick = context.getCurrentTick();
-    context.getAllUnits().forEach((unit) => {
+    const allUnits = context.getAllUnits(); // Get units once
+    
+    // Single iteration over all units for better cache locality
+    for (const unit of allUnits) {
+      // Handle burrowing first
+      const meta = unit.meta; // Cache meta access
       if (
-        unit.meta?.burrowed &&
-        unit.meta.burrowStartTick !== undefined &&
-        unit.meta.burrowDuration !== undefined
+        meta?.burrowed &&
+        meta.burrowStartTick !== undefined &&
+        meta.burrowDuration !== undefined
       ) {
-        const ticksBurrowed = currentTick - unit.meta.burrowStartTick;
-        if (ticksBurrowed >= unit.meta.burrowDuration) {
+        const ticksBurrowed = currentTick - meta.burrowStartTick;
+        if (ticksBurrowed >= meta.burrowDuration) {
           this.commands.push({
             type: "meta",
             params: {
@@ -45,21 +50,23 @@ export class Abilities extends Rule {
           });
         }
       }
-    });
 
-    context.getAllUnits().forEach((unit) => {
-      if (!unit.abilities || !Array.isArray(unit.abilities)) {
-        return;
+      // Handle abilities in same loop
+      const abilities = unit.abilities; // Cache abilities access
+      if (!abilities || !Array.isArray(abilities)) {
+        continue; // Skip this unit, don't return from entire function
       }
 
-      for (const abilityName of unit.abilities) {
+      const lastAbilityTick = unit.lastAbilityTick; // Cache property access
+      
+      for (const abilityName of abilities) { // Use cached abilities
         const ability = this.ability(abilityName);
         if (!ability) {
           continue;
         }
 
-        let lastTick = unit.lastAbilityTick
-          ? unit.lastAbilityTick[abilityName]
+        let lastTick = lastAbilityTick
+          ? lastAbilityTick[abilityName]
           : undefined;
         let ready =
           lastTick === undefined || currentTick - lastTick >= ability.cooldown;
@@ -70,7 +77,7 @@ export class Abilities extends Rule {
 
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
-          const currentUses = unit.meta[usesKey] || 0;
+          const currentUses = meta[usesKey] || 0; // Use cached meta
           if (currentUses >= ability.maxUses) {
             continue; // Ability exhausted
           }
@@ -120,14 +127,14 @@ export class Abilities extends Rule {
             unitId: unit.id,
             meta: {
               lastAbilityTick: {
-                ...unit.lastAbilityTick,
+                ...lastAbilityTick, // Use cached value
                 [abilityName]: currentTick,
               },
             },
           },
         });
       }
-    });
+    } // Close for loop instead of forEach
 
     return this.commands;
   }

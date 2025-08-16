@@ -5,19 +5,19 @@ import type { QueuedCommand } from "./command_handler";
 
 export class AmbientBehavior extends Rule {
   execute(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const ambientCreatures = context
       .getAllUnits()
       .filter((u) => u.meta?.isAmbient && u.hp > 0 && u.team === "neutral");
 
     for (const creature of ambientCreatures) {
-      this.updateAmbientBehavior(context, creature);
+      this.updateAmbientBehavior(context, creature, commands);
     }
-    const commands: QueuedCommand[] = [];
     // TODO: Implement actual logic
     return commands;
   }
 
-  private updateAmbientBehavior(context: TickContext, creature: any): void {
+  private updateAmbientBehavior(context: TickContext, creature: any, commands: QueuedCommand[]): void {
     if (!creature.meta.wanderTarget || this.isNearTarget(creature)) {
       creature.meta.wanderTarget = this.getNewWanderTarget(context, creature);
       creature.meta.lastWanderUpdate = context.getCurrentTick();

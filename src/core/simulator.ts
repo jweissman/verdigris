@@ -98,7 +98,7 @@ class Simulator {
   }
 
   getUnitArrays(): any {
-    return null; // Force fallback to non-array paths
+    return this.unitArrays; // Enable optimized SoA path
   }
 
   getUnitColdData(): Map<string, any> {
@@ -583,7 +583,7 @@ class Simulator {
     this.commandProcessor.execute(context);
 
     if (false && this.pairwiseBatcher) {
-      this.pairwiseBatcher.process(this.units, this);
+      this.pairwiseBatcher.process(this.units as Unit[], this);
 
       this.targetCache = this.pairwiseBatcher.targetCache;
     }
