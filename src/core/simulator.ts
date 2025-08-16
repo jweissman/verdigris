@@ -294,7 +294,6 @@ class Simulator {
     this.reset();
   }
   
-  private activeRules: Rule[] = [];
   private tickContext?: TickContext;
 
   parseCommand(inputString: string) {
@@ -360,8 +359,6 @@ class Simulator {
     this.queuedCommands = [];
 
     this.commandProcessor = new CommandHandler(this, this.transform);
-    
-    this.activeRules = [];
 
     this.rulebook = [
       new Abilities(),
@@ -458,6 +455,8 @@ class Simulator {
 
   markDirty(unitId: string) {
     this.dirtyUnits.add(unitId);
+    // Also mark as changed for current frame if we're in the middle of a step
+    this.changedUnits.add(unitId);
   }
 
   getUnitsNear(x: number, y: number, radius: number = 2): Unit[] {
@@ -603,22 +602,16 @@ class Simulator {
       this.proxyCacheValid = true;
     }
     
-    // Reuse context if possible to avoid allocation
-    const context = this.tickContext || (this.tickContext = new TickContextImpl(this));
+    // Create fresh context each step - it caches units internally
+    const context = new TickContextImpl(this);
     
-    // Only execute applicable rules - massive performance win
-    // Skip rule execution entirely if no units
-    if (this.unitArrays.activeCount > 0) {
-      this.updateActiveRules();
-      
-      // Execute only active rules
-      for (const rule of this.activeRules) {
-        const commands = rule.execute(context);
-        if (commands && commands.length > 0) {
-          // Directly push commands without intermediate array
-          for (let i = 0; i < commands.length; i++) {
-            this.queuedCommands.push(commands[i]);
-          }
+    // Execute all rules - correctness over performance
+    for (const rule of this.rulebook) {
+      const commands = rule.execute(context);
+      if (commands && commands.length > 0) {
+        // Directly push commands without intermediate array
+        for (let i = 0; i < commands.length; i++) {
+          this.queuedCommands.push(commands[i]);
         }
       }
     }
@@ -1246,7 +1239,7 @@ class Simulator {
     return this;
   }
 
-  private updateActiveRules(): void {
+  private hasGrapplingHooks(): boolean {
     // Cache checks for expensive conditions
     const tick = this.ticks;
     
@@ -1303,10 +1296,9 @@ class Simulator {
         case 'SegmentedCreatures':
           if (!this.hasSegmentedCreatures()) continue;
           break;
-        // Conditionally active based on state
+        // Always active - fundamental rules
         case 'UnitMovement':
-          // Only if units have movement
-          if (!this.hasMovingUnits()) continue;
+          // Always run - commands can create movement
           break;
         case 'UnitBehavior':
           // Only if hostile units exist
@@ -1864,14 +1856,10 @@ class Simulator {
     this.queuedCommands.push(...generatedCommands);
 
     // Update lastAbilityTick immediately to prevent double-triggering
-    const proxyManager = (this as any).unitProxyManager;
-    console.log('ProxyManager exists?', !!proxyManager);
+    const proxyManager = this.proxyManager;
     if (proxyManager) {
       const currentTick = { ...unit.lastAbilityTick, [abilityName]: this.ticks };
-      console.log(`Setting lastAbilityTick for ${abilityName} to tick ${this.ticks}`);
       proxyManager.setLastAbilityTick(unit.id, currentTick);
-    } else {
-      console.log('WARNING: No proxyManager, cannot update lastAbilityTick immediately');
     }
 
     this.queuedCommands.push({

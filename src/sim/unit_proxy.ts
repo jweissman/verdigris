@@ -471,19 +471,17 @@ export class UnitProxyManager implements DataQuery {
       this.arrays.rebuildActiveIndices();
     }
 
-    // Return cached array if it exists and is still valid
-    if (this.proxyArrayCache && this.proxyArrayCache.length === this.arrays.activeCount) {
-      return this.proxyArrayCache;
+    // Rebuild proxy array cache if invalidated
+    if (!this.proxyArrayCache) {
+      const proxies: UnitProxy[] = [];
+      for (const i of this.arrays.activeIndices) {
+        const proxy = this.getProxy(i);
+        proxies.push(proxy);
+      }
+      this.proxyArrayCache = proxies;
     }
-
-    // Only rebuild if cache is invalid
-    const proxies: UnitProxy[] = [];
-    for (const i of this.arrays.activeIndices) {
-      const proxy = this.getProxy(i);
-      proxies.push(proxy);
-    }
-    this.proxyArrayCache = proxies;
-    return proxies;
+    
+    return this.proxyArrayCache;
   }
 
   clearCache(): void {

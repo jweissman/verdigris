@@ -787,7 +787,7 @@ export class Abilities extends Rule {
               type: "heal",
               params: {
                 targetId: target.id,
-                amount: 0, // Don't heal here
+                amount: increase, // Heal by the increase amount
                 newMaxHp: oldMaxHp + increase,
               },
             });

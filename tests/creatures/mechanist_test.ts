@@ -368,9 +368,9 @@ describe('Mechanist Showcase', () => {
     
     const reinforcedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
     expect(reinforcedConstruct).toBeDefined();
-    // The ability increases both HP and maxHP by 20
-    expect(reinforcedConstruct!.hp).toBe(beforeHp + 20);
-    expect(reinforcedConstruct!.maxHp).toBe(beforeMaxHp + 20);
+    // The ability increases both HP and maxHP by 10
+    expect(reinforcedConstruct!.hp).toBe(beforeHp + 10);
+    expect(reinforcedConstruct!.maxHp).toBe(beforeMaxHp + 10);
     
 
 
