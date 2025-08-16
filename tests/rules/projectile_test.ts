@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { SceneLoader } from '../../src/core/scene_loader';
+import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('Projectile simulation', () => {
   it('should move a projectile each step', () => {
@@ -229,7 +230,12 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
   });
 
   it('should have bombs complete their arc in fixed duration', () => {
+    // Reset Encyclopedia counts to ensure consistent IDs
+    Encyclopaedia.counts = {};
+    
     const sim = new Simulator(40, 25);
+    // Set fixed seed for reproducibility
+    Simulator.rng.reset(12345);
     const sceneLoader = new SceneLoader(sim);
     
     const bombTest = `b...........w`;

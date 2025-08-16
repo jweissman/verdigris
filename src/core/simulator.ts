@@ -154,6 +154,10 @@ class Simulator {
   queuedEvents: Action[] = [];
   processedEvents: Action[] = [];
   queuedCommands: QueuedCommand[] = [];
+  
+  // Track positions to avoid unnecessary spatial rebuilds
+  private lastUnitPositions: Map<string, { x: number, y: number }> = new Map();
+  private lastActiveCount: number = 0;
   public particleArrays: ParticleArrays = new ParticleArrays(5000); // SoA storage for performance
   
   // Legacy interface - getter that creates particle objects from SoA arrays
@@ -530,9 +534,25 @@ class Simulator {
     // Skip expensive double buffering - just work on the main array
     // The overliteral double buffer was hurting performance
     
-    // Always rebuild spatial structures - they enable O(1) neighbor queries!
-    // Use SoA arrays to avoid proxy overhead
-    {
+    // Only rebuild spatial structures if units have moved or been added/removed
+    // Track if any unit moved this frame
+    let needsSpatialRebuild = this.ticks === 0 || this.unitArrays.activeCount !== this.lastActiveCount;
+    
+    if (!needsSpatialRebuild) {
+      // Check if any unit has moved
+      const arrays = this.unitArrays;
+      for (let i = 0; i < arrays.capacity; i++) {
+        if (arrays.active[i] === 0) continue;
+        const id = arrays.unitIds[i];
+        const lastPos = this.lastUnitPositions.get(id);
+        if (!lastPos || lastPos.x !== arrays.posX[i] || lastPos.y !== arrays.posY[i]) {
+          needsSpatialRebuild = true;
+          break;
+        }
+      }
+    }
+    
+    if (needsSpatialRebuild) {
       this.spatialHash.clear();
       this.positionMap.clear();
       this.gridPartition.clear();
@@ -577,11 +597,16 @@ class Simulator {
           }
           this.positionMap.get(key)!.add(proxy);
         }
+        
+        // Track position for next frame
+        this.lastUnitPositions.set(id, { x, y });
       }
+      
+      this.lastActiveCount = arrays.activeCount;
     }
     
-      // Execute rules - all rules use context now
-      const context = new TickContextImpl(this);
+    // Execute rules - all rules use context now
+    const context = new TickContextImpl(this);
       for (const rule of this.rulebook) {
         rule.execute(context);
       }
