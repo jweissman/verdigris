@@ -1,5 +1,5 @@
-import { Command, CommandParams } from '../rules/command';
-import { Transform } from '../core/transform';
+import { Command, CommandParams } from "../rules/command";
+import { Transform } from "../core/transform";
 
 /**
  * Particle command - adds a particle effect
@@ -8,7 +8,7 @@ import { Transform } from '../core/transform';
  */
 export class ParticleCommand extends Command {
   private transform: Transform;
-  
+
   constructor(sim: any, transform: Transform) {
     super(sim);
     this.transform = transform;
@@ -17,14 +17,12 @@ export class ParticleCommand extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     const particle = params.particle || params;
     if (!particle) {
-      console.warn('ParticleCommand: No particle data provided');
+      console.warn("ParticleCommand: No particle data provided");
       return;
     }
 
-    // Convert ttl to lifetime if needed
     const lifetime = particle.lifetime || particle.ttl || 100;
-    
-    // Add particle to SoA arrays
+
     this.sim.particleArrays.addParticle({
       id: particle.id,
       pos: particle.pos || { x: 0, y: 0 },
@@ -35,7 +33,7 @@ export class ParticleCommand extends Command {
       radius: particle.radius || particle.size || 0.5,
       z: particle.z || 0,
       landed: particle.landed || false,
-      targetCell: particle.targetCell
+      targetCell: particle.targetCell,
     });
   }
 }

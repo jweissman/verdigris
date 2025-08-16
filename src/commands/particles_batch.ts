@@ -1,5 +1,5 @@
-import { Command, CommandParams } from '../rules/command';
-import { Transform } from '../core/transform';
+import { Command, CommandParams } from "../rules/command";
+import { Transform } from "../core/transform";
 
 /**
  * ParticlesBatch command - adds multiple particles at once
@@ -8,7 +8,7 @@ import { Transform } from '../core/transform';
  */
 export class ParticlesBatchCommand extends Command {
   private transform: Transform;
-  
+
   constructor(sim: any, transform: Transform) {
     super(sim);
     this.transform = transform;
@@ -17,11 +17,10 @@ export class ParticlesBatchCommand extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     const particles = params.particles;
     if (!particles || !Array.isArray(particles)) {
-      console.warn('ParticlesBatchCommand: No particles array provided');
+      console.warn("ParticlesBatchCommand: No particles array provided");
       return;
     }
 
-    // Add all particles to SoA arrays
     for (const particle of particles) {
       this.sim.particleArrays.addParticle(particle);
     }

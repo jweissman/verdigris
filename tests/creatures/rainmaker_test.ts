@@ -10,20 +10,20 @@ describe("Rainmaker Integration", () => {
     sim.addUnit({ ...rainmakerUnit, pos: { x: 5, y: 5 } });
     const rainmaker = sim.units.find(u => u.type === 'rainmaker');
     
-    // Verify initial weather is clear
+
     expect(sim.weather.current).toBe('clear');
     expect(sim.weather.duration).toBe(0);
     
-    // Verify rainmaker has the makeRain ability
+
     expect(rainmaker.abilities).toContain('makeRain');
     
-    // Execute the ability directly through simulator
+
     sim.forceAbility(rainmaker.id, 'makeRain');
     
-    // Process the queued command
+
     sim.step();
     
-    // Verify weather changed to rain
+
     expect(sim.weather.current).toBe('rain');
     expect(sim.weather.duration).toBeGreaterThanOrEqual(79); // ~10 seconds at 8fps (may be 79 or 80)
     expect(sim.weather.intensity).toBe(0.8);
@@ -32,35 +32,35 @@ describe("Rainmaker Integration", () => {
   it("should spawn rain particles with correct velocity", () => {
     const sim = new Simulator(10, 10);
     
-    // Directly spawn a rain particle to test its properties
+
     sim.spawnRainParticle();
     
-    // Should have spawned exactly one rain particle
+
     const rainParticles = sim.particles.filter(p => p.type === 'rain');
     expect(rainParticles.length).toBe(1);
     
-    // Rain particles should have diagonal movement
+
     const rainDrop = rainParticles[0];
     expect(rainDrop.vel.x).toBeGreaterThan(0.2); // Minimum diagonal movement
     expect(rainDrop.vel.y).toBeGreaterThan(0.8); // Minimum downward movement
-    // No color for 1-bit aesthetic - particles are always black
+
   });
 
   it("should increase humidity field during rain", () => {
     const sim = new Simulator(10, 10);
     
-    // Get initial humidity at center
+
     const initialHumidity = sim.getHumidity(5, 5);
     
-    // Set rain weather and run simulation
+
     sim.setWeather('rain', 20, 1.0); // Max intensity
     
-    // Run several steps to let rain affect humidity
+
     for (let i = 0; i < 5; i++) {
       sim.step();
     }
     
-    // Humidity should have increased somewhere on the field
+
     let foundIncreasedHumidity = false;
     for (let x = 0; x < sim.fieldWidth; x++) {
       for (let y = 0; y < sim.fieldHeight; y++) {
@@ -78,7 +78,7 @@ describe("Rainmaker Integration", () => {
   it("should extinguish fires with rain", () => {
     const sim = new Simulator(10, 10);
     
-    // Create a unit and set it on fire
+
     const soldier = { 
       id: 'test_soldier',
       pos: { x: 5, y: 5 },
@@ -95,24 +95,24 @@ describe("Rainmaker Integration", () => {
     sim.addUnit(soldier);
     sim.setUnitOnFire(soldier);
     
-    // Need to step to process the setUnitOnFire command
+
     sim.step();
     
-    // Get fresh reference after fire is set
+
     const burningUnit = sim.units.find(u => u.id === soldier.id);
     expect(burningUnit?.meta.onFire).toBe(true);
     
-    // Start heavy rain and create ideal extinguishing conditions
+
     sim.setWeather('rain', 100, 1.0);
     sim.addMoisture(soldier.pos.x, soldier.pos.y, 1.0, 2); // Max humidity
     sim.addHeat(soldier.pos.x, soldier.pos.y, -15, 2); // Cool area significantly
     
-    // Run multiple steps to let rain extinguish the fire
+
     let extinguished = false;
     for (let i = 0; i < 5; i++) {
       sim.step();
       
-      // Get fresh soldier reference since sim.units gets replaced
+
       const freshSoldier = sim.units.find(u => u.id === soldier.id);
       if (freshSoldier && !freshSoldier.meta.onFire) {
         extinguished = true;
@@ -120,7 +120,7 @@ describe("Rainmaker Integration", () => {
       }
     }
     
-    // Fire should eventually be extinguished by rain conditions
+
     expect(extinguished).toBe(true);
   });
 });

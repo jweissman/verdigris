@@ -8,20 +8,20 @@ describe('Winter Background Integration', () => {
     const loader = new SceneLoader(sim);
     
     
-    // Load the toymaker scenario
+
     loader.loadScenario('toymaker');
     
-    // Verify background was set correctly
+
     expect(sim.sceneBackground).toBe('winter');
     
-    // Verify units were loaded (toymaker + worms)
+
     expect(sim.units.length).toBeGreaterThan(0);
     
-    // Find the toymaker
+
     const toymaker = sim.units.find(u => u.id.includes('toymaker'));
     expect(toymaker).toBeDefined();
     
-    // Find enemies  
+
     const enemies = sim.units.filter(u => u.team === 'hostile');
     expect(enemies.length).toBeGreaterThan(0);
     

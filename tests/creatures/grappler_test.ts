@@ -25,15 +25,15 @@ describe('Grappler Unit Verification', () => {
     
     sim.addUnit(grappler);
     
-    // Fire grappling hook using simulator method
+
     const targetPos = { x: 10, y: 5 };
     sim.forceAbility(grappler.id, 'grapplingHook', targetPos);
     sim.step(); // Process the queued command
     
-    // Check projectile was created
+
     const grapples = sim.projectiles.filter(p => p.type === 'grapple');
     expect(grapples.length).toBe(1);
-    // Projectile should be moving from grappler toward target
+
     expect(grapples[0].pos.x).toBeGreaterThanOrEqual(5);
     expect(grapples[0].pos.x).toBeLessThanOrEqual(10);
     expect(grapples[0].target).toEqual({ x: 10, y: 5 });
@@ -53,14 +53,14 @@ describe('Grappler Unit Verification', () => {
     const grapplerFound = allUnits.includes('grappler');
     expect(grapplerFound).toBe(true);
     
-    // Try to create each unit to verify they exist
+
     const validUnits: string[] = [];
     for (const unitType of allUnits) {
       try {
         const unit = Encyclopaedia.unit(unitType);
         if (unit) validUnits.push(unitType);
       } catch (e) {
-        // Unit doesn't exist
+
       }
     }
     

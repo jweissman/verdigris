@@ -10,10 +10,10 @@ describe('Creature Encyclopedia', () => {
   it('should have all expected creature types', () => {
     const allCreatures = Object.keys(Encyclopaedia.bestiary);
     
-    // Check we have a reasonable number of creatures
+
     expect(allCreatures.length).toBeGreaterThan(30);
     
-    // Check key creatures exist
+
     const requiredCreatures = ['farmer', 'soldier', 'worm', 'priest', 'mechatron', 'big-worm', 'rainmaker'];
     requiredCreatures.forEach(type => {
       expect(allCreatures).toContain(type);
@@ -38,7 +38,7 @@ describe('Creature Encyclopedia', () => {
       if (creature.meta?.segmented || tags.includes('segmented')) categories.segmented.push(type);
     });
     
-    // Verify we have creatures in each category
+
     expect(categories.mechanical.length).toBeGreaterThan(5);
     expect(categories.undead.length).toBeGreaterThan(2);
     expect(categories.huge.length).toBeGreaterThan(0);
@@ -71,7 +71,7 @@ describe('Creature Encyclopedia', () => {
     
     expect(sim.units.length).toBeGreaterThanOrEqual(creaturesToPlace.length);
     
-    // Verify creatures exist with correct types
+
     creaturesToPlace.forEach(type => {
       const found = sim.units.find(u => u.type === type);
       expect(found).toBeDefined();

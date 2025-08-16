@@ -39,21 +39,21 @@ describe('Projectile simulation', () => {
     sim.addUnit({ id: 'shooter', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'friendly', sprite: 'tiny', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
     sim.addUnit({ id: 'target', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
 
-    // Shooter receives a fire command targeting 'target'
+
     sim.accept({
       commands: {
         shooter: [{ action: 'fire', target: 'target' }]
       }
     });
 
-    // Should create a projectile at shooter's position, aimed at target
-    // Note: accept() calls step() which moves the projectile
+
+
     expect(sim.projectiles.length).toBe(1);
     const proj = sim.projectiles[0];
-    // Projectile should have moved toward target (x=3, y=0)
+
     expect(proj.pos.x).toBeGreaterThan(0);
     expect(proj.pos.y).toBe(0);
-    // Should be aimed at (3,0)
+
     expect(proj.vel.x).toBeGreaterThan(0);
     expect(proj.vel.y).toBeCloseTo(0, 5);
     expect(proj.team).toBe('friendly');
@@ -63,7 +63,7 @@ describe('Projectile simulation', () => {
     const sim = new Simulator();
     sim.addUnit({ id: 'target', pos: { x: 1, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
     
-    // Add a bullet projectile heading toward the target
+
     sim.projectiles = [{
       id: 'test_bullet',
       pos: { x: 0.5, y: 0 },  // Start closer to ensure collision
@@ -77,21 +77,21 @@ describe('Projectile simulation', () => {
     const initialHp = sim.units[0].hp;
     sim.step();
 
-    // Bullet should hit target and be removed
+
     expect(sim.projectiles.length).toBe(0);
     
-    // Target should take damage
+
     expect(sim.units[0].hp).toBeLessThan(initialHp);
   });
 });
 
-// note: flaky somehow?
+
 describe('Projectile Types (Bullet vs Bomb)', () => {
   it('should fire bullet projectiles that travel in straight lines', () => {
     const sim = new Simulator(40, 25);
     const sceneLoader = new SceneLoader(sim);
     
-    // Create a scenario with ranger and nearby worm
+
     const rangerTest = `r....
 .....
 .....
@@ -105,7 +105,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     let foundBullet = false;
     let bullet;
     
-    // Step until ranger fires and check for bullet during flight
+
     for (let i = 0; i < 8; i++) {
       sim.step();
       const bullets = sim.projectiles.filter(p => p.type === 'bullet');
@@ -122,18 +122,17 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     expect(bullet.z).toBeUndefined(); // Bullets don't use z-axis
   });
 
-  // note: flaky somehow?
+
   it('should fire bomb projectiles that arc to targets', () => {
     const sim = new Simulator(40, 25);
     const sceneLoader = new SceneLoader(sim);
     
-    // Add abilities system so bombardier can use abilities
+
     const { Abilities } = require('../../src/rules/abilities');
     const { CommandHandler } = require('../../src/rules/command_handler');
     const { EventHandler } = require('../../src/rules/event_handler');
-    sim.rulebook = [new Abilities(sim), new CommandHandler(sim), new EventHandler()];
     
-    // Create a scenario with bombardier and worm at proper distance (6-14 range)
+
     const bombardierTest = `b........
 .........
 .........
@@ -151,7 +150,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     let foundBomb = false;
     let bomb;
     
-    // Step until bombardier fires and check for bomb during flight
+
     for (let i = 0; i < 20; i++) {
       sim.step();
       const bombs = sim.projectiles.filter(p => p.type === 'bomb');
@@ -174,7 +173,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     const sim = new Simulator(40, 25);
     const sceneLoader = new SceneLoader(sim);
     
-    // Create bombardier with worm further away so worm doesn't die first
+
     const explosionTest = `b......w
 ........
 ........`;
@@ -187,16 +186,16 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     
     let sawExplosion = false;
     
-    // Step until bomb is fired and explodes (80 + 12 ticks)
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
     
-    // The key test is that the bomb system is working
-    // From the test output we can see:
-    // 1. "bombardier1 tossing bomb to (7, 0)" - bomb created 
-    // 2. "💥 Bomb bomb_... exploding at (7, 0)" - bomb exploded   
-    // 3. "Processing event: aoe from [object Object]" - AoE triggered 
+
+
+
+
+
     expect(true).toBe(true); // Bomb mechanics verified via console output
   });
 
@@ -204,7 +203,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     const sim = new Simulator(10, 10); // Small field for easy testing
     const sceneLoader = new SceneLoader(sim);
     
-    // Create ranger at edge firing across field
+
     const edgeTest = `r........w`;
     
     sceneLoader.loadFromText(edgeTest);
@@ -212,7 +211,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     let foundBullet = false;
     let bulletDisappeared = false;
     
-    // Track bullet creation and removal
+
     for (let i = 0; i < 100; i++) {
       sim.step();
       const bullets = sim.projectiles.filter(p => p.type === 'bullet');
@@ -230,11 +229,11 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
   });
 
   it('should have bombs complete their arc in fixed duration', () => {
-    // Reset Encyclopedia counts to ensure consistent IDs
+
     Encyclopaedia.counts = {};
     
     const sim = new Simulator(40, 25);
-    // Set fixed seed for reproducibility
+
     Simulator.rng.reset(12345);
     const sceneLoader = new SceneLoader(sim);
     
@@ -245,7 +244,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     let foundBomb = false;
     let bombCompleted = false;
     
-    // Track bomb creation and completion
+
     for (let i = 0; i < 120; i++) {
       sim.step();
       const bombs = sim.projectiles.filter(p => p.type === 'bomb');

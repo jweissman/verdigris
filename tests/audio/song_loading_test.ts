@@ -11,14 +11,14 @@ describe('Song Loading', () => {
     const songPath = join(songsDir, 'the-lich.json');
     const songData = JSON.parse(readFileSync(songPath, 'utf8'));
     
-    // Verify song structure matches TrackerPattern interface
+
     expect(songData).toHaveProperty('id');
     expect(songData).toHaveProperty('name');
     expect(songData).toHaveProperty('length');
     expect(songData).toHaveProperty('tracks');
     expect(Array.isArray(songData.tracks)).toBe(true);
     
-    // Verify each track has proper structure
+
     songData.tracks.forEach((track: any) => {
       expect(track).toHaveProperty('channel');
       expect(track).toHaveProperty('notes');
@@ -26,7 +26,7 @@ describe('Song Loading', () => {
       expect(Array.isArray(track.notes)).toBe(true);
       expect(Array.isArray(track.effects)).toBe(true);
       
-      // Verify notes array length matches pattern length
+
       expect(track.notes.length).toBe(songData.length);
     });
   });
@@ -38,16 +38,16 @@ describe('Song Loading', () => {
     songData.tracks.forEach((track: any) => {
       track.notes.forEach((note: any) => {
         if (note !== null) {
-          // Valid TrackerNote structure
+
           expect(note).toHaveProperty('note');
           expect(note).toHaveProperty('instrument');
           expect(note).toHaveProperty('volume');
           
-          // Note format validation (e.g., "E-2", "F#5", "D#2")
+
           expect(typeof note.note).toBe('string');
           expect(note.note).toMatch(/^[A-G]#?-?\d$/);
           
-          // Instrument and volume ranges
+
           expect(note.instrument).toBeGreaterThanOrEqual(0);
           expect(note.instrument).toBeLessThanOrEqual(255);
           expect(note.volume).toBeGreaterThanOrEqual(0);
@@ -67,7 +67,7 @@ describe('Song Loading', () => {
       const songPath = join(songsDir, filename);
       expect(() => {
         const songData = JSON.parse(readFileSync(songPath, 'utf8'));
-        // Basic validation that it's a valid song structure
+
         expect(songData).toHaveProperty('id');
         expect(songData).toHaveProperty('name');
         expect(songData).toHaveProperty('tracks');
@@ -79,7 +79,7 @@ describe('Song Loading', () => {
     const songPath = join(songsDir, 'the-lich.json');
     const songData = JSON.parse(readFileSync(songPath, 'utf8'));
     
-    // Convert to tracker pattern format
+
     const pattern = {
       id: songData.id,
       name: songData.name,
@@ -91,9 +91,9 @@ describe('Song Loading', () => {
       }))
     };
     
-    // This should not throw
+
     expect(() => {
-      // Simulate loading into tracker (would need actual tracker.loadPattern method)
+
       expect(pattern.tracks.length).toBeGreaterThan(0);
       expect(pattern.length).toBeGreaterThan(0);
     }).not.toThrow();

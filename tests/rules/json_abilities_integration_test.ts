@@ -19,13 +19,13 @@ describe('Abilities Integration', () => {
   });
 
   it('should work with real units that have ranged abilities', () => {
-    // Create a real unit from the encyclopedia with ranged ability
-    const archer = Encyclopaedia.unit('ranger'); // ranger gets ranged ability
+
+    const archer = Encyclopaedia.unit('ranger');
     archer.id = 'archer1';
     archer.pos = { x: 2, y: 4 };
     archer.team = 'friendly';
     
-    // Create enemy within range
+
     const enemy = Encyclopaedia.unit('soldier');
     enemy.id = 'enemy1';
     enemy.pos = { x: 8, y: 4 }; // Distance = 6, should be in range
@@ -34,28 +34,27 @@ describe('Abilities Integration', () => {
     sim.addUnit(archer);
     sim.addUnit(enemy);
 
-    // Set up Abilities rule instead of regular Abilities
+
     const jsonAbilities = new Abilities(sim);
     const commandHandler = new CommandHandler(sim);
-    sim.rulebook = [jsonAbilities, commandHandler];
 
-    // Run one simulation step
+
     sim.step();
 
-    // Debug: what abilities do these units actually have?
+
     console.debug('Archer abilities:', Object.keys(archer.abilities || {}));
     console.debug('Enemy abilities:', Object.keys(enemy.abilities || {}));
     
-    // Check if the Abilities rule queued any commands
+
     console.debug(`Commands queued: ${sim.queuedCommands.length}`);
     console.debug('Queued commands:', sim.queuedCommands);
     
-    // Should have queued some commands if abilities triggered
+
     expect(sim.queuedCommands.length).toBeGreaterThanOrEqual(0); // Start with basic assertion
   });
 
   it('should demonstrate Abilities working where regular Abilities fails', () => {
-    // Create ranger with ranged ability and priest with heal ability
+
     const ranger = Encyclopaedia.unit('ranger');
     ranger.id = 'ranger1';
     ranger.pos = { x: 2, y: 4 };
@@ -72,7 +71,7 @@ describe('Abilities Integration', () => {
     enemy.pos = { x: 8, y: 4 }; // Within ranged attack distance
     enemy.team = 'enemy';
 
-    // Test with Abilities
+
     const sim = new Simulator();
     sim.fieldWidth = 12;
     sim.fieldHeight = 8;
@@ -81,14 +80,13 @@ describe('Abilities Integration', () => {
     sim.addUnit(enemy);
     const jsonAbilities = new Abilities(sim);
     const commandHandler = new CommandHandler(sim);
-    sim.rulebook = [jsonAbilities, commandHandler];
 
     console.debug('=== Before Abilities step ===');
     console.debug('Ranger abilities:', Object.keys(ranger.abilities || {}));
     console.debug('Priest abilities:', Object.keys(priest.abilities || {}));
     console.debug('Projectiles before:', sim.projectiles.length);
 
-    // Run simulation step
+
     sim.step();
 
     console.debug('=== After Abilities step ===');
@@ -100,7 +98,7 @@ describe('Abilities Integration', () => {
       console.debug('Commands:', sim.queuedCommands.map(cmd => `${cmd.type} by ${cmd.unitId}`));
     }
 
-    // Abilities should successfully process abilities that regular Abilities cannot
+
     expect(sim.queuedCommands.length + sim.queuedEvents.length + sim.projectiles.length).toBeGreaterThan(0);
   });
 });

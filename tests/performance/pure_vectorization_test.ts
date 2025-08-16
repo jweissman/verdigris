@@ -8,7 +8,7 @@ describe('Pure Vectorization Performance', () => {
     const velX = new Float32Array(count);
     const velY = new Float32Array(count);
     
-    // Initialize with random values
+
     for (let i = 0; i < count; i++) {
       posX[i] = Math.random() * 100;
       posY[i] = Math.random() * 100;
@@ -16,12 +16,12 @@ describe('Pure Vectorization Performance', () => {
       velY[i] = (Math.random() - 0.5) * 2;
     }
     
-    // Measure pure vectorized movement
+
     const iterations = 10000;
     const start = performance.now();
     
     for (let iter = 0; iter < iterations; iter++) {
-      // Pure vectorized loop - can be SIMD optimized
+
       for (let i = 0; i < count; i++) {
         posX[i] += velX[i];
         posY[i] += velY[i];
@@ -46,7 +46,7 @@ describe('Pure Vectorization Performance', () => {
     const count = 1000;
     const units = [];
     
-    // Create unit objects
+
     for (let i = 0; i < count; i++) {
       units.push({
         pos: { x: Math.random() * 100, y: Math.random() * 100 },
@@ -58,7 +58,7 @@ describe('Pure Vectorization Performance', () => {
     const start = performance.now();
     
     for (let iter = 0; iter < iterations; iter++) {
-      // Object-based movement
+
       for (let i = 0; i < count; i++) {
         units[i].pos.x += units[i].vel.x;
         units[i].pos.y += units[i].vel.y;

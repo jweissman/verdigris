@@ -27,7 +27,7 @@ describe('End-to-end combat', () => {
       tags: ['giant']
     });
 
-    // Add 5 small friendlies with hunt behavior
+
     for (let i = 0; i < 5; i++) {
       sim.addUnit({ 
         id: `minion${i}`, 
@@ -44,7 +44,7 @@ describe('End-to-end combat', () => {
       });
     }
 
-    // Simulate 100 steps (enough for them to meet and fight multiple times)
+
     for (let t = 0; t < 100; t++) {
       if (t === 0 || t === 1 || t === 99) {
         console.debug(`Step ${t}: giant at (${sim.roster.giant?.pos.x},${sim.roster.giant?.pos.y}) hp=${sim.roster.giant?.hp}`);
@@ -53,16 +53,16 @@ describe('End-to-end combat', () => {
       sim.step();
     }
 
-    // Expect giant to survive, minions to be culled (dead units removed)
+
     expect(sim.roster.giant.state).not.toBe('dead');
     expect(sim.roster.giant.hp).toBeGreaterThan(0);
     
-    // Minions should be dead and culled from battlefield
+
     for (let i = 0; i < 10; i++) {
       expect(sim.roster[`minion${i}`]).toBeUndefined(); // Dead units are culled
     }
     
-    // Should only have the giant left
+
     expect(sim.units.length).toBe(1);
     expect(sim.units[0].id).toBe('giant');
   });

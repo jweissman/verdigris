@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { Jukebox } from '../../src/audio/jukebox';
 
-// Mock AudioContext for testing
+
 class MockAudioContext {
   sampleRate = 44100;
   currentTime = 0;
@@ -86,7 +86,7 @@ describe('Jukebox', () => {
   let originalAudioContext: any;
   
   beforeEach(() => {
-    // Mock AudioContext
+
     originalAudioContext = (global as any).AudioContext;
     (global as any).AudioContext = MockAudioContext;
     
@@ -119,7 +119,7 @@ describe('Jukebox', () => {
     });
     
     it('should handle invalid sound names gracefully', () => {
-      // Should warn but not throw
+
       expect(() => jukebox.playSound('invalid-sound')).not.toThrow();
     });
     
@@ -206,7 +206,7 @@ describe('Jukebox', () => {
     
     it('should stop current music when starting new music', () => {
       jukebox.startBattleMusic();
-      // Starting new music should stop the current one
+
       expect(() => jukebox.startExplorationMusic()).not.toThrow();
     });
   });
@@ -220,7 +220,7 @@ describe('Jukebox', () => {
   
   describe('Integration with Game Events', () => {
     it('should handle rapid fire events', () => {
-      // Simulate rapid combat
+
       expect(() => {
         for (let i = 0; i < 10; i++) {
           jukebox.onAttack(i % 2 === 0);

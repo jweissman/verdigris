@@ -16,15 +16,14 @@ describe('Abilities', () => {
     sim.queuedCommands = [];
     sim.queuedEvents = [];
 
-    // Use the REAL abilities from abilities_clean.json (no mocking)
+
     
     abilities = new Abilities(sim);
     commandHandler = new CommandHandler(sim);
-    sim.rulebook = [commandHandler]; // Add command handler to process queued commands
   });
 
   it('should queue projectile for ranged ability', () => {
-    // Create archer and enemy - ranged ability should trigger at distance 5
+
     const archer = {
       id: 'archer1',
       pos: { x: 2, y: 2 },
@@ -48,19 +47,19 @@ describe('Abilities', () => {
     sim.addUnit(archer);
     sim.addUnit(enemy);
 
-    // Apply JSON abilities rule
-    const context = sim.getTickContext();
-    abilities.execute(context);
 
-    // Should queue a projectile command and a cooldown update
-    expect(sim.queuedCommands.length).toBe(2);
-    expect(sim.queuedCommands[0].type).toBe('projectile');
-    expect(sim.queuedCommands[0].unitId).toBe('archer1');
-    expect(sim.queuedCommands[0].params.projectileType).toBe('bullet'); // projectile type from JSON
+    const context = sim.getTickContext();
+    const commands = abilities.execute(context);
+
+
+    expect(commands.length).toBe(2);
+    expect(commands[0].type).toBe('projectile');
+    expect(commands[0].unitId).toBe('archer1');
+    expect(commands[0].params.projectileType).toBe('bullet');
   });
 
   it('should queue heal command for heal ability', () => {
-    // Create units - wounded ally
+
     const healer = {
       id: 'healer1',
       pos: { x: 2, y: 2 },
@@ -84,17 +83,17 @@ describe('Abilities', () => {
     sim.addUnit(healer);
     sim.addUnit(wounded);
 
-    // Apply JSON abilities rule
-    const context = sim.getTickContext();
-    abilities.execute(context);
 
-    // Should queue a heal command and a cooldown update
-    expect(sim.queuedCommands.length).toBe(2);
-    expect(sim.queuedCommands[0].type).toBe('heal');
-    expect(sim.queuedCommands[0].unitId).toBe('healer1');
-    // Check params instead of args for new format
-    expect(sim.queuedCommands[0].params?.targetId).toBe('wounded1'); // target id (weakest ally)
-    expect(sim.queuedCommands[0].params?.amount).toBe(5); // heal amount
+    const context = sim.getTickContext();
+    const commands = abilities.execute(context);
+
+
+    expect(commands.length).toBe(2);
+    expect(commands[0].type).toBe('heal');
+    expect(commands[0].unitId).toBe('healer1');
+
+    expect(commands[0].params?.targetId).toBe('wounded1');
+    expect(commands[0].params?.amount).toBe(5);
   });
 
   it('should respect cooldowns', () => {
@@ -122,16 +121,16 @@ describe('Abilities', () => {
     sim.addUnit(enemy);
     sim.ticks = 3; // Only 3 ticks passed, but cooldown is 6
 
-    // Apply JSON abilities rule
+
     const context = sim.getTickContext();
     abilities.execute(context);
 
-    // Should NOT queue any commands due to cooldown
+
     expect(sim.queuedCommands.length).toBe(0);
   });
 
   it('should process commands through command handler', () => {
-    // Create a simple damage command to test the pipeline
+
     sim.queuedCommands.push({
       type: 'damage',
       params: { targetId: 'enemy1', amount: 10, aspect: 'physical' },
@@ -149,11 +148,11 @@ describe('Abilities', () => {
 
     sim.addUnit(enemy);
 
-    // Process commands
+
     const ctx = sim.getTickContext();
     commandHandler.execute(ctx);
 
-    // Should have applied damage to the enemy
+
     const damagedEnemy = sim.units.find(u => u.id === 'enemy1');
     expect(damagedEnemy?.hp).toBe(90); // 100 - 10 damage
   });

@@ -10,12 +10,12 @@ describe.skip('Performance Profiling', () => {
     for (let run = 0; run < 5; run++) {
       Encyclopaedia.counts = {};
       
-      // Measure construction time
+
       const t0 = performance.now();
       const sim = new Simulator(32, 24);
       const t1 = performance.now();
       
-      // Add some units
+
       for (let i = 0; i < 20; i++) {
         sim.addUnit({
           id: `unit_${i}`,
@@ -34,11 +34,11 @@ describe.skip('Performance Profiling', () => {
       }
       const t2 = performance.now();
       
-      // First step
+
       sim.step();
       const t3 = performance.now();
       
-      // Next 5 steps for steady state
+
       const steadyTimes = [];
       for (let i = 0; i < 5; i++) {
         const s0 = performance.now();
@@ -55,7 +55,7 @@ describe.skip('Performance Profiling', () => {
       });
     }
     
-    // Average across runs
+
     const avg = {
       construction: measurements.reduce((a, b) => a + b.construction, 0) / measurements.length,
       unitSetup: measurements.reduce((a, b) => a + b.unitSetup, 0) / measurements.length,
@@ -79,7 +79,7 @@ describe.skip('Performance Profiling', () => {
   it('should profile unit movement specifically', () => {
     const sim = new Simulator(20, 20);
     
-    // Create many moving units
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit${i}`,
@@ -95,7 +95,7 @@ describe.skip('Performance Profiling', () => {
     
     sim.startProfiling();
     
-    // Run for 10 steps
+
     for (let i = 0; i < 10; i++) {
       sim.step();
     }

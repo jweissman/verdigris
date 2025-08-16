@@ -5,7 +5,7 @@ describe('Simulator Overhead Analysis', () => {
   test('measure overhead of each sim.step() phase', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 simple units
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -17,29 +17,27 @@ describe('Simulator Overhead Analysis', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
     
-    // Profile different configurations
+
     const configs = [
       { 
         name: 'Full simulation', 
         setup: () => {
-          // Default - everything enabled
+
         }
       },
       {
         name: 'No rules',
         setup: () => {
-          sim.rulebook = [];
         }
       },
       {
         name: 'Just movement rule',
         setup: () => {
-          sim.rulebook = sim.rulebook.filter(r => 
             r.constructor.name === 'UnitMovement'
           );
         }
@@ -67,7 +65,7 @@ describe('Simulator Overhead Analysis', () => {
       console.log(`  Max: ${max.toFixed(3)}ms`);
     });
     
-    // Test direct array manipulation
+
     console.log('\n=== Direct SoA Movement ===');
     const arrays = (sim as any).unitArrays;
     const times = [];
@@ -75,7 +73,7 @@ describe('Simulator Overhead Analysis', () => {
     for (let i = 0; i < 1000; i++) {
       const start = performance.now();
       
-      // Direct typed array manipulation
+
       for (let j = 0; j < arrays.capacity; j++) {
         if (arrays.active[j]) {
           arrays.posX[j] += 0.1;

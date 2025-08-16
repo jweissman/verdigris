@@ -6,9 +6,9 @@ import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 describe('Regular-sized Segmented Worm', () => {
   it('should create a segmented worm that is not huge', () => {
     const sim = new Simulator(32, 24);
-    // Use default rulebook which includes SegmentedCreatures and CommandHandler
+
     
-    // Create the regular segmented worm
+
     const worm = {
       ...Encyclopaedia.unit('segmented-worm'),
       id: 'worm1',
@@ -17,21 +17,21 @@ describe('Regular-sized Segmented Worm', () => {
     
     sim.addUnit(worm);
     
-    // Verify it's segmented but not huge
+
     expect(worm.meta.segmented).toBe(true);
     expect(worm.meta.segmentCount).toBe(3);
     expect(worm.meta.huge).toBeUndefined(); // Should NOT be huge
     expect(worm.meta.width).toBeUndefined(); // No special width
     expect(worm.meta.height).toBeUndefined(); // No special height
     
-    // Run simulation to create segments
+
     sim.step();
     
-    // Should have segments created
+
     const segments = sim.units.filter(u => u.tags?.includes('segment'));
     expect(segments.length).toBe(3); // 3 body segments
     
-    // Segments should NOT be huge
+
     segments.forEach(segment => {
       expect(segment.meta.huge).toBeUndefined();
       expect(segment.sprite).toBe('worm'); // Uses regular worm sprite
@@ -40,9 +40,9 @@ describe('Regular-sized Segmented Worm', () => {
   
   it('should have different behavior from giant-sandworm', () => {
     const sim = new Simulator(32, 24);
-    // Use default rulebook
+
     
-    // Create both worms for comparison
+
     const regularWorm = {
       ...Encyclopaedia.unit('segmented-worm'),
       id: 'regular',
@@ -58,7 +58,7 @@ describe('Regular-sized Segmented Worm', () => {
     sim.addUnit(regularWorm);
     sim.addUnit(giantWorm);
     
-    // Compare properties
+
     expect(regularWorm.sprite).toBe('worm');
     expect(giantWorm.sprite).toBe('big-worm');
     
@@ -74,7 +74,7 @@ describe('Regular-sized Segmented Worm', () => {
   
   it('should create segments that follow the head', () => {
     const sim = new Simulator(32, 24);
-    // Use default rulebook
+
     
     const worm = {
       ...Encyclopaedia.unit('segmented-worm'),
@@ -84,20 +84,20 @@ describe('Regular-sized Segmented Worm', () => {
     
     sim.addUnit(worm);
     
-    // Create segments
+
     sim.step();
     
     const segments = sim.units.filter(u => u.tags?.includes('segment'));
     expect(segments.length).toBe(3); // Should have 3 segments
     
-    // Segments should be positioned behind the head
+
     segments.forEach((segment, i) => {
-      // Each segment starts slightly behind the previous
+
       expect(segment.pos.x).toBeLessThanOrEqual(worm.pos.x);
       expect(segment.sprite).toBe('worm'); // All use regular worm sprite
     });
     
-    // Verify segments have parent reference
+
     segments.forEach(segment => {
       expect(segment.meta.parentId).toBe('worm1');
       expect(segment.meta.segmentIndex).toBeDefined();
@@ -122,14 +122,14 @@ describe('Regular-sized Segmented Worm', () => {
     sim.addUnit(worm);
     sim.addUnit(grappler);
     
-    // Regular segmented worm has mass 3, so it should be pullable
+
     expect(worm.mass).toBeLessThan(30); // Below the immovable threshold
     
-    // Apply grapple effect
+
     worm.meta.grappled = true;
     worm.meta.grappledBy = 'grappler1';
     
-    // Worm should be pullable (not pinned like massive creatures)
+
     expect(worm.meta.pinned).toBeUndefined();
   });
 });

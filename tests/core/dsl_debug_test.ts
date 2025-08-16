@@ -14,7 +14,7 @@ describe("DSL Debug", () => {
     ghost.pos = { x: 6, y: 5 }; // Adjacent
     sim.addUnit(ghost);
     
-    // Test if abilities are being processed
+
     expect(priest.abilities.includes('radiant')).toBe(true);
 
     // TODO: actually test DSL evaluation?

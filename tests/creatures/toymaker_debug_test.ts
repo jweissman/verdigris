@@ -9,9 +9,8 @@ import DSL from '../../src/rules/dsl';
 describe('Toymaker Debug', () => {
   it('should debug why toymaker is not summoning constructs', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
-    // Create toymaker and enemy manually
+
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
     const enemy = { ...Encyclopaedia.unit('worm'), pos: { x: 8, y: 5 }, team: 'hostile' as const };
     
@@ -19,12 +18,12 @@ describe('Toymaker Debug', () => {
     sim.addUnit(enemy);
     
     
-    // Check toymaker abilities
+
     const deployBot = toymaker.abilities.deployBot;
     if (deployBot) {
     }
     
-    // Test DSL evaluation manually
+
     try {
       const context = sim.getTickContext();
       const closestEnemy = DSL.evaluate('closest.enemy()', toymaker, context);
@@ -36,7 +35,7 @@ describe('Toymaker Debug', () => {
       console.error('DSL evaluation error:', error);
     }
     
-    // Run simulation step by step
+
     for (let tick = 0; tick < 60; tick++) {
       const beforeUnits = sim.units.length;
       const toymakerUnit = sim.units.find(u => u.id === toymaker.id);
@@ -54,7 +53,7 @@ describe('Toymaker Debug', () => {
       
       if (sim.units.length > beforeUnits) {
         const newUnit = sim.units[sim.units.length - 1];
-        expect(sim.units.length).toBe(3); // toymaker + enemy + construct
+        expect(sim.units.length).toBe(3);
         return;
       }
     }

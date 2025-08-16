@@ -15,7 +15,7 @@ describe('Woodland Creatures', () => {
       
       sim.addUnit(deer);
       
-      // Check deer properties
+
       expect(deer.team).toBe('neutral');
       expect(deer.tags).toContain('peaceful');
       expect(deer.meta.moveSpeed).toBe(1.2); // Fast runner
@@ -35,7 +35,7 @@ describe('Woodland Creatures', () => {
       
       sim.addUnit(rabbit);
       
-      // Check rabbit properties
+
       expect(rabbit.team).toBe('neutral');
       expect(rabbit.tags).toContain('small');
       expect(rabbit.tags).toContain('peaceful');
@@ -58,7 +58,7 @@ describe('Woodland Creatures', () => {
       
       sim.addUnit(fox);
       
-      // Check fox properties
+
       expect(fox.team).toBe('neutral');
       expect(fox.tags).toContain('hunter');
       expect(fox.tags).toContain('clever');
@@ -78,7 +78,7 @@ describe('Woodland Creatures', () => {
       
       sim.addUnit(wolf);
       
-      // Check wolf properties
+
       expect(wolf.team).toBe('hostile'); // Wolves are hostile
       expect(wolf.tags).toContain('predator');
       expect(wolf.tags).toContain('pack');
@@ -101,7 +101,7 @@ describe('Woodland Creatures', () => {
       
       sim.addUnit(badger);
       
-      // Check badger properties
+
       expect(badger.team).toBe('neutral');
       expect(badger.tags).toContain('burrower');
       expect(badger.tags).toContain('defensive');
@@ -132,11 +132,11 @@ describe('Woodland Creatures', () => {
       sim.addUnit(fox);
       sim.addUnit(rabbit);
       
-      // Fox should hunt small creatures
+
       expect(fox.meta.huntSmallCreatures).toBe(true);
       expect(rabbit.tags).toContain('small');
       
-      // Rabbit should flee
+
       expect(rabbit.meta.fleeDistance).toBeGreaterThan(0);
     });
     
@@ -147,13 +147,13 @@ describe('Woodland Creatures', () => {
       const wolf = Encyclopaedia.unit('wolf');
       const badger = Encyclopaedia.unit('badger');
       
-      // Peaceful creatures are neutral
+
       expect(deer.team).toBe('neutral');
       expect(rabbit.team).toBe('neutral');
       expect(fox.team).toBe('neutral');
       expect(badger.team).toBe('neutral');
       
-      // Wolves are hostile
+
       expect(wolf.team).toBe('hostile');
     });
     
@@ -164,12 +164,12 @@ describe('Woodland Creatures', () => {
       const wolf = Encyclopaedia.unit('wolf');
       const badger = Encyclopaedia.unit('badger');
       
-      // Mass should correlate with creature size
+
       expect(rabbit.mass).toBeLessThan(fox.mass);
       expect(fox.mass).toBeLessThan(deer.mass);
       expect(deer.mass).toBeLessThan(wolf.mass);
       
-      // Badger is medium-heavy
+
       expect(badger.mass).toBeGreaterThan(deer.mass);
       expect(badger.mass).toBeLessThan(wolf.mass);
     });
@@ -187,10 +187,10 @@ describe('Woodland Creatures', () => {
       
       sim.addUnit(druid);
       
-      // Check druid has summon ability
+
       expect(druid.abilities).toContain('summonForestCreature');
       
-      // Trigger summons multiple times to test variety
+
       const summonedTypes = new Set();
       const initialUnitCount = sim.units.length;
       
@@ -198,7 +198,7 @@ describe('Woodland Creatures', () => {
         sim.forceAbility(druid.id, 'summonForestCreature', druid.pos);
         sim.step(); // Process the ability
         
-        // Check for newly summoned units
+
         const newUnits = sim.units.slice(initialUnitCount);
         for (const unit of newUnits) {
           if (unit.meta?.summoned && unit.meta?.summonedBy === druid.id) {
@@ -207,7 +207,7 @@ describe('Woodland Creatures', () => {
         }
       }
       
-      // Should have summoned various creature types
+
       expect(summonedTypes.size).toBeGreaterThan(1);
     });
   });

@@ -19,11 +19,11 @@ describe("Combat Mechanics", () => {
     const initialHp1 = soldier1.hp;
     const initialHp2 = soldier2.hp;
     
-    // Run simulation for several steps
+
     for (let i = 0; i < 15; i++) {
       sim.step();
       
-      // Get fresh references since sim.units gets replaced
+
       const fresh1 = sim.units.find(u => u.id === soldier1.id);
       const fresh2 = sim.units.find(u => u.id === soldier2.id);
       
@@ -32,11 +32,11 @@ describe("Combat Mechanics", () => {
       }
     }
     
-    // Get final fresh references
+
     const final1 = sim.units.find(u => u.id === soldier1.id);
     const final2 = sim.units.find(u => u.id === soldier2.id);
     
-    // At least one should have taken damage
+
     expect(final1 && final2 && (final1.hp < initialHp1 || final2.hp < initialHp2)).toBe(true);
   });
 
@@ -53,12 +53,12 @@ describe("Combat Mechanics", () => {
     
     const initialSkeletonHp = skeleton.hp;
     
-    // Run simulation for several steps
+
     for (let i = 0; i < 15; i++) {
       sim.step();
     }
     
-    // Skeleton should resist physical damage from soldier
+
     expect(skeleton.hp).toBe(initialSkeletonHp);
     expect(skeleton.meta.perdurance).toBe('undead');
   });
@@ -78,15 +78,15 @@ describe("Combat Mechanics", () => {
     
     let attackFound = false;
     
-    // Run simulation for several steps
+
     for (let i = 0; i < 15; i++) {
       sim.step();
       
-      // Get fresh references since sim.units gets replaced
+
       const fresh1 = sim.units.find(u => u.id === soldier1.id);
       const fresh2 = sim.units.find(u => u.id === soldier2.id);
       
-      // Check if lastAttacked was set on either unit
+
       if (fresh1?.meta?.lastAttacked) {
         expect(fresh1.meta.lastAttacked).toBeGreaterThan(0);
         attackFound = true;

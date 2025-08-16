@@ -21,20 +21,20 @@ describe('SynthEngine', () => {
     expect(buffer.length).toBeGreaterThan(0);
     expect(buffer.some(s => s !== 0)).toBe(true);
     
-    // Should be within -1 to 1 range
+
     expect(buffer.every(s => s >= -1 && s <= 1)).toBe(true);
   });
   
   it('should handle pattern sequencing', () => {
     const engine = new SynthEngine();
     
-    // Create a simple pattern: C-E-G-rest
+
     const pattern: Pattern = {
       notes: [
         { pitch: NoteUtils.nameToFreq('C4'), velocity: 100, gate: 1 },
         { pitch: NoteUtils.nameToFreq('E4'), velocity: 100, gate: 1 },
         { pitch: NoteUtils.nameToFreq('G4'), velocity: 100, gate: 1 },
-        null // rest
+        null
       ],
       duration: 125, // 120 BPM, 16th notes
       loop: true
@@ -51,7 +51,7 @@ describe('SynthEngine', () => {
     const trackIndex = engine.addTrack(track);
     expect(trackIndex).toBe(0);
     
-    // Test pattern modification
+
     engine.setNote(0, 0, 1, { pitch: NoteUtils.nameToFreq('F4'), velocity: 80, gate: 2 });
     expect(track.patterns[0].notes[1]?.pitch).toBeCloseTo(NoteUtils.nameToFreq('F4'), 1);
   });
@@ -127,18 +127,18 @@ describe('SynthEngine', () => {
     
     const buffer = engine.synthesize(note, voice);
     
-    // Check attack phase (should start quiet)
+
     const firstSamples = buffer.slice(0, 10);
     const attackPeak = Math.max(...firstSamples.map(Math.abs));
     expect(attackPeak).toBeLessThan(0.5);
     
-    // Check sustain phase (should stabilize around sustain level)
+
     const midPoint = Math.floor(buffer.length / 2);
     const sustainSamples = buffer.slice(midPoint, midPoint + 100);
     const sustainAvg = sustainSamples.reduce((a, b) => a + Math.abs(b), 0) / sustainSamples.length;
     
-    // Sustain level should be around 0.5 * amplitude
-    // But sine wave averages to ~0.636 of peak, so expect ~0.318
+
+
     expect(sustainAvg).toBeGreaterThan(0.2); // Should have substantial amplitude
     expect(sustainAvg).toBeLessThan(0.5);   // But less than peak
   });
@@ -146,7 +146,7 @@ describe('SynthEngine', () => {
   it('should apply lowpass filter', () => {
     const engine = new SynthEngine();
     
-    // High frequency square wave
+
     const note: Note = {
       pitch: 2000, // High frequency
       velocity: 127,
@@ -166,8 +166,8 @@ describe('SynthEngine', () => {
     const unfiltered = engine.synthesize(note, voiceUnfiltered);
     const filtered = engine.synthesize(note, voiceFiltered);
     
-    // Filtered should have less high frequency content (smoother)
-    // Calculate variance as measure of smoothness
+
+
     let unfilteredVar = 0;
     let filteredVar = 0;
     
@@ -176,7 +176,7 @@ describe('SynthEngine', () => {
       filteredVar += Math.abs(filtered[i] - filtered[i-1]);
     }
     
-    // Filtered signal should be smoother (less variance)
+
     expect(filteredVar).toBeLessThan(unfilteredVar * 0.8);
   });
 });

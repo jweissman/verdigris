@@ -4,7 +4,7 @@ import { SceneLoader } from '../../src/core/scene_loader';
 
 describe('Scene Browser Click Workflow', () => {
   it('should handle canvas click events and convert to grid coordinates', () => {
-    // Create mock canvas that can receive click events
+
     const clickHandlers: ((event: any) => void)[] = [];
     const mockCanvas = {
       width: 320,
@@ -28,18 +28,18 @@ describe('Scene Browser Click Workflow', () => {
 
     const game = new Game(mockCanvas);
     
-    // Create a click handler that the scene browser should provide
+
     const setupClickHandler = (canvas: any, sim: any) => {
       const handleClick = (event: any) => {
         const rect = canvas.getBoundingClientRect();
         const canvasX = event.clientX - rect.left;
         const canvasY = event.clientY - rect.top;
         
-        // Convert to grid coordinates
+
         const gridX = Math.floor((canvasX / canvas.width) * sim.fieldWidth);
         const gridY = Math.floor((canvasY / canvas.height) * sim.fieldHeight);
         
-        // Execute lightning command - this is what scene browser should do
+
         sim.parseCommand(`lightning ${gridX} ${gridY}`);
         
         return { gridX, gridY };
@@ -49,10 +49,10 @@ describe('Scene Browser Click Workflow', () => {
       return handleClick;
     };
 
-    // Set up the click handler (this is what scene browser MWE should do)
+
     const clickHandler = setupClickHandler(mockCanvas, game.sim);
     
-    // Simulate a click event at (170, 110) - slightly off center
+
     const mockClickEvent = {
       clientX: 170 + 10, // +10 for canvas.left offset
       clientY: 110 + 20, // +20 for canvas.top offset
@@ -62,14 +62,14 @@ describe('Scene Browser Click Workflow', () => {
 
     const initialParticles = game.sim.particles.length;
     
-    // Trigger the click through the registered handler
+
     expect(clickHandlers.length).toBe(1);
     const result = clickHandler(mockClickEvent);
     
-    // Process the command that should have been queued
+
     game.sim.step();
     
-    // Verify the workflow worked
+
     const afterParticles = game.sim.particles.length;
     const lightningParticles = game.sim.particles.filter(p => p.type === 'lightning');
     
@@ -105,7 +105,7 @@ describe('Scene Browser Click Workflow', () => {
     const game = new Game(mockCanvas);
     const sceneLoader = new SceneLoader(game.sim);
     
-    // Load a test scene first
+
     const testScene = `f.s.G
 .....
 ..X..
@@ -114,11 +114,11 @@ w.M..`;
     
     sceneLoader.loadFromText(testScene);
     
-    // Verify scene loaded
+
     const units = game.sim.units;
     expect(units.length).toBeGreaterThan(0);
     
-    // Set up click handler for the loaded scene
+
     const sceneBrowserClickHandler = (canvas: any, sim: any) => {
       return (event: any) => {
         const rect = canvas.getBoundingClientRect();
@@ -128,7 +128,7 @@ w.M..`;
         const gridX = Math.floor((canvasX / canvas.width) * sim.fieldWidth);
         const gridY = Math.floor((canvasY / canvas.height) * sim.fieldHeight);
         
-        // Check if clicking near a unit for debugging
+
         const clickedUnit = sim.units.find((u: any) => 
           Math.abs(u.pos.x - gridX) <= 1 && Math.abs(u.pos.y - gridY) <= 1
         );
@@ -136,7 +136,7 @@ w.M..`;
         if (clickedUnit) {
         }
         
-        // Always trigger lightning at click position
+
         sim.parseCommand(`lightning ${gridX} ${gridY}`);
         
         return { gridX, gridY, clickedUnit };
@@ -146,7 +146,7 @@ w.M..`;
     const handler = sceneBrowserClickHandler(mockCanvas, game.sim);
     mockCanvas.addEventListener('click', handler);
 
-    // Simulate clicking near the mechatron (at grid 2,2)
+
     const clickNearMechatron = {
       clientX: 48, // (2/40) * 320 = 16, but click at 48 for grid 6
       clientY: 48, // (2/25) * 200 = 16, but click at 48 for grid 6  
@@ -163,21 +163,21 @@ w.M..`;
   });
 
   it('should provide the foundation for a real scene browser MWE', () => {
-    // This test documents what a real MWE should look like
+
     const sceneBrowserMWEStructure = {
-      // Core components needed
+
       game: 'Game instance with canvas and renderer',
       sceneLoader: 'SceneLoader for loading test scenes', 
       clickHandler: 'Canvas click event listener',
       coordinateMapping: 'Screen coords -> grid coords conversion',
       commandExecution: 'Grid click -> lightning command -> visual effect',
       
-      // Visual debugging features needed
+
       gridOverlay: 'Show grid cells for click targeting',
       unitHighlight: 'Highlight units on hover/click',
       effectFeedback: 'Visual confirmation of lightning strikes',
       
-      // Test scenarios to support
+
       scenarios: [
         'Empty field - test basic lightning placement',
         'Units present - test lightning near creatures', 
@@ -186,7 +186,7 @@ w.M..`;
       ]
     };
     
-    // Verify we have the building blocks
+
     expect(typeof Game).toBe('function');
     expect(typeof SceneLoader).toBe('function');
     

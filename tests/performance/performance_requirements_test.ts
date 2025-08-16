@@ -7,7 +7,7 @@ describe('Performance Requirements', () => {
   test('REQUIREMENT: Minimal sim (50 units, no rules) < 0.05ms', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 units
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -18,15 +18,14 @@ describe('Performance Requirements', () => {
       });
     }
     
-    // No rules
-    sim.rulebook = [];
+
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
     
-    // Measure
+
     const times: number[] = [];
     for (let i = 0; i < 1000; i++) {
       const start = performance.now();
@@ -45,7 +44,7 @@ describe('Performance Requirements', () => {
     const sim = new Simulator(50, 50);
     sim.enableEnvironmentalEffects = true; // Enable weather, particles, etc
     
-    // Add 50 units
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -55,10 +54,9 @@ describe('Performance Requirements', () => {
       });
     }
     
-    // No rules
-    sim.rulebook = [];
+
     
-    // Add some particles and projectiles to test those systems
+
     for (let i = 0; i < 10; i++) {
       sim.particles.push({
         id: `particle_${i}`,
@@ -69,7 +67,7 @@ describe('Performance Requirements', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -91,7 +89,7 @@ describe('Performance Requirements', () => {
   test('REQUIREMENT: With movement rule (50 units) < 0.15ms', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 units with movement
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -102,12 +100,11 @@ describe('Performance Requirements', () => {
       });
     }
     
-    // Only movement rule
     sim.rulebook = sim.rulebook.filter(r => 
       r.constructor.name === 'UnitMovement'
     );
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -129,7 +126,7 @@ describe('Performance Requirements', () => {
   test('REQUIREMENT: With combat rules (50 units) < 0.20ms', () => {
     const sim = new Simulator(50, 50);
     
-    // Add units split into teams
+
     for (let i = 0; i < 25; i++) {
       sim.addUnit({
         id: `friendly_${i}`,
@@ -145,12 +142,11 @@ describe('Performance Requirements', () => {
       });
     }
     
-    // Only combat-related rules
     sim.rulebook = sim.rulebook.filter(r => 
       ['UnitMovement', 'MeleeCombat', 'UnitBehavior'].includes(r.constructor.name)
     );
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -172,7 +168,7 @@ describe('Performance Requirements', () => {
   test('REQUIREMENT: Full simulation (50 units, all rules) < 0.30ms', () => {
     const sim = new Simulator(50, 50);
     
-    // Mixed scenario
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -183,9 +179,9 @@ describe('Performance Requirements', () => {
       });
     }
     
-    // All rules enabled (default)
+
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -220,12 +216,11 @@ describe('Performance Requirements', () => {
         });
       }
       
-      // Minimal rules for scaling test
       sim.rulebook = sim.rulebook.filter(r => 
         r.constructor.name === 'UnitMovement'
       );
       
-      // Warm up
+
       for (let i = 0; i < 100; i++) {
         sim.step();
       }
@@ -255,7 +250,7 @@ describe('Performance Requirements', () => {
       }
     }
     
-    // Check that doubling units takes less than 2.5x time (allowing some overhead)
+
     for (let i = 1; i < measurements.length; i++) {
       const prev = measurements[i-1];
       const curr = measurements[i];

@@ -3,7 +3,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('Sprite Integration', () => {
   it('should assign correct sprites to all construct types', () => {
-    // Test all construct types have proper sprite assignments matching actual PNG files
+
     const freezebot = Encyclopaedia.unit('freezebot');
     expect(freezebot.sprite).toBe('freezebot');
     

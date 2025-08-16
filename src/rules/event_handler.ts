@@ -1,121 +1,126 @@
 import { Action } from "../types/Action";
 import { Vec2 } from "../types/Vec2";
 import { Rule } from "./rule";
+import type { QueuedCommand } from "./command_handler";
 import type { TickContext } from "../core/tick_context";
 
 export class EventHandler extends Rule {
   constructor() {
     super();
   }
-  
+
   glossary = (event: Action, context: TickContext) => {
     let targetUnit = context.findUnitById(event.target as string);
-    let tx = ({
-      aoe: e => {
-        const type = e.meta.aspect === 'heal' ? 'Healing circle' : 'Impact';
+    let tx = {
+      aoe: (e) => {
+        const type = e.meta.aspect === "heal" ? "Healing circle" : "Impact";
         return `${type} from ${e.source} at (${e.target.x}, ${e.target.y}) with radius ${e.meta.radius}`;
       },
-      damage: e => `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage (now at ${targetUnit?.hp} hp)`,
-      heal: e => `${e.source} healed ${e.target} for ${e.meta.amount} (now at ${targetUnit?.hp} hp)`,
-      terrain: e => `${e.source} modified terrain at (${e.target?.x}, ${e.target?.y}): ${e.meta.terrainType}`,
-    })
+      damage: (e) =>
+        `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage (now at ${targetUnit?.hp} hp)`,
+      heal: (e) =>
+        `${e.source} healed ${e.target} for ${e.meta.amount} (now at ${targetUnit?.hp} hp)`,
+      terrain: (e) =>
+        `${e.source} modified terrain at (${e.target?.x}, ${e.target?.y}): ${e.meta.terrainType}`,
+    };
     if (!tx.hasOwnProperty(event.kind)) {
-      // console.warn(`No translation for event kind: ${event.kind}`);
       return `Event: ${event.kind} from ${event.source} to ${event.target}`;
     }
     return tx[event.kind](event);
-  }
+  };
 
-  execute(context: TickContext): void {
+  execute(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const queuedEvents = context.getQueuedEvents();
     if (queuedEvents.length === 0) {
-      return;
+      return commands;
     }
 
     for (const event of queuedEvents) {
-      // Skip if event was already processed (marked by a flag)
       if ((event as any)._processed) {
         continue;
       }
-      // Mark as processed to prevent duplicate handling
+
       (event as any)._processed = true;
-      
+
       switch (event.kind) {
-        case 'aoe':
-          this.handleAreaOfEffect(event, context);
+        case "aoe":
+          this.handleAreaOfEffect(event, context, commands);
           break;
-        case 'damage':
-          this.handleDamage(event, context);
+        case "damage":
+          this.handleDamage(event, context, commands);
           break;
-        case 'heal':
-          this.handleHeal(event, context);
+        case "heal":
+          this.handleHeal(event, context, commands);
           break;
-        case 'knockback':
-          this.handleKnockback(event, context);
+        case "knockback":
+          this.handleKnockback(event, context, commands);
           break;
-        case 'spawn':
-          this.handleSpawn(event, context);
+        case "spawn":
+          this.handleSpawn(event, context, commands);
           break;
-        case 'terrain':
-          this.handleTerrain(event, context);
+        case "terrain":
+          this.handleTerrain(event, context, commands);
           break;
-        case 'particle':
-          // Particles should be created via commands, not events
-          // Events are for observation only
+        case "particle":
           break;
-        case 'moisture':
-          // Moisture events are environmental - no direct handling needed
+        case "moisture":
           break;
         default:
           console.warn(`Unknown event kind: ${event.kind}`);
       }
-      
-      // Event processed - no tracking needed
     }
+
+    return commands;
   }
 
-  private handleSpawn(event: Action, context: TickContext) {
-    if (!event.target || typeof event.target !== 'object' || !('x' in event.target && 'y' in event.target)) {
+  private handleSpawn(event: Action, context: TickContext, commands: QueuedCommand[]) {
+    if (
+      !event.target ||
+      typeof event.target !== "object" ||
+      !("x" in event.target && "y" in event.target)
+    ) {
       console.warn(`Invalid target for spawn event: ${event.target}`);
       return;
     }
 
     if (!event.meta.unit) {
-      console.warn('Spawn event missing unit data');
+      console.warn("Spawn event missing unit data");
       return;
     }
 
     const newUnit = {
       ...event.meta.unit,
       pos: { x: event.target.x, y: event.target.y },
-      id: event.meta.unit?.id || `spawned_${Date.now()}`
+      id: event.meta.unit?.id || `spawned_${Date.now()}`,
     };
-    
-    // Queue add command instead of directly adding
-    context.queueCommand({
-      type: 'spawn',
-      params: { unit: newUnit }
+
+    commands.push({
+      type: "spawn",
+      params: { unit: newUnit },
     });
   }
 
-  private handleParticle(event: Action, context: TickContext) {
+  private handleParticle(event: Action, context: TickContext, commands: QueuedCommand[]) {
     if (!event.meta) return;
-    
-    // Validate particle data
+
     if (!event.meta.pos || !event.meta.vel) {
-      console.error('Particle event missing pos or vel:', event);
+      console.error("Particle event missing pos or vel:", event);
       return;
     }
-    
-    // Queue particle command with complete particle data
-    context.queueCommand({
-      type: 'particle',
-      params: { particle: event.meta }
+
+    commands.push({
+      type: "particle",
+      params: { particle: event.meta },
     });
   }
 
-  private handleAreaOfEffect(event: Action, context: TickContext) {
-    if (!event.target || typeof event.target !== 'object' || !('x' in event.target && 'y' in event.target)) {
+  private handleAreaOfEffect(event: Action, context: TickContext, commands: QueuedCommand[]) {
+    if (
+      !event.target ||
+      typeof event.target !== "object" ||
+      !("x" in event.target && "y" in event.target)
+    ) {
       console.warn(`Invalid target for AoE event: ${event.target}`);
       return;
     }
@@ -125,31 +130,31 @@ export class EventHandler extends Rule {
 
     let sourceUnit = context.findUnitById(event.source as string);
 
-    const isHealing = event.meta.aspect === 'heal';
-    const isEmp = event.meta.aspect === 'emp';
-    const isChill = event.meta.aspect === 'chill';
-    
-    const affectedUnits = context.getAllUnits().filter(unit => {
+    const isHealing = event.meta.aspect === "heal";
+    const isEmp = event.meta.aspect === "emp";
+    const isChill = event.meta.aspect === "chill";
+
+    const affectedUnits = context.getAllUnits().filter((unit) => {
       const dx = unit.pos.x - target.x;
       const dy = unit.pos.y - target.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       const inRange = distance <= (event.meta.radius || 5);
-      
+
       if (isHealing) {
-        return inRange && unit.team === sourceUnit?.team && unit.hp < unit.maxHp;
+        return (
+          inRange && unit.team === sourceUnit?.team && unit.hp < unit.maxHp
+        );
       } else if (isEmp) {
-        const mechanicalImmune = event.meta.mechanicalImmune && unit.tags?.includes('mechanical');
+        const mechanicalImmune =
+          event.meta.mechanicalImmune && unit.tags?.includes("mechanical");
         return inRange && !mechanicalImmune;
       } else if (isChill) {
         return inRange && unit.team !== sourceUnit?.team; // Chill affects enemies
       } else {
-        // For damage AoE: check friendlyFire flag
         const friendlyFire = event.meta.friendlyFire !== false; // Default to true for backwards compatibility
         if (!friendlyFire) {
-          // No friendly fire - only affect enemies
           return inRange && sourceUnit && unit.team !== sourceUnit.team;
         } else {
-          // With friendly fire - affect anyone in range except the source
           return inRange && unit.id !== event.source;
         }
       }
@@ -157,100 +162,94 @@ export class EventHandler extends Rule {
 
     for (const unit of affectedUnits) {
       const distance = Math.sqrt(
-        Math.pow(unit.pos.x - target.x, 2) +
-        Math.pow(unit.pos.y - target.y, 2)
+        Math.pow(unit.pos.x - target.x, 2) + Math.pow(unit.pos.y - target.y, 2),
       );
-      
+
       if (isEmp) {
-        // Queue stun command instead of direct mutation
-        context.queueCommand({
-          type: 'meta',
+        commands.push({
+          type: "meta",
           params: {
             unitId: unit.id,
             meta: {
               stunned: true,
-              stunDuration: event.meta.stunDuration || 20
-            }
-          }
+              stunDuration: event.meta.stunDuration || 20,
+            },
+          },
         });
-        
-        // Add particle effect
-        context.queueCommand({
-          type: 'particle',
+
+        commands.push({
+          type: "particle",
           params: {
             particle: {
               pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
               vel: { x: 0, y: -0.3 },
               radius: 2,
-              color: '#FFFF88',
+              color: "#FFFF88",
               lifetime: 25,
-              type: 'electric_spark'
-            }
-          }
+              type: "electric_spark",
+            },
+          },
         });
       } else if (isChill) {
-        // Queue chill command instead of direct mutation
-        context.queueCommand({
-          type: 'meta',
+        commands.push({
+          type: "meta",
           params: {
             unitId: unit.id,
             meta: {
               chilled: true,
               chillIntensity: 0.5, // 50% slow
-              chillDuration: event.meta.duration || 30
-            }
-          }
+              chillDuration: event.meta.duration || 30,
+            },
+          },
         });
       } else if (isHealing) {
-        // Queue heal event for affected unit
         context.queueEvent({
-          kind: 'heal',
+          kind: "heal",
           source: event.source,
           target: unit.id,
           meta: {
             amount: event.meta.amount || 10,
-            aspect: 'magic',
-            origin: event.target
-          }
+            aspect: "magic",
+            origin: event.target,
+          },
         });
       } else {
-        // Queue damage event with falloff
         const falloff = event.meta.falloff !== false;
         const maxRadius = event.meta.radius || 5;
-        const damageMultiplier = falloff ? Math.max(0.3, 1 - (distance / maxRadius) * 0.5) : 1;
+        const damageMultiplier = falloff
+          ? Math.max(0.3, 1 - (distance / maxRadius) * 0.5)
+          : 1;
         const damage = Math.floor((event.meta.amount || 10) * damageMultiplier);
-        
+
         if (damage > 0) {
-          context.queueCommand({
-            type: 'damage',
+          commands.push({
+            type: "damage",
             params: {
               targetId: unit.id,
               amount: damage,
-              aspect: event.meta.aspect || 'explosion',
+              aspect: event.meta.aspect || "explosion",
               sourceId: event.source,
-              origin: event.target
-            }
+              origin: event.target,
+            },
           });
         }
-        
-        // Check for force/knockback/toss based on mass difference
+
         if (event.meta.force && sourceUnit) {
           const massDiff = (sourceUnit.mass || 1) - (unit.mass || 1);
           if (massDiff >= 3) {
-            // Significant mass difference - toss the lighter unit
             const dx = unit.pos.x - target.x;
             const dy = unit.pos.y - target.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist > 0) {
               const direction = { x: dx / dist, y: dy / dist };
-              context.queueCommand({
-                type: 'toss',
-                unitId: unit.id,  // unitId at command level, not in params
+              commands.push({
+                type: "toss",
+                unitId: unit.id,
                 params: {
                   direction: direction,
                   force: event.meta.force,
-                  distance: Math.min(3, event.meta.force / 2)
-                }
+                  distance: Math.min(3, event.meta.force / 2),
+                },
               });
             }
           }
@@ -258,33 +257,38 @@ export class EventHandler extends Rule {
       }
     }
 
-    // Visual feedback - create explosion particles
     const particleCount = isHealing ? 12 : 20;
-    const particleColor = isHealing ? '#88FF88' : (isEmp ? '#FFFF88' : (isChill ? '#88DDFF' : '#FF8844'));
-    
+    const particleColor = isHealing
+      ? "#88FF88"
+      : isEmp
+        ? "#FFFF88"
+        : isChill
+          ? "#88DDFF"
+          : "#FF8844";
+
     for (let i = 0; i < particleCount; i++) {
       const angle = (i / particleCount) * Math.PI * 2;
       const speed = isHealing ? 0.5 : 1.5;
-      context.queueCommand({
-        type: 'particle',
+      commands.push({
+        type: "particle",
         params: {
           particle: {
             pos: { x: target.x * 8 + 4, y: target.y * 8 + 4 },
-            vel: { 
-              x: Math.cos(angle) * speed, 
-              y: Math.sin(angle) * speed 
+            vel: {
+              x: Math.cos(angle) * speed,
+              y: Math.sin(angle) * speed,
             },
             radius: 2,
             color: particleColor,
             lifetime: 25,
-            type: isHealing ? 'heal_particle' : 'explosion'
-          }
-        }
+            type: isHealing ? "heal_particle" : "explosion",
+          },
+        },
       });
     }
   }
 
-  private handleDamage(event: Action, context: TickContext) {
+  private handleDamage(event: Action, context: TickContext, commands: QueuedCommand[]) {
     if (!event.target || !event.meta?.amount) {
       return;
     }
@@ -294,42 +298,40 @@ export class EventHandler extends Rule {
       return;
     }
 
-    // Queue damage command - let the command handle all resistance logic
-    context.queueCommand({
-      type: 'damage',
+    commands.push({
+      type: "damage",
       params: {
         targetId: targetUnit.id,
         amount: event.meta.amount,
-        aspect: event.meta.aspect || 'physical',
+        aspect: event.meta.aspect || "physical",
         sourceId: event.source,
-        origin: event.meta.origin
-      }
+        origin: event.meta.origin,
+      },
     });
 
-    // Visual feedback
     const origin = event.meta.origin || targetUnit.pos;
-    const aspect = event.meta.aspect || 'physical';
+    const aspect = event.meta.aspect || "physical";
     for (let i = 0; i < 5; i++) {
-      context.queueCommand({
-        type: 'particle',
+      commands.push({
+        type: "particle",
         params: {
           particle: {
             pos: { x: targetUnit.pos.x * 8 + 4, y: targetUnit.pos.y * 8 + 4 },
-            vel: { 
-              x: (context.getRandom() - 0.5) * 2, 
-              y: -context.getRandom() * 2 
+            vel: {
+              x: (context.getRandom() - 0.5) * 2,
+              y: -context.getRandom() * 2,
             },
             radius: 1.5,
-            color: aspect === 'fire' ? '#FF6644' : '#FF4444',
+            color: aspect === "fire" ? "#FF6644" : "#FF4444",
             lifetime: 15,
-            type: 'damage'
-          }
-        }
+            type: "damage",
+          },
+        },
       });
     }
   }
 
-  private handleHeal(event: Action, context: TickContext) {
+  private handleHeal(event: Action, context: TickContext, commands: QueuedCommand[]) {
     if (!event.target || !event.meta?.amount) {
       return;
     }
@@ -339,38 +341,36 @@ export class EventHandler extends Rule {
       return;
     }
 
-    // Queue heal command
-    context.queueCommand({
-      type: 'heal',
+    commands.push({
+      type: "heal",
       params: {
         targetId: targetUnit.id,
-        amount: event.meta.amount
-      }
+        amount: event.meta.amount,
+      },
     });
 
-    // Visual feedback
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2;
-      context.queueCommand({
-        type: 'particle',
+      commands.push({
+        type: "particle",
         params: {
           particle: {
             pos: { x: targetUnit.pos.x * 8 + 4, y: targetUnit.pos.y * 8 + 4 },
-            vel: { 
-              x: Math.cos(angle) * 0.3, 
-              y: Math.sin(angle) * 0.3 - 0.5 
+            vel: {
+              x: Math.cos(angle) * 0.3,
+              y: Math.sin(angle) * 0.3 - 0.5,
             },
             radius: 1.5,
-            color: '#88FF88',
+            color: "#88FF88",
             lifetime: 20,
-            type: 'heal'
-          }
-        }
+            type: "heal",
+          },
+        },
       });
     }
   }
 
-  private handleKnockback(event: Action, context: TickContext) {
+  private handleKnockback(event: Action, context: TickContext, commands: QueuedCommand[]) {
     if (!event.target || !event.meta?.direction) {
       return;
     }
@@ -383,22 +383,18 @@ export class EventHandler extends Rule {
     const force = event.meta.force || 5;
     const direction = event.meta.direction;
 
-    // Queue knockback command
-    context.queueCommand({
-      type: 'knockback',
+    commands.push({
+      type: "knockback",
       params: {
         unitId: targetUnit.id,
         direction: direction,
-        force: force
-      }
+        force: force,
+      },
     });
   }
 
-  private handleTerrain(event: Action, context: TickContext) {
-    // Terrain modifications would go here
-    // For now, just log it
+  private handleTerrain(event: Action, context: TickContext, commands: QueuedCommand[]) {
     if (event.meta?.terrainType) {
-      // console.log(`Terrain change at ${event.target}: ${event.meta.terrainType}`);
     }
   }
 }

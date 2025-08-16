@@ -28,7 +28,7 @@ describe("New Units Integration", () => {
     expect(bigWorm.abilities.includes('breatheFire')).toBe(true);
     expect(bigWorm.team).toBe('hostile');
     
-    // After creating, verify it exists in the roster
+
     const wormInRoster = sim.roster[wormId];
     expect(wormInRoster).toBeDefined();
     expect(wormInRoster.id).toBe(wormId);
@@ -37,7 +37,7 @@ describe("New Units Integration", () => {
   it("should create black faction units from encyclopaedia", () => {
     const sim = new Simulator(10, 10);
     
-    // Test skeleton
+
     const skeleton = Encyclopaedia.unit('skeleton');
     skeleton.pos = { x: 1, y: 1 };
     sim.addUnit(skeleton);
@@ -48,7 +48,7 @@ describe("New Units Integration", () => {
     expect(skeleton.tags).toContain('undead');
     expect(skeleton.tags).toContain('black');
 
-    // Test ghost 
+
     const ghost = Encyclopaedia.unit('ghost');
     ghost.pos = { x: 2, y: 2 };
     sim.addUnit(ghost);
@@ -58,7 +58,7 @@ describe("New Units Integration", () => {
     expect(ghost.tags).toContain('spectral');
     expect(ghost.mass).toBe(0.1); // Nearly weightless
 
-    // Test demon
+
     const demon = Encyclopaedia.unit('demon');
     demon.pos = { x: 3, y: 3 };
     sim.addUnit(demon);
@@ -67,7 +67,7 @@ describe("New Units Integration", () => {
     expect(demon.meta.perdurance).toBe('fiendish');
     expect(demon.mass).toBe(2); // Heavy
 
-    // Test mimic worm
+
     const mimicWorm = Encyclopaedia.unit('mimic-worm');
     mimicWorm.pos = { x: 4, y: 4 };
     sim.addUnit(mimicWorm);
@@ -94,7 +94,7 @@ describe("New Units Integration", () => {
   it("should handle weather system integration", () => {
     const sim = new Simulator(10, 10);
     
-    // Test weather commands
+
     sim.processWeatherCommand('rain', '40', '0.8');
     expect(sim.weather.current).toBe('rain');
     expect(sim.weather.duration).toBe(40);
@@ -107,17 +107,17 @@ describe("New Units Integration", () => {
   it("should set units on fire correctly", () => {
     const sim = new Simulator(10, 10);
     
-    // Create a unit and set it on fire
+
     const soldier = Encyclopaedia.unit('soldier');
     soldier.pos = { x: 5, y: 5 };
     sim.addUnit(soldier);
     
     sim.setUnitOnFire(soldier);
     
-    // Need to step to process the queued command
+
     sim.step();
     
-    // Get fresh reference after step
+
     const updatedSoldier = sim.units.find(u => u.id === soldier.id);
     expect(updatedSoldier?.meta.onFire).toBe(true);
     expect(updatedSoldier?.meta.fireDuration).toBe(40);
@@ -127,12 +127,12 @@ describe("New Units Integration", () => {
   it("should handle priest radiant abilities against undead", () => {
     const sim = new Simulator(10, 10);
     
-    // Create priest with radiant ability
+
     const priest = Encyclopaedia.unit('priest');
     priest.pos = { x: 5, y: 5 };
     sim.addUnit(priest);
     
-    // Create ghost target
+
     const ghost = Encyclopaedia.unit('ghost');
     ghost.pos = { x: 6, y: 5 }; // Adjacent to priest
     sim.addUnit(ghost);
@@ -140,10 +140,10 @@ describe("New Units Integration", () => {
     expect(priest.abilities.includes('radiant')).toBe(true);
     expect(ghost.tags).toContain('spectral');
     
-    // The radiant ability should be extra effective against spectral units
+
     const initialGhostHp = ghost.hp;
     
-    // Test that the units exist and are positioned correctly
+
     expect(sim.units).toHaveLength(2);
     expect(Math.abs(priest.pos.x - ghost.pos.x)).toBe(1);
   });

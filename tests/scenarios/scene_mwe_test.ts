@@ -23,7 +23,7 @@ w..`;
     expect(soldier).toBeDefined();
     expect(worm).toBeDefined();
     
-    // Check teams
+
     expect(farmer?.team).toBe('friendly');
     expect(soldier?.team).toBe('friendly');
     expect(worm?.team).toBe('hostile');
@@ -47,11 +47,11 @@ w.w.w`;
     expect(slingers.length).toBe(3);
     expect(worms.length).toBe(3);
     
-    // Check slinger has ranged ability
-    // const slinger = slingers[0];
-    // expect(slinger.abilities.includes('ranged')).toBe(true);
-    // expect(slinger.abilities.ranged.cooldown).toBe(15);
-    // expect(slinger.abilities.ranged.config?.range).toBe(8);
+
+
+
+
+
   });
 
   it('should load healing.battle with priest', () => {
@@ -70,7 +70,7 @@ w.w.w`;
     
     expect(priest).toBeDefined();
     expect(farmers.length).toBe(2);
-    // expect(priest?.abilities.includes('heal')).toBe(true);
+
   });
 
   it('should handle mass differences for tossing in complex.battle', () => {
@@ -97,7 +97,7 @@ w.w....w.w
     expect(ranger).toBeDefined();
     expect(farmers.length).toBe(4); // Regular farmers with mass 1
     
-    // Heavy units should be able to toss light units
+
     expect(worm!.mass / farmers[0].mass).toBeGreaterThanOrEqual(2);
   });
 
@@ -126,7 +126,7 @@ w..w`;
     const sim = new Simulator(40, 25);
     const sceneLoader = new SceneLoader(sim);
     
-    // Create a scenario with ranger and nearby worm
+
     const rangerTest = `r....
 .....
 .....
@@ -142,15 +142,15 @@ w..w`;
     expect(worm).toBeDefined();
     expect(ranger?.abilities.includes('ranged')).toBe(true);
     
-    // Step the simulation a few times to allow abilities to trigger
+
     expect(sim.projectiles.length).toBe(0); // No projectiles initially
     
-    // Step multiple times to let abilities trigger (cooldown is 60 ticks)
+
     for (let i = 0; i < 7; i++) {
       sim.step();
     }
     
-    // Should have created at least one projectile
+
     expect(sim.projectiles.length).toBeGreaterThan(0);
     
     const projectile = sim.projectiles[0];

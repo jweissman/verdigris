@@ -10,9 +10,9 @@ import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 describe('Grappling Mechanics - Core Physics', () => {
   it('should create a grapple projectile when grappler fires hook', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default which includes all necessary rules
+
     
-    // Create grappler unit
+
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
@@ -21,7 +21,7 @@ describe('Grappling Mechanics - Core Physics', () => {
     };
     sim.addUnit(grappler);
     
-    // Add enemy to target
+
     const enemy = sim.addUnit({
       id: 'enemy',
       pos: { x: 10, y: 5 },
@@ -30,11 +30,11 @@ describe('Grappling Mechanics - Core Physics', () => {
       sprite: 'soldier'
     });
     
-    // Run Abilities to fire grapple
+
     sim.step(); // Abilities queues the grapple command
     sim.step(); // CommandHandler processes the grapple command
     
-    // Should create grapple projectile
+
     const grapples = sim.projectiles.filter(p => p.type === 'grapple');
     expect(grapples.length).toBeGreaterThan(0);
     
@@ -46,7 +46,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should establish tether when grapple hits target unit', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default which includes all necessary rules
+
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
@@ -65,26 +65,26 @@ describe('Grappling Mechanics - Core Physics', () => {
     sim.addUnit(grappler);
     sim.addUnit(target);
     
-    // Fire grapple using Abilities
+
     sim.step(); // Abilities queues the grapple command
     
-    // Check if a grapple projectile was created
+
     const grapplesAfterStep = sim.projectiles.filter(p => p.type === 'grapple');
     console.log('Grapple projectiles after first step:', grapplesAfterStep.length);
     
     sim.step(); // CommandHandler processes the grapple command
     
-    // Process grapple projectile movement and collision
+
     for (let i = 0; i < 20; i++) {
       sim.step();
       
-      // Check if any unit has grappleHit flag
+
       const hitUnits = sim.units.filter(u => u.meta.grappleHit);
       if (hitUnits.length > 0) {
         console.log('Units with grappleHit:', hitUnits.map(u => u.id));
       }
       
-      // Check if tether was established
+
       const g = sim.units.find(u => u.id === 'grappler-1');
       if (g?.meta.grapplingTarget === 'target-1') {
         console.log('Tether established at step', i);
@@ -98,7 +98,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should damage and pin segments when grappling segmented creature', () => {
     const sim = new Simulator();
-    // Use default rulebook which has all necessary rules
+
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
@@ -107,7 +107,7 @@ describe('Grappling Mechanics - Core Physics', () => {
       lastAbilityTick: {}
     };
     
-    // Create segmented worm properly
+
     const worm = {
       ...Encyclopaedia.unit('big-worm'),
       id: 'worm-1',
@@ -122,10 +122,10 @@ describe('Grappling Mechanics - Core Physics', () => {
     sim.addUnit(grappler);
     sim.addUnit(worm);
     
-    // Let SegmentedCreatures create the segments
+
     sim.step();
     
-    // Find the first segment that was created
+
     const segment1 = sim.units.find(u => 
       u.meta?.segment && 
       u.meta?.parentId === 'worm-1' && 
@@ -138,22 +138,22 @@ describe('Grappling Mechanics - Core Physics', () => {
     const initialSegmentHp = segment1!.hp;
     const segmentId = segment1!.id;
     
-    // Use the actual grapple ability
+
     sim.forceAbility('grappler-1', 'grapplingHook', worm);
     
-    // Process grapple - use debugging to track changes
+
     for (let i = 0; i < 20; i++) {
-      // Track segment before step
+
       const segmentBefore = sim.units.find(u => u.id === segmentId);
       const wormBefore = sim.units.find(u => u.id === 'worm-1');
       
       sim.step();
       
-      // Track segment after step
+
       const segmentAfter = sim.units.find(u => u.id === segmentId);
       const wormAfter = sim.units.find(u => u.id === 'worm-1');
       
-      // Log deltas for first few steps and when damage occurs
+
       if (i < 3 || (segmentBefore && segmentAfter && segmentBefore.hp !== segmentAfter.hp)) {
         console.log(`\n=== Step ${i} ===`);
         if (segmentBefore && segmentAfter) {
@@ -172,7 +172,7 @@ describe('Grappling Mechanics - Core Physics', () => {
       }
     }
     
-    // Check if segment was damaged
+
     const finalSegment = sim.units.find(u => u.id === segmentId);
     expect(finalSegment).toBeDefined();
     expect(finalSegment!.hp).toBeLessThan(initialSegmentHp);
@@ -181,7 +181,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should limit grappler to maximum simultaneous grapples', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default which includes all necessary rules
+
     
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
@@ -199,7 +199,7 @@ describe('Grappling Mechanics - Core Physics', () => {
     
     sim.addUnit(grappler);
     
-    // Add multiple targets
+
     for (let i = 0; i < 5; i++) {
       sim.addUnit({
         id: `target-${i}`,
@@ -210,20 +210,20 @@ describe('Grappling Mechanics - Core Physics', () => {
       });
     }
     
-    // Fire multiple grapples
+
     for (let i = 0; i < 10; i++) {
-      // Clear cooldown each time
+
       grappler.lastAbilityTick.grapplingHook = -100;
       sim.step();
     }
     
-    // Count active grapples
+
     const grapples = sim.projectiles.filter(p => 
       p.type === 'grapple' && 
       (p.sourceId === 'grappler-1' || (p as any).grapplerID === 'grappler-1')
     );
     
-    // Should not exceed maximum
+
     expect(grapples.length).toBeLessThanOrEqual(2);
   });
 });

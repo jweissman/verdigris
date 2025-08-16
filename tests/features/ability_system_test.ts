@@ -52,21 +52,21 @@ describe("Ability System Integration", () => {
     
     const initialGhostHp = ghost.hp;
     
-    // Run simulation for enough steps to allow ability cooldown
+
     for (let i = 0; i < 35; i++) { // More than radiant cooldown of 30
       sim.step();
       
-      // Get fresh ghost reference
+
       const freshGhost = sim.units.find(u => u.id === ghost.id);
       if (freshGhost && freshGhost.hp < initialGhostHp) {
         break;
       }
     }
     
-    // Get final fresh ghost reference
+
     const finalGhost = sim.units.find(u => u.id === ghost.id);
     
-    // Ghost should have taken radiant damage
+
     expect(finalGhost && finalGhost.hp < initialGhostHp).toBe(true);
   });
 });

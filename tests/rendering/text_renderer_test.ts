@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
 import { TextRenderer } from '../../src/rendering/text_renderer';
 
-// Mock canvas context for testing
+
 class MockCanvasContext {
   public savedStates: any[] = [];
   public operations: string[] = [];
@@ -60,7 +60,7 @@ class MockCanvasContext {
     this.operations.push('stroke');
   }
   
-  // Properties
+
   font: string = '';
   fillStyle: string | CanvasGradient | CanvasPattern = '';
   strokeStyle: string | CanvasGradient | CanvasPattern = '';
@@ -88,7 +88,7 @@ describe('TextRenderer', () => {
     it('should accept a canvas context', () => {
       const newRenderer = new TextRenderer();
       newRenderer.setContext(mockCtx as any);
-      // Should not throw
+
       newRenderer.drawText('test', 0, 0);
       expect(mockCtx.operations.length).toBeGreaterThan(0);
     });
@@ -111,7 +111,7 @@ describe('TextRenderer', () => {
         outlineColor: '#000000'
       });
       
-      // Check that outline was drawn
+
       const strokeOps = mockCtx.operations.filter(op => op.startsWith('strokeText'));
       expect(strokeOps.length).toBeGreaterThan(0);
     });
@@ -130,7 +130,7 @@ describe('TextRenderer', () => {
     it('should draw speech bubbles', () => {
       renderer.drawBubble('HELLO', 100, 100, { type: 'speech' });
       
-      // Should draw rounded rect and tail
+
       expect(mockCtx.operations).toContain('beginPath');
       expect(mockCtx.operations).toContain('fill');
       expect(mockCtx.operations).toContain('stroke');
@@ -140,7 +140,7 @@ describe('TextRenderer', () => {
     it('should draw thought bubbles', () => {
       renderer.drawBubble('THINKING', 100, 100, { type: 'thought' });
       
-      // Should draw bubbles (arc operations)
+
       const arcOps = mockCtx.operations.filter(op => op.startsWith('arc'));
       expect(arcOps.length).toBeGreaterThan(0);
     });
@@ -153,7 +153,7 @@ describe('TextRenderer', () => {
         padding: 16
       });
       
-      // Should have drawn operations
+
       expect(mockCtx.operations).toContain('fill');
       expect(mockCtx.operations).toContain('stroke');
     });
@@ -163,7 +163,7 @@ describe('TextRenderer', () => {
     it('should draw damage numbers', () => {
       renderer.drawDamageNumber(42, 50, 100);
       
-      // Should draw "-42"
+
       const fillTextOps = mockCtx.operations.filter(op => op.includes('fillText:-42'));
       expect(fillTextOps.length).toBeGreaterThan(0);
     });
@@ -171,7 +171,7 @@ describe('TextRenderer', () => {
     it('should apply float offset', () => {
       renderer.drawDamageNumber(10, 50, 100, 20);
       
-      // Y position should be adjusted by float offset
+
       const fillTextOps = mockCtx.operations.filter(op => op.includes('fillText:-10'));
       expect(fillTextOps[0]).toContain(':80'); // 100 - 20
     });
@@ -180,7 +180,7 @@ describe('TextRenderer', () => {
       mockCtx.operations = [];
       renderer.drawDamageNumber(100, 50, 100, 0, true);
       
-      // Critical should use large font
+
       expect(mockCtx.font).toContain('24px'); // 16 * 1.5
     });
   });
@@ -209,8 +209,8 @@ describe('TextRenderer', () => {
       expect(newRenderer.fontsReady).toBe(false);
     });
     
-    // Note: Actual image loading would need to be mocked in a browser environment
-    // This is just checking the interface exists
+
+
     it('should have loadFontAtlas method', () => {
       expect(renderer.loadFontAtlas).toBeDefined();
       expect(typeof renderer.loadFontAtlas).toBe('function');

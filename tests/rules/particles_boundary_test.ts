@@ -6,7 +6,7 @@ describe('Particle Boundary and Landing Logic', () => {
   it('should not remove particles within bounds', () => {
     const sim = new Simulator();
     
-    // Add particle in center of field
+
     const idx = sim.particleArrays.addParticle({
       pos: { x: sim.fieldWidth * 4, y: sim.fieldHeight * 4 }, // Center in pixels
       vel: { x: 0, y: 0 },
@@ -18,7 +18,7 @@ describe('Particle Boundary and Landing Logic', () => {
     
     sim.step();
     
-    // Should still be active
+
     expect(sim.particleArrays.active[idx]).toBe(1);
   });
   
@@ -26,7 +26,7 @@ describe('Particle Boundary and Landing Logic', () => {
     const sim = new Simulator();
     const fieldHeightPx = sim.fieldHeight * 8;
     
-    // Add snow particle just above landing height
+
     const idx = sim.particleArrays.addParticle({
       pos: { x: 50, y: fieldHeightPx - 1.01 }, // Will land after one step with vel 0.15
       vel: { x: 0, y: 0.15 },
@@ -38,7 +38,7 @@ describe('Particle Boundary and Landing Logic', () => {
     
     sim.step();
     
-    // Should have landed
+
     expect(sim.particleArrays.active[idx]).toBe(1); // Still active
     expect(sim.particleArrays.landed[idx]).toBe(1); // But landed
     expect(sim.particleArrays.posY[idx]).toBe(fieldHeightPx - 1); // At landing position
@@ -48,7 +48,7 @@ describe('Particle Boundary and Landing Logic', () => {
   it('should handle storm clouds without removing them', () => {
     const sim = new Simulator();
     
-    // Add 8 storm clouds like the storm command does
+
     const indices = [];
     for (let i = 0; i < 8; i++) {
       const idx = sim.particleArrays.addParticle({
@@ -65,14 +65,14 @@ describe('Particle Boundary and Landing Logic', () => {
       indices.push(idx);
     }
     
-    // All should be active
+
     for (const idx of indices) {
       expect(sim.particleArrays.active[idx]).toBe(1);
     }
     
     sim.step();
     
-    // All should still be active (storm clouds don't get removed by boundaries)
+
     let activeCount = 0;
     for (const idx of indices) {
       if (sim.particleArrays.active[idx] === 1) activeCount++;
@@ -85,7 +85,7 @@ describe('Particle Boundary and Landing Logic', () => {
     const fieldWidthPx = sim.fieldWidth * 8;
     const fieldHeightPx = sim.fieldHeight * 8;
     
-    // Add particle way out of bounds
+
     const idx = sim.particleArrays.addParticle({
       pos: { x: fieldWidthPx + 100, y: fieldHeightPx + 100 },
       vel: { x: 0, y: 0 },
@@ -97,7 +97,7 @@ describe('Particle Boundary and Landing Logic', () => {
     
     sim.step();
     
-    // Should be removed
+
     expect(sim.particleArrays.active[idx]).toBe(0);
   });
 });

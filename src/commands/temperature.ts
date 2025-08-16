@@ -20,21 +20,25 @@ export class Temperature extends Command {
     const amount = (params.amount as number) ?? 20;
     const radius = (params.radius as number) ?? 3;
 
-    if (typeof amount !== 'number' || isNaN(amount)) {
+    if (typeof amount !== "number" || isNaN(amount)) {
       console.error("Invalid temperature value");
       return;
     }
 
     if (x !== undefined && y !== undefined) {
-      // Set temperature at specific position with radius
       for (let dx = -radius; dx <= radius; dx++) {
         for (let dy = -radius; dy <= radius; dy++) {
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist <= radius) {
             const px = Math.round(x + dx);
             const py = Math.round(y + dy);
-            if (px >= 0 && px < this.sim.fieldWidth && py >= 0 && py < this.sim.fieldHeight) {
-              const falloff = 1 - (dist / radius);
+            if (
+              px >= 0 &&
+              px < this.sim.fieldWidth &&
+              py >= 0 &&
+              py < this.sim.fieldHeight
+            ) {
+              const falloff = 1 - dist / radius;
               const tempChange = amount * falloff;
               const currentTemp = this.sim.temperatureField.get(px, py);
               this.sim.temperatureField.set(px, py, currentTemp + tempChange);
@@ -43,13 +47,11 @@ export class Temperature extends Command {
         }
       }
     } else {
-      // Set global temperature
       for (let fx = 0; fx < this.sim.fieldWidth; fx++) {
         for (let fy = 0; fy < this.sim.fieldHeight; fy++) {
-          // Add some variation for realism
           const variation = (Simulator.rng.random() - 0.5) * 4; // ±2°C variation
           const finalTemp = amount + variation;
-          
+
           this.sim.temperatureField.set(fx, fy, finalTemp);
         }
       }

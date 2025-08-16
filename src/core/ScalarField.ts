@@ -32,8 +32,12 @@ export class ScalarField {
     this.data[idx] += value;
   }
 
-  // Add gradient with quadratic falloff
-  addGradient(centerX: number, centerY: number, radius: number, intensity: number): void {
+  addGradient(
+    centerX: number,
+    centerY: number,
+    radius: number,
+    intensity: number,
+  ): void {
     const startX = Math.max(0, Math.floor(centerX - radius));
     const endX = Math.min(this.width - 1, Math.ceil(centerX + radius));
     const startY = Math.max(0, Math.floor(centerY - radius));
@@ -44,13 +48,13 @@ export class ScalarField {
       const dy = y - centerY;
       const dySq = dy * dy;
       const rowOffset = y * this.width;
-      
+
       for (let x = startX; x <= endX; x++) {
         const dx = x - centerX;
         const distSq = dx * dx + dySq;
-        
+
         if (distSq <= radiusSq) {
-          const falloff = 1 - (distSq / radiusSq);
+          const falloff = 1 - distSq / radiusSq;
           const contribution = intensity * falloff * falloff;
           this.data[rowOffset + x] += contribution;
         }
@@ -58,70 +62,57 @@ export class ScalarField {
     }
   }
 
-  // SIMD-optimized diffusion - single pass, vectorizable
   diffuse(rate: number = 0.1): void {
-    // Copy current state to temp buffer
     this.temp.set(this.data);
-    
-    // Process inner cells only (skip boundaries for simplicity)
-    // This loop is SIMD-vectorizable: no branches, sequential memory access
+
     const w = this.width;
     for (let y = 1; y < this.height - 1; y++) {
       const row = y * w;
-      
-      // Process 4 cells at a time for SIMD (in theory)
+
       for (let x = 1; x < w - 1; x++) {
         const idx = row + x;
-        
-        // Average of 4 neighbors (no branches!)
-        const neighbors = (
-          this.temp[idx - w] +  // top
-          this.temp[idx + w] +  // bottom
-          this.temp[idx - 1] +  // left
-          this.temp[idx + 1]    // right
-        ) * 0.25;
-        
-        // Blend with current value
+
+        const neighbors =
+          (this.temp[idx - w] +
+            this.temp[idx + w] +
+            this.temp[idx - 1] +
+            this.temp[idx + 1]) *
+          0.25;
+
         this.data[idx] = this.temp[idx] * (1 - rate) + neighbors * rate;
       }
     }
   }
 
-  // SIMD-optimized decay - pure vectorizable operation
   decay(rate: number = 0.01): void {
     const factor = 1 - rate;
-    
-    // This is the most SIMD-friendly operation possible
-    // Modern JS engines can vectorize this automatically
+
     for (let i = 0; i < this.size; i++) {
       this.data[i] *= factor;
     }
   }
 
-  // Fast batch operations for even better SIMD
   decayAndDiffuse(decayRate: number = 0.01, diffuseRate: number = 0.1): void {
     const decayFactor = 1 - decayRate;
     const keepFactor = 1 - diffuseRate;
     const neighborFactor = diffuseRate * 0.25;
-    
-    // Copy and decay in one pass
+
     for (let i = 0; i < this.size; i++) {
       this.temp[i] = this.data[i] * decayFactor;
     }
-    
-    // Diffuse from decayed values
+
     const w = this.width;
     for (let y = 1; y < this.height - 1; y++) {
       const row = y * w;
       for (let x = 1; x < w - 1; x++) {
         const idx = row + x;
-        const neighbors = (
-          this.temp[idx - w] + 
-          this.temp[idx + w] + 
-          this.temp[idx - 1] + 
-          this.temp[idx + 1]
-        );
-        this.data[idx] = this.temp[idx] * keepFactor + neighbors * neighborFactor;
+        const neighbors =
+          this.temp[idx - w] +
+          this.temp[idx + w] +
+          this.temp[idx - 1] +
+          this.temp[idx + 1];
+        this.data[idx] =
+          this.temp[idx] * keepFactor + neighbors * neighborFactor;
       }
     }
   }

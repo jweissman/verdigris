@@ -6,7 +6,7 @@ describe('Vectorization Performance', () => {
   test('handles 100 units efficiently', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 100 units
+
     for (let i = 0; i < 100; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -23,7 +23,7 @@ describe('Vectorization Performance', () => {
     
     const startTime = performance.now();
     
-    // Run 100 steps
+
     for (let step = 0; step < 100; step++) {
       sim.step();
     }
@@ -34,20 +34,20 @@ describe('Vectorization Performance', () => {
     
     console.log(`100 units, 100 steps: ${totalTime.toFixed(2)}ms total, ${timePerStep.toFixed(2)}ms per step`);
     
-    // Should complete in reasonable time (< 1 second for 100 steps)
+
     expect(totalTime).toBeLessThan(1000);
     
-    // Average time per step should be < 10ms for smooth 60fps
+
     expect(timePerStep).toBeLessThan(10);
   });
   
   test('all creatures can coexist', () => {
     const sim = new Simulator(50, 50);
     
-    // Add various creature types
+
     const creatureTypes = ['soldier', 'worm', 'squirrel', 'mechatron', 'grappler', 'toymaker'];
     creatureTypes.forEach((name, i) => {
-      // Add 5 of each type
+
       for (let j = 0; j < 5; j++) {
         const creature = Encyclopaedia.unit(name);
         if (creature) {
@@ -63,7 +63,7 @@ describe('Vectorization Performance', () => {
     
     const startTime = performance.now();
     
-    // Run 50 steps - all creatures together!
+
     for (let step = 0; step < 50; step++) {
       sim.step();
     }
@@ -73,10 +73,10 @@ describe('Vectorization Performance', () => {
     
     console.log(`${sim.units.length} creatures (${creatureTypes.length} types), 50 steps: ${totalTime.toFixed(2)}ms`);
     
-    // Should handle all creatures without crashing
+
     expect(sim.units.length).toBeGreaterThan(0);
     
-    // Should complete in reasonable time
+
     expect(totalTime).toBeLessThan(2000);
   });
 });

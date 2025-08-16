@@ -15,39 +15,35 @@ class Freehold extends Game {
       this.numBuffer = ""; // Reset buffer after using it
 
       for (let i = 0; i < repetitions; i++) {
-        // this.handleKeyPress(e);
         this.input.handle(e);
       }
     };
   }
 
-  static boot(
-    canvasId: string | HTMLCanvasElement = 'battlefield'
-  ) {
+  static boot(canvasId: string | HTMLCanvasElement = "battlefield") {
     let game: Freehold | null = null;
-    const canvas = canvasId instanceof HTMLCanvasElement
-      ? canvasId
-      : document.getElementById(canvasId) as HTMLCanvasElement;
+    const canvas =
+      canvasId instanceof HTMLCanvasElement
+        ? canvasId
+        : (document.getElementById(canvasId) as HTMLCanvasElement);
     if (canvas) {
       let addInputListener = (cb: (e: { key: string }) => void) => {
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener("keydown", (e) => {
           cb({ key: e.key });
         });
       };
 
       game = new Freehold(canvas, {
         addInputListener,
-        animationFrame: (cb) => requestAnimationFrame(cb)
+        animationFrame: (cb) => requestAnimationFrame(cb),
       });
-            
-      // Handle window resize
-      window.addEventListener('resize', () => {
+
+      window.addEventListener("resize", () => {
         if (game && game.handleResize) {
           game.handleResize();
         }
       });
-      
-      // Initial size calculation
+
       if (game && game.handleResize) {
         game.handleResize();
       }
@@ -57,7 +53,9 @@ class Freehold extends Game {
       console.error(`Canvas element ${canvasId} not found!`);
     }
     function gameLoop() {
-      if (game) { game.update(); }
+      if (game) {
+        game.update();
+      }
       requestAnimationFrame(gameLoop);
     }
     requestAnimationFrame(gameLoop);
@@ -66,7 +64,7 @@ class Freehold extends Game {
 
 export { Freehold };
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // @ts-ignore
   window.Freehold = Freehold; // Expose for browser use
 }

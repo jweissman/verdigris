@@ -3,7 +3,7 @@ import { describe, it, expect } from 'bun:test';
 describe('Voice Characteristics', () => {
   describe('Female Choir (Alto range)', () => {
     it('should have fundamental frequency in alto range (G3-E5)', () => {
-      // Alto range approximately 196-659 Hz
+
       const altoMin = 196; // G3
       const altoMax = 659; // E5
       const typicalAlto = 392; // G4
@@ -27,8 +27,8 @@ describe('Voice Characteristics', () => {
     
     it('should have reverb characteristics', () => {
       const reverbConfig = {
-        preDelay: 20,      // ms - small room
-        decay: 2.5,        // seconds - church-like
+        preDelay: 20,
+        decay: 2.5,
         wetMix: 0.35,      // 35% wet signal
         earlyReflections: true
       };
@@ -102,7 +102,7 @@ describe('Voice Characteristics', () => {
     });
     
     it('should have harmonic content like plucked string', () => {
-      // Plucked strings have strong odd and even harmonics
+
       const harmonics = [
         1.0,   // Fundamental
         0.5,   // 2nd harmonic
@@ -127,7 +127,7 @@ describe('Voice Characteristics', () => {
         0.2    // 6th
       ];
       
-      // Should have strong upper harmonics for brightness
+
       expect(harmonics[1] + harmonics[2]).toBeGreaterThan(1.0);
     });
     

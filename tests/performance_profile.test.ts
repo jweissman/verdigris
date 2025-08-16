@@ -10,11 +10,11 @@ test.skip('profile squirrel scenario bottlenecks', () => {
   console.debug('\n🔍 PROFILING SQUIRREL SCENARIO');
   console.debug('='.repeat(50));
   
-  // Load squirrel scenario
+
   loader.loadScenario('squirrel');
   console.debug(`Loaded ${sim.units.length} units`);
   
-  // Profile first few steps in detail
+
   let totalStepTime = 0;
   for (let step = 0; step < 10; step++) {
     const stepStart = performance.now();
@@ -31,13 +31,13 @@ test.skip('profile squirrel scenario bottlenecks', () => {
   const avgStepTime = totalStepTime / 10;
   console.debug(`Average: ${avgStepTime.toFixed(2)}ms per step`);
   
-  // Get detailed profiling breakdown
+
   const report = sim.getProfilingReport();
   if (report && report.length > 0) {
     console.debug('\n📊 RULE BREAKDOWN (last 10 steps):');
     console.debug('-'.repeat(40));
     
-    // Group by rule name and calculate totals
+
     const ruleStats: { [key: string]: { total: number, count: number, max: number } } = {};
     
     for (const entry of report) {
@@ -49,7 +49,7 @@ test.skip('profile squirrel scenario bottlenecks', () => {
       ruleStats[entry.name].max = Math.max(ruleStats[entry.name].max, entry.duration);
     }
     
-    // Sort by total time
+
     const sorted = Object.entries(ruleStats)
       .sort((a, b) => b[1].total - a[1].total)
       .slice(0, 8);

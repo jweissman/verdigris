@@ -8,9 +8,11 @@ export default class Input {
   commandBuffer: string = "";
   bufferingCommands: boolean = false;
   static beastKeys = SceneLoader.defaultLegend;
-  constructor(private sim: Simulator, private renderer: Renderer) {
-  }
-  
+  constructor(
+    private sim: Simulator,
+    private renderer: Renderer,
+  ) {}
+
   handle(e: { key: string }) {
     if (this.bufferingCommands) {
       if (e.key === "Escape") {
@@ -30,7 +32,6 @@ export default class Input {
       }
     }
 
-    // if \ is pressed, start buffering commands
     if (e.key === "\\") {
       this.bufferingCommands = true;
       this.commandBuffer = "";
@@ -38,11 +39,6 @@ export default class Input {
       return;
     }
 
-    // if (e.key === "Escape") {
-    //   this.commandBuffer = "";
-    //   this.numBuffer = "";
-    //   return;
-    // } else
     if (e.key.match(/[0-9]/)) {
       this.numBuffer += e.key;
       return;
@@ -52,14 +48,11 @@ export default class Input {
     this.numBuffer = ""; // Reset buffer after using it
 
     for (let i = 0; i < repetitions; i++) {
-      // this.handleKeyPress(e);
       this.handleKeyPress(e);
     }
   }
 
-
   private handleKeyPress(e: { key: string }) {
-
     if (e.key === "Escape") {
       this.sim.reset();
       return;
@@ -68,23 +61,20 @@ export default class Input {
       return;
     } else if (e.key === ",") {
       this.sim.pause();
-      return
+      return;
     } else if (e.key === "Enter") {
       if (this.sim.paused) {
         this.sim.paused = false;
       }
       return;
     }
-    
-    if(e.key === "c" || e.key === "C") {
-      this.renderer.setViewMode(
-        this.renderer.gridView ? 'iso' : 'grid'
-      );
+
+    if (e.key === "c" || e.key === "C") {
+      this.renderer.setViewMode(this.renderer.gridView ? "iso" : "grid");
     }
 
-    
     let beasts = Input.beastKeys;
-    if (Object.keys(beasts).some(b => b === e.key)) {
+    if (Object.keys(beasts).some((b) => b === e.key)) {
       const { x, y } = this.randomGridPosition();
 
       let beast = beasts[e.key];
@@ -98,10 +88,10 @@ export default class Input {
     this.sim.addUnit({ ...Encyclopaedia.unit(beast), pos: { x, y } });
   }
 
-  randomGridPosition(): { x: number, y: number } {
+  randomGridPosition(): { x: number; y: number } {
     return {
       x: Math.floor(Simulator.rng.random() * this.sim.fieldWidth),
-      y: Math.floor(Simulator.rng.random() * this.sim.fieldHeight)
+      y: Math.floor(Simulator.rng.random() * this.sim.fieldHeight),
     };
   }
 }

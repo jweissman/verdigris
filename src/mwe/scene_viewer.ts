@@ -11,8 +11,8 @@ class ScenarioViewer {
   jukebox: Jukebox;
   isPlaying: boolean = false;
   musicEnabled: boolean = true;
-  currentMusic: string = '';
-  currentScenario: string = ''; // Track the current scenario
+  currentMusic: string = "";
+  currentScenario: string = ""; // Track the current scenario
   gameLoop;
   lastSimTime: number = 0;
 
@@ -22,7 +22,14 @@ class ScenarioViewer {
     this.jukebox = new Jukebox();
     const sprites = Game.loadSprites();
     const backgrounds = Game.loadBackgrounds();
-    const { renderer, handleResize, draw } = createScaledRenderer(320, 200, canvas, this.sim, sprites, backgrounds);
+    const { renderer, handleResize, draw } = createScaledRenderer(
+      320,
+      200,
+      canvas,
+      this.sim,
+      sprites,
+      backgrounds,
+    );
     this.renderer = renderer;
     handleResize();
     this.draw = draw;
@@ -31,20 +38,18 @@ class ScenarioViewer {
 
   startGame() {
     if (this.gameLoop) cancelAnimationFrame(this.gameLoop);
-    
+
     const animate = () => {
-      // Simulation runs at 8 FPS
       const now = Date.now();
       if (this.isPlaying && now - this.lastSimTime > 125) {
         this.sim.step();
         this.lastSimTime = now;
       }
-      
-      // Rendering runs at 60 FPS
+
       this.draw();
       this.gameLoop = requestAnimationFrame(animate);
     };
-    
+
     this.lastSimTime = Date.now();
     this.gameLoop = requestAnimationFrame(animate);
   }
@@ -53,25 +58,20 @@ class ScenarioViewer {
 
   loadScene(scenario: string) {
     try {
-      // Stop any current music first
       this.jukebox.stopMusic();
-      
-      // Store the current scenario for restart
+
       this.currentScenario = scenario;
-      
+
       this.sceneLoader.loadScenario(scenario);
       const unitCounts = new Map<string, number>();
-      this.sim.units.forEach(unit => {
-        const type = unit.type || unit.sprite || 'unknown';
+      this.sim.units.forEach((unit) => {
+        const type = unit.type || unit.sprite || "unknown";
         unitCounts.set(type, (unitCounts.get(type) || 0) + 1);
       });
-      
+
       this.draw();
-      
-      // Don't auto-start music, let user control it via selector
-      // Scene metadata can override with 'play' command
     } catch (error) {
-      console.error('Failed to load scene:', error);
+      console.error("Failed to load scene:", error);
     }
   }
 
@@ -88,7 +88,6 @@ class ScenarioViewer {
     if (this.currentScenario) {
       this.loadScene(this.currentScenario);
     } else {
-      // Fallback to first scenario if none loaded yet
       const firstScenario = Object.keys(SceneLoader.scenarios)[0];
       if (firstScenario) {
         this.loadScene(firstScenario);
@@ -97,90 +96,88 @@ class ScenarioViewer {
   }
 
   toggleView() {
-    const currentMode = this.renderer.viewMode || 'cinematic';
-    let newMode: 'grid' | 'cinematic' | 'iso';
-    
-    // Cycle through: cinematic -> iso -> grid -> cinematic
-    switch(currentMode) {
-      case 'cinematic':
-        newMode = 'iso';
+    const currentMode = this.renderer.viewMode || "cinematic";
+    let newMode: "grid" | "cinematic" | "iso";
+
+    switch (currentMode) {
+      case "cinematic":
+        newMode = "iso";
         break;
-      case 'iso':
-        newMode = 'grid';
+      case "iso":
+        newMode = "grid";
         break;
-      case 'grid':
-        newMode = 'cinematic';
+      case "grid":
+        newMode = "cinematic";
         break;
       default:
-        newMode = 'cinematic';
+        newMode = "cinematic";
     }
-    
+
     this.renderer.setViewMode(newMode);
     this.draw();
   }
 }
 
 window.onload = () => {
-  const canvas = document.getElementById('battlefield') as HTMLCanvasElement;
+  const canvas = document.getElementById("battlefield") as HTMLCanvasElement;
   const viewer = new ScenarioViewer(canvas);
 
-  // Console logging to the UI
-  const logDiv = document.getElementById('console') as HTMLDivElement;
-  logDiv.style.whiteSpace = 'pre-wrap';
-  logDiv.style.fontFamily = 'monospace';
-  logDiv.style.color = 'white';
-  logDiv.style.backgroundColor = 'black';
-  logDiv.style.padding = '10px';
-  logDiv.style.overflowY = 'auto';
-  logDiv.style.maxHeight = '200px';
-  logDiv.style.border = '1px solid #333';
+  const logDiv = document.getElementById("console") as HTMLDivElement;
+  logDiv.style.whiteSpace = "pre-wrap";
+  logDiv.style.fontFamily = "monospace";
+  logDiv.style.color = "white";
+  logDiv.style.backgroundColor = "black";
+  logDiv.style.padding = "10px";
+  logDiv.style.overflowY = "auto";
+  logDiv.style.maxHeight = "200px";
+  logDiv.style.border = "1px solid #333";
   const originalLog = console.log;
   console.log = (...args) => {
     originalLog(...args);
-    logDiv.textContent += args.join(' ') + '\n\n';
+    logDiv.textContent += args.join(" ") + "\n\n";
     logDiv.scrollTop = logDiv.scrollHeight;
   };
 
-  // Controls
   function handleSceneChange(e) {
     const selectedScene = e.target.value;
     if (!selectedScene) return;
     viewer.loadScene(selectedScene);
   }
-  document.getElementById('scene-selector').addEventListener('change', (e) => {
+  document.getElementById("scene-selector").addEventListener("change", (e) => {
     handleSceneChange(e);
   });
 
-  document.getElementById('play-pause').addEventListener('click', () => {
+  document.getElementById("play-pause").addEventListener("click", () => {
     viewer.togglePlayPause();
   });
 
-  document.getElementById('step').addEventListener('click', () => {
+  document.getElementById("step").addEventListener("click", () => {
     viewer.step();
   });
 
-  document.getElementById('restart').addEventListener('click', () => {
+  document.getElementById("restart").addEventListener("click", () => {
     viewer.restart();
   });
 
-  document.getElementById('toggle-view').addEventListener('click', () => {
+  document.getElementById("toggle-view").addEventListener("click", () => {
     viewer.toggleView();
   });
 
-  // Music controls
-  const musicSelector = document.getElementById('music-selector') as HTMLSelectElement;
-  musicSelector.addEventListener('change', (e) => {
+  const musicSelector = document.getElementById(
+    "music-selector",
+  ) as HTMLSelectElement;
+  musicSelector.addEventListener("change", (e) => {
     const selectedMusic = (e.target as HTMLSelectElement).value;
     viewer.jukebox.stopMusic();
     if (selectedMusic) {
       viewer.currentMusic = selectedMusic;
       viewer.jukebox.playProgression(selectedMusic, true);
     } else {
-      viewer.currentMusic = '';
+      viewer.currentMusic = "";
     }
   });
-  
-  document.getElementById('toggle-music').addEventListener('click', () => {
+
+  document.getElementById("toggle-music").addEventListener("click", () => {
     viewer.musicEnabled = !viewer.musicEnabled;
     if (!viewer.musicEnabled) {
       viewer.jukebox.stopMusic();
@@ -189,17 +186,21 @@ window.onload = () => {
     }
   });
 
-  document.getElementById('next-music').addEventListener('click', () => {
+  document.getElementById("next-music").addEventListener("click", () => {
     const progressions = viewer.jukebox.getAvailableProgressions();
     const currentIndex = progressions.indexOf(viewer.currentMusic);
     const nextIndex = (currentIndex + 1) % progressions.length;
     const nextMusic = progressions[nextIndex];
     musicSelector.value = nextMusic;
-    musicSelector.dispatchEvent(new Event('change'));
+    musicSelector.dispatchEvent(new Event("change"));
   });
 
-  const initialScene = (document.getElementById('scene-selector') as HTMLSelectElement).value;
+  const initialScene = (
+    document.getElementById("scene-selector") as HTMLSelectElement
+  ).value;
   if (initialScene) {
-    (document.getElementById('scene-selector') as HTMLSelectElement).dispatchEvent(new Event('change'));
+    (
+      document.getElementById("scene-selector") as HTMLSelectElement
+    ).dispatchEvent(new Event("change"));
   }
-}
+};

@@ -12,13 +12,13 @@ describe('Forest Scene - Cozy Atmosphere', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);
     
-    // Load the scene
+
     loader.loadFromText(sceneContent);
     
-    // Check units were loaded
+
     expect(sim.units.length).toBeGreaterThan(0);
     
-    // Check for forest creatures
+
     const bears = sim.units.filter(u => u.sprite === 'bear' || u.type === 'bear');
     const birds = sim.units.filter(u => u.sprite === 'bird' || u.type === 'bird');
     const squirrels = sim.units.filter(u => 
@@ -30,11 +30,11 @@ describe('Forest Scene - Cozy Atmosphere', () => {
     
     
     expect(bears.length).toBeGreaterThan(0);
-    // No birds (lowercase v) in this scene, only bears (V)
+
     
-    // Check scene metadata
+
     expect((sim as any).background).toBe('forest');
-    // Temperature is set as a field value, may have slight variations
+
     const temp = sim.getTemperature(20, 10);
     expect(temp).toBeGreaterThan(15);
     expect(temp).toBeLessThan(20);
@@ -49,10 +49,10 @@ describe('Forest Scene - Cozy Atmosphere', () => {
     
     loader.loadFromText(sceneContent);
     
-    // Check weather particles
+
     const leafParticles = sim.particles.filter(p => p.type === 'leaf' || p.type === 'leaves');
     
-    // Forest scene has leaves weather, not rain
+
     expect(leafParticles.length).toBeGreaterThan(0);
     
   });
@@ -66,7 +66,7 @@ describe('Forest Scene - Cozy Atmosphere', () => {
     
     loader.loadFromText(sceneContent);
     
-    // Run simulation for a few steps to observe peaceful behavior
+
     for (let i = 0; i < 20; i++) {
       sim.step();
     }

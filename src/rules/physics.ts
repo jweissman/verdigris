@@ -1,5 +1,6 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
+import { QueuedCommand } from "./command_handler";
 
 /**
  * Physics rule - handles projectile movement
@@ -7,43 +8,43 @@ import type { TickContext } from "../core/tick_context";
  */
 export class Physics extends Rule {
   private sim: any;
-  
+
   constructor(sim: any) {
     super();
     this.sim = sim;
   }
-  
-  execute(context: TickContext): void {
+
+  execute(_context: TickContext): QueuedCommand[] {
     this.updateProjectiles();
+    return [];
   }
-  
+
   private updateProjectiles(): void {
     if (!this.sim.projectiles) return;
-    
+
     const toRemove: number[] = [];
-    
-    // Update all projectile positions in a single pass
+
     for (let i = 0; i < this.sim.projectiles.length; i++) {
       const p = this.sim.projectiles[i];
-      
-      // Update position
+
       p.pos.x += p.vel.x;
       p.pos.y += p.vel.y;
-      
-      // Apply gravity for bombs
-      if (p.type === 'bomb') {
+
+      if (p.type === "bomb") {
         p.vel.y += 0.2;
         p.lifetime = (p.lifetime || 0) + 1;
       }
-      
-      // Mark for removal if out of bounds
-      if (p.pos.x < 0 || p.pos.x >= this.sim.fieldWidth ||
-          p.pos.y < 0 || p.pos.y >= this.sim.fieldHeight) {
+
+      if (
+        p.pos.x < 0 ||
+        p.pos.x >= this.sim.fieldWidth ||
+        p.pos.y < 0 ||
+        p.pos.y >= this.sim.fieldHeight
+      ) {
         toRemove.push(i);
       }
     }
-    
-    // Remove out-of-bounds projectiles
+
     for (let i = toRemove.length - 1; i >= 0; i--) {
       this.sim.projectiles.splice(toRemove[i], 1);
     }

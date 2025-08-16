@@ -15,12 +15,12 @@ describe("Priest Debug", () => {
     sim.addUnit(ghost);
     
     
-    // Test distance calculation
+
     const dx = ghost.pos.x - priest.pos.x;
     const dy = ghost.pos.y - priest.pos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     
-    // Run simulation steps with detailed logging
+
     for (let i = 0; i < 40; i++) {
       
       sim.step();
@@ -37,7 +37,7 @@ describe("Priest Debug", () => {
       }
     }
     
-    // Test passes if we can debug
+
     expect(priest.abilities.includes('radiant')).toBe(true);
   });
 });

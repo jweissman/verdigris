@@ -6,7 +6,7 @@ describe('Tethering Basics - Step by Step', () => {
   it('should fire a grapple projectile from grappler', () => {
     const sim = new Simulator();
     
-    // Create grappler with grappling hook ability
+
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
@@ -14,20 +14,20 @@ describe('Tethering Basics - Step by Step', () => {
     };
     sim.addUnit(grappler);
     
-    // Verify grappler has the ability
+
     expect(grappler.abilities.includes('grapplingHook')).toBe(true);
     
-    // Fire grapple using simulator method
+
     const targetPos = { x: 10, y: 5 };
     sim.forceAbility(grappler.id, 'grapplingHook', targetPos);
     sim.step(); // Process the queued command
     
-    // Should create a grapple projectile
+
     const grapples = sim.projectiles.filter(p => p.type === 'grapple');
     expect(grapples.length).toBe(1);
     
     const grapple = grapples[0];
-    // Grapple projectile is moving toward target
+
     expect(grapple.pos.x).toBeGreaterThanOrEqual(5);
     expect(grapple.target).toEqual({ x: 10, y: 5 });
   });
@@ -41,7 +41,7 @@ describe('Tethering Basics - Step by Step', () => {
       pos: { x: 5, y: 5 }
     };
     
-    // Create an immovable unit (high mass)
+
     const immovableUnit = {
       ...Encyclopaedia.unit('mechatron'), // Heavy unit
       id: 'heavy-1',
@@ -53,23 +53,23 @@ describe('Tethering Basics - Step by Step', () => {
     sim.addUnit(grappler);
     sim.addUnit(immovableUnit);
     
-    // Use default rulebook which includes all necessary rules
+
     
-    // Fire grapple at heavy unit using simulator
+
     sim.forceAbility(grappler.id, 'grapplingHook', immovableUnit);
     sim.step(); // Process the command to create projectile
     
-    // Simulate projectile travel and collision - ProjectileMotion will handle movement
+
     for (let i = 0; i < 20; i++) {
       sim.step();
       
-      // Check projectile status
+
       const grappleProjectile = sim.projectiles.find(p => p.type === 'grapple');
       if (grappleProjectile) {
         console.log(`Step ${i+1}: Grapple at (${grappleProjectile.pos.x.toFixed(1)}, ${grappleProjectile.pos.y.toFixed(1)}), target at (10, 5)`);
       }
       
-      // Break early if grapple hit
+
       const heavyUnit = sim.units.find(u => u.id === 'heavy-1');
       if (heavyUnit?.meta?.grappled) {
         console.log(`Grapple hit at step ${i+1}`);
@@ -77,7 +77,7 @@ describe('Tethering Basics - Step by Step', () => {
       }
     }
     
-    // Check if heavy unit is grappled - check the actual unit in sim, not the original reference
+
     const immovableInSim = sim.units.find(u => u.id === 'heavy-1');
     expect(immovableInSim).toBeDefined();
     expect(immovableInSim?.meta?.grappled).toBe(true);
@@ -95,7 +95,7 @@ describe('Tethering Basics - Step by Step', () => {
       mass: 2
     };
     
-    // Create a small, light unit
+
     const smallUnit = {
       ...Encyclopaedia.unit('soldier'),
       id: 'small-1',
@@ -107,7 +107,7 @@ describe('Tethering Basics - Step by Step', () => {
     sim.addUnit(grappler);
     sim.addUnit(smallUnit);
     
-    // Manually set up tether (as if grapple already hit)
+
     smallUnit.meta.tethered = true;
     smallUnit.meta.tetheredTo = 'grappler-1';
     smallUnit.meta.tetherPoint = { x: 5, y: 5 };
@@ -115,16 +115,16 @@ describe('Tethering Basics - Step by Step', () => {
     
     const initialDistance = 5;
     
-    // Simulate retraction over several steps
+
     for (let i = 0; i < 5; i++) {
-      // Pull logic: light unit moves toward heavy unit
+
       if (smallUnit.meta.retracting && smallUnit.meta.tethered) {
         const dx = grappler.pos.x - smallUnit.pos.x;
         const dy = grappler.pos.y - smallUnit.pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist > 1) {
-          // Pull speed based on mass ratio
+
           const pullStrength = grappler.mass / (grappler.mass + smallUnit.mass);
           smallUnit.pos.x += (dx / dist) * pullStrength;
           smallUnit.pos.y += (dy / dist) * pullStrength;
@@ -134,7 +134,7 @@ describe('Tethering Basics - Step by Step', () => {
       sim.step();
     }
     
-    // Small unit should be pulled closer
+
     const finalDistance = Math.sqrt(
       Math.pow(smallUnit.pos.x - grappler.pos.x, 2) + 
       Math.pow(smallUnit.pos.y - grappler.pos.y, 2)
@@ -163,16 +163,16 @@ describe('Tethering Basics - Step by Step', () => {
     sim.addUnit(grappler);
     sim.addUnit(tetheredUnit);
     
-    // Set up tether with max distance
+
     tetheredUnit.meta.tethered = true;
     tetheredUnit.meta.tetheredTo = 'grappler-1';
     tetheredUnit.meta.tetherPoint = { x: 5, y: 5 };
     tetheredUnit.meta.maxTetherDistance = 4;
     
-    // Try to move away beyond tether range
+
     tetheredUnit.intendedMove = { x: 15, y: 5 }; // Wants to move far away
     
-    // Apply tether constraint
+
     if (tetheredUnit.meta.tethered) {
       const tetherPoint = tetheredUnit.meta.tetherPoint;
       const intendedX = tetheredUnit.intendedMove.x;
@@ -183,7 +183,7 @@ describe('Tethering Basics - Step by Step', () => {
       const intendedDist = Math.sqrt(dx * dx + dy * dy);
       
       if (intendedDist > tetheredUnit.meta.maxTetherDistance) {
-        // Constrain to max tether distance
+
         const ratio = tetheredUnit.meta.maxTetherDistance / intendedDist;
         tetheredUnit.pos.x = tetherPoint.x + dx * ratio;
         tetheredUnit.pos.y = tetherPoint.y + dy * ratio;
@@ -194,7 +194,7 @@ describe('Tethering Basics - Step by Step', () => {
     
     sim.step();
     
-    // Check unit is constrained by tether
+
     const finalDistance = Math.sqrt(
       Math.pow(tetheredUnit.pos.x - grappler.pos.x, 2) + 
       Math.pow(tetheredUnit.pos.y - grappler.pos.y, 2)

@@ -1,37 +1,38 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/Unit";
-import type { TickContext } from '../core/tick_context';
+import type { TickContext } from "../core/tick_context";
+import type { QueuedCommand } from "./command_handler";
 
 export interface StatusEffect {
-  type: 'chill' | 'stun' | 'burn' | 'poison';
-  duration: number; // ticks remaining
-  intensity: number; // effect strength
-  source?: string; // unit that applied it
+  type: "chill" | "stun" | "burn" | "poison";
+  duration: number;
+  intensity: number;
+  source?: string;
 }
 
 export class StatusEffects extends Rule {
+  private commands: QueuedCommand[] = [];
+
   constructor() {
     super();
   }
-  execute(context: TickContext): void {
-    // Note: TickContext doesn't expose queuedEvents directly
-    // We'll check for units with status effect triggers or existing effects
-    
-    // Check for units that need status effects applied or updated
+
+  execute(context: TickContext): QueuedCommand[] {
+    this.commands = [];
+
     for (const unit of context.getAllUnits()) {
-      // Apply status effects if unit has chill triggers
       if (unit.meta.chillTrigger) {
         this.applyChillFromTrigger(context, unit);
       }
-      
-      // Update existing status effects
+
       if (unit.meta.statusEffects && unit.meta.statusEffects.length > 0) {
         this.updateStatusEffects(context, unit);
       }
-      
-      // Apply mechanics for active status effects
+
       this.applyStatusEffectMechanics(context, unit);
     }
+
+    return this.commands;
   }
 
   private applyChillFromTrigger(context: TickContext, unit: Unit): void {
@@ -39,117 +40,114 @@ export class StatusEffects extends Rule {
     const centerPos = trigger.position || unit.pos;
     const radius = trigger.radius || 2;
 
-    const affectedUnits = context.getAllUnits().filter(target => {
+    const affectedUnits = context.getAllUnits().filter((target) => {
       const distance = Math.sqrt(
-        Math.pow(target.pos.x - centerPos.x, 2) + 
-        Math.pow(target.pos.y - centerPos.y, 2)
+        Math.pow(target.pos.x - centerPos.x, 2) +
+          Math.pow(target.pos.y - centerPos.y, 2),
       );
       return distance <= radius;
     });
 
-    affectedUnits.forEach(target => {
-      // Queue command to apply chill effect
-      context.queueCommand({
-        type: 'applyStatusEffect',
+    affectedUnits.forEach((target) => {
+      this.commands.push({
+        type: "applyStatusEffect",
         params: {
           unitId: target.id,
           effect: {
-            type: 'chill',
+            type: "chill",
             duration: 30, // 3.75 seconds at 8fps
             intensity: 0.5, // 50% movement speed reduction
-            source: unit.id
-          }
-        }
+            source: unit.id,
+          },
+        },
       });
     });
-    
-    // Clear the trigger
-    context.queueCommand({
-      type: 'meta',
+
+    this.commands.push({
+      type: "meta",
       params: {
         unitId: unit.id,
         meta: {
-          chillTrigger: undefined
-        }
-      }
+          chillTrigger: undefined,
+        },
+      },
     });
   }
 
   private updateStatusEffects(context: TickContext, unit: Unit): void {
     const statusEffects = unit.meta.statusEffects || [];
-    const updatedEffects = statusEffects.map(effect => ({
-      ...effect,
-      duration: effect.duration - 1
-    })).filter(effect => effect.duration > 0);
-    
-    context.queueCommand({
-      type: 'meta',
+    const updatedEffects = statusEffects
+      .map((effect) => ({
+        ...effect,
+        duration: effect.duration - 1,
+      }))
+      .filter((effect) => effect.duration > 0);
+
+    this.commands.push({
+      type: "meta",
       params: {
         unitId: unit.id,
         meta: {
-          statusEffects: updatedEffects.length > 0 ? updatedEffects : undefined
-        }
-      }
+          statusEffects: updatedEffects.length > 0 ? updatedEffects : undefined,
+        },
+      },
     });
   }
-  
+
   private applyStatusEffectMechanics(context: TickContext, unit: Unit): void {
     const statusEffects = unit.meta.statusEffects || [];
-    
-    statusEffects.forEach(effect => {
+
+    statusEffects.forEach((effect) => {
       switch (effect.type) {
-        case 'chill':
-          // Queue chill effect
-          context.queueCommand({
-            type: 'meta',
+        case "chill":
+          this.commands.push({
+            type: "meta",
             params: {
               unitId: unit.id,
               meta: {
                 chilled: true,
-                chillIntensity: effect.intensity
-              }
-            }
+                chillIntensity: effect.intensity,
+              },
+            },
           });
           break;
-        case 'stun':
-          // Queue stun effect
-          context.queueCommand({
-            type: 'meta',
+        case "stun":
+          this.commands.push({
+            type: "meta",
             params: {
               unitId: unit.id,
-              meta: { stunned: true }
-            }
+              meta: { stunned: true },
+            },
           });
           break;
-        case 'burn':
-          // Deal damage over time
-          if (context.getCurrentTick() % 8 === 0) { // Every second
-            context.queueCommand({
-              type: 'damage',
+        case "burn":
+          if (context.getCurrentTick() % 8 === 0) {
+            // Every second
+            this.commands.push({
+              type: "damage",
               params: {
                 targetId: unit.id,
                 amount: effect.intensity,
-                aspect: 'heat',
-                sourceId: effect.source || 'burn'
-              }
+                aspect: "heat",
+                sourceId: effect.source || "burn",
+              },
             });
           }
           break;
       }
     });
 
-    // Clean up expired status flags
     if (statusEffects.length === 0) {
-      context.queueCommand({
-        type: 'meta',
+      this.commands.push({
+        type: "meta",
         params: {
           unitId: unit.id,
           meta: {
             chilled: undefined,
             chillIntensity: undefined,
-            stunned: undefined
-          }
-        }
+            stunned: undefined,
+          },
+        },
       });
     }
   }

@@ -49,17 +49,17 @@ describe('ParticleArrays Unit Tests', () => {
     
     expect(arrays.active[idx]).toBe(1);
     
-    arrays.updatePhysics(); // lifetime = 1
+    arrays.updatePhysics();
     expect(arrays.active[idx]).toBe(1);
     
-    arrays.updatePhysics(); // lifetime = 0
+    arrays.updatePhysics();
     expect(arrays.active[idx]).toBe(0);
   });
   
   it('should handle Int16Array limits for lifetime', () => {
     const arrays = new ParticleArrays(10);
     
-    // Int16Array max is 32767
+
     const idx = arrays.addParticle({
       pos: { x: 100, y: 100 },
       vel: { x: 0, y: 0 },
@@ -69,7 +69,7 @@ describe('ParticleArrays Unit Tests', () => {
     
     expect(arrays.lifetime[idx]).toBe(30000);
     
-    // Test with value beyond Int16 max
+
     const idx2 = arrays.addParticle({
       pos: { x: 100, y: 100 },
       vel: { x: 0, y: 0 },
@@ -77,7 +77,7 @@ describe('ParticleArrays Unit Tests', () => {
       type: 'test'
     });
     
-    // Will wrap or clamp depending on implementation
+
     expect(arrays.lifetime[idx2]).toBeLessThan(32768);
   });
 });

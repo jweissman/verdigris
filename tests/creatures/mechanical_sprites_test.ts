@@ -17,7 +17,7 @@ describe('Mechanical Crew Sprites', () => {
     const browser = new CreatureBrowser();
     const mechanicalUnits = browser.getByFilter('mechanical');
     
-    // Should have all mechanical crew plus mechatron, mechatronist
+
     expect(mechanicalUnits.length).toBeGreaterThanOrEqual(8);
     
     const mechanicalCrew = ['builder', 'fueler', 'mechanic', 'engineer', 'welder', 'assembler'];

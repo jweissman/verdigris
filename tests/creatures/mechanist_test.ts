@@ -13,13 +13,13 @@ describe('Mechanist Showcase', () => {
 
   it('should deploy the complete mechanist force', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default which includes all necessary rules
 
-    // Deploy Mechatronist commander
+
+
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 10, y: 5 } };
     sim.addUnit(mechatronist);
 
-    // Deploy all mechanist support units in formation
+
     const mechanistCrew = [
       { type: 'builder', pos: { x: 8, y: 7 } },
       { type: 'fueler', pos: { x: 12, y: 7 } },
@@ -34,7 +34,7 @@ describe('Mechanist Showcase', () => {
       sim.addUnit(unit);
     });
 
-    // Add some constructs to support
+
     const constructs = [
       { type: 'clanker', pos: { x: 6, y: 8 } },
       { type: 'freezebot', pos: { x: 14, y: 8 } },
@@ -48,7 +48,7 @@ describe('Mechanist Showcase', () => {
       sim.addUnit(unit);
     });
 
-    // Add opposing forces for testing
+
     const enemies = [
       { type: 'worm', pos: { x: 3, y: 5 } },
       { type: 'worm', pos: { x: 17, y: 5 } },
@@ -60,31 +60,31 @@ describe('Mechanist Showcase', () => {
       sim.addUnit(unit);
     });
 
-    // Deploy the mighty Mechatron
+
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 10, y: 15 } };
     sim.addUnit(mechatron);
 
-    // Run a few simulation steps
+
     for (let i = 0; i < 5; i++) {
       sim.step();
     }
 
-    // Verify deployment
+
     expect(sim.units.length).toBeGreaterThan(15);
     
-    // Verify mechanist crew
+
     mechanistCrew.forEach(({ type }) => {
       const found = sim.units.find(u => u.type === type);
       expect(found).toBeDefined();
     });
 
-    // Verify constructs
+
     constructs.forEach(({ type }) => {
       const found = sim.units.find(u => u.type === type);
       expect(found).toBeDefined();
     });
 
-    // Verify mechatron (should have phantom units)
+
     const mechatronUnits = sim.units.filter(u => u.id?.includes('mechatron'));
     expect(mechatronUnits.length).toBeGreaterThan(1); // Main + phantoms
   });
@@ -92,7 +92,7 @@ describe('Mechanist Showcase', () => {
   it('should test mechanist abilities', () => {
     const sim = new Simulator(20, 20);
     
-    // Create a mechanist with constructs nearby
+
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 10, y: 10 } };
     sim.addUnit(mechatronist);
     
@@ -102,16 +102,16 @@ describe('Mechanist Showcase', () => {
     const clanker = { ...Encyclopaedia.unit('clanker'), pos: { x: 9, y: 10 } };
     sim.addUnit(clanker);
     
-    // Test that units exist and have abilities
+
     expect(mechatronist.abilities).toContain('callAirdrop');
     expect(fueler.abilities).toContain('powerSurge');
     
-    // Run simulation to test interactions
+
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
     
-    // Units should still exist (not destroyed)
+
     expect(sim.units.find(u => u.id === mechatronist.id)).toBeDefined();
     expect(sim.units.find(u => u.id === fueler.id)).toBeDefined();
   });
@@ -122,7 +122,7 @@ describe('Mechanist Showcase', () => {
     mechanistUnits.forEach(unitType => {
       const unit = Encyclopaedia.unit(unitType);
       
-      // All mechanist units should have these properties
+
       expect(unit.sprite).toBe(unitType);
       expect(unit.team).toBe('friendly');
       expect(unit.tags).toContain('mechanical');
@@ -133,7 +133,7 @@ describe('Mechanist Showcase', () => {
       
     });
     
-    // Verify specific role tags
+
     expect(Encyclopaedia.unit('builder').tags).toContain('builder');
     expect(Encyclopaedia.unit('fueler').tags).toContain('energy');
     expect(Encyclopaedia.unit('mechanic').tags).toContain('repair');
@@ -144,44 +144,42 @@ describe('Mechanist Showcase', () => {
 
   it('should test Builder reinforcement abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
-    // Create builder and a construct to reinforce
+
     const builder = { ...Encyclopaedia.unit('builder'), pos: { x: 5, y: 5 } };
     const construct = { ...Encyclopaedia.unit('clanker'), pos: { x: 7, y: 5 } };
     
     sim.addUnit(builder);
     sim.addUnit(construct);
     
-    // Get references to the actual units in the simulator
+
     const simBuilder = sim.units.find(u => u.sprite === 'builder')!;
     const simConstruct = sim.units.find(u => u.sprite === 'clanker')!;
     
-    // Get original values from the simulator proxy
+
     const originalHp = simConstruct.hp;
     const originalMaxHp = simConstruct.maxHp;
     
-    // Force the reinforcement ability
+
     sim.forceAbility(simBuilder.id, 'reinforceConstruct', simConstruct);
     sim.step(); // Process command
     sim.step(); // Process heal event and command
     
-    // Check the results on the simulator unit
+
     expect(simConstruct.hp).toBe(originalHp + 10);
     expect(simConstruct.maxHp).toBe(originalMaxHp + 10);
     expect(simConstruct.meta.armor).toBe(1); // Gained armor
     
-    // Should have visual effect particles
+
     const reinforceParticles = sim.particles.filter(p => p.color === '#00FF88');
     expect(reinforceParticles.length).toBeGreaterThan(0);
   });
 
   it('should test Fueler power surge ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
-    // Create fueler and mechanical units to boost
+
     const fueler = { ...Encyclopaedia.unit('fueler'), pos: { x: 5, y: 5 } };
     const freezeBot = { ...Encyclopaedia.unit('freezebot'), pos: { x: 7, y: 5 } };
     const spikerBot = { ...Encyclopaedia.unit('spiker'), pos: { x: 6, y: 7 } };
@@ -190,12 +188,12 @@ describe('Mechanist Showcase', () => {
     sim.addUnit(freezeBot);
     sim.addUnit(spikerBot);
     
-    // Get the actual units from the simulator
+
     const fuelerMechanist = sim.units.find(u => u.sprite === 'fueler')!;
     const simFreezeBot = sim.units.find(u => u.sprite === 'freezebot')!;
     const simSpikerBot = sim.units.find(u => u.sprite === 'spikebot')!;
     
-    // Set up some cooldowns to test the reset
+
     sim.ticks = 100;
     sim.queuedCommands.push({
       type: 'meta',
@@ -214,36 +212,35 @@ describe('Mechanist Showcase', () => {
     
     console.debug(`Before: freezebot cooldown = ${simFreezeBot.lastAbilityTick?.freezeAura}, spiker cooldown = ${simSpikerBot.lastAbilityTick?.whipChain}`);
     
-    // Force the power surge ability - this should reset cooldowns
+
     sim.forceAbility(fuelerMechanist.id, 'powerSurge', fuelerMechanist);
     
     console.debug(`After power surge (before step): freezebot cooldown = ${simFreezeBot.lastAbilityTick?.freezeAura}, spiker cooldown = ${simSpikerBot.lastAbilityTick?.whipChain}`);
     
-    // Process the power surge command
+
     sim.step();
     
     console.debug(`After step: freezebot cooldown = ${simFreezeBot.lastAbilityTick?.freezeAura}, spiker cooldown = ${simSpikerBot.lastAbilityTick?.whipChain}`);
     
-    // The test should check that the power surge reset effect worked
-    // If abilities are triggering automatically during step, we should at least see that 
-    // the power surge had some effect - particles or other indication
+
+
+
     expect(sim.particles.length).toBeGreaterThan(0);
     
-    // Should have energy field particles
+
     const energyParticles = sim.particles.filter(p => p.color === '#FFAA00');
     expect(energyParticles.length).toBeGreaterThan(0); // Energy field created
   });
 
   it('should test Mechanic emergency repair ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
-    // Create mechanic and damaged units
+
     const mechanic = { ...Encyclopaedia.unit('mechanic'), pos: { x: 5, y: 5 } };
     const damagedConstruct = { ...Encyclopaedia.unit('clanker'), pos: { x: 6, y: 5 } };
     
-    // Damage the construct and add some debuffs
+
     damagedConstruct.hp = 2; // Badly damaged
     damagedConstruct.meta.stunned = true;
     damagedConstruct.meta.stunDuration = 20;
@@ -254,51 +251,49 @@ describe('Mechanist Showcase', () => {
     
     const originalHp = damagedConstruct.hp;
     
-    // Force emergency repair
+
     sim.forceAbility(mechanic.id, 'emergencyRepair', damagedConstruct);
     sim.step(); // Process ability
     sim.step(); // Process heal event and command
     sim.step(); // Process heal command
       
-      // Get the actual unit from the simulator
+
       const repairedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5 && u.tags?.includes('construct'));
       expect(repairedConstruct).toBeDefined();
       
-      // Should be healed (emergencyRepair heals for 15 according to abilities.json)
+
       expect(repairedConstruct!.hp).toBe(Math.min(repairedConstruct!.maxHp, originalHp + 15));
       
-      // Debuffs should be removed 
+
       expect(repairedConstruct!.meta.stunned).toBeUndefined();
       expect(repairedConstruct!.meta.frozen).toBeUndefined();
   });
 
   it('should test Engineer shield generator ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
-    // Create engineer and nearby enemy to trigger shield
+
     const engineer = { ...Encyclopaedia.unit('engineer'), pos: { x: 5, y: 5 } };
     const enemy = { ...Encyclopaedia.unit('worm'), pos: { x: 8, y: 5 }, team: 'hostile' as const };
     
     sim.addUnit(engineer);
     sim.addUnit(enemy);
     
-    // Force shield generator
+
     sim.forceAbility(engineer.id, 'shieldGenerator', engineer.pos);
     sim.step();
     
-    // Check that something happened (particles or effect)
-    // Shield generation creates area particles
+
+
     expect(sim.particles.length).toBeGreaterThan(0);
   });
 
   it('should test Engineer system hack ability', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
-    // Create engineer and enemy to hack
+
     const engineer = { ...Encyclopaedia.unit('engineer'), pos: { x: 5, y: 5 } };
     const enemy = { ...Encyclopaedia.unit('demon'), pos: { x: 8, y: 5 }, team: 'hostile' as const };
     
@@ -307,11 +302,11 @@ describe('Mechanist Showcase', () => {
     
     sim.ticks = 10; // Set current tick for cooldown calculation
     
-    // Force system hack
+
     sim.forceAbility(engineer.id, 'systemHack', enemy);
     sim.step();
     
-    // Enemy should be hacked
+
     const hackedEnemy = sim.units.find(u => u.id === enemy.id);
     expect(hackedEnemy).toBeDefined();
     expect(hackedEnemy!.meta.systemsHacked).toBe(true);
@@ -320,20 +315,19 @@ describe('Mechanist Showcase', () => {
 
   it('should test Welder dual abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     const welder = { ...Encyclopaedia.unit('welder'), pos: { x: 5, y: 5 } };
     const construct = { ...Encyclopaedia.unit('swarmbot'), pos: { x: 6, y: 5 } };
     
-    // Damage the construct
+
     construct.hp = 3;
     const originalMaxHp = construct.maxHp;
     
     sim.addUnit(welder);
     sim.addUnit(construct);
     
-    // Force both abilities
+
     sim.forceAbility(welder.id, 'emergencyRepair', construct);
     sim.forceAbility(welder.id, 'reinforceConstruct', construct);
     sim.step(); // Process commands
@@ -342,15 +336,14 @@ describe('Mechanist Showcase', () => {
     const repairedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
     expect(repairedConstruct).toBeDefined();
     
-    // Emergency repair heals to max (3 → 12), reinforcement increases maxHp and heals 10 more
+
     expect(repairedConstruct!.hp).toBe(22); // Emergency repair to 12, then reinforce heals 10 more
     expect(repairedConstruct!.maxHp).toBe(22); // MaxHP increased by 10 from reinforcement
-    // Note: buff effects may need debugging, but healing works
+
   });
 
   it('should test Assembler advanced construction abilities', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
     const assembler = { ...Encyclopaedia.unit('assembler'), pos: { x: 5, y: 5 } };
@@ -361,12 +354,12 @@ describe('Mechanist Showcase', () => {
     sim.addUnit(roller);
     sim.addUnit(zapper);
     
-    // Get the actual units from the simulator
+
     const simAssembler = sim.units.find(u => u.sprite === 'assembler')!;
     const simRoller = sim.units.find(u => u.sprite === 'jumpbot')!;
     const simZapper = sim.units.find(u => u.sprite === 'zapper')!;
     
-    // Test reinforcement
+
     const beforeHp = simRoller.hp;
     sim.forceAbility(simAssembler.id, 'reinforceConstruct', simRoller);
     sim.step(); // Process command
@@ -376,8 +369,8 @@ describe('Mechanist Showcase', () => {
     expect(reinforcedConstruct).toBeDefined();
     expect(reinforcedConstruct!.hp).toBe(beforeHp + 10);
     
-    // Test power surge  
-    // Set up cooldowns
+
+
     sim.ticks = 60;
     sim.queuedCommands.push({
       type: 'meta',
@@ -402,22 +395,21 @@ describe('Mechanist Showcase', () => {
     sim.forceAbility(simAssembler.id, 'powerSurge', simAssembler.pos);
     sim.step();
     
-    // Should reset cooldowns (abilities may immediately trigger after reset)
+
     expect(simRoller.meta.lastAbilityTick?.chargeAttack).toBeLessThanOrEqual(sim.ticks);
     expect(simZapper.meta.lastAbilityTick?.zapHighest).toBeLessThanOrEqual(sim.ticks + 1); // May trigger immediately
   });
 
   it('should verify mechanist synergy with constructs', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
     
-    // Create a diverse mechanist support team
+
     const builder = { ...Encyclopaedia.unit('builder'), pos: { x: 5, y: 5 } };
     const fueler = { ...Encyclopaedia.unit('fueler'), pos: { x: 6, y: 5 } };
     const mechanic = { ...Encyclopaedia.unit('mechanic'), pos: { x: 7, y: 5 } };
     
-    // Create constructs to support
+
     const construct1 = { ...Encyclopaedia.unit('clanker'), pos: { x: 8, y: 5 } };
     const construct2 = { ...Encyclopaedia.unit('freezebot'), pos: { x: 9, y: 5 } };
     
@@ -427,14 +419,14 @@ describe('Mechanist Showcase', () => {
     sim.addUnit(construct1);
     sim.addUnit(construct2);
     
-    // Get the actual units from the simulator
+
     const simBuilder = sim.units.find(u => u.sprite === 'builder')!;
     const simFueler = sim.units.find(u => u.sprite === 'fueler')!;
     const simMechanic = sim.units.find(u => u.sprite === 'mechanic')!;
     const simConstruct1 = sim.units.find(u => u.sprite === 'clanker')!;
     const simConstruct2 = sim.units.find(u => u.sprite === 'freezebot')!;
     
-    // Damage one construct after getting the sim reference
+
     sim.queuedCommands.push({
       type: 'damage',
       params: {
@@ -456,21 +448,21 @@ describe('Mechanist Showcase', () => {
     
     let synergisticActions = 0;
     
-    // Test repair synergy
+
     const beforeHp = simConstruct1.hp;
     sim.forceAbility(simMechanic.id, 'emergencyRepair', simConstruct1);
     sim.step();
     const repairedConstruct = sim.units.find(u => u.pos.x === 8 && u.pos.y === 5);
     if (repairedConstruct && repairedConstruct.hp > beforeHp) synergisticActions++;
     
-    // Test reinforcement synergy
+
     const reinforcedConstruct = sim.units.find(u => u.pos.x === 8 && u.pos.y === 5);
     const beforeMaxHp = reinforcedConstruct!.maxHp;
     sim.forceAbility(simBuilder.id, 'reinforceConstruct', simConstruct1);
     sim.step();
     if (reinforcedConstruct && reinforcedConstruct.maxHp > beforeMaxHp) synergisticActions++;
     
-    // Test power boost synergy
+
     sim.ticks = 30;
     sim.queuedCommands.push({
       type: 'meta',

@@ -7,7 +7,7 @@ describe('Abilities Rule', () => {
   it('should trigger a simple ability after its cooldown', () => {
     const sim = new Simulator();
 
-    // Create a unit with a self-damage ability (like explode)
+
     const unit: Unit = {
       id: 'unit1',
       pos: { x: 0, y: 0 },
@@ -23,7 +23,7 @@ describe('Abilities Rule', () => {
       tags: ['construct']
     };
 
-    // Add an enemy nearby to trigger the explode ability
+
     const enemy: Unit = {
       id: 'enemy1',
       pos: { x: 1, y: 0 },
@@ -43,9 +43,9 @@ describe('Abilities Rule', () => {
     sim.step(); // This triggers the explode ability and queues the damage command
     sim.step(); // This processes the damage command
     
-    // Explode deals 999 damage to self, unit should be dead or removed
+
     const unit1 = sim.units.find(u => u.id === 'unit1');
-    // Unit is either dead or removed from the list
+
     expect(unit1 === undefined || unit1.state === 'dead').toBe(true);
   });
 });

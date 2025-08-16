@@ -8,10 +8,10 @@ describe('Toymaker Scene Integration', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);
     
-    // Load toymaker scene
+
     loader.loadScenario('toymaker');
     
-    // Verify scene loaded
+
     expect(sim.units.length).toBe(16); // 1 toymaker + 15 worms
     
     const toymaker = sim.units.find(u => u.tags?.includes('craftor'));
@@ -21,10 +21,10 @@ describe('Toymaker Scene Integration', () => {
     expect(toymaker?.sprite).toBe('toymaker'); // Toymaker sprite
     expect(enemies.length).toBe(15);
     
-    // Start winter effects
+
     BiomeEffects.createWinterStorm(sim);
     
-    // Run a few simulation steps
+
     
     let constructsDeployed = [];
     let snowflakesGenerated = 0;
@@ -35,7 +35,7 @@ describe('Toymaker Scene Integration', () => {
       
       sim.step();
       
-      // Check for construct deployment
+
       const afterUnits = sim.units.length;
       if (afterUnits > beforeUnits) {
         const newConstruct = sim.units.find(u => u.tags?.includes('construct'));
@@ -48,19 +48,19 @@ describe('Toymaker Scene Integration', () => {
         }
       }
       
-      // Check snowfall generation
+
       const afterSnow = sim.particles.filter(p => p.type === 'snow').length;
       if (afterSnow > beforeSnow) {
         snowflakesGenerated += (afterSnow - beforeSnow);
       }
     }
     
-    // Verify winter effects are working
+
     expect(snowflakesGenerated).toBeGreaterThan(0);
     const snowflakes = sim.particles.filter(p => p.type === 'snow');
     expect(snowflakes.length).toBeGreaterThan(0);
     
-    // Check snowflake properties
+
     if (snowflakes.length > 0) {
       expect(snowflakes[0].radius).toBeLessThanOrEqual(0.5); // Single pixel
       expect(snowflakes[0].color).toBe('#FFFFFF');
@@ -77,7 +77,7 @@ describe('Toymaker Scene Integration', () => {
     const sim = new Simulator();
     sim.winterActive = true; // Enable winter effects without overriding rulebook
     
-    // Run until we have snowflakes
+
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
@@ -85,7 +85,7 @@ describe('Toymaker Scene Integration', () => {
     const snowflakes = sim.particles.filter(p => p.type === 'snow');
     expect(snowflakes.length).toBeGreaterThan(0);
     
-    // Test snowflake properties for single-pixel rendering
+
     snowflakes.forEach((flake, index) => {
       expect(flake.radius).toBeLessThanOrEqual(0.5); // Single pixel max
       expect(flake.color).toBe('#FFFFFF');

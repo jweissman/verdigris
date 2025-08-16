@@ -5,13 +5,13 @@ import { BiomeEffects } from '../../src/rules/biome_effects';
 describe('Improved Particle System', () => {
   it('should create single-pixel snowflakes with vertical fall', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default integrated rulebook
+
     
-    // Queue weather command and process it
+
     sim.queuedCommands.push(...BiomeEffects.winterStormCommands());
     sim.step(); // Process the weather command
     
-    // Also set flags directly for immediate test needs
+
     sim.winterActive = true;
     
     for (let tick = 0; tick < 10; tick++) {
@@ -26,14 +26,14 @@ describe('Improved Particle System', () => {
     expect(snowflake.vel.x).toBe(0); // Pure vertical fall
     expect(snowflake.vel.y).toBeCloseTo(0.15, 5); // Slower fall (floating point)
     expect(snowflake.color).toBe('#FFFFFF');
-    // targetCell is not used by BiomeEffects
+
   });
   
   it('should make snowflakes land at specific cells', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default integrated rulebook
+
     
-    // Create a snowflake manually at almost-landed position
+
     sim.particleArrays.addParticle({
       pos: { x: 5, y: sim.fieldHeight * 8 - 1.1 }, // In pixels, will land after one step with vel 0.15
       vel: { x: 0, y: 0.15 },
@@ -47,7 +47,7 @@ describe('Improved Particle System', () => {
     });
     
     
-    // Step simulation to make it land
+
     sim.step();
     
     const particles = sim.particles.filter(p => p.type === 'snow');

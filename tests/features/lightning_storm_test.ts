@@ -12,38 +12,38 @@ describe('Lightning Storm Environmental System', () => {
   // NOTE: flaky
   it('should create lightning storm and generate periodic strikes', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default which includes LightningStorm
+
     
-    // Create lightning storm using command
+
     sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
     sim.step();
     
-    // Verify storm state
+
     expect(sim.lightningActive).toBe(true);
     
-    // Initial storm clouds should be created
+
     const stormClouds = sim.particles.filter(p => p.type === 'storm_cloud');
     expect(stormClouds.length).toBe(8);
     expect(stormClouds[0].color).toBe('#333366');
     
-    // Force at least one lightning strike to test functionality
+
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     let lightningStrikes = 0;
     let empEvents = 0;
     
     if (lightningRule) {
-      // Force a strike for testing
+
       const context = sim.getTickContext();
       lightningRule.generateLightningStrike(context);
       lightningStrikes++;
     }
     
-    // Process the strike  
+
     sim.step();
-    // EMP events are processed immediately, so check processed events instead
+
     empEvents = sim.processedEvents?.filter(e => e.meta.aspect === 'emp').length || 1;
     
-    // Run more ticks to test automatic strikes
+
     for (let tick = 0; tick < 50; tick++) {
       const beforeParticles = sim.particles.filter(p => p.type === 'lightning').length;
       
@@ -56,11 +56,11 @@ describe('Lightning Storm Environmental System', () => {
       }
     }
     
-    // Should have generated at least one lightning strike
+
     expect(lightningStrikes).toBeGreaterThan(0);
     expect(empEvents).toBeGreaterThan(0);
     
-    // Check that any lightning-related particles were created (including longer-lasting ones)
+
     const allLightningParticles = sim.particles.filter(p => 
       p.type === 'lightning' || 
       p.type === 'lightning_branch' || 
@@ -74,10 +74,10 @@ describe('Lightning Storm Environmental System', () => {
 
   it('should stun non-mechanical units with EMP effects', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default which includes all necessary rules
+
     
     
-    // Create test units - mix of mechanical and organic
+
     const soldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 5, y: 5 } }; // Organic
     const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 6, y: 5 } }; // Organic  
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 7, y: 5 } }; // Mechanical
@@ -86,26 +86,26 @@ describe('Lightning Storm Environmental System', () => {
     sim.addUnit(worm);
     sim.addUnit(mechatronist);
     
-    // Force a lightning strike near the units
+
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     if (lightningRule) {
-      // Strike at position (6, 5) to affect the test units
+
       const context = sim.getTickContext();
       lightningRule.generateLightningStrike(context, { x: 6, y: 5 });
     }
     
-    // Process the EMP event
+
     sim.step();
     
-    // Check that units were affected appropriately
+
     const stunnedUnits = sim.units.filter(u => u.meta.stunned);
     const immuneUnits = sim.units.filter(u => !u.meta.stunned && u.tags?.includes('mechanical'));
     
     
-    // Verify stun effects were applied correctly
+
     expect(stunnedUnits.length).toBeGreaterThan(0); // Some units should be stunned
     
-    // Check EMP visual effects were created
+
     const empSparks = sim.particles.filter(p => p.type === 'electric_spark' && p.color === '#FFFF88');
     expect(empSparks.length).toBeGreaterThan(0);
     
@@ -114,10 +114,9 @@ describe('Lightning Storm Environmental System', () => {
   it('should boost mechanical units when lightning strikes nearby', () => {
     const sim = new Simulator();
     const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
-    sim.rulebook = [new LightningStorm(sim), new EventHandler(), new CommandHandler(sim)];
     
     
-    // Create mechanical units
+
     const mechatronist1 = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 10, y: 10 } };
     const mechatronist2 = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 12, y: 10 } };
     const clanker = { ...Encyclopaedia.unit('clanker'), pos: { x: 11, y: 11 } };
@@ -126,29 +125,29 @@ describe('Lightning Storm Environmental System', () => {
     sim.addUnit(mechatronist2);  
     sim.addUnit(clanker);
     
-    // Initialize some ability cooldowns
+
     mechatronist1.lastAbilityTick = { callAirdrop: sim.tick - 60 }; // Recently used
     mechatronist2.lastAbilityTick = { tacticalOverride: sim.tick - 30 };
     
-    // Trigger lightning storm and force a strike near the mechanical units
+
     LightningStorm.createLightningStorm(sim);
     
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     if (lightningRule) {
-      // Strike near the mechanical units at (11, 10) to boost them
+
       const context = sim.getTickContext();
       lightningRule.generateLightningStrike(context, { x: 11, y: 10 });
     }
     
-    // Process the lightning effects
+
     sim.step();
     
-    // Check for lightning boost effects
+
     const boostedUnits = sim.units.filter(u => u.meta.lightningBoost).length;
     
     expect(boostedUnits).toBeGreaterThan(0);
     
-    // Check for power surge particles on boosted mechanists
+
     const powerSurgeParticles = sim.particles.filter(p => p.type === 'power_surge');
     expect(powerSurgeParticles.length).toBeGreaterThan(0);
     
@@ -156,16 +155,16 @@ describe('Lightning Storm Environmental System', () => {
 
   it('should create diverse lightning visual effects', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default which includes LightningStorm
+
     
     
-    // Create lightning storm using command
+
     sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
     sim.step();
     
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     
-    // Force multiple strikes to ensure we get variety of effects
+
     if (lightningRule) {
       for (let i = 0; i < 3; i++) {
         const context = sim.getTickContext();
@@ -174,12 +173,12 @@ describe('Lightning Storm Environmental System', () => {
       }
     }
     
-    // Run some more for automatic strikes and particle decay
+
     for (let tick = 0; tick < 30; tick++) {
       sim.step();
     }
     
-    // Check for variety of lightning particle types
+
     const lightningTypes = [
       'lightning',
       'lightning_branch', 
@@ -199,21 +198,21 @@ describe('Lightning Storm Environmental System', () => {
     
     expect(typesFound).toBeGreaterThanOrEqual(3); // Should have variety of effects
     
-    // No color checks for 1-bit aesthetic - all particles are black
+
     
   });
 
   it('should end lightning storm and clean up effects', () => {
     const sim = new Simulator();
-    // Don't override rulebook - use default which includes LightningStorm
+
     
     
-    // Start storm using command
+
     sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
     sim.step(); // Process the command
     expect(sim.lightningActive).toBe(true);
     
-    // Let it run for a bit and count strikes
+
     let strikeCount = 0;
     for (let tick = 0; tick < 20; tick++) {
       const beforeStep = sim.particles.filter(p => p.type === 'lightning').length;
@@ -225,12 +224,12 @@ describe('Lightning Storm Environmental System', () => {
     }
     expect(strikeCount).toBeGreaterThan(0); // Some strikes occurred during storm
     
-    // End storm using command
+
     sim.queuedCommands.push({ type: 'storm', params: { action: 'stop' } });
     sim.step(); // Process the command
     expect(sim.lightningActive).toBe(false);
     
-    // No new lightning strikes should occur after storm ends
+
     let newStrikesAfterEnd = 0;
     for (let tick = 0; tick < 20; tick++) {
       const beforeStep = sim.particles.filter(p => p.type === 'lightning').length;

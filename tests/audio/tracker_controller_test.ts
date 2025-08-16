@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { TrackerController, TrackerState } from '../../src/audio/tracker_controller';
 
-// Mock AudioContext for testing
+
 class MockAudioContext {
   sampleRate = 44100;
   currentTime = 0;
@@ -86,7 +86,7 @@ describe('TrackerController', () => {
   let originalAudioContext: any;
   
   beforeEach(() => {
-    // Mock AudioContext
+
     originalAudioContext = (global as any).AudioContext;
     (global as any).AudioContext = MockAudioContext;
     

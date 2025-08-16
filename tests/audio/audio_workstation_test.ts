@@ -59,7 +59,7 @@ describe('AudioWorkstation', () => {
     });
     
     it('should clear all notes in pattern', () => {
-      // Add some notes
+
       workstation.setNote(0, 0, { pitch: 'C4', velocity: 0.8, gate: 1 });
       workstation.setNote(1, 4, { pitch: 'G3', velocity: 0.7, gate: 2 });
       
@@ -262,7 +262,7 @@ describe('AudioWorkstation', () => {
       workstation.createPattern('pattern2', 32);
       
       const bank = workstation.getPatternBank();
-      expect(bank.length).toBeGreaterThanOrEqual(3); // default + 2 new
+      expect(bank.length).toBeGreaterThanOrEqual(3);
     });
     
     it('should delete patterns except current', () => {

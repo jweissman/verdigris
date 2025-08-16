@@ -31,33 +31,33 @@ describe('Miner and Mindmender Units', () => {
       
       sim.addUnit(miner);
       
-      // Miner can dig trenches for defense
+
       const minerUnit = sim.units.find(u => u.id === 'miner1');
       expect(minerUnit).toBeDefined();
       expect(minerUnit?.abilities).toContain('digTrench');
       
-      // Use the ability to dig a trench
+
       const initialEventCount = sim.queuedEvents.length;
       const initialParticleCount = sim.particles.length;
       
-      // Force the dig trench ability
+
       sim.forceAbility('miner1', 'digTrench', minerUnit.pos);
       
-      // Should create terrain events
+
       expect(sim.queuedEvents.length).toBeGreaterThan(initialEventCount);
       const terrainEvents = sim.queuedEvents.filter(e => e.kind === 'terrain');
       expect(terrainEvents.length).toBeGreaterThan(0);
       
-      // Check that terrain events have proper metadata
+
       const firstTerrainEvent = terrainEvents[0];
       expect(firstTerrainEvent.meta.terrainType).toBe('trench');
       expect(firstTerrainEvent.meta.defenseBonus).toBe(0.5);
       expect(firstTerrainEvent.meta.movementPenalty).toBe(0.3);
       
-      // Process commands to create particles
+
       sim.step();
       
-      // Should create dust particles for visual feedback
+
       expect(sim.particles.length).toBeGreaterThan(initialParticleCount);
       const dustParticles = sim.particles.filter(p => p.type === 'debris' && p.color === '#8B4513');
       expect(dustParticles.length).toBeGreaterThan(0);
@@ -74,14 +74,14 @@ describe('Miner and Mindmender Units', () => {
       sim.addUnit(miner);
       const minerUnit = sim.units.find(u => u.id === 'miner1');
       
-      // Start with no ore
+
       expect(minerUnit?.meta.currentOre).toBe(0);
       
-      // Collect ore
+
       minerUnit.meta.currentOre += 1;
       expect(minerUnit.meta.currentOre).toBe(1);
       
-      // Should not exceed capacity (in real game logic)
+
       minerUnit.meta.currentOre = minerUnit.meta.oreCarryCapacity;
       expect(minerUnit.meta.currentOre).toBe(minerUnit.meta.oreCarryCapacity);
     });
@@ -136,7 +136,7 @@ describe('Miner and Mindmender Units', () => {
       const nearAlly = sim.units.find(u => u.id === 'soldier1');
       const distantAlly = sim.units.find(u => u.id === 'soldier2');
       
-      // Check distance calculations
+
       const nearDistance = Math.sqrt(
         Math.pow(nearAlly.pos.x - mindmenderUnit.pos.x, 2) + 
         Math.pow(nearAlly.pos.y - mindmenderUnit.pos.y, 2)
@@ -164,7 +164,7 @@ describe('Miner and Mindmender Units', () => {
       expect(mindmenderUnit?.meta.mindShieldDuration).toBe(50);
       expect(mindmenderUnit?.meta.confuseDuration).toBe(30);
       
-      // These durations should be used when applying effects
+
       const targetUnit = {
         ...Encyclopaedia.unit('soldier'),
         id: 'target1',
@@ -172,7 +172,7 @@ describe('Miner and Mindmender Units', () => {
       };
       sim.addUnit(targetUnit);
       
-      // Apply shield effect (manually for test)
+
       const target = sim.units.find(u => u.id === 'target1');
       target.meta.shielded = true;
       target.meta.shieldRemaining = mindmenderUnit.meta.mindShieldDuration;
@@ -205,14 +205,14 @@ describe('Miner and Mindmender Units', () => {
       const minerUnit = sim.units.find(u => u.id === 'miner1');
       const mindmenderUnit = sim.units.find(u => u.id === 'mindmender1');
       
-      // Both units should exist and be on the same team
+
       expect(minerUnit?.team).toBe('friendly');
       expect(mindmenderUnit?.team).toBe('friendly');
       
-      // Miner should be damaged
+
       expect(minerUnit.hp).toBeLessThan(minerUnit.maxHp);
       
-      // Distance should be within psychic range
+
       const distance = Math.sqrt(
         Math.pow(minerUnit.pos.x - mindmenderUnit.pos.x, 2) + 
         Math.pow(minerUnit.pos.y - mindmenderUnit.pos.y, 2)

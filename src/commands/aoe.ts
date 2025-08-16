@@ -15,12 +15,17 @@ export class AoE extends Command {
     const y = params.y as number;
     const radius = params.radius as number;
     const damage = params.damage as number;
-    const type = (params.type as string) || 'physical';
+    const type = (params.type as string) || "physical";
     const stunDuration = params.stunDuration as number;
-    
+
     const center = { x, y };
 
-    if (typeof radius !== 'number' || isNaN(radius) || typeof damage !== 'number' || isNaN(damage)) {
+    if (
+      typeof radius !== "number" ||
+      isNaN(radius) ||
+      typeof damage !== "number" ||
+      isNaN(damage)
+    ) {
       console.warn(`AoE command: invalid radius ${radius} or damage ${damage}`);
       return;
     }
@@ -29,21 +34,20 @@ export class AoE extends Command {
       aspect: type,
       amount: damage,
       radius: radius,
-      origin: center
+      origin: center,
     };
 
-    // Add EMP-specific properties if provided
     if (stunDuration !== undefined) {
       meta.stunDuration = stunDuration;
     }
 
     this.sim.queuedEvents.push({
-      kind: 'aoe',
+      kind: "aoe",
       source: unitId,
       target: center,
-      meta: meta
+      meta: meta,
     });
 
-    const effectType = damage > 0 ? 'damage' : 'healing';
+    const effectType = damage > 0 ? "damage" : "healing";
   }
 }

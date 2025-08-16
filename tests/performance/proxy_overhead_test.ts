@@ -5,7 +5,7 @@ describe('Proxy Overhead Analysis', () => {
     const count = 1000;
     const iterations = 10000;
     
-    // Setup: Create typed arrays
+
     const posX = new Float32Array(count);
     const posY = new Float32Array(count);
     const ids = new Array(count);
@@ -16,7 +16,7 @@ describe('Proxy Overhead Analysis', () => {
       ids[i] = `unit_${i}`;
     }
     
-    // Test 1: Direct array access
+
     {
       const start = performance.now();
       let sum = 0;
@@ -29,7 +29,7 @@ describe('Proxy Overhead Analysis', () => {
       console.log(`Direct array access: ${time.toFixed(2)}ms (${(time/iterations).toFixed(4)}ms per iter)`);
     }
     
-    // Test 2: Object with getters (proxy-like)
+
     {
       const units = [];
       for (let i = 0; i < count; i++) {
@@ -51,12 +51,12 @@ describe('Proxy Overhead Analysis', () => {
       console.log(`Object with getters: ${time.toFixed(2)}ms (${(time/iterations).toFixed(4)}ms per iter)`);
     }
     
-    // Test 3: Creating new array of proxies each iteration (like getAllProxies)
+
     {
       const start = performance.now();
       let sum = 0;
       for (let iter = 0; iter < iterations; iter++) {
-        // Create new array each time - this is what getAllProxies does!
+
         const units = [];
         for (let i = 0; i < count; i++) {
           const index = i;
@@ -74,7 +74,7 @@ describe('Proxy Overhead Analysis', () => {
       console.log(`Creating proxies each iteration: ${time.toFixed(2)}ms (${(time/iterations).toFixed(4)}ms per iter)`);
     }
     
-    // Test 4: Just array allocation
+
     {
       const start = performance.now();
       for (let iter = 0; iter < iterations; iter++) {
@@ -87,7 +87,7 @@ describe('Proxy Overhead Analysis', () => {
       console.log(`Just array allocation: ${time.toFixed(2)}ms (${(time/iterations).toFixed(4)}ms per iter)`);
     }
     
-    // Test 5: forEach vs for loop
+
     {
       const units = [];
       for (let i = 0; i < count; i++) {

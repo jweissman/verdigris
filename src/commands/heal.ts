@@ -12,33 +12,30 @@ export class Heal extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     const targetId = params.targetId as string;
     const amount = params.amount as number;
-    const aspect = (params.aspect as string) || 'healing';
+    const aspect = (params.aspect as string) || "healing";
     const newMaxHp = params.newMaxHp as number | undefined; // For buff heals
-    
-    if (typeof amount !== 'number' || isNaN(amount)) {
+
+    if (typeof amount !== "number" || isNaN(amount)) {
       console.warn(`Heal command: invalid amount ${amount}`);
       return;
     }
 
-    // Apply heal directly using Transform - use updateUnit for efficiency
     const transform = this.sim.getTransform();
-    const target = this.sim.units.find(u => u.id === targetId);
+    const target = this.sim.units.find((u) => u.id === targetId);
     if (!target) {
       console.warn(`Heal command: target ${targetId} not found`);
       return;
     }
-    
-    // If newMaxHp is provided, this is a buff that increases max HP
+
     if (newMaxHp !== undefined) {
       transform.updateUnit(targetId, {
         maxHp: newMaxHp,
-        hp: target.hp + amount
+        hp: target.hp + amount,
       });
     } else {
-      // Normal heal - capped at maxHp  
       const newHp = Math.min(target.hp + amount, target.maxHp);
       transform.updateUnit(targetId, {
-        hp: newHp
+        hp: newHp,
       });
     }
   }

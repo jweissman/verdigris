@@ -12,7 +12,7 @@ import { Transform } from "../core/transform";
  */
 export class Airdrop extends Command {
   private transform: Transform;
-  
+
   constructor(sim: Simulator, transform: Transform) {
     super(sim);
     this.transform = transform;
@@ -21,85 +21,75 @@ export class Airdrop extends Command {
     const unitType = params.unitType as string;
     const x = params.x as number | undefined;
     const y = params.y as number | undefined;
-    
-    // Determine drop position
+
     let dropX: number, dropY: number;
-    
+
     if (x !== undefined && y !== undefined) {
       dropX = x;
       dropY = y;
     } else {
-      // Default to center of field for dramatic effect
       dropX = Math.floor(this.sim.fieldWidth / 2);
       dropY = Math.floor(this.sim.fieldHeight / 2);
     }
-    
-    // Validate position is in bounds
+
     dropX = Math.max(0, Math.min(this.sim.fieldWidth - 1, dropX));
     dropY = Math.max(0, Math.min(this.sim.fieldHeight - 1, dropY));
-    
+
     try {
       const unit = Encyclopaedia.unit(unitType);
-      
-      // Create unit at high altitude first
-      const droppedUnit = { 
-        ...unit, 
-        team: 'friendly' as const,
+
+      const droppedUnit = {
+        ...unit,
+        team: "friendly" as const,
         pos: { x: dropX, y: dropY },
         meta: {
           ...unit.meta,
           z: 20, // Start very high up
           dropping: true,
           dropSpeed: 0.8,
-          landingImpact: true
-        }
+          landingImpact: true,
+        },
       };
-      
-      // Use transform if available to add unit properly
+
       if (this.transform) {
         this.transform.addUnit(droppedUnit);
       } else {
-        // Fallback to direct add if no transform
         this.sim.addUnit(droppedUnit);
       }
-      
-      // Add atmospheric entry particle effects
+
       this.createAtmosphericEntry(dropX, dropY);
-      
     } catch (error) {
       console.error(`Airdrop failed: Unknown unit type '${unitType}'`);
     }
   }
-  
+
   private createAtmosphericEntry(x: number, y: number) {
-    // Create dramatic smoke trail particles
     for (let i = 0; i < 12; i++) {
       this.sim.particleArrays.addParticle({
-        pos: { 
-          x: x + (Simulator.rng.random() - 0.5) * 3, 
-          y: Simulator.rng.random() * 10 // Spread across upper atmosphere
+        pos: {
+          x: x + (Simulator.rng.random() - 0.5) * 3,
+          y: Simulator.rng.random() * 10, // Spread across upper atmosphere
         },
         vel: { x: (Simulator.rng.random() - 0.5) * 0.3, y: 0.6 },
         radius: 1.5 + Simulator.rng.random(),
         lifetime: 40 + Simulator.rng.random() * 20,
-        color: '#666666', // Dark smoke
+        color: "#666666", // Dark smoke
         z: 15 + Simulator.rng.random() * 5,
-        type: 'debris', // Use existing fire particle renderer for smoke
-        landed: false
+        type: "debris", // Use existing fire particle renderer for smoke
+        landed: false,
       });
     }
-    
-    // Add shockwave indicator on ground
+
     this.sim.queuedEvents.push({
-      kind: 'aoe',
-      source: 'airdrop',
+      kind: "aoe",
+      source: "airdrop",
       target: { x, y },
       meta: {
-        aspect: 'warning',
+        aspect: "warning",
         radius: 6,
         amount: 0, // No damage yet - just visual warning
-        duration: 25 // Warning lasts until landing
-      }
+        duration: 25, // Warning lasts until landing
+      },
     });
   }
 }

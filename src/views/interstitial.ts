@@ -1,2 +1,0 @@
-// i think this is an 'extreme' version of the cinematic view where heroes at max-y are shown as full portraits and we can script events?
-// we need minimally some dialogue flow / scriptable space for non-combat events and menuing, title screens etc

@@ -6,10 +6,10 @@ describe('Synthbox - Mathematical Sound Engine', () => {
     const osc = new Oscillator('sine');
     const samples = osc.generate(440, 100, 44100); // A440, 100 samples at 44.1kHz
     
-    // Should generate values between -1 and 1
+
     expect(samples.every(s => s >= -1 && s <= 1)).toBe(true);
     
-    // Should complete roughly one cycle in 100 samples at 440Hz
+
     const cyclesExpected = 440 * 100 / 44100; // ~1 cycle
     const zeroCrossings = samples.filter((s, i) => 
       i > 0 && Math.sign(s) !== Math.sign(samples[i-1])
@@ -33,7 +33,7 @@ describe('Synthbox - Mathematical Sound Engine', () => {
     const sawWave = saw.generate(freq, samples, rate);
     const triangleWave = triangle.generate(freq, samples, rate);
     
-    // Each should have different characteristics
+
     expect(sineWave).not.toEqual(squareWave);
     expect(squareWave).not.toEqual(sawWave);
     expect(sawWave).not.toEqual(triangleWave);
@@ -60,13 +60,13 @@ describe('Synthbox - Mathematical Sound Engine', () => {
   it('should create a 4-channel synthbox', () => {
     const synth = new Synthbox();
     
-    // Configure channels
+
     synth.channel(0).setVoice('choir');    // Female choir
     synth.channel(1).setVoice('pluck');    // Pluck/bass
     synth.channel(2).setVoice('lead');     // Soloist/guitar
     synth.channel(3).setVoice('texture');  // Chitter/birdsong
     
-    // Each channel should have different timbres
+
     const choir = synth.channel(0);
     const pluck = synth.channel(1);
     
@@ -81,10 +81,10 @@ describe('Synthbox - Mathematical Sound Engine', () => {
     synth.channel(0).reverb = 0.5; // 50% wet
     const wet = synth.channel(0).generate('A4', 1000);
     
-    // Reverb should produce different signal than dry
+
     expect(dry).not.toEqual(wet);
     
-    // Both should have sound content
+
     const dryHasSound = dry.some(s => Math.abs(s) > 0.01);
     const wetHasSound = wet.some(s => Math.abs(s) > 0.01);
     expect(dryHasSound).toBe(true);
@@ -94,29 +94,29 @@ describe('Synthbox - Mathematical Sound Engine', () => {
   it('should sequence musical phrases', () => {
     const synth = new Synthbox();
     
-    // Simple sequence: "uarp uarp rest uarp"
+
     const sequence = synth.sequence([
-      { note: 'C4', duration: 0.25 },  // uarp
-      { note: 'E4', duration: 0.25 },  // uarp
-      { note: null, duration: 0.25 },  // rest
-      { note: 'G4', duration: 0.25 },  // uarp
+      { note: 'C4', duration: 0.25 },
+      { note: 'E4', duration: 0.25 },
+      { note: null, duration: 0.25 },
+      { note: 'G4', duration: 0.25 },
     ]);
     
     expect(sequence.length).toBe(4);
-    expect(sequence[2].note).toBeNull(); // rest
+    expect(sequence[2].note).toBeNull();
   });
 
   it('should generate eerie mathematical harmonics', () => {
     const synth = new Synthbox();
     
-    // Fibonacci-based harmonic series for eeriness
+
     const fibHarmonics = [1, 1, 2, 3, 5, 8, 13];
     const fundamental = 110; // A2
     
     const harmonics = fibHarmonics.map(n => fundamental * n);
     const composite = synth.mixHarmonics(harmonics, [1, 0.5, 0.3, 0.2, 0.1, 0.05, 0.02]);
     
-    // Should create a complex waveform
+
     expect(composite.length).toBeGreaterThan(0);
     expect(composite.some(s => s !== 0)).toBe(true);
   });
@@ -124,7 +124,7 @@ describe('Synthbox - Mathematical Sound Engine', () => {
   it('should support ADSR envelope shaping', () => {
     const osc = new Oscillator('sine');
     
-    // Attack, Decay, Sustain, Release
+
     const envelope = {
       attack: 0.01,   // 10ms
       decay: 0.1,     // 100ms  
@@ -134,10 +134,10 @@ describe('Synthbox - Mathematical Sound Engine', () => {
     
     const samples = osc.generateWithEnvelope(440, 1000, 44100, envelope);
     
-    // Should start at 0 (attack)
+
     expect(samples[0]).toBeCloseTo(0, 2);
     
-    // Should reach peak after attack time
+
     const attackSamples = Math.floor(envelope.attack * 44100);
     const peakRegion = samples.slice(attackSamples, attackSamples + 100);
     const maxAmplitude = Math.max(...peakRegion.map(Math.abs));

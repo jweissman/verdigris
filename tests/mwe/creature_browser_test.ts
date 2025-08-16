@@ -15,7 +15,7 @@ describe("CreatureBrowser", () => {
     expect(mechanical.length).toBeGreaterThan(0);
     expect(friendly.length).toBeGreaterThan(0);
     
-    // Test specific creatures for Mechatron anchor point debugging
+
     const farmer = all.find(c => c.type === 'farmer');
     const mechatron = all.find(c => c.type === 'mechatron');
     
@@ -120,7 +120,7 @@ describe("CreatureBrowser", () => {
     const all = browser.getAll();
     expect(all.length).toBe(browser.getCount());
     
-    // Test specific creature exists
+
     const farmer = all.find(c => c.type === 'farmer');
     expect(farmer).toBeDefined();
     expect(farmer?.sprite).toBe('farmer');
@@ -140,7 +140,7 @@ describe("CreatureBrowser", () => {
     expect(friendly.length).toBeGreaterThan(0);
     expect(hostile.length).toBeGreaterThan(0);
     
-    // Test filtering logic
+
     huge.forEach(creature => {
       expect(creature.isHuge).toBe(true);
     });
@@ -154,7 +154,7 @@ describe("CreatureBrowser", () => {
     const browser = new CreatureBrowser();
     const creatures = browser.getAll();
     
-    // Test each creature has required properties for HTML
+
     creatures.forEach(creature => {
       expect(creature.type).toBeDefined();
       expect(creature.sprite).toBeDefined();
@@ -169,10 +169,10 @@ describe("CreatureBrowser", () => {
   });
 
   it('should handle window export for HTML integration', () => {
-    // Test the static boot method
+
     const mockWindow = { CreatureBrowser: undefined } as any;
     
-    // Simulate what happens in browser
+
     class TestCreatureBrowser extends CreatureBrowser {
       static boot(): void {
         mockWindow.CreatureBrowser = new CreatureBrowser();

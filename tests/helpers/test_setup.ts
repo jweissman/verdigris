@@ -6,10 +6,10 @@ import { Simulator } from '../../src/core/simulator';
  * Reset global state for test isolation
  */
 export function resetTestState() {
-  // Reset Encyclopaedia unit ID counters
+
   Encyclopaedia.counts = {};
   
-  // Reset Simulator RNG seed for deterministic tests
+
   Simulator.seed(12345);
 }
 

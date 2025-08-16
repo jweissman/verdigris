@@ -24,38 +24,72 @@ export class CreatureBrowser {
 
   private loadCreatures(): void {
     const creatureTypes = [
-      'farmer', 'soldier', 'worm', 'priest', 'ranger', 'bombardier',
-      'squirrel', 'tamer', 'megasquirrel', 'rainmaker', 'skeleton',
-      'demon', 'ghost', 'mimic-worm', 'big-worm', 'mesoworm', 'toymaker',
-      'mechatron', 'grappler', 'desert-megaworm', 'builder', 'fueler',
-      'mechanic', 'engineer', 'welder', 'assembler', 'clanker',
-      'freezebot', 'spiker', 'swarmbot', 'roller', 'zapper',
-      // Desert day creatures
-      'worm-hunter', 'waterbearer', 'skirmisher', 'desert-worm',
-      // Dragon Day units
-      'dragon', 'lancer', 'miner', 'mindmender'
+      "farmer",
+      "soldier",
+      "worm",
+      "priest",
+      "ranger",
+      "bombardier",
+      "squirrel",
+      "tamer",
+      "megasquirrel",
+      "rainmaker",
+      "skeleton",
+      "demon",
+      "ghost",
+      "mimic-worm",
+      "big-worm",
+      "mesoworm",
+      "toymaker",
+      "mechatron",
+      "grappler",
+      "desert-megaworm",
+      "builder",
+      "fueler",
+      "mechanic",
+      "engineer",
+      "welder",
+      "assembler",
+      "clanker",
+      "freezebot",
+      "spiker",
+      "swarmbot",
+      "roller",
+      "zapper",
+
+      "worm-hunter",
+      "waterbearer",
+      "skirmisher",
+      "desert-worm",
+
+      "dragon",
+      "lancer",
+      "miner",
+      "mindmender",
     ];
 
-    this.creatures = creatureTypes.map(type => {
-      try {
-        const unit = Encyclopaedia.unit(type);
-        return {
-          type,
-          sprite: unit.sprite || 'unknown',
-          hp: unit.hp || 0,
-          team: (unit.team || 'hostile') as 'friendly' | 'hostile',
-          tags: unit.tags || [],
-          abilities: unit.abilities || [],
-          isHuge: unit.tags?.includes('huge') || false,
-          isMechanical: unit.tags?.includes('mechanical') || false,
-          segmentCount: (unit.meta as any)?.segmentCount || 0
-        };
-      } catch (error) {
-        console.warn(`Failed to load creature: ${type}`);
-        return null;
-      }
-      // @ts-ignore
-    }).filter((c): c is CreatureData => c !== null) as CreatureData[];
+    this.creatures = creatureTypes
+      .map((type) => {
+        try {
+          const unit = Encyclopaedia.unit(type);
+          return {
+            type,
+            sprite: unit.sprite || "unknown",
+            hp: unit.hp || 0,
+            team: (unit.team || "hostile") as "friendly" | "hostile",
+            tags: unit.tags || [],
+            abilities: unit.abilities || [],
+            isHuge: unit.tags?.includes("huge") || false,
+            isMechanical: unit.tags?.includes("mechanical") || false,
+            segmentCount: (unit.meta as any)?.segmentCount || 0,
+          };
+        } catch (error) {
+          console.warn(`Failed to load creature: ${type}`);
+          return null;
+        }
+        // @ts-ignore
+      })
+      .filter((c): c is CreatureData => c !== null) as CreatureData[];
   }
 
   getAll(): CreatureData[] {
@@ -64,16 +98,16 @@ export class CreatureBrowser {
 
   getByFilter(filterType: string): CreatureData[] {
     switch (filterType) {
-      case 'huge':
-        return this.creatures.filter(c => c.isHuge);
-      case 'mechanical':
-        return this.creatures.filter(c => c.isMechanical);
-      case 'friendly':
-        return this.creatures.filter(c => c.team === 'friendly');
-      case 'hostile':
-        return this.creatures.filter(c => c.team === 'hostile');
-      case 'segmented':
-        return this.creatures.filter(c => c.segmentCount > 0);
+      case "huge":
+        return this.creatures.filter((c) => c.isHuge);
+      case "mechanical":
+        return this.creatures.filter((c) => c.isMechanical);
+      case "friendly":
+        return this.creatures.filter((c) => c.team === "friendly");
+      case "hostile":
+        return this.creatures.filter((c) => c.team === "hostile");
+      case "segmented":
+        return this.creatures.filter((c) => c.segmentCount > 0);
       default:
         return this.creatures;
     }
@@ -93,35 +127,36 @@ export default class CreatureBrowserUI {
   bgs: Map<string, HTMLImageElement> = Game.loadBackgrounds();
   sprites: Map<string, HTMLImageElement> = Game.loadSprites();
 
-
   constructor() {
     this.setupControls();
     this.renderCreatures(); // Actually render the creatures!
   }
 
   setupControls() {
-    const filter = document.getElementById('creature-filter');
+    const filter = document.getElementById("creature-filter");
     if (!filter) {
-      console.error('Filter element not found');
+      console.error("Filter element not found");
       return;
     }
 
-    filter.addEventListener('change', () => {
+    filter.addEventListener("change", () => {
       let filterType = (filter as HTMLSelectElement).value;
       this.renderCreatures(filterType);
     });
   }
 
-  renderCreatures(filterType = 'all') {
-    const grid = document.getElementById('creature-grid');
-    const count = document.getElementById('creature-count');
+  renderCreatures(filterType = "all") {
+    const grid = document.getElementById("creature-grid");
+    const count = document.getElementById("creature-count");
 
     if (!grid || !count) return;
 
     const creatures = this.browser.getByFilter(filterType);
     count.textContent = creatures.length.toString();
 
-    grid.innerHTML = creatures.map((creature, index) => `
+    grid.innerHTML = creatures
+      .map(
+        (creature, index) => `
             <div class="creature-card">
               <h3>${creature.type}</h3>
               <div class="sprite-display">
@@ -154,25 +189,29 @@ export default class CreatureBrowserUI {
                 <div><strong>HP:</strong> ${creature.hp} | <strong>Team:</strong> ${creature.team}</div>
                 <div><strong>Sprite:</strong> ${creature.sprite}</div>
                 <div><strong>Abilities:</strong> ${creature.abilities.length}</div>
-                ${creature.segmentCount > 0 ? `<div><strong>Segments:</strong> ${creature.segmentCount}</div>` : ''}
+                ${creature.segmentCount > 0 ? `<div><strong>Segments:</strong> ${creature.segmentCount}</div>` : ""}
                 <div class="creature-tags">
-                  ${creature.isHuge ? '<span class="tag huge">HUGE</span>' : ''}
-                  ${creature.isMechanical ? '<span class="tag mechanical">MECHANICAL</span>' : ''}
-                  ${creature.segmentCount > 0 ? '<span class="tag segmented">SEGMENTED</span>' : ''}
+                  ${creature.isHuge ? '<span class="tag huge">HUGE</span>' : ""}
+                  ${creature.isMechanical ? '<span class="tag mechanical">MECHANICAL</span>' : ""}
+                  ${creature.segmentCount > 0 ? '<span class="tag segmented">SEGMENTED</span>' : ""}
                 </div>
               </div>
             </div>
-          `).join('');
+          `,
+      )
+      .join("");
 
     this.renderSprites();
   }
 
   renderSprites() {
-    const canvases = document.querySelectorAll('.creature-canvas-left, .creature-canvas-right');
+    const canvases = document.querySelectorAll(
+      ".creature-canvas-left, .creature-canvas-right",
+    );
 
     canvases.forEach((canvas, index) => {
       const canvasEl = canvas as HTMLCanvasElement;
-      const ctx = canvasEl.getContext('2d');
+      const ctx = canvasEl.getContext("2d");
       const creatureType = canvasEl.dataset.creature;
       const facing = canvasEl.dataset.facing;
 
@@ -180,28 +219,26 @@ export default class CreatureBrowserUI {
         return;
       }
 
-      // Check if sprite exists for this creature
       const unit = Encyclopaedia.unit(creatureType);
-      const spriteName = unit.sprite || 'soldier';
+      const spriteName = unit.sprite || "soldier";
       const spriteImage = this.sprites.get(spriteName);
 
-      // Setup sim - single unit centered
       let sim = new Simulator(1, 1);
       sim.addUnit({
-        ...unit, pos: { x: 0, y: 0 }
+        ...unit,
+        pos: { x: 0, y: 0 },
       });
 
-      // Create Isometric view with adjusted offsets for creature browser
       let view = new Isometric(ctx, sim, 320, 200, this.sprites, this.bgs);
-      view.baseOffsetX = 160;  // Center horizontally in 320px
-      view.baseOffsetY = 100;  // Center vertically in 200px
+      view.baseOffsetX = 160; // Center horizontally in 320px
+      view.baseOffsetY = 100; // Center vertically in 200px
       view.show();
     });
   }
 }
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('load', () => {
+if (typeof window !== "undefined") {
+  window.addEventListener("load", () => {
     new CreatureBrowserUI();
   });
 }

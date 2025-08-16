@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { VoiceSynthesizer } from '../../src/audio/voice_synthesizer';
 
-// Mock AudioContext for testing
+
 class MockAudioContext {
   sampleRate = 44100;
   currentTime = 0;
@@ -86,9 +86,9 @@ describe('VoiceSynthesizer', () => {
   let originalAudioContext: any;
   
   beforeEach(() => {
-    // Save original AudioContext
+
     originalAudioContext = (global as any).AudioContext;
-    // Replace with mock
+
     (global as any).AudioContext = MockAudioContext;
     
     synth = new VoiceSynthesizer();
@@ -96,7 +96,7 @@ describe('VoiceSynthesizer', () => {
   
   afterEach(() => {
     synth.dispose();
-    // Restore original AudioContext
+
     (global as any).AudioContext = originalAudioContext;
   });
   
@@ -108,8 +108,8 @@ describe('VoiceSynthesizer', () => {
     
     it('should initialize audio context on first use', () => {
       synth.init();
-      // After init, internal state should be set up
-      // We can't directly test private members, but we can test behavior
+
+
       expect(() => synth.playNote('choir', 440, 0.1)).not.toThrow();
     });
   });
@@ -153,8 +153,8 @@ describe('VoiceSynthesizer', () => {
     it('should handle chord inversions for choir voice', () => {
       const chord = [261.63, 329.63, 392.00]; // C major
       
-      // Play same chord multiple times with channel ID
-      // Each time should use a different inversion
+
+
       expect(() => {
         synth.playNote('choir', chord, 0.5, 'channel-1');
         synth.playNote('choir', chord, 0.5, 'channel-1');
@@ -165,7 +165,7 @@ describe('VoiceSynthesizer', () => {
     it('should track inversions per channel', () => {
       const chord = [261.63, 329.63, 392.00];
       
-      // Different channels should have independent inversion tracking
+
       expect(() => {
         synth.playNote('choir', chord, 0.5, 'channel-1');
         synth.playNote('choir', chord, 0.5, 'channel-2');
@@ -182,7 +182,7 @@ describe('VoiceSynthesizer', () => {
     it('should create walking bass patterns for chords', () => {
       const chord = [261.63, 329.63, 392.00];
       
-      // Play chord multiple times to trigger pattern progression
+
       expect(() => {
         for (let i = 0; i < 8; i++) {
           synth.playNote('bass', chord, 0.25, 'bass-channel');
@@ -224,14 +224,14 @@ describe('VoiceSynthesizer', () => {
       synth.init();
       expect(() => synth.dispose()).not.toThrow();
       
-      // After dispose, should be able to reinitialize
+
       expect(() => synth.init()).not.toThrow();
     });
   });
   
   describe('Edge Cases', () => {
     it('should handle playing before initialization', () => {
-      // Should auto-initialize
+
       expect(() => synth.playNote('choir', 440, 0.5)).not.toThrow();
     });
     

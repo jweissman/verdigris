@@ -5,9 +5,8 @@ import { CommandHandler } from '../../src/rules/command_handler';
 describe('Leaf Animation System', () => {
   it('should create falling leaf particles with weather command', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim)]; // Add command handler to process weather command
     
-    // Queue leaves weather command
+
     sim.queuedCommands = [{
       type: 'weather',
       params: { weatherType: 'leaves', duration: 50, intensity: 0.3 }
@@ -15,14 +14,14 @@ describe('Leaf Animation System', () => {
     
     sim.step();
     
-    // Should create leaf particles
+
     const leafParticles = sim.particles.filter(p => 
       p.type === 'leaf' || p.type === 'leaves'
     );
     
     expect(leafParticles.length).toBeGreaterThan(0);
     
-    // Check leaf particle properties
+
     if (leafParticles.length > 0) {
       const leaf = leafParticles[0];
       expect(leaf.z).toBeDefined(); // Should have vertical position
@@ -34,7 +33,7 @@ describe('Leaf Animation System', () => {
   it('should animate leaves falling with sway motion', () => {
     const sim = new Simulator();
     
-    // Create a leaf particle manually
+
     const leaf = {
       id: 'leaf-1',
       type: 'leaf',
@@ -54,9 +53,9 @@ describe('Leaf Animation System', () => {
     const initialX = leaf.pos.x;
     const initialZ = leaf.z;
     
-    // Simulate several steps
+
     for (let i = 0; i < 10; i++) {
-      // Apply simple falling physics
+
       leaf.z -= 0.5; // Fall
       leaf.pos.x += Math.sin(i * leaf.meta.swayFrequency) * leaf.meta.swayAmplitude; // Sway
       leaf.pos.y += leaf.vel.y;
@@ -64,7 +63,7 @@ describe('Leaf Animation System', () => {
       sim.step();
     }
     
-    // Leaf should have moved
+
     expect(leaf.z).toBeLessThan(initialZ); // Fell down
     expect(Math.abs(leaf.pos.x - initialX)).toBeGreaterThan(0); // Swayed horizontally
   });
@@ -72,14 +71,14 @@ describe('Leaf Animation System', () => {
   it('should spawn leaves from tree positions', () => {
     const sim = new Simulator();
     
-    // Add tree-like positions (could be actual tree units later)
+
     const treePositions = [
       { x: 5, y: 5 },
       { x: 15, y: 10 },
       { x: 25, y: 8 }
     ];
     
-    // Create leaves weather with intensity
+
     sim.queuedCommands = [{
       type: 'weather',
       params: { weatherType: 'leaves', duration: 30, intensity: 0.5 }
@@ -87,15 +86,15 @@ describe('Leaf Animation System', () => {
     
     sim.step();
     
-    // Leaves should spawn from various positions
+
     const leafParticles = sim.particles.filter(p => 
       p.type === 'leaf' || p.type === 'leaves'
     );
     
-    // Should have multiple leaves
+
     expect(leafParticles.length).toBeGreaterThan(0);
     
-    // Leaves should have varied positions
+
     if (leafParticles.length > 1) {
       const positions = leafParticles.map(l => l.pos.x);
       const uniqueX = new Set(positions);
@@ -106,8 +105,8 @@ describe('Leaf Animation System', () => {
   it('should remove leaves when they hit the ground', () => {
     const sim = new Simulator();
     
-    // Create a leaf at ground level
-    // Add leaf particle properly through the API
+
+
     sim.particleArrays.addParticle({
       id: 'ground-leaf',
       type: 'leaf',
@@ -119,12 +118,12 @@ describe('Leaf Animation System', () => {
       radius: 1
     });
     
-    // Simulate leaf expiring
+
     for (let i = 0; i < 5; i++) {
       sim.step();
     }
     
-    // Leaf should be removed
+
     const remainingLeaf = sim.particles.find(p => p.id === 'ground-leaf');
     expect(remainingLeaf).toBeUndefined();
   });

@@ -7,7 +7,7 @@ describe('Common Particle Renderer', () => {
   let renderer: ParticleRenderer;
 
   beforeEach(() => {
-    // Create mock canvas context
+
     mockCtx = {
       save: () => {},
       restore: () => {},
@@ -35,14 +35,14 @@ describe('Common Particle Renderer', () => {
       })
     };
 
-    // Create mock sprites map
+
     mockSprites = new Map();
     
-    // Mock leaf sprite
+
     const mockLeafSprite = {} as HTMLImageElement;
     mockSprites.set('leaf', mockLeafSprite);
     
-    // Mock lightning sprite  
+
     const mockLightningSprite = {} as HTMLImageElement;
     mockSprites.set('lightning', mockLightningSprite);
 
@@ -59,7 +59,7 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 0.8, scale: 1.5 };
 
-    // Spy on drawImage to verify sprite rendering
+
     let drawImageCalled = false;
     mockCtx.drawImage = () => { drawImageCalled = true; };
 
@@ -77,7 +77,7 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 0.6 };
 
-    // Spy on fillRect to verify pixel rendering
+
     let fillRectCalled = false;
     mockCtx.fillRect = () => { fillRectCalled = true; };
 
@@ -97,7 +97,7 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 0.9, scale: 1.2 };
 
-    // Spy on fill and stroke to verify circle and sparkle
+
     let fillRectCalled = false;
     mockCtx.fillRect = () => { fillRectCalled = true; };
 
@@ -117,13 +117,13 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 0.7 };
 
-    // Fire should flicker - sometimes draw, sometimes don't
+
     let fillRectCalled = false;
     mockCtx.fillRect = () => { fillRectCalled = true; };
 
     renderer.renderParticle(mockCtx, fireParticle, config);
 
-    // Fire particles may flicker based on lifetime
+
     expect(mockCtx.fillStyle === '#000000' || mockCtx.fillStyle === '').toBe(true);
   });
 
@@ -137,7 +137,7 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 1.0, scale: 2.0 };
 
-    // Spy on drawImage to verify sprite rendering
+
     let drawImageCalled = false;
     mockCtx.drawImage = () => { drawImageCalled = true; };
 
@@ -156,7 +156,7 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 0.5 };
 
-    // Spy on fillRect for pixel rendering
+
     let fillRectCalled = false;
     mockCtx.fillRect = () => { fillRectCalled = true; };
 
@@ -179,7 +179,7 @@ describe('Common Particle Renderer', () => {
 
     const config = { x: 160, y: 120, alpha: 0.8 };
 
-    // Spy on fillRect for fallback rendering (simple black square)
+
     let fillRectCalled = false;
     mockCtx.fillRect = () => { fillRectCalled = true; };
 

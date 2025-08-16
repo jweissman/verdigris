@@ -1,12 +1,15 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
+import type { QueuedCommand } from "./command_handler";
+
 export class UnitMovement extends Rule {
   static wanderRate: number = 0.15;
-  execute(context: TickContext): void {
-    context.queueCommand({
-      type: 'forces',
-      params: {}
-    });
-    return;
+  execute(context: TickContext): QueuedCommand[] {
+    return [
+      {
+        type: "forces",
+        params: {},
+      },
+    ];
   }
 }

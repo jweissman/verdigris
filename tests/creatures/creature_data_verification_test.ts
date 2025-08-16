@@ -8,7 +8,7 @@ describe('Creature Data Verification', () => {
     
     expect(allCreatures.length).toBeGreaterThan(0);
     
-    // Check first few creatures have required data
+
     const farmer = allCreatures.find(c => c.type === 'farmer');
     const soldier = allCreatures.find(c => c.type === 'soldier');
     const worm = allCreatures.find(c => c.type === 'worm');
@@ -24,7 +24,7 @@ describe('Creature Data Verification', () => {
     
     expect(creatures.length).toBeGreaterThan(0);
     
-    // Test each creature has all required properties
+
     let validCount = 0;
     let invalidCreatures: string[] = [];
     
@@ -68,7 +68,7 @@ describe('Creature Data Verification', () => {
     expect(mechanical.length).toBeGreaterThan(0);
     expect(friendly.length).toBeGreaterThan(0);
     
-    // Verify filtering actually works
+
     huge.forEach(creature => {
       expect(creature.isHuge).toBe(true);
     });
@@ -87,18 +87,18 @@ describe('Creature Data Verification', () => {
     const browser = new CreatureBrowser();
     const creatures = browser.getAll();
     
-    // Test specific creatures we know should exist
+
     const farmer = creatures.find(c => c.type === 'farmer');
     const mechatron = creatures.find(c => c.type === 'mechatron');
     const desertMegaworm = creatures.find(c => c.type === 'desert-megaworm');
     
-    // Farmer tests
+
     expect(farmer?.sprite).toBe('farmer');
     expect(farmer?.team).toBe('friendly');
     expect(farmer?.hp).toBeGreaterThan(0);
     expect(farmer?.isHuge).toBe(false);
     
-    // Mechatron tests (if exists)
+
     if (mechatron) {
       expect(mechatron.sprite).toBe('mechatron');
       expect(mechatron.isHuge).toBe(true);
@@ -112,7 +112,7 @@ describe('Creature Data Verification', () => {
     const browser = new CreatureBrowser();
     const creatures = browser.getByFilter('all');
     
-    // Generate the same HTML structure the browser would create
+
     const generateCreatureHTML = (creatures: any[]) => {
       return creatures.map(creature => `
         <div class="creature-card">
@@ -135,7 +135,7 @@ describe('Creature Data Verification', () => {
     
     const html = generateCreatureHTML(creatures);
     
-    // Verify HTML contains expected content
+
     expect(html).toContain('farmer');
     expect(html).toContain('HP:');
     expect(html).toContain('Team:');
@@ -143,7 +143,7 @@ describe('Creature Data Verification', () => {
     expect(html).toContain('HUGE');
     expect(html).toContain('MECHANICAL');
     
-    // Count cards generated
+
     const cardCount = (html.match(/creature-card/g) || []).length;
     expect(cardCount).toBe(creatures.length);
     

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { Soundboard, SoundPad } from '../../src/audio/soundboard';
 
-// Mock AudioContext for testing
+
 class MockAudioContext {
   sampleRate = 44100;
   currentTime = 0;
@@ -69,8 +69,8 @@ describe('Soundboard', () => {
   
   describe('Pad Operations', () => {
     it('should play valid pad indices', () => {
-      expect(soundboard.playPad(0)).toBe(true);  // kick
-      expect(soundboard.playPad(15)).toBe(true); // error
+      expect(soundboard.playPad(0)).toBe(true);
+      expect(soundboard.playPad(15)).toBe(true);
     });
     
     it('should reject invalid pad indices', () => {

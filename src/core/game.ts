@@ -31,7 +31,7 @@ import mimicWorm from "../assets/sprites/mimic-worm.png";
 import skeleton from "../assets/sprites/skeleton.png";
 // @ts-ignore
 import bigWorm from "../assets/sprites/big-worm.png";
-// @ts-ignore  
+// @ts-ignore
 import skeletonMage from "../assets/sprites/skeleton-mage.png";
 // @ts-ignore
 import clanker from "../assets/sprites/clanker.png";
@@ -68,7 +68,6 @@ import waterpriest from "../assets/sprites/waterpriest.png";
 // @ts-ignore
 import wormrider from "../assets/sprites/wormrider.png";
 
-// Mechanical crew sprites
 // @ts-ignore
 import builder from "../assets/sprites/builder.png";
 // @ts-ignore
@@ -82,7 +81,6 @@ import welder from "../assets/sprites/welder.png";
 // @ts-ignore
 import assembler from "../assets/sprites/assembler.png";
 
-// Background imports
 // @ts-ignore
 import lakeBg from "../assets/bg/lake.png";
 // @ts-ignore
@@ -118,36 +116,57 @@ class Game {
   constructor(
     canvas: HTMLCanvasElement,
     opts?: {
-      addInputListener?: (cb: (e: { key: string }) => void) => void,
-      animationFrame?: (cb: () => void) => void
-    }
+      addInputListener?: (cb: (e: { key: string }) => void) => void;
+      animationFrame?: (cb: () => void) => void;
+    },
   ) {
-    this.addInputListener = opts?.addInputListener || (typeof window !== 'undefined' ? (cb) => window.addEventListener("keydown", cb as any) : () => {});
-    this.animationFrame = opts?.animationFrame || (typeof window !== 'undefined' ? (cb) => requestAnimationFrame(cb) : () => {});
+    this.addInputListener =
+      opts?.addInputListener ||
+      (typeof window !== "undefined"
+        ? (cb) => window.addEventListener("keydown", cb as any)
+        : () => {});
+    this.animationFrame =
+      opts?.animationFrame ||
+      (typeof window !== "undefined"
+        ? (cb) => requestAnimationFrame(cb)
+        : () => {});
     this.loop = this.loop.bind(this);
     this.sim = new Simulator(40, 25); // 40×25 grid = 320×200 pixels at 8px per cell
-    
-    // Create scaled renderer for browser environments
-    if (typeof window !== 'undefined') { //} && canvas instanceof HTMLCanvasElement) {
-      const scaledRenderer = createScaledRenderer(320, 200, canvas, this.sim, Game.loadSprites(), Game.loadBackgrounds());
+
+    if (typeof window !== "undefined") {
+      //} && canvas instanceof HTMLCanvasElement) {
+      const scaledRenderer = createScaledRenderer(
+        320,
+        200,
+        canvas,
+        this.sim,
+        Game.loadSprites(),
+        Game.loadBackgrounds(),
+      );
       this.renderer = scaledRenderer.renderer;
       this._handleResize = scaledRenderer.handleResize;
       this.draw = scaledRenderer.draw;
     } else {
-      // Fallback for testing - create basic renderer with mock canvas
-      const mockCanvas = { 
-        width: 320, 
-        height: 200, 
-        getContext: () => ({
-          clearRect: () => {},
-          fillRect: () => {},
-          drawImage: () => {},
-          save: () => {},
-          restore: () => {},
-          imageSmoothingEnabled: false
-        } as any)
+      const mockCanvas = {
+        width: 320,
+        height: 200,
+        getContext: () =>
+          ({
+            clearRect: () => {},
+            fillRect: () => {},
+            drawImage: () => {},
+            save: () => {},
+            restore: () => {},
+            imageSmoothingEnabled: false,
+          }) as any,
       };
-      this.renderer = new Renderer(320, 200, mockCanvas, this.sim, new Map<string, HTMLImageElement>());
+      this.renderer = new Renderer(
+        320,
+        200,
+        mockCanvas,
+        this.sim,
+        new Map<string, HTMLImageElement>(),
+      );
       this._handleResize = () => {};
       this.draw = () => this.renderer.draw();
     }
@@ -155,73 +174,71 @@ class Game {
 
   bootstrap() {
     this.sim.reset();
-    // Setup input handling
+
     this.setupInput();
 
-    // Start the main loop
     this.animationFrame(this.loop);
   }
 
   static spriteList = [
-      { name: 'worm', src: worm },
-      { name: 'soldier', src: soldier },
-      { name: 'farmer', src: farmer },
-      { name: 'slinger', src: slinger },
-      { name: 'priest', src: priest },
-      { name: 'bombardier', src: bombardier },
-      { name: 'tamer', src: tamer },
-      { name: 'squirrel', src: squirrel },
-      { name: 'megasquirrel', src: megasquirrel },
-      { name: 'leaf', src: leaf },
-      { name: 'rainmaker', src: rainmaker },
-      { name: 'demon', src: demon },
-      { name: 'ghost', src: ghost },
-      { name: 'mimic-worm', src: mimicWorm },
-      { name: 'skeleton', src: skeleton },
-      { name: 'big-worm', src: bigWorm },
-      { name: 'skeleton-mage', src: skeletonMage },
-      { name: 'clanker', src: clanker },
-      { name: 'freezebot', src: freezebot },
-      { name: 'spikebot', src: spikebot },
-      { name: 'swarmbot', src: swarmbot },
-      { name: 'jumpbot', src: jumpbot },
-      { name: 'toymaker', src: toymaker },
-      { name: 'zapper', src: zapper },
-      { name: 'bear', src: bear },
-      { name: 'owl', src: owl },
-      { name: 'deer', src: deer },
-      { name: 'buck', src: buck },
-    { name: 'mechatron', src: mechatron },
-    { name: 'mechatronist', src: mechantronist },
-    { name: 'lightning', src: lightning },
-    { name: 'grappler', src: grappler },
-    { name: 'waterpriest', src: waterpriest },
-    { name: 'wormrider', src: wormrider },
-    // Mechanical crew
-    { name: 'builder', src: builder },
-    { name: 'fueler', src: fueler },
-    { name: 'mechanic', src: mechanic },
-    { name: 'engineer', src: engineer },
-    { name: 'welder', src: welder },
-    { name: 'assembler', src: assembler },
-    { name: 'cell-effects', src: cellEffects }
-    ];
+    { name: "worm", src: worm },
+    { name: "soldier", src: soldier },
+    { name: "farmer", src: farmer },
+    { name: "slinger", src: slinger },
+    { name: "priest", src: priest },
+    { name: "bombardier", src: bombardier },
+    { name: "tamer", src: tamer },
+    { name: "squirrel", src: squirrel },
+    { name: "megasquirrel", src: megasquirrel },
+    { name: "leaf", src: leaf },
+    { name: "rainmaker", src: rainmaker },
+    { name: "demon", src: demon },
+    { name: "ghost", src: ghost },
+    { name: "mimic-worm", src: mimicWorm },
+    { name: "skeleton", src: skeleton },
+    { name: "big-worm", src: bigWorm },
+    { name: "skeleton-mage", src: skeletonMage },
+    { name: "clanker", src: clanker },
+    { name: "freezebot", src: freezebot },
+    { name: "spikebot", src: spikebot },
+    { name: "swarmbot", src: swarmbot },
+    { name: "jumpbot", src: jumpbot },
+    { name: "toymaker", src: toymaker },
+    { name: "zapper", src: zapper },
+    { name: "bear", src: bear },
+    { name: "owl", src: owl },
+    { name: "deer", src: deer },
+    { name: "buck", src: buck },
+    { name: "mechatron", src: mechatron },
+    { name: "mechatronist", src: mechantronist },
+    { name: "lightning", src: lightning },
+    { name: "grappler", src: grappler },
+    { name: "waterpriest", src: waterpriest },
+    { name: "wormrider", src: wormrider },
+
+    { name: "builder", src: builder },
+    { name: "fueler", src: fueler },
+    { name: "mechanic", src: mechanic },
+    { name: "engineer", src: engineer },
+    { name: "welder", src: welder },
+    { name: "assembler", src: assembler },
+    { name: "cell-effects", src: cellEffects },
+  ];
 
   static backgroundList = [
-    { name: 'lake', src: lakeBg },
-    { name: 'mountain', src: mountainBg },
-    { name: 'monastery', src: monasteryBg },
-    { name: 'burning-city', src: burningCityBg },
-    { name: 'winter', src: winterBg },
-    { name: 'toyforge', src: toyforgeBg },
-    { name: 'desert', src: desertBg },
-    { name: 'forest', src: forestBg }
+    { name: "lake", src: lakeBg },
+    { name: "mountain", src: mountainBg },
+    { name: "monastery", src: monasteryBg },
+    { name: "burning-city", src: burningCityBg },
+    { name: "winter", src: winterBg },
+    { name: "toyforge", src: toyforgeBg },
+    { name: "desert", src: desertBg },
+    { name: "forest", src: forestBg },
   ];
 
   static loadBackgrounds(): Map<string, HTMLImageElement> {
-    // Only load backgrounds in browser environment
-    if (typeof Image === 'undefined') {
-      console.debug('Skipping background loading in headless environment');
+    if (typeof Image === "undefined") {
+      console.debug("Skipping background loading in headless environment");
       return new Map();
     }
 
@@ -241,9 +258,8 @@ class Game {
   }
 
   static loadSprites(): Map<string, HTMLImageElement> {
-    // Only load sprites in browser environment
-    if (typeof Image === 'undefined') {
-      console.debug('Skipping sprite loading in headless environment');
+    if (typeof Image === "undefined") {
+      console.debug("Skipping sprite loading in headless environment");
       return new Map();
     }
 
@@ -264,13 +280,13 @@ class Game {
   }
 
   setupInput() {
-
     this.addInputListener(this.getInputHandler());
   }
 
-  // Default input handler: spawn a worm on 'w'
   getInputHandler(): (e: { key: string }) => void {
-    return (e) => { console.debug(`Key pressed: ${e.key} [default handler]`); };
+    return (e) => {
+      console.debug(`Key pressed: ${e.key} [default handler]`);
+    };
   }
 
   loop() {
@@ -281,17 +297,16 @@ class Game {
   lastStep: number = 0;
   update() {
     const now = Date.now();
-    
+
     const simTickInterval = 1000 / this.simTickRate;
     if (now - this.lastSimTime >= simTickInterval) {
       this.sim.step();
       this.lastSimTime = now;
     }
-    
+
     this.drawFrame();
   }
 
-  
   drawFrame() {
     let t0 = performance.now();
     this.draw();
@@ -302,7 +317,6 @@ class Game {
     }
   }
 
-  // Expose resize handling to external code
   handleResize() {
     this._handleResize();
   }
@@ -310,7 +324,6 @@ class Game {
 
 export { Game };
 
-if (typeof window !== 'undefined') {
-  // If running in browser, export Game globally
+if (typeof window !== "undefined") {
   (window as any).Game = Game;
 }

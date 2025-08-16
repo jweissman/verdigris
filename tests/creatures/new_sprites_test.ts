@@ -4,8 +4,8 @@ import Encyclopaedia from "../../src/dmg/encyclopaedia";
 
 describe("New Sprites Integration", () => {
   it("should create Big Worm with correct sprite", () => {
-    // const sim = new Simulator(15, 15);
-    // const bigWorm = sim.createBigWorm({ x: 5, y: 5 }, 4);
+
+
     const bigWorm = Encyclopaedia.unit("big-worm");
     
     expect(bigWorm.sprite).toBe('big-worm'); // Should use new sprite
@@ -40,18 +40,18 @@ describe("New Sprites Integration", () => {
     const bigWorm = sim.units.find(u => u.type === 'big-worm');
     const wormId = bigWorm.id;
     
-    // Run simulation step to create segments
+
     sim.step();
     
-    // Look up worm in roster after step
+
     const updatedWorm = sim.roster[wormId];
     expect(updatedWorm).toBeDefined();
     
-    // Should have created additional segment units
+
     const segments = sim.units.filter(u => u.meta.segment && u.meta.parentId === wormId);
     expect(segments.length).toBeGreaterThanOrEqual(1);
     
-    // Segments should use worm sprite and have proper metadata
+
     if (segments.length > 0) {
       const firstSegment = segments[0];
       expect(firstSegment.sprite).toBe('big-worm'); // Segments now inherit parent sprite
@@ -63,7 +63,7 @@ describe("New Sprites Integration", () => {
   it("should verify all sprite names are loaded", () => {
     const sim = new Simulator(5, 5);
     
-    // Test that all new sprite names work without errors
+
     const rainmaker = Encyclopaedia.unit('rainmaker');
     expect(rainmaker.sprite).toBe('rainmaker');
     
@@ -82,7 +82,7 @@ describe("New Sprites Integration", () => {
     const skeletonMage = Encyclopaedia.unit('skeleton-mage');
     expect(skeletonMage.sprite).toBe('skeleton-mage');
     
-    // Big Worm uses encyclopaedia
+
     const bigWormUnit = Encyclopaedia.unit('big-worm');
     expect(bigWormUnit.sprite).toBe('big-worm');
   });
@@ -90,7 +90,7 @@ describe("New Sprites Integration", () => {
   it("should have proper black faction variety", () => {
     const sim = new Simulator(10, 10);
     
-    // Create a variety of black faction units
+
     const units = [
       Encyclopaedia.unit('skeleton'),
       Encyclopaedia.unit('skeleton-mage'),
@@ -99,29 +99,29 @@ describe("New Sprites Integration", () => {
       Encyclopaedia.unit('mimic-worm')
     ];
     
-    // Position them
+
     units.forEach((unit, i) => {
       unit.pos = { x: i + 1, y: 1 };
       sim.addUnit(unit);
     });
     
-    // All should be hostile team
+
     units.forEach(unit => {
       expect(unit.team).toBe('hostile');
       expect(unit.tags).toContain('black');
     });
     
-    // Should have variety in perdurance types
-    expect(units[0].meta.perdurance).toBe('undead');      // skeleton
-    expect(units[1].meta.perdurance).toBe('undead');      // skeleton-mage  
-    expect(units[2].meta.perdurance).toBe('spectral');    // ghost
-    expect(units[3].meta.perdurance).toBe('fiendish');    // demon
-    expect(units[4].meta.perdurance).toBeUndefined();     // mimic-worm (no special perdurance)
+
+    expect(units[0].meta.perdurance).toBe('undead');
+    expect(units[1].meta.perdurance).toBe('undead');
+    expect(units[2].meta.perdurance).toBe('spectral');
+    expect(units[3].meta.perdurance).toBe('fiendish');
+    expect(units[4].meta.perdurance).toBeUndefined();
     
-    // Verify they have unique capabilities
-    expect(units[1].tags).toContain('caster');           // skeleton-mage
-    expect(units[2].tags).toContain('spectral');         // ghost
-    expect(units[3].abilities.includes('fireBlast')).toBe(true);  // demon has fire
-    expect(units[4].meta.segmented).toBe(true);          // mimic-worm segments
+
+    expect(units[1].tags).toContain('caster');
+    expect(units[2].tags).toContain('spectral');
+    expect(units[3].abilities.includes('fireBlast')).toBe(true);
+    expect(units[4].meta.segmented).toBe(true);
   });
 });

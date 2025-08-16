@@ -46,14 +46,14 @@ describe('Forest Creatures', () => {
     const naturist = Encyclopaedia.unit('naturist');
     const wildmage = Encyclopaedia.unit('wildmage');
     
-    // Druid has entangle and summon
+
     expect(druid.abilities).toContain('entangle');
     expect(druid.abilities).toContain('summonForestCreature');
     
-    // Naturist has regenerate
+
     expect(naturist.abilities).toContain('regenerate');
     
-    // Wildmage has wild bolt
+
     expect(wildmage.abilities).toContain('wildBolt');
   });
 });

@@ -21,7 +21,7 @@ describe("Combat Debug", () => {
       
       sim.step();
       
-      // Get fresh references from simulation
+
       const fresh1 = sim.units.find(u => u.id === soldier1.id);
       const fresh2 = sim.units.find(u => u.id === soldier2.id);
       

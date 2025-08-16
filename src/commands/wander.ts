@@ -13,41 +13,40 @@ export class Wander extends Command {
   }
 
   execute(unitId: string | null, params: any): void {
-    const team = params.team || 'all';
+    const team = params.team || "all";
     const chance = parseFloat(params.chance) || 0.1;
-    
-    // Filter units by team
-    const units = this.sim.units.filter(u => {
-      if (team === 'all') return true;
+
+    const units = this.sim.units.filter((u) => {
+      if (team === "all") return true;
       return u.team === team;
     });
-    
-    // Make each unit potentially wander
+
     for (const unit of units) {
-      if (unit.state === 'dead') continue;
-      
-      // Only wander if not engaged in combat
-      const hasNearbyEnemy = this.sim.units.some(other => 
-        other.team !== unit.team && 
-        other.state !== 'dead' &&
-        Math.abs(other.pos.x - unit.pos.x) <= 3 &&
-        Math.abs(other.pos.y - unit.pos.y) <= 3
+      if (unit.state === "dead") continue;
+
+      const hasNearbyEnemy = this.sim.units.some(
+        (other) =>
+          other.team !== unit.team &&
+          other.state !== "dead" &&
+          Math.abs(other.pos.x - unit.pos.x) <= 3 &&
+          Math.abs(other.pos.y - unit.pos.y) <= 3,
       );
-      
+
       if (!hasNearbyEnemy && Simulator.rng.random() < chance) {
-        // Random small movement
         const dx = Math.floor(Simulator.rng.random() * 3 - 1); // -1, 0, or 1
         const dy = Math.floor(Simulator.rng.random() * 3 - 1);
-        
-        // Check bounds
+
         const newX = unit.pos.x + dx;
         const newY = unit.pos.y + dy;
-        
-        if (newX >= 0 && newX < this.sim.fieldWidth && 
-            newY >= 0 && newY < this.sim.fieldHeight) {
-          // Use transform to mutate (proxies are read-only)
+
+        if (
+          newX >= 0 &&
+          newX < this.sim.fieldWidth &&
+          newY >= 0 &&
+          newY < this.sim.fieldHeight
+        ) {
           this.sim.getTransform().updateUnit(unit.id, {
-            intendedMove: { x: dx, y: dy }
+            intendedMove: { x: dx, y: dy },
           });
         }
       }

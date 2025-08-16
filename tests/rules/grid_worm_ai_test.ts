@@ -22,16 +22,16 @@ describe('Grid Worm AI', () => {
     for (let i = 0; i < 20; i++) {
       sim.step();
       const unit = sim.units[0];
-      // Check if worm has moved from last pos
+
       if (unit.pos.x !== lastPos.x || unit.pos.y !== lastPos.y) {
         totalMoves++;
         lastPos = { x: unit.pos.x, y: unit.pos.y };
       }
     }
     
-    // Should have moved at least once in 20 ticks
+
     expect(totalMoves).toBeGreaterThan(0);
-    // Final position should be different from initial
+
     const finalUnit = sim.units[0];
     const moved = finalUnit.pos.x !== initialPos.x || finalUnit.pos.y !== initialPos.y;
     expect(moved).toBe(true);

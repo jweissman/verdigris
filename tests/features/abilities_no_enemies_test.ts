@@ -9,22 +9,21 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should allow deployment commands even without enemies present', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
-    // Deploy toymaker with NO enemies on field
+
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 20, y: 10 } };
     toymaker.abilities.deployBot = { ...Encyclopaedia.abilities.deployBot, maxUses: 5 };
     sim.addUnit(toymaker);
     
     
-    // Test that deployment commands work without enemies
+
     sim.parseCommand('deploy clanker');
     sim.parseCommand('deploy freezebot');
     
-    // Process deployment commands
+
     sim.step();
     
-    // Verify constructs were deployed despite no enemies
+
     const constructs = sim.units.filter(u => u.tags?.includes('construct'));
     expect(constructs.length).toBeGreaterThan(0);
   });
@@ -32,16 +31,15 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test supportive abilities work without combat targets', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
-    // Create Mechatron with shield recharge ability
+
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 15, y: 10 } };
-    // Damage Mechatron so shield recharge has an effect to trigger (below 50% health)
+
     mechatron.hp = 80; // 40% health to trigger self-heal
     sim.addUnit(mechatron);
     
     
-    // Test shield recharge ability (self-targeting supportive ability)
+
     expect(mechatron.abilities).toContain('shieldRecharge');
     const shieldRechargeAbility = Abilities.all.shieldRecharge;
     expect(shieldRechargeAbility).toBeDefined();
@@ -49,10 +47,10 @@ describe('Abilities Without Nearby Enemies', () => {
     expect(shieldRechargeAbility.target).toBe('self.pos');
     expect(shieldRechargeAbility.trigger).toBe('self.hp < self.maxHp * 0.5');
     
-    // Verify it can be triggered without enemies
+
     const initialHp = mechatron.hp;
     
-    // Force the ability to trigger
+
     sim.forceAbility(mechatron.id, 'shieldRecharge', mechatron.pos);
     sim.step();
   });
@@ -60,18 +58,17 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should test area effect abilities can trigger in empty areas', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
-    // Create Mechatron in empty field
+
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 20, y: 15 } };
     sim.addUnit(mechatron);
     
     
-    // Test EMP pulse in empty area
+
     expect(mechatron.abilities).toContain('empPulse');
     const initialProcessedEvents = sim.processedEvents.length;
     
-    // Should create AoE effect even with no targets
+
     sim.forceAbility(mechatron.id, 'empPulse', mechatron.pos);
     sim.step();
     
@@ -81,7 +78,7 @@ describe('Abilities Without Nearby Enemies', () => {
     expect(empEvent.meta.aspect).toBe('emp');
     expect(empEvent.meta.radius).toBe(8);
     
-    // Test missile barrage toward empty coordinates
+
     const missileBarrage = mechatron.abilities.missileBarrage;
     if (missileBarrage?.effect) {
       const initialProjectiles = sim.projectiles.length;
@@ -89,7 +86,7 @@ describe('Abilities Without Nearby Enemies', () => {
       
       missileBarrage.effect(mechatron, emptyTarget, sim);
       
-      // Should create projectiles even targeting empty space
+
       expect(sim.projectiles.length).toBe(initialProjectiles + 6);
       const missiles = sim.projectiles.slice(-6);
       
@@ -103,51 +100,49 @@ describe('Abilities Without Nearby Enemies', () => {
   it('should verify toymaker deployment limits work during solo play', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
-    // Create toymaker in peaceful field
+
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 15, y: 15 } };
     toymaker.abilities.deployBot = { ...Encyclopaedia.abilities.deployBot, maxUses: 3 }; // Lower limit for test
     sim.addUnit(toymaker);
     
     
-    // Try to deploy more constructs than the limit
+
     sim.parseCommand('deploy clanker');
     sim.parseCommand('deploy freezebot'); 
     sim.parseCommand('deploy spiker');
     sim.parseCommand('deploy swarmbot'); // Should be blocked
     sim.parseCommand('deploy roller');   // Should be blocked
     
-    // Process all deployment attempts
+
     for (let i = 0; i < 3; i++) {
       sim.step();
     }
     
-    // Verify constructs were deployed (deployment limits may be handled by command system)
+
     const constructs = sim.units.filter(u => u.tags?.includes('construct'));
     expect(constructs.length).toBeGreaterThan(0);
     
-    // Verify the ability has maxUses defined for limit tracking
+
     expect(toymaker.abilities.deployBot.maxUses).toBe(3);
   });
   
   it('should test environmental abilities work without combat context', () => {
     
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
     
-    // Create rainmaker for environmental effects
+
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 20, y: 20 } };
     sim.addUnit(rainmaker);
     
     
-    // Test that environmental abilities are defined and can trigger
+
     expect(rainmaker.abilities).toContain('makeRain');
     const makeRainAbility = Abilities.all.makeRain;
     expect(makeRainAbility).toBeDefined();
     expect(makeRainAbility.cooldown).toBe(200);
     
-    // Verify ability creates weather effect
+
     const initialWeather = sim.weather.current;
     sim.forceAbility(rainmaker.id, 'makeRain', rainmaker.pos);
     sim.step();
