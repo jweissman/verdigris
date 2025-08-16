@@ -1019,7 +1019,7 @@
   "explode": {
     "name": "Self-Destruct",
     "cooldown": 0,
-    "trigger": "nearbyEnemy",
+    "trigger": "distance(closest.enemy()?.pos) <= 1",
     "range": 1,
     "effects": [
       {

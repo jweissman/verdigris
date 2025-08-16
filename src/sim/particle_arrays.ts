@@ -81,6 +81,7 @@ export class ParticleArrays {
     
     const index = this.freeIndices.pop()!;
     
+    
     // Store particle data
     this.particleIds[index] = particle.id || `p_${Date.now()}_${index}`;
     this.posX[index] = particle.pos.x;

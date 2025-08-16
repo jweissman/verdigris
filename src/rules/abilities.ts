@@ -439,51 +439,32 @@ export class Abilities extends Rule {
   }
 
   private explode(context: TickContext, effect: AbilityEffect, caster: any): void {
-    // Self-destruct explosion when enemies get close
+    // Self-destruct explosion - trigger should have already verified enemy proximity
     const radius = effect.meta?.radius || 2;
     const damage = effect.meta?.damage || caster.hp * 2; // Damage based on remaining HP
     
-    // Find nearby enemies
-    const enemies = context.getAllUnits().filter(u => 
-      u.team !== caster.team && 
-      u.hp > 0 &&
-      Math.abs(u.pos.x - caster.pos.x) <= radius &&
-      Math.abs(u.pos.y - caster.pos.y) <= radius
-    );
-    
-    // Only explode if enemies are very close (distance 1-2)
-    const hasCloseEnemy = enemies.some(e => {
-      const dist = Math.max(
-        Math.abs(e.pos.x - caster.pos.x),
-        Math.abs(e.pos.y - caster.pos.y)
-      );
-      return dist <= 1;
+    // Queue explosion command
+    context.queueCommand({
+      type: 'aoe',
+      params: {
+        x: caster.pos.x,
+        y: caster.pos.y,
+        radius: radius,
+        damage: damage,
+        type: 'explosive'
+      },
+      unitId: caster.id
     });
     
-    if (hasCloseEnemy) {
-      // Queue explosion command
-      context.queueCommand({
-        type: 'aoe',
-        params: {
-          x: caster.pos.x,
-          y: caster.pos.y,
-          radius: radius,
-          damage: damage,
-          type: 'explosive'
-        },
-        unitId: caster.id
-      });
-      
-      // Kill the caster (self-destruct)
-      context.queueCommand({
-        type: 'damage',
-        params: {
-          unitId: caster.id,
-          amount: caster.hp + 100, // Ensure death
-          damageType: 'explosive'
-        }
-      });
-    }
+    // Kill the caster (self-destruct)
+    context.queueCommand({
+      type: 'damage',
+      params: {
+        targetId: caster.id,
+        amount: caster.hp + 100, // Ensure death
+        damageType: 'explosive'
+      }
+    });
   }
 
   private leap(context: TickContext, effect: AbilityEffect, caster: any, primaryTarget: any): void {
@@ -871,10 +852,10 @@ export class Abilities extends Rule {
             y: target.pos.y + (context.getRandom() - 0.5) * radius 
           },
           vel: { x: 0, y: 0 },
-          ttl: duration,
+          lifetime: duration,
           color: '#228B22', // Forest green
           type: 'entangle',
-          size: 0.5
+          radius: 0.5
         });
       }
       // Queue particle commands directly

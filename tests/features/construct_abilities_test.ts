@@ -10,7 +10,7 @@ import { StatusEffects } from '../../src/rules/status_effects';
 describe('Construct Abilities', () => {
   it('should trigger clanker explosion when enemy gets close', () => {
     const sim = new Simulator();
-    sim.rulebook = [new CommandHandler(sim), new Abilities(sim), new EventHandler()];
+    // Don't override rulebook - let it use the default which includes all necessary rules
     
     // Add clanker
     const clanker = { ...Encyclopaedia.unit('clanker'), pos: { x: 5, y: 5 } };
@@ -27,7 +27,7 @@ describe('Construct Abilities', () => {
     expect(sim.units.find(u => u.id === clanker.id)?.hp).toBe(6); // Still alive
     
     // Add enemy close enough to trigger (distance = 1)
-    const closeEnemy = { ...Encyclopaedia.unit('soldier'), pos: { x: 6, y: 5 }, team: 'hostile' as const };
+    const closeEnemy = { ...Encyclopaedia.unit('worm'), pos: { x: 6, y: 5 }, team: 'hostile' as const };
     sim.addUnit(closeEnemy);
     
     // Run simulation until explosion
@@ -37,6 +37,18 @@ describe('Construct Abilities', () => {
       
       // Check if clanker died (exploded)
       const clankerUnit = sim.units.find(u => u.id === clanker.id);
+      const closeEnemyUnit = sim.units.find(u => u.id === closeEnemy.id);
+      
+      // Debug: check distance
+      if (i === 0 && clankerUnit && closeEnemyUnit) {
+        const dist = Math.sqrt(
+          Math.pow(clankerUnit.pos.x - closeEnemyUnit.pos.x, 2) +
+          Math.pow(clankerUnit.pos.y - closeEnemyUnit.pos.y, 2)
+        );
+        console.debug(`Clanker at ${clankerUnit.pos.x},${clankerUnit.pos.y}, Enemy at ${closeEnemyUnit.pos.x},${closeEnemyUnit.pos.y}, Distance: ${dist}`);
+        console.debug(`Clanker abilities:`, clankerUnit.abilities, 'lastAbilityTick:', clankerUnit.lastAbilityTick);
+      }
+      
       if (!clankerUnit || clankerUnit.hp <= 0) {
         exploded = true;
         break;

@@ -100,14 +100,16 @@ describe('Systematic Creature Tests', () => {
           ...creature,
           id: `${name}_friendly`,
           pos: { x: 8, y: 8 + i * 2 },  // Closer together
-          team: 'friendly'
+          team: 'friendly',
+          abilities: [...(creature.abilities || []), 'melee'] // Ensure melee
         });
         
         sim.addUnit({
           ...creature,
           id: `${name}_hostile`,
-          pos: { x: 10, y: 8 + i * 2 },  // Only 2 tiles apart
-          team: 'hostile'
+          pos: { x: 9, y: 8 + i * 2 },  // Adjacent for immediate combat
+          team: 'hostile',
+          abilities: [...(creature.abilities || []), 'melee'] // Ensure melee
         });
       });
       

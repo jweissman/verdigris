@@ -26,15 +26,15 @@ describe('Abilities Rule', () => {
     // Add an enemy nearby to trigger the explode ability
     const enemy: Unit = {
       id: 'enemy1',
-      pos: { x: 2, y: 0 },
-      intendedMove: { x: 2, y: 0 },
+      pos: { x: 1, y: 0 },
+      intendedMove: { x: 1, y: 0 },
       team: 'hostile',
       sprite: 'worm',
       state: 'idle',
       hp: 50,
       maxHp: 50,
       mass: 1,
-      abilities: {},
+      abilities: [],
       lastAbilityTick: {}
     };
 
