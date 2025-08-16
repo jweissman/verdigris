@@ -61,7 +61,7 @@ describe('Abilities Without Nearby Enemies', () => {
     
 
     const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 20, y: 15 } };
-    sim.addUnit(mechatron);
+    const addedMechatron = sim.addUnit(mechatron);
     
     
 
@@ -69,7 +69,7 @@ describe('Abilities Without Nearby Enemies', () => {
     const initialProcessedEvents = sim.processedEvents.length;
     
 
-    sim.forceAbility(mechatron.id, 'empPulse', mechatron.pos);
+    sim.forceAbility(addedMechatron.id, 'empPulse', addedMechatron.pos);
     sim.step();
     
     expect(sim.processedEvents.length).toBe(initialProcessedEvents + 1);

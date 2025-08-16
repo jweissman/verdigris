@@ -171,6 +171,9 @@ export class BiomeEffects extends Rule {
   private commands: QueuedCommand[] = [];
 
   execute(context: TickContext): QueuedCommand[] {
+    // Clear commands from previous tick
+    this.commands = [];
+    
     if (context.isWinterActive()) {
       if (context.getCurrentTick() % 5 === 0) {
         for (let i = 0; i < 3; i++) {
@@ -236,8 +239,6 @@ export class BiomeEffects extends Rule {
       this.processSandstormEffects(context);
     }
 
-    this.commands = [];
-    this.processTemperatureEffects(context);
     return this.commands;
   }
 

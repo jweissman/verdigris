@@ -211,12 +211,12 @@ describe('Tossing mechanics', () => {
       meta: {}
     };
 
-    sim.addUnit(unit);
+    const addedUnit = sim.addUnit(unit);
 
 
     sim.queuedCommands.push({
       type: 'toss',
-      unitId: 'target',
+      unitId: addedUnit.id,
       params: { direction: { x: 1, y: 0 }, force: 8, distance: 3 }
     });
 

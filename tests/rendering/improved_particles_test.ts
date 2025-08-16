@@ -14,6 +14,7 @@ describe('Improved Particle System', () => {
 
     sim.winterActive = true;
     
+    // Need to wait for tick 5, 10, 15 etc - BiomeEffects generates snow every 5 ticks
     for (let tick = 0; tick < 10; tick++) {
       sim.step();
     }

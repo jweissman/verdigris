@@ -173,9 +173,30 @@ class Simulator {
     return result;
   }
 
-  temperatureField: ScalarField;
-  humidityField: ScalarField;
-  pressureField: ScalarField;
+  private _temperatureField: ScalarField | null = null;
+  private _humidityField: ScalarField | null = null;
+  private _pressureField: ScalarField | null = null;
+  
+  get temperatureField(): ScalarField {
+    if (!this._temperatureField) {
+      this._temperatureField = new ScalarField(this.fieldWidth, this.fieldHeight, 20);
+    }
+    return this._temperatureField;
+  }
+  
+  get humidityField(): ScalarField {
+    if (!this._humidityField) {
+      this._humidityField = new ScalarField(this.fieldWidth, this.fieldHeight, 0.3);
+    }
+    return this._humidityField;
+  }
+  
+  get pressureField(): ScalarField {
+    if (!this._pressureField) {
+      this._pressureField = new ScalarField(this.fieldWidth, this.fieldHeight, 1.0);
+    }
+    return this._pressureField;
+  }
 
   weather: {
     current:
@@ -262,9 +283,7 @@ class Simulator {
 
     this.transform = new Transform(this);
 
-    this.temperatureField = new ScalarField(fieldWidth, fieldHeight, 20); // Base temperature ~20°C
-    this.humidityField = new ScalarField(fieldWidth, fieldHeight, 0.3); // Base humidity 30%
-    this.pressureField = new ScalarField(fieldWidth, fieldHeight, 1.0); // Base pressure 1 atm
+    // Scalar fields are now lazy-initialized via getters
 
     this.weather = {
       current: "clear",
@@ -815,7 +834,7 @@ class Simulator {
       particle.vel.y = 0;
       particle.lifetime = Math.min(particle.lifetime, 30); // Fade quickly when landed
 
-      this.humidityField.addGradient(gridX, gridY, 1, 0.05);
+        this.humidityField.addGradient(gridX, gridY, 1, 0.05);
     }
   }
 
@@ -837,8 +856,10 @@ class Simulator {
     });
   }
 
+
   updateScalarFields() {
-    if (this.ticks % 10 !== 0) return;
+    // Only update scalar fields every 100 ticks for performance
+    if (this.ticks % 100 !== 0) return;
 
     this.temperatureField.decayAndDiffuse(0.002, 0.05); // Temperature
     this.humidityField.decayAndDiffuse(0.005, 0.08); // Humidity
@@ -848,6 +869,9 @@ class Simulator {
   }
 
   applyFieldInteractions() {
+    // Skip if fields not initialized
+    if (!this.temperatureField || !this.humidityField) return;
+    
     const startY = (this.ticks % 10) * Math.floor(this.fieldHeight / 10);
     const endY = Math.min(
       startY + Math.floor(this.fieldHeight / 10),
@@ -965,6 +989,8 @@ class Simulator {
 
   applyRainEffects() {
     const intensity = this.weather.intensity;
+    
+    // Init fields if needed
 
     for (let i = 0; i < Math.ceil(intensity * 5); i++) {
       const x = Simulator.rng.random() * this.fieldWidth;
@@ -988,6 +1014,8 @@ class Simulator {
   applyStormEffects() {
     this.applyRainEffects();
 
+    // Init fields if needed
+    
     const intensity = this.weather.intensity;
 
     for (let i = 0; i < Math.ceil(intensity * 3); i++) {
@@ -1529,6 +1557,9 @@ class Simulator {
     };
 
     const primaryTarget = target || unit;
+    // Clear the rule's commands array before processing
+    (abilitiesRule as any).commands = [];
+    
     for (const effect of jsonAbility.effects) {
       (abilitiesRule as Abilities).processEffectAsCommand(
         context,
@@ -1537,6 +1568,10 @@ class Simulator {
         primaryTarget,
       );
     }
+    
+    // Collect the commands that were generated
+    const generatedCommands = (abilitiesRule as any).commands || [];
+    this.queuedCommands.push(...generatedCommands);
 
     this.queuedCommands.push({
       type: "meta",

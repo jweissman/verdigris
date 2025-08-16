@@ -23,11 +23,11 @@ describe('Grappler Unit Verification', () => {
       pos: { x: 5, y: 5 }
     };
     
-    sim.addUnit(grappler);
+    const addedGrappler = sim.addUnit(grappler);
     
 
     const targetPos = { x: 10, y: 5 };
-    sim.forceAbility(grappler.id, 'grapplingHook', targetPos);
+    sim.forceAbility(addedGrappler.id, 'grapplingHook', targetPos);
     sim.step(); // Process the queued command
     
 

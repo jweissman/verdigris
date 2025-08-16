@@ -85,7 +85,7 @@ describe('Performance Requirements', () => {
     const avg = times.reduce((a, b) => a + b, 0) / times.length;
     const median = times.sort((a, b) => a - b)[500];
     
-    console.log(`With environment: avg=${avg.toFixed(4)}ms, median=${median.toFixed(4)}ms`);
+    console.log(`With environmental effects: avg=${avg.toFixed(4)}ms, median=${median.toFixed(4)}ms`);
     expect(avg).toBeLessThan(0.10);
   });
   

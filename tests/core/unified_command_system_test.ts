@@ -51,10 +51,10 @@ describe('Unified Command System', () => {
     
 
     const rainmaker = { ...Encyclopaedia.unit('rainmaker'), pos: { x: 5, y: 5 } };
-    sim.addUnit(rainmaker);
+    const addedRainmaker = sim.addUnit(rainmaker);
     
 
-    sim.forceAbility(rainmaker.id, 'makeRain', rainmaker.pos);
+    sim.forceAbility(addedRainmaker.id, 'makeRain', addedRainmaker.pos);
     
 
 
@@ -66,7 +66,7 @@ describe('Unified Command System', () => {
       duration: 80,
       intensity: 0.8
     });
-    expect(weatherCommand.unitId).toBe(rainmaker.id);
+    expect(weatherCommand.unitId).toBe(addedRainmaker.id);
     
 
     let steps = 0;
@@ -85,16 +85,16 @@ describe('Unified Command System', () => {
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
     const enemy = { ...Encyclopaedia.unit('worm'), pos: { x: 8, y: 5 }, team: 'hostile' as const };
     
-    sim.addUnit(toymaker);
+    // Clear ability usage before adding
+    if (!toymaker.lastAbilityTick) toymaker.lastAbilityTick = {};
+    delete toymaker.lastAbilityTick?.deployBot;
+    if (!toymaker.meta) toymaker.meta = {};
+    toymaker.meta.deployBotUses = 0;
+    
+    const addedToymaker = sim.addUnit(toymaker);
     sim.addUnit(enemy);
     
     const unitsBefore = sim.units.length;
-    
-
-    if (!toymaker.lastAbilityTick) toymaker.lastAbilityTick = {};
-    delete toymaker.lastAbilityTick.deployBot;
-    if (!toymaker.meta) toymaker.meta = {};
-    toymaker.meta.deployBotUses = 0;
     
 
     sim.step();
@@ -102,7 +102,7 @@ describe('Unified Command System', () => {
 
     expect(sim.queuedCommands.length).toBe(2);
     expect(sim.queuedCommands[0].type).toBe('deploy');
-    expect(sim.queuedCommands[0].unitId).toBe(toymaker.id);
+    expect(sim.queuedCommands[0].unitId).toBe(addedToymaker.id);
     
 
     sim.step();
