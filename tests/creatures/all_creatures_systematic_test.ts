@@ -99,14 +99,14 @@ describe('Systematic Creature Tests', () => {
         sim.addUnit({
           ...creature,
           id: `${name}_friendly`,
-          pos: { x: 5, y: 5 + i * 3 },
+          pos: { x: 8, y: 8 + i * 2 },  // Closer together
           team: 'friendly'
         });
         
         sim.addUnit({
           ...creature,
           id: `${name}_hostile`,
-          pos: { x: 25, y: 5 + i * 3 },
+          pos: { x: 10, y: 8 + i * 2 },  // Only 2 tiles apart
           team: 'hostile'
         });
       });

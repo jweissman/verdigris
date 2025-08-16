@@ -70,6 +70,7 @@ describe('Cute Animals System', () => {
   
   it('should handle social interactions between cute animals', () => {
     const sim = new Simulator(15, 10);
+    sim.sceneBackground = 'arena'; // Prevent ambient spawning
     
     // Spawn two squirrels near each other
     const squirrel1 = {

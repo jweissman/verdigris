@@ -73,8 +73,8 @@ describe('Druid and Naturalist Forest Abilities', () => {
       sim.addUnit(druid);
       sim.addUnit(enemy);
       
-      // Setup abilities system - Abilities needs to be before CommandHandler to queue commands
-      sim.rulebook = [new Abilities(sim), new CommandHandler(sim)];
+      // Use default rulebook which includes all necessary systems
+      // The default rulebook already has Abilities and CommandHandler in the right order
       
       // Druids use entangle when enemies are nearby
       // Make sure enemy is close enough (entangle has range)
@@ -83,8 +83,9 @@ describe('Druid and Naturalist Forest Abilities', () => {
       // Force druid to use entangle on the enemy (pass the enemy unit, not just position)
       sim.forceAbility(druid.id, 'entangle', enemy);
       
-      // Process the ability
+      // Process the ability and particle commands
       sim.step();
+      sim.step(); // Second step to process queued particle commands
       
       // Refetch enemy due to double buffering
       const currentEnemy = sim.units.find(u => u.id === enemy.id);

@@ -19,7 +19,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
       hp: 40,
       maxHp: 40,
       mass: 8,
-      abilities: {},
+      abilities: [],
       meta: { huge: true }
     };
     
@@ -34,7 +34,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
       hp: 10,
       maxHp: 10,
       mass: 1,
-      abilities: {},
+      abilities: [],
       meta: {}
     };
     
@@ -70,7 +70,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
       hp: 40,
       maxHp: 40,
       mass: 8,
-      abilities: {},
+      abilities: [],
       meta: { huge: true }
     };
     
@@ -117,7 +117,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
       hp: 40,
       maxHp: 40,
       mass: 8,
-      abilities: {},
+      abilities: [],
       meta: { huge: true }
     };
     
@@ -132,7 +132,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
       hp: 10,
       maxHp: 10, 
       mass: 1,
-      abilities: {},
+      abilities: [],
       meta: {}
     };
     
@@ -140,8 +140,11 @@ describe('Field Abstraction (Real vs Apparent)', () => {
     sim.addUnit(blocker);
     sim.step(); // Create phantoms
     
+    // Get the actual unit from the simulator (which will be a proxy)
+    const megasquirrelUnit = sim.roster['megasquirrel'];
+    
     // Should NOT be able to move right because body would collide
-    expect(sim.validMove(megasquirrel, 1, 0)).toBe(false);
+    expect(sim.validMove(megasquirrelUnit, 1, 0)).toBe(false);
   });
 
   it('should support querying apparent field vs real field', () => {
@@ -158,7 +161,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
       hp: 40,
       maxHp: 40,
       mass: 8,
-      abilities: {},  
+      abilities: [],  
       meta: { huge: true }
     };
     

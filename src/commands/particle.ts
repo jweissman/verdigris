@@ -15,13 +15,27 @@ export class ParticleCommand extends Command {
   }
 
   execute(unitId: string | null, params: CommandParams): void {
-    const particle = params.particle;
+    const particle = params.particle || params;
     if (!particle) {
       console.warn('ParticleCommand: No particle data provided');
       return;
     }
 
+    // Convert ttl to lifetime if needed
+    const lifetime = particle.lifetime || particle.ttl || 100;
+    
     // Add particle to SoA arrays
-    this.sim.particleArrays.addParticle(particle);
+    this.sim.particleArrays.addParticle({
+      id: particle.id,
+      pos: particle.pos || { x: 0, y: 0 },
+      vel: particle.vel || { x: 0, y: 0 },
+      lifetime: lifetime,
+      type: particle.type,
+      color: particle.color,
+      radius: particle.radius || particle.size || 0.5,
+      z: particle.z || 0,
+      landed: particle.landed || false,
+      targetCell: particle.targetCell
+    });
   }
 }

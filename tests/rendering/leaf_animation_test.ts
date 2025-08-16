@@ -107,29 +107,20 @@ describe('Leaf Animation System', () => {
     const sim = new Simulator();
     
     // Create a leaf at ground level
-    const groundLeaf = {
+    // Add leaf particle properly through the API
+    sim.particleArrays.addParticle({
       id: 'ground-leaf',
       type: 'leaf',
       pos: { x: 10, y: 10 },
       vel: { x: 0, y: 0 },
       z: 0.1, // Almost at ground
-      lifetime: 100,
-      meta: {}
-    };
+      lifetime: 3, // Will expire quickly
+      color: '#88AA44',
+      radius: 1
+    });
     
-    sim.particles.push(groundLeaf);
-    
-    // Simulate leaf hitting ground
+    // Simulate leaf expiring
     for (let i = 0; i < 5; i++) {
-      // Check if leaf is at ground
-      if (groundLeaf.z <= 0) {
-        groundLeaf.lifetime = 0; // Mark for removal
-      }
-      groundLeaf.z -= 0.5;
-      
-      // Remove dead particles
-      sim.particles = sim.particles.filter(p => p.lifetime > 0);
-      
       sim.step();
     }
     

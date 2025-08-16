@@ -1015,5 +1015,20 @@
         "radius": 2
       }
     ]
+  },
+  "explode": {
+    "name": "Self-Destruct",
+    "cooldown": 0,
+    "trigger": "nearbyEnemy",
+    "range": 1,
+    "effects": [
+      {
+        "type": "explode",
+        "meta": {
+          "radius": 2,
+          "damage": 12
+        }
+      }
+    ]
   }
 }

@@ -175,7 +175,11 @@ export class ParticleArrays {
       'lightning_branch': 14,
       'electric_spark': 15,
       'power_surge': 16,
-      'ground_burst': 17
+      'ground_burst': 17,
+      'entangle': 18,
+      'tame': 19,
+      'calm': 20,
+      'heal': 21
     };
     return types[type || ''] || 0;
   }

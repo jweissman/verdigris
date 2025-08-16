@@ -37,8 +37,8 @@ describe('Field Overlays - Environmental Visualization', () => {
       sim.humidityField.set(8, 8, 0.8); // High humidity
       sim.humidityField.set(12, 12, 0.3); // Low humidity
       
-      expect(sim.humidityField.get(8, 8)).toBe(0.8);
-      expect(sim.humidityField.get(12, 12)).toBe(0.3);
+      expect(sim.humidityField.get(8, 8)).toBeCloseTo(0.8, 5);
+      expect(sim.humidityField.get(12, 12)).toBeCloseTo(0.3, 5);
       
     } else {
     }

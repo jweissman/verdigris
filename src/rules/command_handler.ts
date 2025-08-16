@@ -231,8 +231,11 @@ export class CommandHandler extends Rule {
         // Process other commands
         for (const queuedCommand of otherCommands) {
           // Handle particle commands directly (no Command class needed)
-          if (queuedCommand.type === 'particle' && queuedCommand.params?.particle) {
-            this.sim.particleArrays.addParticle(queuedCommand.params.particle);
+          if (queuedCommand.type === 'particle') {
+            const particleData = queuedCommand.params?.particle || queuedCommand.params;
+            if (particleData) {
+              this.sim.particleArrays.addParticle(particleData);
+            }
             continue;
           }
           
@@ -371,6 +374,13 @@ export class CommandHandler extends Rule {
         return {
           action: args[0] || 'start'
         };
+        
+      case 'particle':
+        // args: particle object - might be in args[0] or already be the params
+        if (typeof args === 'object' && !Array.isArray(args)) {
+          return args; // Already an object with particle data
+        }
+        return args[0] || {};
         
       case 'jump':
         // args: [targetX, targetY, height?, damage?, radius?]

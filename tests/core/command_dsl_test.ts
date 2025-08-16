@@ -74,7 +74,7 @@ describe('Command DSL', () => {
       hp: 30,
       maxHp: 30,
       mass: 1,
-      abilities: {},
+      abilities: [],
       tags: []
     };
     sim.addUnit(unit);

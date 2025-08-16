@@ -29,11 +29,13 @@ export default class Particles extends Rule {
       
       // Check for landing (snow particles)
       const typeId = arrays.type[i];
-      if (typeId === 3 && arrays.posY[i] >= fieldHeight - 1) { // 3 = snow
-        arrays.landed[i] = 1;
-        arrays.posY[i] = fieldHeight - 1;
-        arrays.velX[i] = 0;
-        arrays.velY[i] = 0;
+      if (typeId === 3) { // 3 = snow
+        if (arrays.posY[i] >= fieldHeight - 1) {
+          arrays.landed[i] = 1;
+          arrays.posY[i] = fieldHeight - 1;
+          arrays.velX[i] = 0;
+          arrays.velY[i] = 0;
+        }
       }
       
       // Check for boundary collisions - deactivate out of bounds particles

@@ -570,12 +570,12 @@ class Simulator {
             this.positionMap.get(key)!.add(proxy);
           }
         } else {
-          // Regular units - no proxy needed
+          // Regular units - add proxy
           const key = `${Math.round(x)},${Math.round(y)}`;
           if (!this.positionMap.has(key)) {
             this.positionMap.set(key, new Set());
           }
-          this.positionMap.get(key)!.add(id as any);
+          this.positionMap.get(key)!.add(proxy);
         }
       }
     }
@@ -689,6 +689,15 @@ class Simulator {
       else if (type === 3) { // snow
         arrays.velX[i] = 0; // No horizontal drift
         arrays.velY[i] = 0.15;
+        
+        // Check for landing
+        const fieldHeightPx = this.fieldHeight * 8;
+        if (arrays.posY[i] >= fieldHeightPx - 1) {
+          arrays.landed[i] = 1;
+          arrays.posY[i] = fieldHeightPx - 1;
+          arrays.velX[i] = 0;
+          arrays.velY[i] = 0;
+        }
       }
       
       // Remove if lifetime expired or out of bounds (in pixels)
@@ -703,7 +712,7 @@ class Simulator {
   }
   
   private getParticleTypeName(typeId: number): any {
-    const types = ['', 'leaf', 'rain', 'snow', 'debris', 'lightning', 'sand', 'energy', 'magic', 'grapple_line', 'test_particle', 'test', 'pin', 'storm_cloud', 'lightning_branch', 'electric_spark', 'power_surge', 'ground_burst'];
+    const types = ['', 'leaf', 'rain', 'snow', 'debris', 'lightning', 'sand', 'energy', 'magic', 'grapple_line', 'test_particle', 'test', 'pin', 'storm_cloud', 'lightning_branch', 'electric_spark', 'power_surge', 'ground_burst', 'entangle', 'tame', 'calm', 'heal'];
     return types[typeId] || undefined;
   }
   
@@ -1350,8 +1359,9 @@ class Simulator {
   }
 
   private isOwnPhantom(unit, owner) {
+    if (!unit) return false;
     // Check if unit is a phantom belonging to the owner, OR if unit is the owner itself
-    return (unit.meta.phantom && unit.meta.parentId === owner?.id) || unit === owner;
+    return (unit.meta && unit.meta.phantom && unit.meta.parentId === owner?.id) || unit === owner;
   }
 
   // Unit lookup cache for O(1) performance

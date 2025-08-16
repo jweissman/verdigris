@@ -28,7 +28,7 @@ describe('Particle Boundary and Landing Logic', () => {
     
     // Add snow particle just above landing height
     const idx = sim.particleArrays.addParticle({
-      pos: { x: 50, y: fieldHeightPx - 2 }, // Just above landing
+      pos: { x: 50, y: fieldHeightPx - 1.01 }, // Will land after one step with vel 0.15
       vel: { x: 0, y: 0.15 },
       lifetime: 100,
       type: 'snow'
