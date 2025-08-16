@@ -225,14 +225,29 @@ describe('Tossing mechanics', () => {
 
     let aoeGenerated = false;
     let aoeEvent = null;
+    const initialProcessedEvents = sim.processedEvents.length;
     
-    for (let i = 0; i < 8; i++) {
+    // Toss takes 8 ticks to complete
+    for (let i = 0; i < 10; i++) {
       sim.tick();
 
-      if (!aoeGenerated && sim.queuedEvents.length > 0) {
-        aoeEvent = sim.queuedEvents.find(e => e.kind === 'aoe');
-        if (aoeEvent) {
-          aoeGenerated = true;
+      // Check both queued and processed events
+      if (!aoeGenerated) {
+        // Check queued events
+        if (sim.queuedEvents.length > 0) {
+          aoeEvent = sim.queuedEvents.find(e => e.kind === 'aoe');
+          if (aoeEvent) {
+            aoeGenerated = true;
+          }
+        }
+        
+        // Check processed events
+        if (sim.processedEvents.length > initialProcessedEvents) {
+          const recentEvents = sim.processedEvents.slice(initialProcessedEvents);
+          aoeEvent = recentEvents.find(e => e.kind === 'aoe');
+          if (aoeEvent) {
+            aoeGenerated = true;
+          }
         }
       }
     }

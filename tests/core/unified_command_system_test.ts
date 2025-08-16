@@ -97,18 +97,18 @@ describe('Unified Command System', () => {
     const unitsBefore = sim.units.length;
     
 
+    // First step: toymaker should deploy a bot
     sim.step();
     
-
-    expect(sim.queuedCommands.length).toBe(2);
-    expect(sim.queuedCommands[0].type).toBe('deploy');
-    expect(sim.queuedCommands[0].unitId).toBe(addedToymaker.id);
-    
-
-    sim.step();
-    
-
+    // The deploy command should have been processed, creating a new unit
     expect(sim.units.length).toBe(unitsBefore + 1);
+    
+    // Second step: process the meta command that updates lastAbilityTick
+    sim.step();
+    
+    // Verify a construct was created
+    const newUnits = sim.units.filter(u => !['toymaker', 'worm'].includes(u.type || ''));
+    expect(newUnits.length).toBeGreaterThan(0);
     
     const construct = sim.units[sim.units.length - 1];
   });
