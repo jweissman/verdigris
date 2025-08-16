@@ -361,13 +361,16 @@ describe('Mechanist Showcase', () => {
     
 
     const beforeHp = simRoller.hp;
+    const beforeMaxHp = simRoller.maxHp;
     sim.forceAbility(simAssembler.id, 'reinforceConstruct', simRoller);
     sim.step(); // Process command
     sim.step(); // Process heal event and command
     
     const reinforcedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
     expect(reinforcedConstruct).toBeDefined();
-    expect(reinforcedConstruct!.hp).toBe(beforeHp + 10);
+    // The ability increases both HP and maxHP by 20
+    expect(reinforcedConstruct!.hp).toBe(beforeHp + 20);
+    expect(reinforcedConstruct!.maxHp).toBe(beforeMaxHp + 20);
     
 
 

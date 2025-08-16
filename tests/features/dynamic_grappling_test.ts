@@ -16,7 +16,10 @@ describe('Dynamic Grappling Scenarios', () => {
     [mediumWorm, largeWorm, grappler1, grappler2].forEach(u => sim.addUnit(u));
     
 
-    const grapplingPhysics = sim.rulebook[0] as GrapplingPhysics;
+    const grapplingPhysics = sim.rulebook.find(r => r instanceof GrapplingPhysics) as GrapplingPhysics;
+    if (!grapplingPhysics) {
+      throw new Error('GrapplingPhysics rule not found in rulebook');
+    }
     
 
     (grapplingPhysics as any).grappleLines.set('grap1_medworm', {
