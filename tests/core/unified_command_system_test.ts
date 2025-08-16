@@ -37,7 +37,7 @@ describe('Unified Command System', () => {
     expect(sim.queuedCommands.length).toBe(1);
     
 
-    sim.step();
+    sim.step(); // Fixpoint processing handles deploy -> spawn event -> spawn command
     
 
     expect(sim.units.length).toBe(unitsBefore + 1);
@@ -97,14 +97,11 @@ describe('Unified Command System', () => {
     const unitsBefore = sim.units.length;
     
 
-    // First step: toymaker should deploy a bot
+    // Fixpoint processing handles abilities -> deploy command -> spawn event -> spawn command
     sim.step();
     
     // The deploy command should have been processed, creating a new unit
     expect(sim.units.length).toBe(unitsBefore + 1);
-    
-    // Second step: process the meta command that updates lastAbilityTick
-    sim.step();
     
     // Verify a construct was created
     const newUnits = sim.units.filter(u => !['toymaker', 'worm'].includes(u.type || ''));

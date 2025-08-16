@@ -162,6 +162,11 @@ export class ParticleArrays {
       tame: 19,
       calm: 20,
       heal: 21,
+      thunder_ring: 22,
+      explosion: 23,
+      heal_particle: 24,
+      freeze_impact: 25,
+      pain: 26,
     };
     return types[type || ""] || 0;
   }

@@ -114,7 +114,7 @@ describe('Command DSL', () => {
     
 
     const initialParticleCount = sim.particles.length;
-    sim.step();
+    sim.step(); // Fixpoint processing handles all command chains
     
 
     expect(sim.particles.length).toBeGreaterThan(initialParticleCount);
@@ -131,7 +131,7 @@ describe('Command DSL', () => {
     
 
     const initialUnitCount = sim.units.length;
-    sim.step(); // CommandHandler will process command → event → spawn
+    sim.step(); // Fixpoint processing handles deploy -> spawn event -> spawn command
     
 
     expect(sim.units.length).toBe(initialUnitCount + 1);
@@ -162,7 +162,7 @@ describe('Command DSL', () => {
     }];
     
     const particleCount = sim.particles.length;
-    sim.step();
+    sim.step(); // Fixpoint processing handles bolt -> particle commands
     expect(sim.particles.length).toBeGreaterThan(particleCount);
   });
 });

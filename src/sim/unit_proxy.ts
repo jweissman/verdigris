@@ -138,15 +138,17 @@ export class UnitProxyManager implements DataQuery {
   }
 
   private getIndex(unitId: string): number {
-    let index = this.idToIndex.get(unitId);
-    if (index === undefined) {
-      this.rebuildIndex();
-      index = this.idToIndex.get(unitId);
-      if (index === undefined) {
-        throw new Error(`Unit ${unitId} not found`);
-      }
+    // Fast path - most of the time the index is cached
+    const index = this.idToIndex.get(unitId);
+    if (index !== undefined) return index;
+    
+    // Slow path - rebuild index if needed
+    this.rebuildIndex();
+    const newIndex = this.idToIndex.get(unitId);
+    if (newIndex === undefined) {
+      throw new Error(`Unit ${unitId} not found`);
     }
-    return index;
+    return newIndex;
   }
 
   private getCold(unitId: string): any {

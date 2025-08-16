@@ -11,12 +11,26 @@ export class MoveCommand extends Command {
     const unit = this.sim.units.find((u) => u.id === targetId);
     if (!unit) return;
 
-    let newX: number, newY: number;
-
+    // If absolute position is provided, calculate the delta
     if (params.x !== undefined && params.y !== undefined) {
-      newX = params.x as number;
-      newY = params.y as number;
+      const newX = params.x as number;
+      const newY = params.y as number;
+      const dx = newX - unit.pos.x;
+      const dy = newY - unit.pos.y;
+      
+      const updates: any = {
+        intendedMove: { x: dx, y: dy },
+      };
+      
+      // Handle z coordinate for jumping/tossing
+      if (params.z !== undefined) {
+        if (!updates.meta) updates.meta = {};
+        updates.meta.z = params.z;
+      }
+      
+      transform.updateUnit(targetId, updates);
     } else {
+      // Use dx/dy directly for intended move
       const dx = (params.dx as number) || 0;
       const dy = (params.dy as number) || 0;
 
@@ -34,33 +48,25 @@ export class MoveCommand extends Command {
         effectiveDy = 0;
       }
 
-      newX = unit.pos.x + effectiveDx;
-      newY = unit.pos.y + effectiveDy;
-    }
-
-    newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, newX));
-    newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, newY));
-
-    let facing = unit.meta.facing || "right";
-    if (!unit.meta.jumping && !unit.meta.tossing && params.dx !== undefined) {
-      const dx = params.dx as number;
-      if (dx > 0) {
-        facing = "right";
-      } else if (dx < 0) {
-        facing = "left";
+      let facing = unit.meta.facing || "right";
+      if (!unit.meta.jumping && !unit.meta.tossing && dx !== 0) {
+        if (dx > 0) {
+          facing = "right";
+        } else if (dx < 0) {
+          facing = "left";
+        }
       }
+
+      let metaUpdates = { ...unit.meta, facing };
+
+      if (params.z !== undefined) {
+        metaUpdates.z = params.z as number;
+      }
+
+      transform.updateUnit(targetId, {
+        intendedMove: { x: effectiveDx, y: effectiveDy },
+        meta: metaUpdates,
+      });
     }
-
-    let metaUpdates = { ...unit.meta, facing };
-
-    if (params.z !== undefined) {
-      metaUpdates.z = params.z as number;
-    }
-
-    transform.updateUnit(targetId, {
-      pos: { x: newX, y: newY },
-      intendedMove: { x: 0, y: 0 }, // Clear intended move after applying
-      meta: metaUpdates,
-    });
   }
 }

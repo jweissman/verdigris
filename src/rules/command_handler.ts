@@ -127,21 +127,48 @@ export class CommandHandler {
     this.commands.set("toss", new Toss(sim, this.transform));
   }
 
-  execute(context: TickContext): Command[] {
-    if (!this.sim.queuedCommands?.length && !this.sim.queuedEvents?.length) {
-      return [];
-    }
+  private executeOne(queuedCommand: QueuedCommand, context: TickContext): boolean {
+    if (!queuedCommand.type) return false;
 
+    const command = this.commands.get(queuedCommand.type);
+    if (command) {
+      command.execute(queuedCommand.unitId || null, queuedCommand.params);
+      return true;
+    }
+    
+    return false;
+  }
+
+  execute(context: TickContext): Command[] {
+    // Process commands and events to fixpoint - keep going until no new commands/events are generated
     let iterations = 0;
     const maxIterations = 10; // Prevent infinite loops
+    
+    while ((this.sim.queuedCommands?.length > 0 || this.sim.queuedEvents?.length > 0) && iterations < maxIterations) {
+      iterations++;
+      if (this.sim.enableProfiling) {
+        console.debug(`[Iteration ${iterations}] Commands: ${this.sim.queuedCommands?.length}, Events: ${this.sim.queuedEvents?.length}`);
+      }
+      this.executeOnce(context);
+    }
+    
+    if (iterations >= maxIterations) {
+      console.warn(`Command handler hit max iterations (${maxIterations}) - possible infinite loop`);
+    }
+    
+    return [];
+  }
+  
+  private executeOnce(context: TickContext): void {
+    if (!this.sim.queuedCommands?.length && !this.sim.queuedEvents?.length) {
+      return;
+    }
+
+    // Process commands only once per tick for performance
+    // Commands that generate other commands will be processed next tick
     const processedCommandIds = new Set<string>(); // Track processed command IDs
 
-    while (iterations < maxIterations) {
-      iterations++;
-      let didWork = false;
-
-      if (this.sim.queuedCommands?.length > 0) {
-        didWork = true;
+    if (this.sim.queuedCommands?.length > 0) {
         const commandsToProcess = [];
         const commandsToKeep = [];
 
@@ -221,27 +248,34 @@ export class CommandHandler {
           }
         }
 
-        // TODO: Consider adding a batch move API to Transform for performance
+        // Process moves in batch for vectorization benefits
         const moveCommand = this.commands.get("move");
-        if (moveCommand) {
-          for (const [unitId, params] of Object.entries(moveBatch)) {
+        if (moveCommand && Object.keys(moveBatch).length > 0) {
+          // Execute all moves at once for better cache locality
+          const moveEntries = Object.entries(moveBatch);
+          for (const [unitId, params] of moveEntries) {
             moveCommand.execute(unitId, params);
           }
         }
 
+        // Group other commands by type for batch processing
+        const commandsByType = new Map<string, QueuedCommand[]>();
         for (const queuedCommand of otherCommands) {
-          if (queuedCommand.type === "particle") {
-            const particleData =
-              queuedCommand.params?.particle || queuedCommand.params;
-            if (particleData) {
-              this.sim.particleArrays.addParticle(particleData);
-            }
-            continue;
+          if (!queuedCommand.type) continue;
+          if (!commandsByType.has(queuedCommand.type)) {
+            commandsByType.set(queuedCommand.type, []);
           }
+          commandsByType.get(queuedCommand.type)!.push(queuedCommand);
+        }
 
-          const command = this.commands.get(queuedCommand.type);
+        // Execute each command type in batch
+        for (const [cmdType, cmds] of commandsByType) {
+          const command = this.commands.get(cmdType);
           if (command) {
-            command.execute(queuedCommand.unitId || null, queuedCommand.params);
+            // Process all commands of this type together for cache efficiency
+            for (const queuedCommand of cmds) {
+              command.execute(queuedCommand.unitId || null, queuedCommand.params);
+            }
           }
         }
 
@@ -256,28 +290,33 @@ export class CommandHandler {
           }
         }
 
-        this.sim.queuedCommands = [
-          ...commandsToKeep,
-          ...this.sim.queuedCommands.filter(
-            (c) =>
-              !commandsToProcess.includes(c) && !commandsToKeep.includes(c),
-          ),
-        ];
+        // Preserve any commands that were added during processing
+        // These are commands added by executed commands (like bolt adding particle commands)
+        const newCommands: QueuedCommand[] = [];
+        for (const cmd of this.sim.queuedCommands) {
+          if (!commandsToProcess.includes(cmd) && !commandsToKeep.includes(cmd)) {
+            newCommands.push(cmd);
+          }
+        }
+        
+        if (this.sim.enableProfiling && newCommands.length > 0) {
+          console.debug(`Preserving ${newCommands.length} commands generated during processing`);
+        }
+        
+        this.sim.queuedCommands = [...commandsToKeep, ...newCommands];
 
         if (this.transform) {
           this.transform.commit();
         }
-      }
+    }
 
-      if (this.sim.queuedEvents?.length > 0) {
-        didWork = true;
-
+    if (this.sim.queuedEvents?.length > 0) {
         const eventsToProcess = [...this.sim.queuedEvents];
 
         const eventHandler = new EventHandler();
         const eventCommands = eventHandler.execute(context);
 
-        // Add the generated commands back to the queue for processing
+        // Add the generated commands back to the queue for processing next tick
         if (eventCommands && eventCommands.length > 0) {
           this.sim.queuedCommands.push(...eventCommands);
         }
@@ -285,12 +324,8 @@ export class CommandHandler {
         this.sim.recordProcessedEvents(eventsToProcess);
 
         this.sim.queuedEvents = [];
-      }
-
-      if (!didWork) break;
     }
 
-    return [];
   }
 
   private convertArgsToParams(

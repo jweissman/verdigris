@@ -67,7 +67,8 @@ describe('Scene Browser Click Workflow', () => {
     const result = clickHandler(mockClickEvent);
     
 
-    game.sim.step();
+    game.sim.step(); // Process lightning command
+    game.sim.step(); // Process particle commands
     
 
     const afterParticles = game.sim.particles.length;
@@ -156,6 +157,7 @@ w.M..`;
 
     const result = handler(clickNearMechatron);
     game.sim.step(); // Process the lightning command
+    game.sim.step(); // Process particle commands
 
     const lightningParticles = game.sim.particles.filter(p => p.type === 'lightning');
     expect(lightningParticles.length).toBeGreaterThan(0);

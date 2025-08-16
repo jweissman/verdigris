@@ -50,6 +50,12 @@ export class Damage extends Command {
       if (perdurance === "sturdiness") {
         finalDamage = 1;
       }
+      
+      // Swarm takes full damage (no reduction)
+      if (perdurance === "swarm") {
+        // Swarm perdurance doesn't reduce damage
+        finalDamage = amount;
+      }
     }
 
     const newHp = Math.max(0, target.hp - finalDamage); // Clamp HP to minimum 0

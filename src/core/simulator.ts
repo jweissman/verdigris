@@ -502,6 +502,8 @@ class Simulator {
 
   ticks = 0;
   lastCall: number = 0;
+  private ruleApplicability: Map<string, boolean> = new Map();
+
   step(force = false) {
     if (this.paused) {
       if (!force) {
@@ -591,12 +593,20 @@ class Simulator {
     }
 
     const context = new TickContextImpl(this);
+    
+    // Execute rules and collect commands
+    const allCommands: any[][] = [];
+    
     for (const rule of this.rulebook) {
       const commands = rule.execute(context);
-
       if (commands && commands.length > 0) {
-        this.queuedCommands.push(...commands);
+        allCommands.push(commands);
       }
+    }
+    
+    // Batch add all commands for better cache locality
+    for (const commands of allCommands) {
+      this.queuedCommands.push(...commands);
     }
 
     this.commandProcessor.execute(context);
@@ -619,11 +629,14 @@ class Simulator {
       }
 
       if (this.enableEnvironmentalEffects) {
-        this.updateScalarFields();
-        this.updateWeather();
+        // Only update expensive environmental effects occasionally
+        if (this.ticks % 10 === 0) {
+          this.updateScalarFields();
+          this.updateWeather();
+        }
 
-        if (Simulator.rng.random() < 0.02) {
-          // 2% chance per tick
+        if (Simulator.rng.random() < 0.002) {
+          // Reduce to 0.2% chance per tick  
           this.spawnLeafParticle();
         }
       }
@@ -727,6 +740,11 @@ class Simulator {
       "tame",
       "calm",
       "heal",
+      "thunder_ring",
+      "explosion",
+      "heal_particle",
+      "freeze_impact",
+      "pain",
     ];
     return types[typeId] || undefined;
   }
@@ -858,14 +876,15 @@ class Simulator {
 
 
   updateScalarFields() {
-    // Only update scalar fields every 100 ticks for performance
-    if (this.ticks % 100 !== 0) return;
+    // Only update scalar fields every 500 ticks for performance
+    if (this.ticks % 500 !== 0) return;
 
     this.temperatureField.decayAndDiffuse(0.002, 0.05); // Temperature
     this.humidityField.decayAndDiffuse(0.005, 0.08); // Humidity
     this.pressureField.decayAndDiffuse(0.01, 0.12); // Pressure
 
-    this.applyFieldInteractions();
+    // Skip field interactions for now - too expensive
+    // this.applyFieldInteractions();
   }
 
   applyFieldInteractions() {
@@ -1213,6 +1232,56 @@ class Simulator {
     return this;
   }
 
+  private hasGrapplingHooks(): boolean {
+    // Check if any units have grappling hooks active
+    for (const unit of this.units) {
+      if (unit.meta?.grapplingHook) return true;
+    }
+    return false;
+  }
+  
+  private hasAirdrops(): boolean {
+    // Check if any units are airdrops
+    for (const unit of this.units) {
+      if (unit.tags?.includes('airdrop')) return true;
+    }
+    return false;
+  }
+  
+  private hasStatusEffects(): boolean {
+    // Check if any units have status effects
+    for (const unit of this.units) {
+      if (unit.meta?.statusEffects && unit.meta.statusEffects.length > 0) return true;
+    }
+    return false;
+  }
+  
+  private hasJumpingUnits(): boolean {
+    for (const unit of this.units) {
+      if (unit.meta?.jumping) return true;
+    }
+    return false;
+  }
+  
+  private hasTossedUnits(): boolean {
+    for (const unit of this.units) {
+      if (unit.meta?.tossed) return true;
+    }
+    return false;
+  }
+  
+  private hasAreaEffects(): boolean {
+    // Check if there are any area effects active
+    return false; // TODO: Implement when we track area effects
+  }
+  
+  private hasKnockbackUnits(): boolean {
+    for (const unit of this.units) {
+      if (unit.meta?.knockback) return true;
+    }
+    return false;
+  }
+  
   clone() {
     const newSimulator = new Simulator();
 

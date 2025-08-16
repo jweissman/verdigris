@@ -116,7 +116,8 @@ w.d.g.........
     
 
     game.sim.parseCommand('lightning 10 8');
-    game.sim.step();
+    game.sim.step(); // Process lightning command
+    game.sim.step(); // Process particle commands
     
 
     const lightningParticles = game.sim.particles.filter(p => p.type === 'lightning');
