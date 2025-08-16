@@ -43,6 +43,7 @@ import { Wander } from "../commands/wander";
 import { RemoveProjectileCommand } from "../commands/update_projectile";
 import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
+import { HumidityCommand } from "../commands/humidity";
 
 export type QueuedCommand = {
   type: string;
@@ -125,6 +126,7 @@ export class CommandHandler {
     );
 
     this.commands.set("toss", new Toss(sim, this.transform));
+    this.commands.set("humidity", new HumidityCommand(sim, this.transform));
   }
 
   private executeOne(queuedCommand: QueuedCommand, context: TickContext): boolean {

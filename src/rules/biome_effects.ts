@@ -174,6 +174,45 @@ export class BiomeEffects extends Rule {
     // Clear commands from previous tick
     this.commands = [];
     
+    // Handle rain effects - queue commands instead of mutating
+    const sim = (context as any).sim;
+    if (sim && sim.weather && sim.weather.current === 'rain') {
+      const intensity = sim.weather.intensity || 0.5;
+      const humidityIncrease = 0.005 * intensity;
+      
+      // Queue humidity increase commands
+      for (let x = 0; x < context.getFieldWidth(); x++) {
+        for (let y = 0; y < context.getFieldHeight(); y++) {
+          this.commands.push({
+            type: "humidity",
+            params: {
+              x: x,
+              y: y,
+              delta: humidityIncrease
+            }
+          });
+        }
+      }
+      
+      // Check for burning units and extinguish them
+      const allUnits = context.getAllUnits();
+      for (const unit of allUnits) {
+        if (unit.meta?.onFire) {
+          this.commands.push({
+            type: "meta",
+            params: {
+              unitId: unit.id,
+              meta: {
+                onFire: false,
+                burnDuration: undefined,
+                burnStartTick: undefined
+              }
+            }
+          });
+        }
+      }
+    }
+    
     if (context.isWinterActive()) {
       if (context.getCurrentTick() % 5 === 0) {
         for (let i = 0; i < 3; i++) {

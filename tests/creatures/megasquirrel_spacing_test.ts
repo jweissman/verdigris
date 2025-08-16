@@ -120,7 +120,6 @@ describe('Megasquirrel Spacing', () => {
     const soldier = sim.creatureById('soldier1');
     const phantoms = sim.units.filter(u => u.meta.phantom && u.meta.parentId === 'mega1');
     
-
     expect(soldier.pos.y).not.toBe(11);
     
 

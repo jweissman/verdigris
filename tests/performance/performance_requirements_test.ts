@@ -2,12 +2,10 @@ import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 
 describe('Performance Requirements', () => {
-  const TARGET_MS = 0.5; // TODO: 0.15ms per step
+  const TARGET_MS = 0.15; // TODO: 0.15ms per step
   
   test('REQUIREMENT: Minimal sim (50 units, no rules) < 0.05ms', () => {
     const sim = new Simulator(50, 50);
-    
-
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -20,10 +18,6 @@ describe('Performance Requirements', () => {
     
     // Minimal sim should have no rules for pure SoA performance
     sim.rulebook = [];
-    
-
-    
-
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
