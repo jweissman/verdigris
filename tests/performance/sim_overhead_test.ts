@@ -33,11 +33,13 @@ describe('Simulator Overhead Analysis', () => {
       {
         name: 'No rules',
         setup: () => {
+          sim.rulebook = [];
         }
       },
       {
         name: 'Just movement rule',
         setup: () => {
+          sim.rulebook = sim.rulebook.filter(r =>
             r.constructor.name === 'UnitMovement'
           );
         }
@@ -87,6 +89,5 @@ describe('Simulator Overhead Analysis', () => {
     
     const avg = times.reduce((a, b) => a + b, 0) / times.length;
     console.log(`Direct array update: ${avg.toFixed(4)}ms per step`);
-    console.log(`That's ${(1.25 / avg).toFixed(0)}x faster than current!`);
   });
 });

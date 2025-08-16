@@ -53,7 +53,9 @@ describe('Field Abstraction (Real vs Apparent)', () => {
 
   it('should allow huge units to move as single entity', () => {
     const sim = new Simulator(10, 10);
-
+    
+    // Keep only movement and huge units rules
+    sim.rulebook = [
       sim.rulebook.find(r => r.constructor.name === 'UnitMovement')!,
       sim.rulebook.find(r => r.constructor.name === 'HugeUnits')!
     ];
@@ -93,11 +95,11 @@ describe('Field Abstraction (Real vs Apparent)', () => {
 
     const updatedMegasquirrel = sim.units.find(u => u.id === 'mega2' && !u.meta.phantom)!;
 
-    expect(updatedMegasquirrel.pos.x).toBe(2); // Still at original position
-    expect(updatedMegasquirrel.pos.y).toBe(2);
+    expect(updatedMegasquirrel.pos.x).toBe(3); // Moved right by 1
+    expect(updatedMegasquirrel.pos.y).toBe(2); // Y unchanged
     
 
-    expect(sim.validMove(updatedMegasquirrel, 1, 0)).toBe(true); // Would be valid if it worked
+    expect(sim.validMove(updatedMegasquirrel, 1, 0)).toBe(true); // Can continue moving right
   });
 
   it('should prevent huge unit movement when body would collide', () => {

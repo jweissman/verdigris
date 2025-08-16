@@ -79,13 +79,13 @@ class Simulator {
   public static rng: RNG = new RNG(12345);
   private static randomProtected: boolean = false;
 
-  private lastFrameUnits: Unit[] = [];
+  // private lastFrameUnits: Unit[] = [];
   private changedUnits: Set<string> = new Set();
 
   private gridPartition: GridPartition;
 
   public proxyManager: UnitProxyManager;
-  private unitDataStore: UnitDataStore;
+  // private unitDataStore: UnitDataStore;
   private proxyCache: UnitProxy[] = [];
   private proxyCacheValid = false;
 
@@ -274,7 +274,7 @@ class Simulator {
 
     this.unitColdData = new Map();
 
-    this.unitDataStore = new UnitDataStore(this.unitArrays, this.unitColdData);
+    // this.unitDataStore = new UnitDataStore(this.unitArrays, this.unitColdData);
 
     this.proxyManager = new UnitProxyManager(
       this.unitArrays,

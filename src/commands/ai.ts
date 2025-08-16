@@ -216,6 +216,7 @@ export class AICommand extends Command {
     const searchRadius = 15;
     const MAX_SEARCH_RADIUS = searchRadius * searchRadius;
 
+    // Use spatial queries instead of O(n²) nested loops
     for (let i = 0; i < units.length; i++) {
       const unit = units[i];
       if (unit.state === "dead" || unit.hp <= 0) continue;
@@ -229,7 +230,10 @@ export class AICommand extends Command {
       let closestEnemyDist = Infinity;
       let closestAllyDist = Infinity;
 
-      for (const other of units) {
+      // Use spatial queries to get only nearby units - O(log n) instead of O(n)
+      const nearbyUnits = this.sim.getUnitsNear(unit.pos.x, unit.pos.y, searchRadius);
+
+      for (const other of nearbyUnits) {
         if (other.state === "dead" || other.hp <= 0) continue;
         if (other.id === unit.id) continue;
 
@@ -343,7 +347,10 @@ export class AICommand extends Command {
         let avgY = unit.pos.y;
         let count = 1;
 
-        for (const other of units) {
+        // Use spatial queries to find nearby allies - O(log n) instead of O(n)
+        const nearbyUnits = this.sim.getUnitsNear(unit.pos.x, unit.pos.y, 5);
+        
+        for (const other of nearbyUnits) {
           if (other.id === unit.id || other.team !== unit.team) continue;
           if (other.state === "dead" || other.hp <= 0) continue;
           if (other.meta.phantom) continue;

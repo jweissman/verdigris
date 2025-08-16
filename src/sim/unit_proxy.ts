@@ -455,8 +455,31 @@ export class UnitProxyManager implements DataQuery {
     const allies = new Map<string, string | null>();
     const radiusSq = searchRadius * searchRadius;
 
+    // Count active units
+    let activeCount = 0;
     for (let i = 0; i < capacity; i++) {
-      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue; // Skip dead
+      if (this.arrays.active[i] && this.arrays.state[i] !== 3) {
+        activeCount++;
+      }
+    }
+
+    // Use optimized approach for smaller unit counts, grid for larger
+    if (activeCount <= 75) {
+      return this.batchFindTargetsSimple(radiusSq, enemies, allies);
+    } else {
+      return this.batchFindTargetsGrid(searchRadius, radiusSq, enemies, allies);
+    }
+  }
+
+  private batchFindTargetsSimple(
+    radiusSq: number,
+    enemies: Map<string, string | null>,
+    allies: Map<string, string | null>
+  ): { enemies: Map<string, string | null>; allies: Map<string, string | null>; } {
+    const capacity = this.arrays.capacity;
+
+    for (let i = 0; i < capacity; i++) {
+      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue;
 
       const unitId = this.arrays.unitIds[i];
       const x1 = this.arrays.posX[i];
@@ -468,9 +491,14 @@ export class UnitProxyManager implements DataQuery {
       let minEnemyDistSq = Infinity;
       let minAllyDistSq = Infinity;
 
+      // Optimized inner loop with early distance checks
       for (let j = 0; j < capacity; j++) {
-        if (i === j || !this.arrays.active[j] || this.arrays.state[j] === 3)
-          continue;
+        if (i === j || !this.arrays.active[j] || this.arrays.state[j] === 3) continue;
+
+        // Quick distance pre-filter using manhattan distance
+        const absDx = Math.abs(this.arrays.posX[j] - x1);
+        const absDy = Math.abs(this.arrays.posY[j] - y1);
+        if (absDx + absDy > 15) continue; // Skip if too far (manhattan distance > search radius)
 
         const dx = this.arrays.posX[j] - x1;
         const dy = this.arrays.posY[j] - y1;
@@ -487,6 +515,92 @@ export class UnitProxyManager implements DataQuery {
         } else if (team1 === team2 && distSq < minAllyDistSq) {
           minAllyDistSq = distSq;
           closestAlly = targetId;
+        }
+      }
+
+      enemies.set(unitId, closestEnemy);
+      allies.set(unitId, closestAlly);
+    }
+
+    return { enemies, allies };
+  }
+
+  private batchFindTargetsGrid(
+    searchRadius: number,
+    radiusSq: number,
+    enemies: Map<string, string | null>,
+    allies: Map<string, string | null>
+  ): { enemies: Map<string, string | null>; allies: Map<string, string | null>; } {
+    const capacity = this.arrays.capacity;
+
+    // Grid implementation for large unit counts
+    const gridSize = Math.ceil(searchRadius / 2);
+    const gridWidth = Math.ceil(100 / gridSize);
+    const gridHeight = Math.ceil(100 / gridSize);
+    const grid: number[][] = Array(gridWidth * gridHeight).fill(null).map(() => []);
+
+    // Populate grid
+    for (let i = 0; i < capacity; i++) {
+      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue;
+      
+      const x = this.arrays.posX[i];
+      const y = this.arrays.posY[i];
+      const gx = Math.floor(x / gridSize);
+      const gy = Math.floor(y / gridSize);
+      const gridIdx = gy * gridWidth + gx;
+      
+      if (gridIdx >= 0 && gridIdx < grid.length) {
+        grid[gridIdx].push(i);
+      }
+    }
+
+    for (let i = 0; i < capacity; i++) {
+      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue;
+
+      const unitId = this.arrays.unitIds[i];
+      const x1 = this.arrays.posX[i];
+      const y1 = this.arrays.posY[i];
+      const team1 = this.arrays.team[i];
+
+      let closestEnemy: string | null = null;
+      let closestAlly: string | null = null;
+      let minEnemyDistSq = Infinity;
+      let minAllyDistSq = Infinity;
+
+      const gx = Math.floor(x1 / gridSize);
+      const gy = Math.floor(y1 / gridSize);
+      const cellRadius = Math.ceil(searchRadius / gridSize);
+
+      for (let dy = -cellRadius; dy <= cellRadius; dy++) {
+        for (let dx = -cellRadius; dx <= cellRadius; dx++) {
+          const checkGx = gx + dx;
+          const checkGy = gy + dy;
+
+          if (checkGx < 0 || checkGx >= gridWidth || checkGy < 0 || checkGy >= gridHeight) continue;
+
+          const gridIdx = checkGy * gridWidth + checkGx;
+          const cellUnits = grid[gridIdx];
+
+          for (const j of cellUnits) {
+            if (i === j) continue;
+
+            const dx = this.arrays.posX[j] - x1;
+            const dy = this.arrays.posY[j] - y1;
+            const distSq = dx * dx + dy * dy;
+
+            if (distSq > radiusSq) continue;
+
+            const team2 = this.arrays.team[j];
+            const targetId = this.arrays.unitIds[j];
+
+            if (team1 !== team2 && distSq < minEnemyDistSq) {
+              minEnemyDistSq = distSq;
+              closestEnemy = targetId;
+            } else if (team1 === team2 && distSq < minAllyDistSq) {
+              minAllyDistSq = distSq;
+              closestAlly = targetId;
+            }
+          }
         }
       }
 
