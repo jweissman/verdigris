@@ -25,18 +25,25 @@ export class AICommand extends Command {
 
   private processAIBatched(): void {
     const postures = new Map<string, string>();
-    for (const unit of this.sim.units) {
-      if (unit.state !== "dead") {
-        let posture = unit.posture || unit.meta?.posture;
-        if (!posture && unit.tags) {
-          if (unit.tags.includes("hunt")) posture = "hunt";
-          else if (unit.tags.includes("guard")) posture = "guard";
-          else if (unit.tags.includes("swarm")) posture = "swarm";
-          else if (unit.tags.includes("wander")) posture = "wander";
-          else if (unit.tags.includes("aggressive")) posture = "bully";
-        }
-        postures.set(unit.id, posture || "wait");
+    const arrays = this.sim.getUnitArrays();
+    const coldData = (this.sim as any).unitColdData;
+    
+    // Direct array access for performance
+    for (const i of arrays.activeIndices) {
+      if (arrays.state[i] === 3) continue; // Skip dead
+      
+      const unitId = arrays.unitIds[i];
+      const data = coldData.get(unitId);
+      
+      let posture = data?.posture || data?.meta?.posture;
+      if (!posture && data?.tags) {
+        if (data.tags.includes("hunt")) posture = "hunt";
+        else if (data.tags.includes("guard")) posture = "guard";
+        else if (data.tags.includes("swarm")) posture = "swarm";
+        else if (data.tags.includes("wander")) posture = "wander";
+        else if (data.tags.includes("aggressive")) posture = "bully";
       }
+      postures.set(unitId, posture || "wait");
     }
 
     const proxyManager = this.sim.getProxyManager();

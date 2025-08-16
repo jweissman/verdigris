@@ -2,64 +2,131 @@ import { describe, test } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 
 describe('Minimal Simulation Test', () => {
-  test('absolute minimal step', () => {
-    const sim = new Simulator(50, 50);
-    
-
-    for (let i = 0; i < 50; i++) {
-      sim.addUnit({
-        id: `unit_${i}`,
-        pos: { x: i % 50, y: Math.floor(i / 50) },
-        intendedMove: { x: 0.1, y: 0 },
-        team: 'neutral',
-        hp: 10
-      });
-    }
-    
-
-    
-
-    (sim as any).pairwiseBatcher = null;
-    
-
-    const times: number[] = [];
-    for (let i = 0; i < 1000; i++) {
-      const start = performance.now();
-      sim.step();
-      const elapsed = performance.now() - start;
-      times.push(elapsed);
-    }
-    
-    const avg = times.reduce((a, b) => a + b, 0) / times.length;
-    const min = Math.min(...times);
-    const max = Math.max(...times);
-    const median = times.sort((a, b) => a - b)[500];
-    
-    console.log('\n=== Absolute Minimal Step (50 units, no rules) ===');
-    console.log(`Average: ${avg.toFixed(4)}ms`);
-    console.log(`Median: ${median.toFixed(4)}ms`);
-    console.log(`Min: ${min.toFixed(4)}ms`);
-    console.log(`Max: ${max.toFixed(4)}ms`);
-    console.log(`\nTarget: 0.15ms`);
-    console.log(`Current: ${avg.toFixed(4)}ms (${(avg/0.15).toFixed(1)}x slower)`);
-    
-
-    const UnitMovement = (sim as any).rulebook.find((r: any) => 
-      r.constructor.name === 'UnitMovement'
-    );
-    
-    if (UnitMovement) {
+  test('Measure overhead sources', () => {
+    // Test 1: Empty sim, no rules, no units
+    {
+      const sim = new Simulator(50, 50);
+      sim.rulebook = [];
       
-      const times2: number[] = [];
+      // Warmup
+      for (let i = 0; i < 100; i++) {
+        sim.step();
+      }
+      
+      const times: number[] = [];
       for (let i = 0; i < 1000; i++) {
         const start = performance.now();
         sim.step();
-        const elapsed = performance.now() - start;
-        times2.push(elapsed);
+        times.push(performance.now() - start);
       }
       
-      const avg2 = times2.reduce((a, b) => a + b, 0) / times2.length;
-      console.log(`\nWith movement rule: ${avg2.toFixed(4)}ms`);
+      const avg = times.reduce((a, b) => a + b, 0) / times.length;
+      console.log(`\n=== Performance Breakdown ===`);
+      console.log(`Empty sim (no rules, no units): ${avg.toFixed(4)}ms`);
     }
+    
+    // Test 2: 50 units, no rules
+    {
+      const sim = new Simulator(50, 50);
+      sim.rulebook = [];
+      
+      for (let i = 0; i < 50; i++) {
+        sim.addUnit({
+          id: `unit_${i}`,
+          pos: { x: i % 50, y: Math.floor(i / 50) },
+          team: 'neutral',
+          hp: 10
+        });
+      }
+      
+      // Warmup
+      for (let i = 0; i < 100; i++) {
+        sim.step();
+      }
+      
+      const times: number[] = [];
+      for (let i = 0; i < 1000; i++) {
+        const start = performance.now();
+        sim.step();
+        times.push(performance.now() - start);
+      }
+      
+      const avg = times.reduce((a, b) => a + b, 0) / times.length;
+      console.log(`50 units, no rules: ${avg.toFixed(4)}ms`);
+    }
+    
+    // Test 3: 50 units, all rules
+    {
+      const sim = new Simulator(50, 50);
+      
+      for (let i = 0; i < 50; i++) {
+        sim.addUnit({
+          id: `unit_${i}`,
+          pos: { x: i % 50, y: Math.floor(i / 50) },
+          team: 'neutral',
+          hp: 10
+        });
+      }
+      
+      console.log(`Total rules: ${sim.rulebook.length}`);
+      
+      // Warmup
+      for (let i = 0; i < 100; i++) {
+        sim.step();
+      }
+      
+      const times: number[] = [];
+      for (let i = 0; i < 1000; i++) {
+        const start = performance.now();
+        sim.step();
+        times.push(performance.now() - start);
+      }
+      
+      const avg = times.reduce((a, b) => a + b, 0) / times.length;
+      console.log(`50 units, all rules: ${avg.toFixed(4)}ms`);
+    }
+    
+    // Test 4: Rule iteration overhead
+    {
+      const sim = new Simulator(50, 50);
+      
+      for (let i = 0; i < 50; i++) {
+        sim.addUnit({
+          id: `unit_${i}`,
+          pos: { x: i % 50, y: Math.floor(i / 50) },
+          team: 'neutral',
+          hp: 10
+        });
+      }
+      
+      // Create empty rules
+      class EmptyRule {
+        execute(context: any) { return []; }
+      }
+      
+      for (const ruleCount of [1, 5, 10, 20]) {
+        sim.rulebook = [];
+        for (let i = 0; i < ruleCount; i++) {
+          sim.rulebook.push(new EmptyRule() as any);
+        }
+        
+        // Warmup
+        for (let i = 0; i < 100; i++) {
+          sim.step();
+        }
+        
+        const times: number[] = [];
+        for (let i = 0; i < 1000; i++) {
+          const start = performance.now();
+          sim.step();
+          times.push(performance.now() - start);
+        }
+        
+        const avg = times.reduce((a, b) => a + b, 0) / times.length;
+        console.log(`${ruleCount} empty rules: ${avg.toFixed(4)}ms`);
+      }
+    }
+    
+    console.log(`\nTarget: 0.01ms per step`);
   });
 });

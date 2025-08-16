@@ -471,17 +471,12 @@ export class UnitProxyManager implements DataQuery {
       this.arrays.rebuildActiveIndices();
     }
 
-    if (this.proxyArrayCache) {
-      let writeIndex = 0;
-      for (const i of this.arrays.activeIndices) {
-        const proxy = this.getProxy(i); // This is cached!
-        this.proxyArrayCache[writeIndex++] = proxy;
-      }
-
-      this.proxyArrayCache.length = writeIndex;
+    // Return cached array if it exists and is still valid
+    if (this.proxyArrayCache && this.proxyArrayCache.length === this.arrays.activeCount) {
       return this.proxyArrayCache;
     }
 
+    // Only rebuild if cache is invalid
     const proxies: UnitProxy[] = [];
     for (const i of this.arrays.activeIndices) {
       const proxy = this.getProxy(i);
@@ -501,12 +496,14 @@ export class UnitProxyManager implements DataQuery {
   notifyUnitAdded(unitId: string, index: number): void {
     this.idToIndex.set(unitId, index);
     this.indexCache[unitId] = index;
+    this.proxyArrayCache = null; // Invalidate array cache
   }
 
   notifyUnitRemoved(unitId: string): void {
     this.idToIndex.delete(unitId);
     delete this.indexCache[unitId];
     this.proxyCache.delete(unitId);
+    this.proxyArrayCache = null; // Invalidate array cache
   }
 
   /**
@@ -546,13 +543,8 @@ export class UnitProxyManager implements DataQuery {
     const allies = new Map<string, string | null>();
     const radiusSq = searchRadius * searchRadius;
 
-    // Count active units
-    let activeCount = 0;
-    for (let i = 0; i < capacity; i++) {
-      if (this.arrays.active[i] && this.arrays.state[i] !== 3) {
-        activeCount++;
-      }
-    }
+    // Count active units (already tracked)
+    const activeCount = this.arrays.activeCount;
 
     // Use optimized approach for smaller unit counts, grid for larger
     if (activeCount <= 75) {
@@ -569,8 +561,8 @@ export class UnitProxyManager implements DataQuery {
   ): { enemies: Map<string, string | null>; allies: Map<string, string | null>; } {
     const capacity = this.arrays.capacity;
 
-    for (let i = 0; i < capacity; i++) {
-      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue;
+    for (const i of this.arrays.activeIndices) {
+      if (this.arrays.state[i] === 3) continue;
 
       const unitId = this.arrays.unitIds[i];
       const x1 = this.arrays.posX[i];
@@ -583,8 +575,8 @@ export class UnitProxyManager implements DataQuery {
       let minAllyDistSq = Infinity;
 
       // Optimized inner loop with early distance checks
-      for (let j = 0; j < capacity; j++) {
-        if (i === j || !this.arrays.active[j] || this.arrays.state[j] === 3) continue;
+      for (const j of this.arrays.activeIndices) {
+        if (i === j || this.arrays.state[j] === 3) continue;
 
         // Quick distance pre-filter using manhattan distance
         const absDx = Math.abs(this.arrays.posX[j] - x1);
@@ -631,8 +623,8 @@ export class UnitProxyManager implements DataQuery {
     const grid: number[][] = Array(gridWidth * gridHeight).fill(null).map(() => []);
 
     // Populate grid
-    for (let i = 0; i < capacity; i++) {
-      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue;
+    for (const i of this.arrays.activeIndices) {
+      if (this.arrays.state[i] === 3) continue;
       
       const x = this.arrays.posX[i];
       const y = this.arrays.posY[i];
@@ -645,8 +637,8 @@ export class UnitProxyManager implements DataQuery {
       }
     }
 
-    for (let i = 0; i < capacity; i++) {
-      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue;
+    for (const i of this.arrays.activeIndices) {
+      if (this.arrays.state[i] === 3) continue;
 
       const unitId = this.arrays.unitIds[i];
       const x1 = this.arrays.posX[i];
@@ -712,8 +704,8 @@ export class UnitProxyManager implements DataQuery {
     const targets = this.batchFindTargets();
     const moves = new Map<string, { dx: number; dy: number }>();
 
-    for (let i = 0; i < this.arrays.capacity; i++) {
-      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue;
+    for (const i of this.arrays.activeIndices) {
+      if (this.arrays.state[i] === 3) continue; // Skip dead units
 
       const unitId = this.arrays.unitIds[i];
       const posture = postures.get(unitId) || "wait";
@@ -835,8 +827,8 @@ export class UnitProxyManager implements DataQuery {
   batchApplyForces(): void {
     const capacity = this.arrays.capacity;
 
-    for (let i = 0; i < capacity; i++) {
-      if (!this.arrays.active[i] || this.arrays.state[i] === 3) continue;
+    for (const i of this.arrays.activeIndices) {
+      if (this.arrays.state[i] === 3) continue;
 
       if (
         this.arrays.intendedMoveX[i] !== 0 ||

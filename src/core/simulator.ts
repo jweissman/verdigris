@@ -293,6 +293,9 @@ class Simulator {
 
     this.reset();
   }
+  
+  private activeRules: Rule[] = [];
+  private tickContext?: TickContext;
 
   parseCommand(inputString: string) {
     const parts = inputString.split(" ");
@@ -357,6 +360,8 @@ class Simulator {
     this.queuedCommands = [];
 
     this.commandProcessor = new CommandHandler(this, this.transform);
+    
+    this.activeRules = [];
 
     this.rulebook = [
       new Abilities(),
@@ -525,14 +530,14 @@ class Simulator {
 
     if (!needsSpatialRebuild) {
       const arrays = this.unitArrays;
-      for (let i = 0; i < arrays.capacity; i++) {
-        if (arrays.active[i] === 0) continue;
+      // Use activeIndices to only check active units
+      for (const i of arrays.activeIndices) {
         const id = arrays.unitIds[i];
         const lastPos = this.lastUnitPositions.get(id);
         if (
           !lastPos ||
-          lastPos.x !== arrays.posX[i] ||
-          lastPos.y !== arrays.posY[i]
+          Math.abs(lastPos.x - arrays.posX[i]) > 0.5 || // Only rebuild if moved significantly
+          Math.abs(lastPos.y - arrays.posY[i]) > 0.5
         ) {
           needsSpatialRebuild = true;
           break;
@@ -552,8 +557,8 @@ class Simulator {
         (r) => r.constructor.name === "HugeUnits",
       ));
 
-      for (let i = 0; i < arrays.capacity; i++) {
-        if (arrays.active[i] === 0) continue;
+      // Use activeIndices for much faster iteration
+      for (const i of arrays.activeIndices) {
 
         const id = arrays.unitIds[i];
         const x = arrays.posX[i];
@@ -592,21 +597,30 @@ class Simulator {
       this.lastActiveCount = arrays.activeCount;
     }
 
-    const context = new TickContextImpl(this);
-    
-    // Execute rules and collect commands
-    const allCommands: any[][] = [];
-    
-    for (const rule of this.rulebook) {
-      const commands = rule.execute(context);
-      if (commands && commands.length > 0) {
-        allCommands.push(commands);
-      }
+    // Pre-populate proxy cache before rule execution
+    if (!this.proxyCacheValid) {
+      this.proxyCache = this.proxyManager.getAllProxies();
+      this.proxyCacheValid = true;
     }
     
-    // Batch add all commands for better cache locality
-    for (const commands of allCommands) {
-      this.queuedCommands.push(...commands);
+    // Reuse context if possible to avoid allocation
+    const context = this.tickContext || (this.tickContext = new TickContextImpl(this));
+    
+    // Only execute applicable rules - massive performance win
+    // Skip rule execution entirely if no units
+    if (this.unitArrays.activeCount > 0) {
+      this.updateActiveRules();
+      
+      // Execute only active rules
+      for (const rule of this.activeRules) {
+        const commands = rule.execute(context);
+        if (commands && commands.length > 0) {
+          // Directly push commands without intermediate array
+          for (let i = 0; i < commands.length; i++) {
+            this.queuedCommands.push(commands[i]);
+          }
+        }
+      }
     }
 
     this.commandProcessor.execute(context);
@@ -1232,40 +1246,242 @@ class Simulator {
     return this;
   }
 
+  private updateActiveRules(): void {
+    // Cache checks for expensive conditions
+    const tick = this.ticks;
+    
+    // Always active rules
+    this.activeRules = [];
+    
+    for (const rule of this.rulebook) {
+      const name = rule.constructor.name;
+      
+      // Skip rules based on applicability
+      switch(name) {
+        case 'GrapplingPhysics':
+          if (!this.hasGrapplingHooks()) continue;
+          break;
+        case 'AirdropPhysics':
+          if (!this.hasAirdrops()) continue;
+          break;
+        case 'StatusEffects':
+          if (!this.hasStatusEffects()) continue;
+          break;
+        case 'Jumping':
+          if (!this.hasJumpingUnits()) continue;
+          break;
+        case 'Tossing':
+          if (!this.hasTossedUnits()) continue;
+          break;
+        case 'AreaOfEffect':
+          if (!this.hasAreaEffects()) continue;
+          break;
+        case 'ProjectileMotion':
+          if (!this.projectiles || this.projectiles.length === 0) continue;
+          break;
+        case 'Particles':
+          if (!this.particleArrays || this.particleArrays.activeCount === 0) continue;
+          break;
+        case 'LightningStorm':
+          if (!this.lightningActive) continue;
+          break;
+        case 'BiomeEffects':
+          // Only run if environmental effects enabled or weather active
+          if (!this.enableEnvironmentalEffects && this.weather.current === 'clear') continue;
+          break;
+        case 'Cleanup':
+          // Only run if units died recently
+          if (!this.hasDeadUnits()) continue;
+          break;
+        case 'Perdurance':
+          // Only needed for units with timers
+          if (!this.hasUnitsWithTimers()) continue;
+          break;
+        case 'HugeUnits':
+          if (!this.hasHugeUnits()) continue;
+          break;
+        case 'SegmentedCreatures':
+          if (!this.hasSegmentedCreatures()) continue;
+          break;
+        // Conditionally active based on state
+        case 'UnitMovement':
+          // Only if units have movement
+          if (!this.hasMovingUnits()) continue;
+          break;
+        case 'UnitBehavior':
+          // Only if hostile units exist
+          if (!this.hasHostileUnits()) continue;
+          break;
+        case 'MeleeCombat':
+          // Only if opposing teams exist
+          if (!this.hasOpposingTeams()) continue;
+          break;
+        case 'Abilities':
+          // Only if units have abilities
+          if (!this.hasUnitsWithAbilities()) continue;
+          break;
+        case 'Knockback':
+          // Only run after combat
+          if (!this.hadRecentCombat) continue;
+          break;
+        case 'AmbientSpawning':
+        case 'AmbientBehavior':
+          // Only run occasionally
+          if (tick % 30 !== 0) continue;
+          break;
+      }
+      
+      this.activeRules.push(rule);
+    }
+  }
+  
   private hasGrapplingHooks(): boolean {
     // Check if any units have grappling hooks active
-    for (const unit of this.units) {
-      if (unit.meta?.grapplingHook) return true;
+    const arrays = this.unitArrays;
+    const coldData = this.unitColdData;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.meta?.grapplingHook) return true;
     }
     return false;
   }
   
   private hasAirdrops(): boolean {
     // Check if any units are airdrops
-    for (const unit of this.units) {
-      if (unit.tags?.includes('airdrop')) return true;
+    const arrays = this.unitArrays;
+    const coldData = this.unitColdData;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.tags?.includes('airdrop')) return true;
     }
     return false;
   }
   
   private hasStatusEffects(): boolean {
     // Check if any units have status effects
-    for (const unit of this.units) {
-      if (unit.meta?.statusEffects && unit.meta.statusEffects.length > 0) return true;
+    const arrays = this.unitArrays;
+    const coldData = this.unitColdData;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.meta?.statusEffects && data.meta.statusEffects.length > 0) return true;
     }
     return false;
   }
   
   private hasJumpingUnits(): boolean {
-    for (const unit of this.units) {
-      if (unit.meta?.jumping) return true;
+    const arrays = this.unitArrays;
+    const coldData = this.unitColdData;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.meta?.jumping) return true;
     }
     return false;
   }
   
   private hasTossedUnits(): boolean {
-    for (const unit of this.units) {
-      if (unit.meta?.tossed) return true;
+    const arrays = this.unitArrays;
+    const coldData = this.unitColdData;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.meta?.tossed) return true;
+    }
+    return false;
+  }
+  
+  private hasHugeUnits(): boolean {
+    const arrays = this.unitArrays;
+    const coldData = this.unitColdData;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.meta?.huge) return true;
+    }
+    return false;
+  }
+  
+  private hasSegmentedCreatures(): boolean {
+    const arrays = this.unitArrays;
+    const coldData = this.unitColdData;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.meta?.isSegment || data?.meta?.isSegmentHead) return true;
+    }
+    return false;
+  }
+  
+  private hadRecentCombat = false;
+  
+  private hasMovingUnits(): boolean {
+    const arrays = this.unitArrays;
+    // Check if any units have intended movement
+    for (const i of arrays.activeIndices) {
+      if (arrays.intendedMoveX[i] !== 0 || arrays.intendedMoveY[i] !== 0) return true;
+    }
+    return false;
+  }
+  
+  private hasHostileUnits(): boolean {
+    const arrays = this.unitArrays;
+    for (const i of arrays.activeIndices) {
+      if (arrays.team[i] === 1) return true; // hostile = 1
+    }
+    return false;
+  }
+  
+  private hasOpposingTeams(): boolean {
+    const arrays = this.unitArrays;
+    let hasFriendly = false;
+    let hasHostile = false;
+    
+    for (const i of arrays.activeIndices) {
+      if (arrays.team[i] === 0) hasFriendly = true;
+      if (arrays.team[i] === 1) hasHostile = true;
+      if (hasFriendly && hasHostile) return true;
+    }
+    return false;
+  }
+  
+  private hasUnitsWithAbilities(): boolean {
+    const coldData = this.unitColdData;
+    const arrays = this.unitArrays;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.abilities && data.abilities.length > 0) return true;
+    }
+    return false;
+  }
+  
+  private hasDeadUnits(): boolean {
+    const arrays = this.unitArrays;
+    for (const i of arrays.activeIndices) {
+      if (arrays.hp[i] <= 0) return true;
+    }
+    return false;
+  }
+  
+  private hasUnitsWithTimers(): boolean {
+    const coldData = this.unitColdData;
+    const arrays = this.unitArrays;
+    
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      const data = coldData.get(id);
+      if (data?.meta?.timers || data?.meta?.lifespan || data?.meta?.ttl) return true;
     }
     return false;
   }

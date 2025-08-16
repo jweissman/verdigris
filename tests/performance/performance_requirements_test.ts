@@ -2,7 +2,8 @@ import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 
 describe('Performance Requirements', () => {
-  const TARGET_MS = 0.15; // TODO: 0.15ms per step
+  const TARGET_MS = 0.01; // TODO: 0.15ms per step
+  
   
   test('REQUIREMENT: Minimal sim (50 units, no rules) < 0.05ms', () => {
     const sim = new Simulator(50, 50);
@@ -88,7 +89,7 @@ describe('Performance Requirements', () => {
     expect(avg).toBeLessThan(0.10);
   });
   
-  test('REQUIREMENT: With movement rule (50 units) < 0.15ms', () => {
+  test(`REQUIREMENT: With movement rule (50 units) < 0.015ms`, () => {
     const sim = new Simulator(50, 50);
     
 
@@ -122,7 +123,7 @@ describe('Performance Requirements', () => {
     const median = times.sort((a, b) => a - b)[500];
     
     console.log(`With movement: avg=${avg.toFixed(4)}ms, median=${median.toFixed(4)}ms`);
-    expect(avg).toBeLessThan(TARGET_MS);
+    expect(avg).toBeLessThan(0.015); // Realistic target with proxy overhead
   });
   
   test('REQUIREMENT: With combat rules (50 units) < 0.20ms', () => {
