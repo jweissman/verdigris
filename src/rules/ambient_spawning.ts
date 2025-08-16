@@ -9,7 +9,7 @@ export class AmbientSpawning extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
-    
+
     if (context.getCurrentTick() - this.lastSpawnTick < this.spawnInterval)
       return commands;
 

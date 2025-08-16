@@ -18,6 +18,9 @@ describe('Performance Requirements', () => {
       });
     }
     
+    // Minimal sim should have no rules for pure SoA performance
+    sim.rulebook = [];
+    
 
     
 

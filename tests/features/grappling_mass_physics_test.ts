@@ -57,12 +57,17 @@ describe('Grappling Mass Physics', () => {
     const context = sim.getTickContext();
     
 
-    grapplingPhysics.execute(context);
+    // GrapplingPhysics generates commands that need to be queued
+    const commands1 = grapplingPhysics.execute(context);
+    sim.queuedCommands.push(...commands1);
+    
     const commandHandler = new CommandHandler(sim);
     commandHandler.execute(context);
     
 
-    grapplingPhysics.execute(context);
+    // Second round to apply pull effects
+    const commands2 = grapplingPhysics.execute(context);
+    sim.queuedCommands.push(...commands2);
     commandHandler.execute(context);
 
 
@@ -128,7 +133,8 @@ describe('Grappling Mass Physics', () => {
     const initialHeavyX = heavyTarget.pos.x;
 
     const context = sim.getTickContext();
-    grapplingPhysics.execute(context);
+    const commands = grapplingPhysics.execute(context);
+    sim.queuedCommands.push(...commands);
     const commandHandler = new CommandHandler(sim);
     commandHandler.execute(context);
 
@@ -199,7 +205,8 @@ describe('Grappling Mass Physics', () => {
     
 
     const context = sim.getTickContext();
-    grapplingPhysics.execute(context);
+    const commands = grapplingPhysics.execute(context);
+    sim.queuedCommands.push(...commands);
     const commandHandler = new CommandHandler(sim);
     commandHandler.execute(context);
 
@@ -329,7 +336,8 @@ describe('Grappling Mass Physics', () => {
 
     const grapplingPhysics = new GrapplingPhysics();
     const context = sim.getTickContext();
-    grapplingPhysics.execute(context);
+    const commands = grapplingPhysics.execute(context);
+    sim.queuedCommands.push(...commands);
     const commandHandler = new CommandHandler(sim);
     commandHandler.execute(context);
     

@@ -12,37 +12,17 @@ describe('Performance Tests', () => {
     describe.skip(scenario, () => {
       it(`${scenario} run ${SIMULATION_STEPS} ticks by ${MAX_EXECUTION_TIME}ms`, () => {
         const sim = new Simulator(32, 32);
-
-      
-
-
-
-
-      
         const loader = new SceneLoader(sim);
-      
         const startTime = performance.now();
-      
-
         loader.loadScenario(scenario);
-      
-
         for (let step = 0; step < SIMULATION_STEPS; step++) {
           sim.step();
-        
-
           const currentUnits = sim.getRealUnits().length;
           expect(currentUnits).toBeLessThan(100); // Sanity check - no unit explosion
         }
-      
         const endTime = performance.now();
         const executionTime = endTime - startTime;
-      
-      
-
         expect(executionTime).toBeLessThan(MAX_EXECUTION_TIME);
-      
-
         const outOfBoundsX = sim.units.filter(u => u.pos.x < 0 || u.pos.x >= sim.fieldWidth);
         const outOfBoundsY = sim.units.filter(u => u.pos.y < 0 || u.pos.y >= sim.fieldHeight);
       
@@ -63,8 +43,6 @@ describe('Performance Tests', () => {
 
   it('should handle stress test with multiple megasquirrels', () => {
     const sim = new Simulator(20, 20);
-    
-
     for (let i = 0; i < 3; i++) {
       sim.addUnit({
         id: `mega${i}`,
@@ -80,8 +58,6 @@ describe('Performance Tests', () => {
         meta: { huge: true }
       });
     }
-    
-
     for (let i = 0; i < 10; i++) {
       sim.addUnit({
         id: `worm${i}`,
@@ -99,19 +75,17 @@ describe('Performance Tests', () => {
     }
     
     const startTime = performance.now();
-    const initialUnits = sim.getRealUnits().length;
-    
 
-    for (let step = 0; step < 30; step++) {
+    const steps = 30;
+    for (let step = 0; step < steps; step++) {
       sim.step();
     }
     
     const endTime = performance.now();
     const executionTime = endTime - startTime;
-    
-    
 
-    expect(executionTime).toBeLessThan(2000); // 1.5 seconds max
+    // expect(executionTime).toBeLessThan(1500);
+    expect(executionTime).toBeLessThan(steps * EXECUTION_TIME_PER_STEP);
   });
 
   it('should measure actual step time without overhead', () => {

@@ -29,7 +29,11 @@ export class HugeUnits extends Rule {
     );
   }
 
-  private createPhantoms(context: TickContext, hugeUnit: Unit, commands: QueuedCommand[]) {
+  private createPhantoms(
+    context: TickContext,
+    hugeUnit: Unit,
+    commands: QueuedCommand[],
+  ) {
     for (let i = 1; i <= 3; i++) {
       const phantomPos = {
         x: hugeUnit.pos.x,
@@ -66,7 +70,7 @@ export class HugeUnits extends Rule {
   private updatePhantomPositions(
     context: TickContext,
     allUnits: readonly Unit[],
-    commands: QueuedCommand[]
+    commands: QueuedCommand[],
   ) {
     const phantomPairs = this.getPhantomPairs(allUnits);
 
@@ -121,7 +125,7 @@ export class HugeUnits extends Rule {
   private cleanupOrphanedPhantoms(
     context: TickContext,
     allUnits: readonly Unit[],
-    commands: QueuedCommand[]
+    commands: QueuedCommand[],
   ) {
     const orphanedPhantoms = allUnits.filter((unit) => {
       const meta = unit.meta || {};

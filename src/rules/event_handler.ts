@@ -74,7 +74,11 @@ export class EventHandler extends Rule {
     return commands;
   }
 
-  private handleSpawn(event: Action, context: TickContext, commands: QueuedCommand[]) {
+  private handleSpawn(
+    event: Action,
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     if (
       !event.target ||
       typeof event.target !== "object" ||
@@ -101,7 +105,11 @@ export class EventHandler extends Rule {
     });
   }
 
-  private handleParticle(event: Action, context: TickContext, commands: QueuedCommand[]) {
+  private handleParticle(
+    event: Action,
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     if (!event.meta) return;
 
     if (!event.meta.pos || !event.meta.vel) {
@@ -115,7 +123,11 @@ export class EventHandler extends Rule {
     });
   }
 
-  private handleAreaOfEffect(event: Action, context: TickContext, commands: QueuedCommand[]) {
+  private handleAreaOfEffect(
+    event: Action,
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     if (
       !event.target ||
       typeof event.target !== "object" ||
@@ -288,7 +300,11 @@ export class EventHandler extends Rule {
     }
   }
 
-  private handleDamage(event: Action, context: TickContext, commands: QueuedCommand[]) {
+  private handleDamage(
+    event: Action,
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     if (!event.target || !event.meta?.amount) {
       return;
     }
@@ -331,7 +347,11 @@ export class EventHandler extends Rule {
     }
   }
 
-  private handleHeal(event: Action, context: TickContext, commands: QueuedCommand[]) {
+  private handleHeal(
+    event: Action,
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     if (!event.target || !event.meta?.amount) {
       return;
     }
@@ -370,7 +390,11 @@ export class EventHandler extends Rule {
     }
   }
 
-  private handleKnockback(event: Action, context: TickContext, commands: QueuedCommand[]) {
+  private handleKnockback(
+    event: Action,
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     if (!event.target || !event.meta?.direction) {
       return;
     }
@@ -393,7 +417,11 @@ export class EventHandler extends Rule {
     });
   }
 
-  private handleTerrain(event: Action, context: TickContext, commands: QueuedCommand[]) {
+  private handleTerrain(
+    event: Action,
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     if (event.meta?.terrainType) {
     }
   }

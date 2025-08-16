@@ -8,6 +8,8 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
  */
 describe('Systematic Creature Tests', () => {
 
+  // TODO couldn't these be the real beast names from Encyclopedia? 
+  // Note I think some are confabulated?
   const creatureNames = [
     'soldier', 'worm', 'squirrel', 'big-worm', 'megasquirrel',
     'grappler', 'toymaker', 'mechatron', 'mechanist', 'toy',

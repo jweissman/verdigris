@@ -24,7 +24,7 @@ export class Abilities extends Rule {
 
     const currentTick = context.getCurrentTick();
     const allUnits = context.getAllUnits(); // Get units once
-    
+
     // Single iteration over all units for better cache locality
     for (const unit of allUnits) {
       // Handle burrowing first
@@ -58,8 +58,9 @@ export class Abilities extends Rule {
       }
 
       const lastAbilityTick = unit.lastAbilityTick; // Cache property access
-      
-      for (const abilityName of abilities) { // Use cached abilities
+
+      for (const abilityName of abilities) {
+        // Use cached abilities
         const ability = this.ability(abilityName);
         if (!ability) {
           continue;

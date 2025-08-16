@@ -36,7 +36,10 @@ export class GrapplingPhysics extends Rule {
     return commands;
   }
 
-  private handleGrappleCollisions(context: TickContext, commands: QueuedCommand[]) {
+  private handleGrappleCollisions(
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     const allUnits = context.getAllUnits();
 
     for (const unit of allUnits) {
@@ -46,7 +49,11 @@ export class GrapplingPhysics extends Rule {
     }
   }
 
-  private processGrappleHit(context: TickContext, hitUnit: Unit, commands: QueuedCommand[]) {
+  private processGrappleHit(
+    context: TickContext,
+    hitUnit: Unit,
+    commands: QueuedCommand[],
+  ) {
     if (hitUnit.meta.grappleHit) {
       const grapplerID = hitUnit.meta.grapplerID || "unknown";
       const grappler = context.findUnitById(grapplerID);
@@ -248,7 +255,7 @@ export class GrapplingPhysics extends Rule {
     grappler: Unit,
     target: Unit,
     _grappleLine: GrappleLine,
-    commands: QueuedCommand[]
+    commands: QueuedCommand[],
   ) {
     commands.push({
       type: "pull",
@@ -325,7 +332,10 @@ export class GrapplingPhysics extends Rule {
     }
   }
 
-  private cleanupExpiredGrapples(context: TickContext, commands: QueuedCommand[]) {
+  private cleanupExpiredGrapples(
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     const expiredLines: string[] = [];
 
     for (const [lineID, grappleLine] of this.grappleLines.entries()) {

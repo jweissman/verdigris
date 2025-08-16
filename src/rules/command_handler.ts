@@ -89,10 +89,7 @@ export class CommandHandler {
     this.commands.set("move", new MoveCommand(sim));
     this.commands.set("knockback", new KnockbackCommand(sim));
 
-    this.commands.set(
-      "applyStatusEffect",
-      new ApplyStatusEffectCommand(sim),
-    );
+    this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim));
     this.commands.set(
       "updateStatusEffects",
       new UpdateStatusEffectsCommand(sim),
@@ -279,7 +276,7 @@ export class CommandHandler {
 
         const eventHandler = new EventHandler();
         const eventCommands = eventHandler.execute(context);
-        
+
         // Add the generated commands back to the queue for processing
         if (eventCommands && eventCommands.length > 0) {
           this.sim.queuedCommands.push(...eventCommands);

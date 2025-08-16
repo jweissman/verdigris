@@ -45,7 +45,11 @@ export class SegmentedCreatures extends Rule {
     return hasExistingSegments || hasQueuedSegments;
   }
 
-  private createSegments(context: TickContext, creature: Unit, commands: QueuedCommand[]) {
+  private createSegments(
+    context: TickContext,
+    creature: Unit,
+    commands: QueuedCommand[],
+  ) {
     const segmentCount = creature.meta.segmentCount || 4; // Default to 4 segments
 
     if (segmentCount > 50) {
@@ -160,7 +164,10 @@ export class SegmentedCreatures extends Rule {
     }
   }
 
-  private updateSegmentPositions(context: TickContext, commands: QueuedCommand[]): void {
+  private updateSegmentPositions(
+    context: TickContext,
+    commands: QueuedCommand[],
+  ): void {
     const segmentGroups = this.getSegmentGroups(context);
     const units = context.getAllUnits();
 
@@ -226,7 +233,10 @@ export class SegmentedCreatures extends Rule {
     return groups;
   }
 
-  private cleanupOrphanedSegments(context: TickContext, commands: QueuedCommand[]) {
+  private cleanupOrphanedSegments(
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     const orphanedSegments = context
       .getAllUnits()
       .filter(
@@ -312,7 +322,10 @@ export class SegmentedCreatures extends Rule {
       });
   }
 
-  private handleSegmentGrappling(context: TickContext, commands: QueuedCommand[]) {
+  private handleSegmentGrappling(
+    context: TickContext,
+    commands: QueuedCommand[],
+  ) {
     const units = context.getAllUnits();
 
     units

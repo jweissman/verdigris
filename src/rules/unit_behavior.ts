@@ -4,9 +4,11 @@ import type { QueuedCommand } from "./command_handler";
 
 export class UnitBehavior extends Rule {
   execute(context: TickContext): QueuedCommand[] {
-    return [{
-      type: "ai", 
-      params: {},
-    }];
+    return [
+      {
+        type: "ai",
+        params: {},
+      },
+    ];
   }
 }

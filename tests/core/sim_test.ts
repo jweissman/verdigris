@@ -45,6 +45,9 @@ describe('Simulation basics', () => {
     sim.addUnit({ id: 'e', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }});
     const input = { commands: { e: [{ action: 'move', target: { x: 1, y: 0 } }] } };
     sim.accept(input);
-    expect(sim.units[0].intendedMove.x).toBe(1);
+    // After accept() which calls step(), the unit should have moved
+    expect(sim.units[0].pos.x).toBe(1);
+    // And intendedMove should be cleared after physics
+    expect(sim.units[0].intendedMove.x).toBe(0);
   });
 });

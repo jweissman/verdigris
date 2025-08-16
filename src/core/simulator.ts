@@ -1418,16 +1418,8 @@ class Simulator {
         for (const cmd of command) {
           if (cmd.action === "move") {
             if (cmd.target) {
-              for (let i = 0; i < this.unitArrays.capacity; i++) {
-                if (
-                  this.unitArrays.unitIds[i] === unit.id &&
-                  this.unitArrays.active[i] === 1
-                ) {
-                  this.unitArrays.intendedMoveX[i] = cmd.target.x;
-                  this.unitArrays.intendedMoveY[i] = cmd.target.y;
-                  break;
-                }
-              }
+              // Use ProxyManager API for consistency with SoA
+              this.proxyManager.setIntendedMove(unit.id, cmd.target);
             }
           }
           if (cmd.action === "fire" && cmd.target) {
@@ -1452,6 +1444,8 @@ class Simulator {
         }
       }
     }
+    // Invalidate proxy cache after direct SoA updates
+    this.proxyCacheValid = false;
     return this;
   }
 

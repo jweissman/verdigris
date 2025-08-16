@@ -52,7 +52,11 @@ export class AirdropPhysics extends Rule {
     return commands;
   }
 
-  private handleLanding(context: TickContext, unit: any, commands: QueuedCommand[]): void {
+  private handleLanding(
+    context: TickContext,
+    unit: any,
+    commands: QueuedCommand[],
+  ): void {
     const shouldApplyImpact = unit.meta.landingImpact;
 
     commands.push({

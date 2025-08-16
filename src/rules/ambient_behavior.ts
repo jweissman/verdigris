@@ -17,7 +17,11 @@ export class AmbientBehavior extends Rule {
     return commands;
   }
 
-  private updateAmbientBehavior(context: TickContext, creature: any, commands: QueuedCommand[]): void {
+  private updateAmbientBehavior(
+    context: TickContext,
+    creature: any,
+    commands: QueuedCommand[],
+  ): void {
     if (!creature.meta.wanderTarget || this.isNearTarget(creature)) {
       creature.meta.wanderTarget = this.getNewWanderTarget(context, creature);
       creature.meta.lastWanderUpdate = context.getCurrentTick();
