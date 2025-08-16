@@ -37,42 +37,69 @@ interface DataQuery {
  * This class should _not_ directly expose setters!
  */
 export class UnitProxy implements Unit {
+  private _cachedIndex: number | undefined;
+  
   constructor(
     public readonly id: string,
     private query: DataQuery,
+    index?: number
   ) {
-    Object.defineProperty(this, "query", { enumerable: false });
+    this._cachedIndex = index;
   }
 
   get pos(): Vec2 {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).getPositionByIndex(this._cachedIndex);
+    }
     return this.query.getPosition(this.id);
   }
 
   get intendedMove(): Vec2 {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).getIntendedMoveByIndex(this._cachedIndex);
+    }
     return this.query.getIntendedMove(this.id);
   }
 
   get hp(): number {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).getHpByIndex(this._cachedIndex);
+    }
     return this.query.getHp(this.id);
   }
 
   get maxHp(): number {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).getMaxHpByIndex(this._cachedIndex);
+    }
     return this.query.getMaxHp(this.id);
   }
 
   get dmg(): number {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).getDamageByIndex(this._cachedIndex);
+    }
     return this.query.getDamage(this.id);
   }
 
   get team(): "friendly" | "hostile" | "neutral" {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).getTeamByIndex(this._cachedIndex);
+    }
     return this.query.getTeam(this.id);
   }
 
   get state(): UnitState {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).getStateByIndex(this._cachedIndex);
+    }
     return this.query.getState(this.id);
   }
 
   get mass(): number {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).getMassByIndex(this._cachedIndex);
+    }
     return this.query.getMass(this.id);
   }
 
@@ -109,6 +136,9 @@ export class UnitProxy implements Unit {
   }
 
   get isAlive(): boolean {
+    if (this._cachedIndex !== undefined) {
+      return (this.query as UnitProxyManager).isAliveByIndex(this._cachedIndex);
+    }
     return this.query.isAlive(this.id);
   }
 }
@@ -130,25 +160,81 @@ export class UnitProxyManager implements DataQuery {
 
   rebuildIndex(): void {
     this.idToIndex.clear();
+    this.indexCache = Object.create(null); // Clear cache
     for (const i of this.arrays.activeIndices) {
       if (this.arrays.unitIds[i]) {
         this.idToIndex.set(this.arrays.unitIds[i], i);
+        this.indexCache[this.arrays.unitIds[i]] = i; // Pre-populate cache
       }
     }
   }
 
+  private indexCache: { [key: string]: number } = Object.create(null);
+  
   private getIndex(unitId: string): number {
-    // Fast path - most of the time the index is cached
-    const index = this.idToIndex.get(unitId);
+    // Fast path - check if we have a direct index from the proxy
+    // This avoids the Map/object lookup entirely for most calls
+    let index = this.indexCache[unitId];
     if (index !== undefined) return index;
+    
+    // Fallback to Map
+    index = this.idToIndex.get(unitId);
+    if (index !== undefined) {
+      this.indexCache[unitId] = index; // Cache in object
+      return index;
+    }
     
     // Slow path - rebuild index if needed
     this.rebuildIndex();
-    const newIndex = this.idToIndex.get(unitId);
-    if (newIndex === undefined) {
+    index = this.idToIndex.get(unitId);
+    if (index === undefined) {
       throw new Error(`Unit ${unitId} not found`);
     }
-    return newIndex;
+    this.indexCache[unitId] = index;
+    return index;
+  }
+  
+  // Fast methods that bypass getIndex() lookup - called by proxies with cached index
+  getPositionByIndex(index: number): Vec2 {
+    return { x: this.arrays.posX[index], y: this.arrays.posY[index] };
+  }
+  
+  getIntendedMoveByIndex(index: number): Vec2 {
+    return {
+      x: this.arrays.intendedMoveX[index],
+      y: this.arrays.intendedMoveY[index],
+    };
+  }
+  
+  getHpByIndex(index: number): number {
+    return this.arrays.hp[index];
+  }
+  
+  getMaxHpByIndex(index: number): number {
+    return this.arrays.maxHp[index];
+  }
+  
+  getTeamByIndex(index: number): "friendly" | "hostile" | "neutral" {
+    const teamId = this.arrays.team[index];
+    return teamId === 1 ? "friendly" : teamId === 2 ? "hostile" : "neutral";
+  }
+  
+  getStateByIndex(index: number): UnitState {
+    const stateId = this.arrays.state[index];
+    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead"];
+    return stateMap[stateId] || "idle";
+  }
+  
+  getMassByIndex(index: number): number {
+    return this.arrays.mass[index];
+  }
+  
+  getDamageByIndex(index: number): number {
+    return this.arrays.dmg[index];
+  }
+  
+  isAliveByIndex(index: number): boolean {
+    return this.arrays.state[index] !== 3 && this.arrays.hp[index] > 0;
   }
 
   private getCold(unitId: string): any {
@@ -365,7 +451,7 @@ export class UnitProxyManager implements DataQuery {
       throw new Error(`No unit at index ${index}`);
     }
     if (!this.proxyCache.has(unitId)) {
-      this.proxyCache.set(unitId, new UnitProxy(unitId, this));
+      this.proxyCache.set(unitId, new UnitProxy(unitId, this, index));
     }
     return this.proxyCache.get(unitId)!;
   }
@@ -408,15 +494,18 @@ export class UnitProxyManager implements DataQuery {
   clearCache(): void {
     this.proxyCache.clear();
     this.proxyArrayCache = null; // Invalidate array cache too
+    this.indexCache = Object.create(null); // Clear index cache
     this.rebuildIndex();
   }
 
   notifyUnitAdded(unitId: string, index: number): void {
     this.idToIndex.set(unitId, index);
+    this.indexCache[unitId] = index;
   }
 
   notifyUnitRemoved(unitId: string): void {
     this.idToIndex.delete(unitId);
+    delete this.indexCache[unitId];
     this.proxyCache.delete(unitId);
   }
 

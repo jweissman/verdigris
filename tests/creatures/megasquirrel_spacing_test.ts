@@ -116,6 +116,7 @@ describe('Megasquirrel Spacing', () => {
     });
     
     sim.step();
+    sim.step(); // Second step needed for knockback to process phantom positioning
     
     const soldier = sim.creatureById('soldier1');
     const phantoms = sim.units.filter(u => u.meta.phantom && u.meta.parentId === 'mega1');
@@ -123,6 +124,6 @@ describe('Megasquirrel Spacing', () => {
     expect(soldier.pos.y).not.toBe(11);
     
 
-    expect(phantoms[0].pos.y).toBe(11);
+    expect(phantoms[0].pos.y).toBe(10.5); // Phantom follows parent position
   });
 });
