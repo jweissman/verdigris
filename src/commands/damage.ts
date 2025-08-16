@@ -54,12 +54,16 @@ export class Damage extends Command {
 
     const newHp = Math.max(0, target.hp - finalDamage); // Clamp HP to minimum 0
 
+    // Track damage taken for segments
+    const damageTaken = target.meta?.segment ? finalDamage : undefined;
+
     transform.updateUnit(targetId, {
       hp: newHp,
       state: newHp <= 0 ? "dead" : target.state,
       meta: {
         ...target.meta,
         impactFrame: this.sim.ticks,
+        damageTaken: damageTaken !== undefined ? damageTaken : target.meta?.damageTaken,
       },
     });
 

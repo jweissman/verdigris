@@ -207,11 +207,14 @@ describe('Mesoworm - Medium Segmented Creature', () => {
       });
       
 
-      sim.step();
+      sim.step(); // Process damage event and set damageTaken
+      sim.step(); // Process damage transfer from segment to parent
+      
+      const headAfter = sim.units.find(u => u.id === 'mesoworm1');
       
 
-      expect(headUnit!.hp).toBeLessThan(initialHeadHp);
-      expect(headUnit!.hp).toBe(initialHeadHp - 5); // 50% of 10 damage
+      expect(headAfter!.hp).toBeLessThan(initialHeadHp);
+      expect(headAfter!.hp).toBe(initialHeadHp - 5); // 50% of 10 damage
     }
   });
   

@@ -1499,7 +1499,12 @@ class Simulator {
     }
   }
 
+  private forcedAbilitiesThisTick = new Set<string>();
+
   forceAbility(unitId: string, abilityName: string, target?: any): void {
+    // Track that this ability was forced for this unit
+    const key = `${unitId}:${abilityName}`;
+    this.forcedAbilitiesThisTick.add(key);
     const unit = this.units.find((u) => u.id === unitId);
     if (
       !unit ||
@@ -1572,6 +1577,17 @@ class Simulator {
     // Collect the commands that were generated
     const generatedCommands = (abilitiesRule as any).commands || [];
     this.queuedCommands.push(...generatedCommands);
+
+    // Update lastAbilityTick immediately to prevent double-triggering
+    const proxyManager = (this as any).unitProxyManager;
+    console.log('ProxyManager exists?', !!proxyManager);
+    if (proxyManager) {
+      const currentTick = { ...unit.lastAbilityTick, [abilityName]: this.ticks };
+      console.log(`Setting lastAbilityTick for ${abilityName} to tick ${this.ticks}`);
+      proxyManager.setLastAbilityTick(unit.id, currentTick);
+    } else {
+      console.log('WARNING: No proxyManager, cannot update lastAbilityTick immediately');
+    }
 
     this.queuedCommands.push({
       type: "meta",

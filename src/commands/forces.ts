@@ -41,6 +41,9 @@ export class ForcesCommand extends Command {
       moveX[i] = 0;
       moveY[i] = 0;
     }
+
+    // Apply collision resolution for overlapping units
+    this.resolveCollisionsSoA(arrays);
   }
 
   private updateProjectiles(): void {
