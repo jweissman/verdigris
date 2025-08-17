@@ -74,13 +74,13 @@ describe('Mechanist Showcase', () => {
     
 
     mechanistCrew.forEach(({ type }) => {
-      const found = sim.units.find(u => u.type === type);
+      const found = sim.liveUnits.find(u => u.type === type);
       expect(found).toBeDefined();
     });
 
 
     constructs.forEach(({ type }) => {
-      const found = sim.units.find(u => u.type === type);
+      const found = sim.liveUnits.find(u => u.type === type);
       expect(found).toBeDefined();
     });
 
@@ -112,8 +112,8 @@ describe('Mechanist Showcase', () => {
     }
     
 
-    expect(sim.units.find(u => u.id === mechatronist.id)).toBeDefined();
-    expect(sim.units.find(u => u.id === fueler.id)).toBeDefined();
+    expect(sim.liveUnits.find(u => u.id === mechatronist.id)).toBeDefined();
+    expect(sim.liveUnits.find(u => u.id === fueler.id)).toBeDefined();
   });
 
   it('should create all mechanist support units with correct properties', () => {
@@ -153,8 +153,8 @@ describe('Mechanist Showcase', () => {
     sim.addUnit(construct);
     
 
-    const simBuilder = sim.units.find(u => u.sprite === 'builder')!;
-    const simConstruct = sim.units.find(u => u.sprite === 'clanker')!;
+    const simBuilder = sim.liveUnits.find(u => u.sprite === 'builder')!;
+    const simConstruct = sim.liveUnits.find(u => u.sprite === 'clanker')!;
     
 
     const originalHp = simConstruct.hp;
@@ -189,9 +189,9 @@ describe('Mechanist Showcase', () => {
     sim.addUnit(spikerBot);
     
 
-    const fuelerMechanist = sim.units.find(u => u.sprite === 'fueler')!;
-    const simFreezeBot = sim.units.find(u => u.sprite === 'freezebot')!;
-    const simSpikerBot = sim.units.find(u => u.sprite === 'spikebot')!;
+    const fuelerMechanist = sim.liveUnits.find(u => u.sprite === 'fueler')!;
+    const simFreezeBot = sim.liveUnits.find(u => u.sprite === 'freezebot')!;
+    const simSpikerBot = sim.liveUnits.find(u => u.sprite === 'spikebot')!;
     
 
     sim.ticks = 100;
@@ -258,7 +258,7 @@ describe('Mechanist Showcase', () => {
     sim.step(); // Process heal command
       
 
-      const repairedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5 && u.tags?.includes('construct'));
+      const repairedConstruct = sim.liveUnits.find(u => u.pos.x === 6 && u.pos.y === 5 && u.tags?.includes('construct'));
       expect(repairedConstruct).toBeDefined();
       
 
@@ -307,7 +307,7 @@ describe('Mechanist Showcase', () => {
     sim.step();
     
 
-    const hackedEnemy = sim.units.find(u => u.id === enemy.id);
+    const hackedEnemy = sim.liveUnits.find(u => u.id === enemy.id);
     expect(hackedEnemy).toBeDefined();
     expect(hackedEnemy!.meta.systemsHacked).toBe(true);
     expect(hackedEnemy!.meta.hackDuration).toBe(30);
@@ -333,7 +333,7 @@ describe('Mechanist Showcase', () => {
     sim.step(); // Process commands
     sim.step(); // Process heal event and commands
     
-    const repairedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
+    const repairedConstruct = sim.liveUnits.find(u => u.pos.x === 6 && u.pos.y === 5);
     expect(repairedConstruct).toBeDefined();
     
 
@@ -355,9 +355,9 @@ describe('Mechanist Showcase', () => {
     sim.addUnit(zapper);
     
 
-    const simAssembler = sim.units.find(u => u.sprite === 'assembler')!;
-    const simRoller = sim.units.find(u => u.sprite === 'jumpbot')!;
-    const simZapper = sim.units.find(u => u.sprite === 'zapper')!;
+    const simAssembler = sim.liveUnits.find(u => u.sprite === 'assembler')!;
+    const simRoller = sim.liveUnits.find(u => u.sprite === 'jumpbot')!;
+    const simZapper = sim.liveUnits.find(u => u.sprite === 'zapper')!;
     
 
     const beforeHp = simRoller.hp;
@@ -366,7 +366,7 @@ describe('Mechanist Showcase', () => {
     sim.step(); // Process command
     sim.step(); // Process heal event and command
     
-    const reinforcedConstruct = sim.units.find(u => u.pos.x === 6 && u.pos.y === 5);
+    const reinforcedConstruct = sim.liveUnits.find(u => u.pos.x === 6 && u.pos.y === 5);
     expect(reinforcedConstruct).toBeDefined();
 
     expect(reinforcedConstruct!.hp).toBe(beforeHp + 10);
@@ -423,11 +423,11 @@ describe('Mechanist Showcase', () => {
     sim.addUnit(construct2);
     
 
-    const simBuilder = sim.units.find(u => u.sprite === 'builder')!;
-    const simFueler = sim.units.find(u => u.sprite === 'fueler')!;
-    const simMechanic = sim.units.find(u => u.sprite === 'mechanic')!;
-    const simConstruct1 = sim.units.find(u => u.sprite === 'clanker')!;
-    const simConstruct2 = sim.units.find(u => u.sprite === 'freezebot')!;
+    const simBuilder = sim.liveUnits.find(u => u.sprite === 'builder')!;
+    const simFueler = sim.liveUnits.find(u => u.sprite === 'fueler')!;
+    const simMechanic = sim.liveUnits.find(u => u.sprite === 'mechanic')!;
+    const simConstruct1 = sim.liveUnits.find(u => u.sprite === 'clanker')!;
+    const simConstruct2 = sim.liveUnits.find(u => u.sprite === 'freezebot')!;
     
 
     sim.queuedCommands.push({
@@ -455,11 +455,11 @@ describe('Mechanist Showcase', () => {
     const beforeHp = simConstruct1.hp;
     sim.forceAbility(simMechanic.id, 'emergencyRepair', simConstruct1);
     sim.step();
-    const repairedConstruct = sim.units.find(u => u.pos.x === 8 && u.pos.y === 5);
+    const repairedConstruct = sim.liveUnits.find(u => u.pos.x === 8 && u.pos.y === 5);
     if (repairedConstruct && repairedConstruct.hp > beforeHp) synergisticActions++;
     
 
-    const reinforcedConstruct = sim.units.find(u => u.pos.x === 8 && u.pos.y === 5);
+    const reinforcedConstruct = sim.liveUnits.find(u => u.pos.x === 8 && u.pos.y === 5);
     const beforeMaxHp = reinforcedConstruct!.maxHp;
     sim.forceAbility(simBuilder.id, 'reinforceConstruct', simConstruct1);
     sim.step();

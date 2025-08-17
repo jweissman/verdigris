@@ -86,9 +86,8 @@ describe('Wander Command', () => {
 
     sim.step();
     
-
-    const friendlyUnit = sim.units.find(u => u.team === 'friendly');
-    const hostileUnit = sim.units.find(u => u.team === 'hostile');
+    const friendlyUnit = sim.liveUnits.find(u => u.team === 'friendly');
+    const hostileUnit = sim.liveUnits.find(u => u.team === 'hostile');
     
 
     expect(friendlyUnit?.pos.x !== friendlyInitialPos.x || friendlyUnit?.pos.y !== friendlyInitialPos.y).toBe(true);

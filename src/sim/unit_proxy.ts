@@ -47,6 +47,44 @@ export class UnitProxy implements Unit {
     this._cachedIndex = index;
   }
 
+  /**
+   * Static factory to create a lightweight unit object
+   * This is a plain object with values, not a proxy with getters
+   */
+  static createLightweight(
+    unitId: string, 
+    index: number, 
+    arrays: UnitArrays,
+    metadataStore: Map<string, any>
+  ): Unit {
+    const coldData = metadataStore.get(unitId) || {};
+    const stateId = arrays.state[index];
+    const teamId = arrays.team[index];
+    
+    return {
+      id: unitId,
+      pos: { x: arrays.posX[index], y: arrays.posY[index] },
+      intendedMove: { x: arrays.intendedMoveX[index], y: arrays.intendedMoveY[index] },
+      hp: arrays.hp[index],
+      maxHp: arrays.maxHp[index],
+      dmg: arrays.dmg[index],
+      team: teamId === 1 ? "friendly" : teamId === 2 ? "hostile" : "neutral",
+      state: (["idle", "walk", "attack", "dead"] as UnitState[])[stateId] || "idle",
+      mass: arrays.mass[index],
+      sprite: coldData.sprite || 'default',
+      abilities: coldData.abilities || [],
+      tags: coldData.tags,
+      meta: coldData.meta || {},
+      type: coldData.type,
+      posture: coldData.posture,
+      intendedTarget: coldData.intendedTarget,
+      lastAbilityTick: coldData.lastAbilityTick,
+      get isAlive() { 
+        return this.state !== 'dead' && this.hp > 0; 
+      }
+    };
+  }
+
   get pos(): Vec2 {
     const manager = this.query as UnitProxyManager;
     return {
@@ -136,6 +174,10 @@ export class UnitProxyManager implements DataQuery {
   public readonly arrays: UnitArrays;
   private metadataStore: Map<string, any>;
   private idToIndex: Map<string, number> = new Map();
+  
+  // Flag to control lightweight vs real proxies
+  // Tests can set this to false to get real proxies
+  public useLightweightProxies: boolean = true;
 
   constructor(arrays: UnitArrays, metadataStore: Map<string, any>) {
     this.arrays = arrays;
@@ -443,6 +485,26 @@ export class UnitProxyManager implements DataQuery {
   }
 
   getAllProxies(): UnitProxy[] {
+    if (this.arrays.activeIndices.length === 0 && this.arrays.activeCount > 0) {
+      this.arrays.rebuildActiveIndices();
+    }
+
+    const proxies: UnitProxy[] = [];
+    for (const i of this.arrays.activeIndices) {
+      const unitId = this.arrays.unitIds[i];
+      // Use lightweight objects instead of proxy classes for performance
+      const lightweight = UnitProxy.createLightweight(unitId, i, this.arrays, this.metadataStore);
+      proxies.push(lightweight as any);
+    }
+
+    return proxies;
+  }
+
+  /**
+   * Get real proxies that stay in sync with arrays
+   * Used for tests and external API where references are held across ticks
+   */
+  getRealProxies(): UnitProxy[] {
     if (this.arrays.activeIndices.length === 0 && this.arrays.activeCount > 0) {
       this.arrays.rebuildActiveIndices();
     }

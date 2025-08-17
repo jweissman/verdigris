@@ -86,7 +86,16 @@ class Simulator {
   public proxyManager: UnitProxyManager;
 
   get units(): readonly Unit[] {
+    // Returns lightweight snapshots for performance
     return this.proxyManager.getAllProxies();
+  }
+  
+  /**
+   * Get units with real proxies that stay in sync with arrays
+   * FOR TESTS ONLY - production code should use 'units'
+   */
+  get liveUnits(): readonly Unit[] {
+    return this.proxyManager.getRealProxies();
   }
 
   setUnitsFromTransform(units: Unit[]): void {
@@ -451,18 +460,20 @@ class Simulator {
 
   get roster() {
     const sim = this;
+    // Use real proxies for roster so tests can hold references across ticks
+    const realProxies = this.proxyManager.getRealProxies();
     return new Proxy(
       {},
       {
         get(target, prop) {
           if (typeof prop === "string") {
-            return sim.units.find((u) => u.id === prop);
+            return realProxies.find((u) => u.id === prop);
           }
           return undefined;
         },
         has(target, prop) {
           if (typeof prop === "string") {
-            return sim.units.some((u) => u.id === prop);
+            return realProxies.some((u) => u.id === prop);
           }
           return false;
         },
