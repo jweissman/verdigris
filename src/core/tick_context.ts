@@ -54,6 +54,11 @@ export interface TickContext {
   getUnitColdData(unitId: string): any;
   getUnitColdDataByIndex(index: number): any;
   isAbilityForced(unitId: string, abilityName: string): boolean;
+  
+  // High-performance index-based methods
+  findUnitIndicesInRadius(center: Vec2, radius: number): number[];
+  getActiveUnitIndices(): number[];
+  getUnitIndicesWithAbilities(): number[];
 }
 
 /**
@@ -230,5 +235,41 @@ export class TickContextImpl implements TickContext {
   isAbilityForced(unitId: string, abilityName: string): boolean {
     const key = `${unitId}:${abilityName}`;
     return (this.sim as any).forcedAbilitiesThisTick?.has(key) || false;
+  }
+  
+  // High-performance index-based methods
+  findUnitIndicesInRadius(center: Vec2, radius: number): number[] {
+    const arrays = this.getArrays();
+    const indices: number[] = [];
+    const radiusSq = radius * radius;
+    
+    for (const idx of arrays.activeIndices) {
+      const dx = arrays.posX[idx] - center.x;
+      const dy = arrays.posY[idx] - center.y;
+      if (dx * dx + dy * dy <= radiusSq) {
+        indices.push(idx);
+      }
+    }
+    
+    return indices;
+  }
+  
+  getActiveUnitIndices(): number[] {
+    return [...this.getArrays().activeIndices];
+  }
+  
+  getUnitIndicesWithAbilities(): number[] {
+    const arrays = this.getArrays();
+    const indices: number[] = [];
+    
+    for (const idx of arrays.activeIndices) {
+      const unitId = arrays.unitIds[idx];
+      const coldData = this.getUnitColdData(unitId);
+      if (coldData?.abilities?.length > 0) {
+        indices.push(idx);
+      }
+    }
+    
+    return indices;
   }
 }

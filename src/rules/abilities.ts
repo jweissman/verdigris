@@ -122,7 +122,7 @@ export class Abilities extends Rule {
         }
 
         let shouldTrigger = true;
-        let target = unit;
+        let target: any = unit;
 
         if (ability.trigger) {
           try {

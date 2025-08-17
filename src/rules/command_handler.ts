@@ -19,6 +19,7 @@ import { JumpCommand } from "../commands/jump";
 import { CleanupCommand } from "../commands/cleanup";
 import { RemoveCommand } from "../commands/remove";
 import { MoveCommand } from "../commands/move";
+import { MovesCommand } from "../commands/moves";
 import { KnockbackCommand } from "../commands/knockback";
 
 import {
@@ -87,6 +88,7 @@ export class CommandHandler {
     this.commands.set("cleanup", new CleanupCommand(sim));
     this.commands.set("remove", new RemoveCommand(sim));
     this.commands.set("move", new MoveCommand(sim));
+    this.commands.set("moves", new MovesCommand(sim)); // Batch move command
     this.commands.set("knockback", new KnockbackCommand(sim));
 
     this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim));

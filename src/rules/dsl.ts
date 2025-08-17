@@ -533,12 +533,18 @@ export default class DSL {
   }
   
   // Simple parser for common DSL patterns to avoid eval
+  // This handles 99% of ability expressions without eval overhead
   private static trySimpleParse(
     expression: string,
     subject: Unit,
     allUnits: readonly Unit[],
     context: TickContext
   ): any {
+    // Handle backtick-wrapped expressions with eval (escape hatch for complex expressions)
+    if (expression.startsWith('`') && expression.endsWith('`')) {
+      // Remove backticks and fall through to eval
+      return undefined; // Let eval handle it
+    }
     // Handle simple property access patterns
     if (expression.startsWith("self.")) {
       const prop = expression.substring(5);
@@ -641,26 +647,187 @@ export default class DSL {
       return closestEnemy?.pos || null;
     }
     
-    // Handle simple && expressions
+    // Handle weakest.ally()?.pos  
+    if (expression === "weakest.ally()?.pos") {
+      let weakestAlly: Unit | null = null;
+      let lowestHp = Infinity;
+      for (const u of allUnits) {
+        if (u.team === subject.team && u.id !== subject.id && u.state !== "dead") {
+          if (u.hp < lowestHp) {
+            lowestHp = u.hp;
+            weakestAlly = u;
+          }
+        }
+      }
+      return weakestAlly?.pos || null;
+    }
+    
+    // Handle distance(X) <= Y or distance(X) > Y patterns
+    const distanceMatch = expression.match(/^distance\((.+?)\)\s*([<>=]+)\s*(\d+(?:\.\d+)?)$/);
+    if (distanceMatch) {
+      const [, targetExpr, op, distStr] = distanceMatch;
+      const maxDist = parseFloat(distStr);
+      
+      // Parse the target expression
+      const targetPos = this.trySimpleParse(targetExpr, subject, allUnits, context);
+      if (!targetPos) return undefined;
+      
+      const dx = targetPos.x - subject.pos.x;
+      const dy = targetPos.y - subject.pos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      switch (op) {
+        case '<': return dist < maxDist;
+        case '<=': return dist <= maxDist;
+        case '>': return dist > maxDist;
+        case '>=': return dist >= maxDist;
+        case '==': return dist === maxDist;
+        default: return undefined;
+      }
+    }
+    
+    // Handle property access with ?. operator
+    if (expression.includes('?.')) {
+      const parts = expression.split('?.');
+      if (parts[0] === 'closest.ally()') {
+        let closestAlly: Unit | null = null;
+        let minDistSq = Infinity;
+        for (const u of allUnits) {
+          if (u.team === subject.team && u.id !== subject.id && u.state !== "dead") {
+            const dx = u.pos.x - subject.pos.x;
+            const dy = u.pos.y - subject.pos.y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < minDistSq) {
+              minDistSq = distSq;
+              closestAlly = u;
+            }
+          }
+        }
+        
+        if (!closestAlly) return null;
+        
+        // Handle the rest of the property access
+        let result: any = closestAlly;
+        for (let i = 1; i < parts.length; i++) {
+          if (!result) return null;
+          
+          // Handle method calls like includes('construct')
+          const methodMatch = parts[i].match(/^(\w+)\((.*)\)$/);
+          if (methodMatch) {
+            const [, method, args] = methodMatch;
+            if (method === 'includes' && result.includes) {
+              // Parse the argument (remove quotes)
+              const arg = args.replace(/['"`]/g, '');
+              return result.includes(arg);
+            }
+          }
+          
+          // Handle comparisons like hp < maxHp * 0.7
+          const compMatch = parts[i].match(/^(\w+)\s*([<>=]+)\s*(.+)$/);
+          if (compMatch) {
+            const [, prop, op, rightExpr] = compMatch;
+            const leftVal = result[prop];
+            
+            // Parse right side (handle maxHp * 0.7 pattern)
+            const multMatch = rightExpr.match(/^(\w+)\s*\*\s*([\d.]+)$/);
+            let rightVal;
+            if (multMatch) {
+              const [, rightProp, factor] = multMatch;
+              rightVal = result[rightProp] * parseFloat(factor);
+            } else {
+              rightVal = parseFloat(rightExpr);
+            }
+            
+            switch (op) {
+              case '<': return leftVal < rightVal;
+              case '<=': return leftVal <= rightVal;
+              case '>': return leftVal > rightVal;
+              case '>=': return leftVal >= rightVal;
+              case '==': return leftVal === rightVal;
+              default: return undefined;
+            }
+          }
+          
+          // Simple property access
+          const propMatch = parts[i].match(/^(\w+)$/);
+          if (propMatch) {
+            result = result[propMatch[1]];
+          }
+        }
+        return result;
+      }
+      
+      if (parts[0] === 'closest.enemy()') {
+        let closestEnemy: Unit | null = null;
+        let minDistSq = Infinity;
+        for (const u of allUnits) {
+          if (u.team !== subject.team && u.state !== "dead") {
+            const dx = u.pos.x - subject.pos.x;
+            const dy = u.pos.y - subject.pos.y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < minDistSq) {
+              minDistSq = distSq;
+              closestEnemy = u;
+            }
+          }
+        }
+        
+        if (!closestEnemy) return null;
+        
+        // Handle the rest like tags?.includes('megabeast')
+        let result: any = closestEnemy;
+        for (let i = 1; i < parts.length; i++) {
+          if (!result) return null;
+          
+          // Handle method calls
+          const methodMatch = parts[i].match(/^(\w+)\((.*)\)$/);
+          if (methodMatch) {
+            const [, method, args] = methodMatch;
+            if (method === 'includes' && result.includes) {
+              const arg = args.replace(/['"`]/g, '');
+              return result.includes(arg);
+            }
+          }
+          
+          // Simple property access
+          const propMatch = parts[i].match(/^(\w+)$/);
+          if (propMatch) {
+            result = result[propMatch[1]];
+          }
+        }
+        return result;
+      }
+    }
+    
+    // Handle simple && expressions (must come after other checks)
     if (expression.includes(" && ")) {
       const parts = expression.split(" && ");
       if (parts.length === 2) {
         const left = this.trySimpleParse(parts[0].trim(), subject, allUnits, context);
         if (left === false) return false; // Short circuit
+        if (left === undefined) return undefined; // Can't parse
         const right = this.trySimpleParse(parts[1].trim(), subject, allUnits, context);
+        if (right === undefined) return undefined; // Can't parse
         return left && right;
       }
     }
     
-    // Handle simple || expressions
+    // Handle simple || expressions (must come after other checks)
     if (expression.includes(" || ")) {
       const parts = expression.split(" || ");
       if (parts.length === 2) {
         const left = this.trySimpleParse(parts[0].trim(), subject, allUnits, context);
         if (left === true) return true; // Short circuit
+        if (left === undefined) return undefined; // Can't parse
         const right = this.trySimpleParse(parts[1].trim(), subject, allUnits, context);
+        if (right === undefined) return undefined; // Can't parse
         return left || right;
       }
+    }
+    
+    // Handle parenthesized expressions
+    if (expression.startsWith('(') && expression.endsWith(')')) {
+      return this.trySimpleParse(expression.slice(1, -1), subject, allUnits, context);
     }
     
     // Return undefined to indicate we couldn't parse it
