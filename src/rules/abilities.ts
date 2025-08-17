@@ -1,5 +1,4 @@
 import DSL from "./dsl";
-import { FastDSL } from "./fast_dsl";
 import { Rule } from "./rule";
 import { AbilityEffect } from "../types/AbilityEffect";
 import { Ability } from "../types/Ability";
@@ -12,14 +11,15 @@ export class Abilities extends Rule {
   // @ts-ignore
   static all: { [key: string]: Ability } = abilitiesJson as any;
   
-  // Cache for ability lookups
+
   private static abilityCache = new Map<string, Ability | undefined>();
 
   private commands: QueuedCommand[] = [];
+  private cachedAllUnits: readonly Unit[] = []; // Cache for current execution
 
   constructor() {
     super();
-    // Pre-cache all abilities on initialization
+
     if (Abilities.abilityCache.size === 0) {
       for (const name in Abilities.all) {
         Abilities.abilityCache.set(name, Abilities.all[name]);
@@ -37,29 +37,33 @@ export class Abilities extends Rule {
 
     const currentTick = context.getCurrentTick();
     const allUnits = context.getAllUnits();
+    this.cachedAllUnits = allUnits; // Cache for all helper methods
     
-    // Pre-filter units that have abilities or are burrowed
+    // Clear DSL cache for each step to enable lazy evaluation
+    DSL.clearCache();
+    
+
     const relevantUnits = allUnits.filter(u => 
       (u.abilities && u.abilities.length > 0) || u.meta?.burrowed
     );
     
-    // Early exit if no units have abilities - massive performance gain
+
     if (relevantUnits.length === 0) {
       return this.commands;
     }
     
-    // Pre-compute common DSL lookups once per tick
+
     const enemyCache = new Map<string, any>(); // Cache closest enemy per unit
     const allyCache = new Map<string, any>();  // Cache closest ally per unit
 
-    // Single iteration over relevant units only
+
     for (const unit of relevantUnits) {
-      // Skip dead units early
+
       if (unit.state === 'dead' || unit.hp <= 0) {
         continue;
       }
       
-      // Handle burrowing first
+
       const meta = unit.meta; // Cache meta access
       if (
         meta?.burrowed &&
@@ -83,7 +87,7 @@ export class Abilities extends Rule {
         }
       }
 
-      // Handle abilities in same loop
+
       const abilities = unit.abilities; // Cache abilities access
       if (!abilities || abilities.length === 0) {
         continue; // Skip this unit
@@ -92,7 +96,7 @@ export class Abilities extends Rule {
       const lastAbilityTick = unit.lastAbilityTick; // Cache property access
 
       for (const abilityName of abilities) {
-        // Use cached abilities
+
         const ability = this.ability(abilityName);
         if (!ability) {
           continue;
@@ -116,47 +120,14 @@ export class Abilities extends Rule {
           }
         }
 
-        // Fast path for common patterns
+
         let shouldTrigger = true;
         let target = unit;
         
-        // Handle triggers - always evaluate for correctness
+
         if (ability.trigger) {
           try {
-            // Fast path for exact "closest.enemy()" pattern
-            if (ability.trigger === "closest.enemy()") {
-              if (!enemyCache.has(unit.id)) {
-                const enemy = FastDSL.closestEnemy(unit, allUnits);
-                enemyCache.set(unit.id, enemy);
-              }
-              shouldTrigger = enemyCache.get(unit.id) !== null;
-            } else if (ability.trigger.startsWith("distance(closest.enemy()") && ability.trigger.includes(">")) {
-              // Fast path for "distance(closest.enemy()?.pos) > N" pattern
-              if (!enemyCache.has(unit.id)) {
-                const enemy = FastDSL.closestEnemy(unit, allUnits);
-                enemyCache.set(unit.id, enemy);
-              }
-              const enemy = enemyCache.get(unit.id);
-              if (!enemy) {
-                shouldTrigger = false;
-              } else {
-                // Extract range from pattern like "> 10"
-                const match = ability.trigger.match(/>\s*(\d+)/);
-                if (match) {
-                  const range = parseInt(match[1]);
-                  const dx = enemy.pos.x - unit.pos.x;
-                  const dy = enemy.pos.y - unit.pos.y;
-                  const distSq = dx * dx + dy * dy;
-                  shouldTrigger = distSq > (range * range);
-                } else {
-                  // Fallback to DSL
-                  shouldTrigger = DSL.evaluate(ability.trigger, unit, context);
-                }
-              }
-            } else {
-              // Fallback to DSL for complex expressions
-              shouldTrigger = DSL.evaluate(ability.trigger, unit, context);
-            }
+            shouldTrigger = DSL.evaluate(ability.trigger, unit, context, undefined, allUnits);
           } catch (error) {
             continue;
           }
@@ -166,25 +137,30 @@ export class Abilities extends Rule {
           }
         }
 
-        // Handle targets
+
         if (ability.target && ability.target !== "self") {
           try {
-            // Fast paths for common patterns
+
             if (ability.target === "closest.enemy()") {
               if (!enemyCache.has(unit.id)) {
-                const enemy = FastDSL.closestEnemy(unit, allUnits);
+
+                const enemy = allUnits.find(u => u.team !== unit.team && u.id !== unit.id && u.state !== 'dead') || null;
                 enemyCache.set(unit.id, enemy);
               }
               target = enemyCache.get(unit.id);
             } else if (ability.target === "closest.ally()") {
               if (!allyCache.has(unit.id)) {
-                const ally = FastDSL.closestAlly(unit, allUnits);
+
+                const nearbyUnits = context.findUnitsInRadius(unit.pos, 15);
+                const ally = nearbyUnits.find(u => u.team === unit.team && u.id !== unit.id && u.state !== 'dead') || null;
                 allyCache.set(unit.id, ally);
               }
               target = allyCache.get(unit.id);
             } else if (ability.target === "closest.enemy()?.pos") {
               if (!enemyCache.has(unit.id)) {
-                const enemy = FastDSL.closestEnemy(unit, allUnits);
+
+                const nearbyUnits = context.findUnitsInRadius(unit.pos, 15);
+                const enemy = nearbyUnits.find(u => u.team !== unit.team && u.id !== unit.id && u.state !== 'dead') || null;
                 enemyCache.set(unit.id, enemy);
               }
               const enemy = enemyCache.get(unit.id);
@@ -194,11 +170,11 @@ export class Abilities extends Rule {
             } else if (ability.target === "self") {
               target = unit;
             } else if (ability.target === "target") {
-              // This is referencing a previously set target - keep it
+
               target = unit;
             } else {
-              // Fallback to DSL for complex patterns
-              target = DSL.evaluate(ability.target, unit, context);
+
+              target = DSL.evaluate(ability.target, unit, context, undefined, allUnits);
             }
           } catch (error) {
             continue;
@@ -359,7 +335,7 @@ export class Abilities extends Rule {
 
     if (typeof targetExpression === "string") {
       try {
-        return DSL.evaluate(targetExpression, caster, context);
+        return DSL.evaluate(targetExpression, caster, context, undefined, this.cachedAllUnits);
       } catch (error) {
         console.warn(`Failed to resolve target '${targetExpression}':`, error);
         return null;
@@ -377,7 +353,7 @@ export class Abilities extends Rule {
   ): any {
     if (typeof value === "string") {
       try {
-        return DSL.evaluate(value, caster, context, target);
+        return DSL.evaluate(value, caster, context, target, this.cachedAllUnits);
       } catch (error) {
         console.warn(`Failed to resolve DSL value '${value}':`, error);
         return value;
@@ -417,7 +393,7 @@ export class Abilities extends Rule {
             : value.$conditional.else;
         }
 
-        const conditionResult = DSL.evaluate(condition, caster, context);
+        const conditionResult = DSL.evaluate(condition, caster, context, undefined, this.cachedAllUnits);
         return conditionResult
           ? value.$conditional.then
           : value.$conditional.else;
@@ -1323,7 +1299,7 @@ export class Abilities extends Rule {
             target: safeUnit, // Make target reference the same unit with safe tags
             self: safeUnit,
           };
-          return DSL.evaluate(effect.condition, context, this.sim);
+          return DSL.evaluate(effect.condition, context, this.sim, undefined, this.cachedAllUnits);
         } catch (error) {
           console.warn(
             `Failed to evaluate condition '${effect.condition}':`,

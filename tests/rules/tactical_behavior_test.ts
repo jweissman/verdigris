@@ -119,7 +119,7 @@ describe('Tactical Behavior Improvements', () => {
     
     sim.step(); // Process commands and events
     
-    // Expect at least one new unit was created (might be more from auto-abilities)
+
     expect(sim.units.length).toBeGreaterThanOrEqual(initialUnits + 1);
     
     const newConstruct = sim.units[sim.units.length - 1];

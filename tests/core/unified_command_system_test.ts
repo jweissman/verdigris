@@ -85,7 +85,7 @@ describe('Unified Command System', () => {
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
     const enemy = { ...Encyclopaedia.unit('worm'), pos: { x: 8, y: 5 }, team: 'hostile' as const };
     
-    // Clear ability usage before adding
+
     if (!toymaker.lastAbilityTick) toymaker.lastAbilityTick = {};
     delete toymaker.lastAbilityTick?.deployBot;
     if (!toymaker.meta) toymaker.meta = {};
@@ -97,13 +97,13 @@ describe('Unified Command System', () => {
     const unitsBefore = sim.units.length;
     
 
-    // Fixpoint processing handles abilities -> deploy command -> spawn event -> spawn command
+
     sim.step();
     
-    // The deploy command should have been processed, creating a new unit
+
     expect(sim.units.length).toBe(unitsBefore + 1);
     
-    // Verify a construct was created
+
     const newUnits = sim.units.filter(u => !['toymaker', 'worm'].includes(u.type || ''));
     expect(newUnits.length).toBeGreaterThan(0);
     

@@ -274,7 +274,7 @@ export class SegmentedCreatures extends Rule {
           if (parent) {
             const transferDamage = Math.floor(segment.meta.damageTaken * 0.5);
             if (transferDamage > 0) {
-              // Use damage command to properly apply damage to parent
+
               commands.push({
                 type: "damage",
                 params: {
@@ -299,7 +299,7 @@ export class SegmentedCreatures extends Rule {
                 },
               });
             }
-            // Clear the damage taken flag
+
             segment.meta.damageTaken = undefined;
           }
         }

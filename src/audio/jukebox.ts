@@ -287,7 +287,7 @@ export class Jukebox {
           ) {
             const pattern = Simulator.rng.random();
             if (pattern > 0.25) {
-              // 75% chance of plucks
+
 
               const arpNotes = chordNotes.slice(0, 3).map((note, i) => {
                 const octave = i === 0 ? 4 : 5; // Mix octaves, not too high
@@ -388,7 +388,7 @@ export class Jukebox {
 
     setTimeout(() => {
       if (!this.isPlaying) {
-        // Only if no background music
+
         this.playProgression("victory-fanfare", false);
       }
     }, 500);
@@ -441,14 +441,14 @@ export class Jukebox {
 
     const playRandomBirdSong = () => {
       if (Math.random() < 0.3) {
-        // 30% chance every interval
+
         this.playBirdSong();
       }
     };
 
     const playRandomAmbience = () => {
       if (Math.random() < 0.2) {
-        // 20% chance every interval
+
         this.playForestAmbience();
       }
     };

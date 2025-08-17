@@ -35,11 +35,11 @@ export class SpawnCommand extends Command {
             x:
               params.x !== undefined
                 ? (params.x as number)
-                : Math.floor(Math.random() * this.sim.fieldWidth),
+                : Math.floor(Math.random() * this.sim.getTickContext().getFieldWidth()),
             y:
               params.y !== undefined
                 ? (params.y as number)
-                : Math.floor(Math.random() * this.sim.fieldHeight),
+                : Math.floor(Math.random() * this.sim.getTickContext().getFieldHeight()),
           },
           team: (params.team || unitData.team || "neutral") as
             | "friendly"

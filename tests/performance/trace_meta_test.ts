@@ -5,7 +5,7 @@ describe('Trace Meta Commands', () => {
   test('Find where meta commands originate', () => {
     const sim = new Simulator(50, 50);
     
-    // Add one unit to trace
+
     sim.addUnit({
       id: 'test_unit',
       pos: { x: 25, y: 25 },
@@ -14,7 +14,7 @@ describe('Trace Meta Commands', () => {
       abilities: []
     });
     
-    // Hook into queuedCommands to trace meta command generation
+
     const originalPush = sim.queuedCommands.push;
     sim.queuedCommands.push = function(...items) {
       for (const item of items) {

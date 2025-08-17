@@ -43,7 +43,7 @@ export function createTestSimulator(unitCount: number = 50): Simulator {
     });
   }
   
-  // Warm up
+
   for (let i = 0; i < 100; i++) {
     sim.step();
   }

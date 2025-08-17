@@ -38,7 +38,7 @@ describe('Abilities', () => {
     const enemy = {
       id: 'enemy1', 
       pos: { x: 7, y: 2 }, // Distance = 5, within range 10 but > 2
-      team: 'enemy',
+      team: 'hostile',
       state: 'idle',
       hp: 100,
       maxHp: 100

@@ -44,7 +44,7 @@ describe('Performance Tests', () => {
 
   it('should handle stress test with multiple megasquirrels', () => {
     const sim = new Simulator(20, 20);
-    // Keep only essential rules for this test
+
     sim.rulebook = sim.rulebook.filter(r => 
       ['HugeUnits', 'UnitMovement', 'MeleeCombat'].includes(r.constructor.name)
     );
@@ -89,8 +89,8 @@ describe('Performance Tests', () => {
     const endTime = performance.now();
     const executionTime = endTime - startTime;
 
-    // This test is measuring basic performance - with 22 units and minimal rules
-    // We should be able to do 30 steps in under 1 second
+
+
     expect(executionTime).toBeLessThan(1000); // 1 second for 30 steps
   });
 

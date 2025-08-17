@@ -15,7 +15,7 @@ export default class Particles extends Rule {
 
     const arrays = this.sim.particleArrays;
     
-    // Early exit if no particles
+
     const activeCount = arrays.activeCount;
     if (activeCount === 0) return [];
 
@@ -25,12 +25,12 @@ export default class Particles extends Rule {
     const fieldHeight = context.getFieldHeight() * 8; // Convert to pixel coords
     const fieldWidth = context.getFieldWidth() * 8;
     
-    // Use activeIndices if available, otherwise scan
+
     if (arrays.activeIndices) {
       for (const i of arrays.activeIndices) {
         const typeId = arrays.type[i];
         if (typeId === 3) {
-          // 3 = snow
+
           if (arrays.posY[i] >= fieldHeight - 1) {
             arrays.landed[i] = 1;
             arrays.posY[i] = fieldHeight - 1;
@@ -48,12 +48,12 @@ export default class Particles extends Rule {
             arrays.posY[i] < -50 ||
             arrays.posY[i] > fieldHeight + 50)
         ) {
-          // Give generous buffer
+
           arrays.removeParticle(i);
         }
       }
     } else {
-      // Fallback to full scan but with early exit
+
       let processed = 0;
       for (let i = 0; i < arrays.capacity && processed < activeCount; i++) {
         if (arrays.active[i] === 0) continue;
@@ -61,7 +61,7 @@ export default class Particles extends Rule {
 
         const typeId = arrays.type[i];
         if (typeId === 3) {
-          // 3 = snow
+
           if (arrays.posY[i] >= fieldHeight - 1) {
             arrays.landed[i] = 1;
             arrays.posY[i] = fieldHeight - 1;
@@ -79,7 +79,7 @@ export default class Particles extends Rule {
             arrays.posY[i] < -50 ||
             arrays.posY[i] > fieldHeight + 50)
         ) {
-          // Give generous buffer
+
           arrays.removeParticle(i);
         }
       }

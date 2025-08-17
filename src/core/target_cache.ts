@@ -46,7 +46,7 @@ export class TargetCache {
         dataA.closestEnemyDist = dist;
       }
       if (dist <= 2) {
-        // Combat range
+
         dataA.nearbyEnemies.push(unitB.id);
       }
 
@@ -55,7 +55,7 @@ export class TargetCache {
         dataB.closestEnemyDist = dist;
       }
       if (dist <= 2) {
-        // Combat range
+
         dataB.nearbyEnemies.push(unitA.id);
       }
     } else {
@@ -64,7 +64,7 @@ export class TargetCache {
         dataA.closestAllyDist = dist;
       }
       if (dist <= 5) {
-        // Support range
+
         dataA.nearbyAllies.push(unitB.id);
       }
 
@@ -73,7 +73,7 @@ export class TargetCache {
         dataB.closestAllyDist = dist;
       }
       if (dist <= 5) {
-        // Support range
+
         dataB.nearbyAllies.push(unitA.id);
       }
     }

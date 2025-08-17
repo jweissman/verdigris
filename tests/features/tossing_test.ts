@@ -34,7 +34,8 @@ describe('Tossing mechanics', () => {
 
     sim.tick();
 
-    const tossedUnit = sim.roster.target;
+    const context = sim.getTickContext();
+    const tossedUnit = context.findUnitById('target')!;
     expect(tossedUnit.meta.tossing).toBe(true);
     expect(tossedUnit.meta.tossProgress).not.toBeUndefined();
     expect(tossedUnit.meta.tossOrigin).toEqual({ x: 5, y: 5 });
@@ -68,12 +69,14 @@ describe('Tossing mechanics', () => {
     });
 
     sim.tick(); // Process command
-    expect(sim.roster.target.meta.tossing).toBe(true);
+    const context = sim.getTickContext();
+    expect(context.findUnitById('target')!.meta.tossing).toBe(true);
 
 
     for (let i = 1; i < 8; i++) {
       sim.tick();
-      const tossedUnit = sim.roster.target;
+      const context = sim.getTickContext();
+    const tossedUnit = context.findUnitById('target')!;
       
       expect(tossedUnit.meta.tossing).toBe(true);
       expect(tossedUnit.meta.tossProgress).toBe(i);
@@ -151,7 +154,8 @@ describe('Tossing mechanics', () => {
 
     sim.tick();
 
-    const tossedUnit = sim.roster.target;
+    const context = sim.getTickContext();
+    const tossedUnit = context.findUnitById('target')!;
     expect(tossedUnit.meta.tossTarget.x).toBe(9); // Clamped to field width - 1
     expect(tossedUnit.meta.tossTarget.y).toBe(9); // Clamped to field height - 1
   });
@@ -227,13 +231,13 @@ describe('Tossing mechanics', () => {
     let aoeEvent = null;
     const initialProcessedEvents = sim.processedEvents.length;
     
-    // Toss takes 8 ticks to complete
+
     for (let i = 0; i < 10; i++) {
       sim.tick();
 
-      // Check both queued and processed events
+
       if (!aoeGenerated) {
-        // Check queued events
+
         if (sim.queuedEvents.length > 0) {
           aoeEvent = sim.queuedEvents.find(e => e.kind === 'aoe');
           if (aoeEvent) {
@@ -241,7 +245,7 @@ describe('Tossing mechanics', () => {
           }
         }
         
-        // Check processed events
+
         if (sim.processedEvents.length > initialProcessedEvents) {
           const recentEvents = sim.processedEvents.slice(initialProcessedEvents);
           aoeEvent = recentEvents.find(e => e.kind === 'aoe');

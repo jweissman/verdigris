@@ -27,7 +27,7 @@ export class AICommand extends Command {
     const postures = new Map<string, string>();
     const context = this.sim.getTickContext();
     
-    // PERFORMANCE: Only process units that have AI behavior or are not neutral
+
     for (const unit of context.getAllUnits()) {
       if (unit.state === 'dead' || unit.hp <= 0) continue;
       
@@ -40,7 +40,7 @@ export class AICommand extends Command {
         else if (unit.tags.includes("aggressive")) posture = "bully";
       }
       
-      // Skip neutral units with no posture/tags - they do nothing anyway
+
       if (!posture && unit.team === 'neutral' && (!unit.tags || unit.tags.length === 0)) {
         continue;
       }
@@ -64,6 +64,6 @@ export class AICommand extends Command {
 
   private handleWoodlandSummoning(): void {
     // TODO: Implement woodland summoning logic
-    // This was removed during cleanup but is still referenced
+
   }
 }

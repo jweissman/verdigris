@@ -5,7 +5,7 @@ describe('Proxy Overhead Isolation', () => {
   test('Measure exact proxy overhead', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 100 units
+
     for (let i = 0; i < 100; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -19,7 +19,7 @@ describe('Proxy Overhead Isolation', () => {
     const arrays = sim.unitArrays;
     const proxyManager = sim.proxyManager;
     
-    // Test 1: Direct array access
+
     const directStart = performance.now();
     let sum1 = 0;
     for (let iter = 0; iter < iterations; iter++) {
@@ -29,7 +29,7 @@ describe('Proxy Overhead Isolation', () => {
     }
     const directTime = performance.now() - directStart;
     
-    // Test 2: Proxy access (cached proxies)
+
     const proxies = proxyManager.getAllProxies(); // Get cached proxies once
     const proxyStart = performance.now();
     let sum2 = 0;
@@ -40,7 +40,7 @@ describe('Proxy Overhead Isolation', () => {
     }
     const proxyTime = performance.now() - proxyStart;
     
-    // Test 3: Creating proxies every iteration
+
     const createStart = performance.now();
     let sum3 = 0;
     for (let iter = 0; iter < iterations; iter++) {
@@ -63,7 +63,7 @@ describe('Proxy Overhead Isolation', () => {
     console.log(`Proxy:   ${(proxyTime / iterations).toFixed(4)}ms`);
     console.log(`Create:  ${(createTime / iterations).toFixed(4)}ms`);
     
-    // Verify correctness
+
     expect(sum1).toBeGreaterThan(0);
     expect(sum2).toBe(sum1);
     expect(sum3).toBe(sum1);
@@ -72,7 +72,7 @@ describe('Proxy Overhead Isolation', () => {
   test('Profile actual rule execution', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 units with abilities to trigger rule logic
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -83,7 +83,7 @@ describe('Proxy Overhead Isolation', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }

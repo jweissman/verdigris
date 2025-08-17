@@ -10,9 +10,11 @@ describe('Simulation basics', () => {
       intendedMove: { x: 1, y: 0 }
     });
 
-    expect(initial.roster.u1.pos.x).toBe(0);
+    const context = initial.getTickContext();
+    expect(context.findUnitById('u1')?.pos.x).toBe(0);
     const next = initial.step();
-    expect(next.roster.u1.pos.x).toBe(1);
+    const nextContext = next.getTickContext();
+    expect(nextContext.findUnitById('u1')?.pos.x).toBe(1);
   });
 
   it('should move multiple units independently', () => {
@@ -21,8 +23,9 @@ describe('Simulation basics', () => {
     sim.addUnit({ id: 'b', pos: { x: 5, y: 0 }, intendedMove: { x: -1, y: 0 }});
   
     const next = sim.step();
-    expect(next.roster.a.pos.x).toBe(1);
-    expect(next.roster.b.pos.x).toBe(4);
+    const nextContext = next.getTickContext();
+    expect(nextContext.findUnitById('a')?.pos.x).toBe(1);
+    expect(nextContext.findUnitById('b')?.pos.x).toBe(4);
   });
   
   it('should not move units with zero intendedMove', () => {
@@ -45,9 +48,9 @@ describe('Simulation basics', () => {
     sim.addUnit({ id: 'e', pos: { x: 0, y: 0 }, intendedMove: { x: 0, y: 0 }});
     const input = { commands: { e: [{ action: 'move', target: { x: 1, y: 0 } }] } };
     sim.accept(input);
-    // After accept() which calls step(), the unit should have moved
+
     expect(sim.units[0].pos.x).toBe(1);
-    // And intendedMove should be cleared after physics
+
     expect(sim.units[0].intendedMove.x).toBe(0);
   });
 });

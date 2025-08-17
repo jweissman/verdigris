@@ -134,7 +134,7 @@ class Game {
     this.sim = new Simulator(40, 25); // 40×25 grid = 320×200 pixels at 8px per cell
 
     if (typeof window !== "undefined") {
-      //} && canvas instanceof HTMLCanvasElement) {
+
       const scaledRenderer = createScaledRenderer(
         320,
         200,

@@ -5,7 +5,7 @@ describe('Debug Abilities', () => {
   test('Check if neutral units have abilities', () => {
     const sim = new Simulator(50, 50);
     
-    // Add one neutral unit with NO abilities
+
     sim.addUnit({
       id: 'test_unit',
       pos: { x: 25, y: 25 },
@@ -26,7 +26,7 @@ describe('Debug Abilities', () => {
       console.log(`  team: ${unit.team}`);
       console.log(`  tags: ${JSON.stringify(unit.tags)}`);
       
-      // Check if this unit would be filtered out
+
       const hasAbilities = unit.abilities && unit.abilities.length > 0;
       const isBurrowed = unit.meta?.burrowed;
       const wouldProcess = hasAbilities || isBurrowed;

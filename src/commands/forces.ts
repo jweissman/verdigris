@@ -18,10 +18,11 @@ export class ForcesCommand extends Command {
 
   private applyAllForces(): void {
     const arrays = this.sim.proxyManager.arrays;
+    const context = this.sim.getTickContext();
 
     const capacity = arrays.capacity;
-    const fieldWidth = this.sim.fieldWidth;
-    const fieldHeight = this.sim.fieldHeight;
+    const fieldWidth = context.getFieldWidth();
+    const fieldHeight = context.getFieldHeight();
 
     const posX = arrays.posX;
     const posY = arrays.posY;
@@ -38,7 +39,7 @@ export class ForcesCommand extends Command {
       moveY[i] = 0;
     }
 
-    // Apply collision resolution for overlapping units
+
     this.resolveCollisionsSoA(arrays);
   }
 
@@ -58,11 +59,12 @@ export class ForcesCommand extends Command {
         p.lifetime = (p.lifetime || 0) + 1;
       }
 
+      const context = this.sim.getTickContext();
       if (
         p.pos.x < 0 ||
-        p.pos.x >= this.sim.fieldWidth ||
+        p.pos.x >= context.getFieldWidth() ||
         p.pos.y < 0 ||
-        p.pos.y >= this.sim.fieldHeight
+        p.pos.y >= context.getFieldHeight()
       ) {
         toRemove.push(i);
       }
@@ -77,7 +79,8 @@ export class ForcesCommand extends Command {
 
   private resolveCollisionsSoA(arrays: any): void {
     const grid = new Map<number, number>();
-    const fieldWidth = this.sim.fieldWidth;
+    const context = this.sim.getTickContext();
+    const fieldWidth = context.getFieldWidth();
 
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0 || arrays.state[i] === 3) continue;
@@ -108,7 +111,7 @@ export class ForcesCommand extends Command {
           newPackedPos = packedPos - 1;
           displaced = true;
         } else if (
-          y + 1 < this.sim.fieldHeight &&
+          y + 1 < context.getFieldHeight() &&
           !grid.has(packedPos + fieldWidth)
         ) {
           arrays.posY[toDisplace] = y + 1;
@@ -135,7 +138,7 @@ export class ForcesCommand extends Command {
       }
     }
 
-    const fieldHeight = this.sim.fieldHeight;
+    const fieldHeight = context.getFieldHeight();
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
       arrays.posX[i] = Math.max(0, Math.min(fieldWidth - 1, arrays.posX[i]));

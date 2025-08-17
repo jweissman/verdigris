@@ -33,7 +33,7 @@ export class Wander extends Command {
       );
 
       if (!hasNearbyEnemy && Simulator.rng.random() < chance) {
-        // Ensure non-zero movement for testing reliability
+
         const roll = Simulator.rng.random();
         const dx = roll < 0.5 ? -1 : 1;
         const dy = Simulator.rng.random() < 0.5 ? -1 : 1;
@@ -41,13 +41,14 @@ export class Wander extends Command {
         const newX = unit.pos.x + dx;
         const newY = unit.pos.y + dy;
 
+        const context = this.sim.getTickContext();
         if (
           newX >= 0 &&
-          newX < this.sim.fieldWidth &&
+          newX < context.getFieldWidth() &&
           newY >= 0 &&
-          newY < this.sim.fieldHeight
+          newY < context.getFieldHeight()
         ) {
-          // Only set intendedMove - physics handles actual movement
+
           this.sim.getTransform().updateUnit(unit.id, {
             intendedMove: { x: dx, y: dy },
           });

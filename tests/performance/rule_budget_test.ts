@@ -5,14 +5,14 @@ describe('Individual Rule Budget Tests', () => {
   const sim = createTestSimulator(50);
   const context = sim.getTickContext();
   
-  // Create a test for each rule
+
   for (const rule of sim.rulebook) {
     const ruleName = rule.constructor.name;
     
     test(`${ruleName} should be under ${PerfBudgets.rule_execution_ms}ms budget`, () => {
       const times: number[] = [];
       
-      // Measure this rule's execution time
+
       for (let i = 0; i < 100; i++) {
         const start = performance.now();
         rule.execute(context);

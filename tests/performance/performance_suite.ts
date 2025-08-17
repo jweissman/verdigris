@@ -5,7 +5,7 @@ import perfConfig from '../perf.json';
 
 const PerfBudgets = perfConfig.budgets;
 
-// Helper to measure execution time
+
 function timeExecution(fn: () => void, iterations: number = 1000): { median: number; avg: number } {
   const times: number[] = [];
   for (let i = 0; i < iterations; i++) {
@@ -22,11 +22,11 @@ function timeExecution(fn: () => void, iterations: number = 1000): { median: num
 
 describe('Performance Suite', () => {
   
-  // Individual rule performance
+
   test('Each rule meets budget', () => {
     const sim = new Simulator(50, 50);
     
-    // Add test units
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -38,7 +38,7 @@ describe('Performance Suite', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -61,7 +61,7 @@ describe('Performance Suite', () => {
     expect(failures).toBe(0);
   });
   
-  // Step performance with different unit counts
+
   test('Step performance with 50 units', () => {
     const sim = new Simulator(50, 50);
     
@@ -76,7 +76,7 @@ describe('Performance Suite', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -101,7 +101,7 @@ describe('Performance Suite', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -130,7 +130,7 @@ describe('Performance Suite', () => {
         });
       }
       
-      // Warm up
+
       for (let i = 0; i < 100; i++) {
         sim.step();
       }
@@ -140,7 +140,7 @@ describe('Performance Suite', () => {
       console.log(`${size} units: ${result.median.toFixed(4)}ms`);
     }
     
-    // Check scaling
+
     for (let i = 1; i < sizes.length; i++) {
       const sizeRatio = sizes[i] / sizes[i-1];
       const timeRatio = timings[i] / timings[i-1];

@@ -238,7 +238,7 @@ export default class SceneWeatherViewer {
     const deltaTime = currentTime - this.lastTime;
 
     if (this.isPlaying && deltaTime > 100) {
-      // ~10 FPS for simulation
+
       this.sim.step();
       this.lastTime = currentTime;
     }

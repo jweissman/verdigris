@@ -10,7 +10,7 @@ import {
 
 describe('Performance Test Suite', () => {
   
-  // Test individual rules meet their budgets
+
   test('Each rule meets budget', () => {
     const sim = createTestSimulator(50);
     const results = profileRules(sim, 100);
@@ -51,7 +51,7 @@ describe('Performance Test Suite', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -69,11 +69,11 @@ describe('Performance Test Suite', () => {
         pos: { x: i % 50, y: Math.floor(i / 50) },
         team: 'neutral',
         hp: 10
-        // No intendedMove
+
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -137,13 +137,67 @@ describe('Performance Test Suite', () => {
     }
   });
   
+  test('getAllUnits call frequency', () => {
+    const sim = new Simulator(50, 50);
+    
+    // Add units with abilities to trigger expensive DSL evaluations
+    for (let i = 0; i < 50; i++) {
+      sim.addUnit({
+        id: `unit_${i}`,
+        pos: { x: i % 50, y: Math.floor(i / 50) },
+        team: i % 2 === 0 ? 'friendly' : 'hostile',
+        hp: 20,
+        abilities: ['melee', 'heal'] // Multiple abilities to trigger more DSL calls
+      });
+    }
+    
+    let callCount = 0;
+    let proxyCreations = 0;
+    
+    const context = sim.getTickContext();
+    const originalGetAllUnits = context.getAllUnits.bind(context);
+    context.getAllUnits = function() {
+      callCount++;
+      return originalGetAllUnits();
+    };
+    
+    const originalGetAllProxies = sim.proxyManager.getAllProxies.bind(sim.proxyManager);
+    sim.proxyManager.getAllProxies = function() {
+      proxyCreations++;
+      return originalGetAllProxies();
+    };
+    
+    console.log('\n=== getAllUnits Call Analysis ===');
+    
+    for (const rule of sim.rulebook) {
+      const ruleName = rule.constructor.name;
+      const beforeCalls = callCount;
+      const beforeProxies = proxyCreations;
+      
+      rule.execute(context);
+      
+      const ruleCalls = callCount - beforeCalls;
+      const ruleProxies = proxyCreations - beforeProxies;
+      
+      if (ruleCalls > 0) {
+        console.log(`${ruleName.padEnd(20)}: ${ruleCalls.toString().padStart(3)} getAllUnits calls, ${ruleProxies.toString().padStart(3)} proxy creations`);
+      }
+    }
+    
+    console.log(`\nTOTAL: ${callCount} getAllUnits calls, ${proxyCreations} proxy creations per step`);
+    console.log(`With 50 units = ${proxyCreations * 50} proxy objects created per step`);
+    
+    // This is the smoking gun - we should cache getAllUnits results!
+    expect(callCount).toBeLessThan(100); // Reasonable limit
+  });
+
   test('Performance summary', () => {
     const sim = createTestSimulator(50);
     const results = profileRules(sim, 100);
     
     console.log('\n' + formatPerformanceTable(results));
     
-    // Calculate total
+
     let totalMedian = 0;
     for (const [_, timing] of results) {
       totalMedian += timing.median;

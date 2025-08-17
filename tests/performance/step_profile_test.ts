@@ -7,7 +7,7 @@ describe('Step Phase Profiling', () => {
     const sim = new Simulator(50, 50);
     sim.enableProfiling = true;
     
-    // Add 50 stationary units to isolate overhead
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -19,7 +19,7 @@ describe('Step Phase Profiling', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -37,22 +37,22 @@ describe('Step Phase Profiling', () => {
     
     const iterations = 1000;
     
-    // Manual profiling of step phases
+
     for (let i = 0; i < iterations; i++) {
       const stepStart = performance.now();
       
-      // Manually run step phases with timing
+
       sim.ticks++;
       sim.changedUnits = new Set(sim.dirtyUnits);
       sim.dirtyUnits.clear();
       
-      // Phase 1: Spatial check
+
       const spatialStart = performance.now();
       let needsSpatialRebuild = sim.ticks === 0 || 
         sim.unitArrays.activeCount !== sim.lastActiveCount;
       phases.spatialCheck += performance.now() - spatialStart;
       
-      // Phase 2: Spatial rebuild (if needed)
+
       if (needsSpatialRebuild) {
         const rebuildStart = performance.now();
         sim.gridPartition.clear();
@@ -72,12 +72,12 @@ describe('Step Phase Profiling', () => {
         phases.spatialRebuild += performance.now() - rebuildStart;
       }
       
-      // Phase 3: Context creation
+
       const contextStart = performance.now();
       const context = sim.getTickContext();
       phases.contextCreation += performance.now() - contextStart;
       
-      // Phase 4: Rule execution
+
       const ruleStart = performance.now();
       const allCommands = [];
       for (const rule of sim.rulebook) {
@@ -88,7 +88,7 @@ describe('Step Phase Profiling', () => {
       }
       phases.ruleExecution += performance.now() - ruleStart;
       
-      // Track command counts
+
       if (i === 0) {
         console.log(`Commands generated: ${allCommands.length}`);
         const typeCounts = {};
@@ -98,11 +98,11 @@ describe('Step Phase Profiling', () => {
         console.log('Command types:', typeCounts);
       }
       
-      // Phase 5: Command processing with iteration tracking
+
       const cmdStart = performance.now();
       sim.queuedCommands = allCommands;
       
-      // Track fixpoint iterations
+
       let iterations = 0;
       let commandsProcessed = 0;
       let eventsProcessed = 0;
@@ -119,18 +119,18 @@ describe('Step Phase Profiling', () => {
         commandsProcessed += cmdCount;
         eventsProcessed += eventCount;
         
-        // Run one iteration
+
         const commandsToProcess = sim.queuedCommands || [];
         sim.queuedCommands = [];
         for (const cmd of commandsToProcess) {
           sim.commandProcessor.executeOne?.(cmd, context);
         }
         
-        // Process events
+
         if (sim.queuedEvents?.length > 0) {
           const events = sim.queuedEvents;
           sim.queuedEvents = [];
-          // Events might generate new commands
+
         }
       }
       
@@ -142,12 +142,12 @@ describe('Step Phase Profiling', () => {
       
       phases.commandProcessing += performance.now() - cmdStart;
       
-      // Phase 6: Update changed units
+
       const updateStart = performance.now();
       sim.updateChangedUnits();
       phases.updateChangedUnits += performance.now() - updateStart;
       
-      // Phase 7: Environmental effects (particles, weather, etc)
+
       const envStart = performance.now();
       if (sim.projectiles?.length) {
         sim.updateProjectilePhysics();
@@ -160,12 +160,12 @@ describe('Step Phase Profiling', () => {
       phases.total += performance.now() - stepStart;
     }
     
-    // Average all phases
+
     for (const key in phases) {
       phases[key] /= iterations;
     }
     
-    // Calculate overhead
+
     const overhead = phases.total - phases.ruleExecution;
     
     console.log('\n=== Step Phase Breakdown (50 units, 1000 iterations) ===');

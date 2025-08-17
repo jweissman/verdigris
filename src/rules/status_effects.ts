@@ -29,7 +29,7 @@ export class StatusEffects extends Rule {
         this.updateStatusEffects(context, unit);
         this.applyStatusEffectMechanics(context, unit);
       } else if (unit.meta.chilled || unit.meta.stunned) {
-        // Only clear if flags are set
+
         this.applyStatusEffectMechanics(context, unit);
       }
     }
@@ -124,7 +124,7 @@ export class StatusEffects extends Rule {
           break;
         case "burn":
           if (context.getCurrentTick() % 8 === 0) {
-            // Every second
+
             this.commands.push({
               type: "damage",
               params: {
@@ -139,7 +139,7 @@ export class StatusEffects extends Rule {
       }
     });
 
-    // Only clear status flags if they were previously set
+
     if (statusEffects.length === 0 && (unit.meta.chilled || unit.meta.stunned)) {
       this.commands.push({
         type: "meta",

@@ -48,7 +48,7 @@ export class AmbientBehavior extends Rule {
     }
 
     if (context.getRandom() < 0.02) {
-      // 2% chance each tick
+
       creature.meta.wanderTarget = this.getNewWanderTarget(context, creature);
     }
 

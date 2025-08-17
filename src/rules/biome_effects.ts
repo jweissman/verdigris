@@ -171,16 +171,16 @@ export class BiomeEffects extends Rule {
   private commands: QueuedCommand[] = [];
 
   execute(context: TickContext): QueuedCommand[] {
-    // Clear commands from previous tick
+
     this.commands = [];
     
-    // Handle rain effects - queue commands instead of mutating
+
     const sim = (context as any).sim;
     if (sim && sim.weather && sim.weather.current === 'rain') {
       const intensity = sim.weather.intensity || 0.5;
       const humidityIncrease = 0.005 * intensity;
       
-      // Queue humidity increase commands
+
       for (let x = 0; x < context.getFieldWidth(); x++) {
         for (let y = 0; y < context.getFieldHeight(); y++) {
           this.commands.push({
@@ -194,7 +194,7 @@ export class BiomeEffects extends Rule {
         }
       }
       
-      // Check for burning units and extinguish them
+
       const allUnits = context.getAllUnits();
       for (const unit of allUnits) {
         if (unit.meta?.onFire) {
@@ -676,7 +676,7 @@ export class BiomeEffects extends Rule {
 
       case "heat_stress":
         if (context.getCurrentTick() % 8 === 0) {
-          // Every second
+
           this.commands.push({
             type: "applyStatusEffect",
             params: {

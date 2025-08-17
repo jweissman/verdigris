@@ -5,7 +5,7 @@ describe('Command Performance Profiling', () => {
   test('Profile individual command execution times', () => {
     const sim = new Simulator(50, 50);
     
-    // Add units to generate commands
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -16,12 +16,12 @@ describe('Command Performance Profiling', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
     
-    // Instrument command handler
+
     const commandHandler = sim.commandProcessor;
     const originalExecuteOne = commandHandler.executeOne;
     const commandTimes = new Map<string, { count: number, total: number }>();
@@ -42,14 +42,14 @@ describe('Command Performance Profiling', () => {
       return result;
     };
     
-    // Run simulation and collect command metrics
+
     const stepStart = performance.now();
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
     const totalStepTime = performance.now() - stepStart;
     
-    // Calculate statistics
+
     console.log('\n=== Command Performance Analysis (100 steps) ===');
     console.log('Command Type         | Count  | Total (ms) | Avg (μs) | % of Total');
     console.log('-------------------- | ------ | ---------- | -------- | ----------');
@@ -75,7 +75,7 @@ describe('Command Performance Profiling', () => {
     console.log(`Average step time: ${(totalStepTime / 100).toFixed(3)}ms`);
     console.log(`Commands per step: ${(Array.from(commandTimes.values()).reduce((sum, s) => sum + s.count, 0) / 100).toFixed(1)}`);
     
-    // Restore original method
+
     commandHandler.executeOne = originalExecuteOne;
   });
 });

@@ -93,14 +93,14 @@ export class ScalarField {
   }
 
   decayAndDiffuse(decayRate: number = 0.01, diffuseRate: number = 0.1): void {
-    // Ultra-fast approximation: just decay, skip diffusion for now
-    // This is 100x faster and good enough for environmental effects
+
+
     const decayFactor = 1 - decayRate - diffuseRate * 0.5; // Combine decay and diffusion loss
     
     const data = this.data;
     const size = this.size;
     
-    // Unrolled vectorized decay - process 8 elements at once for SIMD
+
     let i = 0;
     const size8 = Math.floor(size / 8) * 8;
     
@@ -115,7 +115,7 @@ export class ScalarField {
       data[i + 7] *= decayFactor;
     }
     
-    // Handle remaining elements
+
     for (; i < size; i++) {
       data[i] *= decayFactor;
     }

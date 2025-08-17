@@ -5,7 +5,7 @@ describe('Neutral Units Performance', () => {
   test('Should be very fast with only neutral units', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 neutral units with NO abilities
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -16,12 +16,12 @@ describe('Neutral Units Performance', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
     
-    // Measure with neutral units only
+
     const start = performance.now();
     const iterations = 1000;
     for (let i = 0; i < iterations; i++) {
@@ -35,7 +35,7 @@ describe('Neutral Units Performance', () => {
     console.log(`Budget: 0.01ms`);
     console.log(`${avgStep < 0.01 ? '✅ PASS' : '❌ FAIL'} - ${(avgStep / 0.01).toFixed(1)}x over budget`);
     
-    // This should be MUCH faster since neutral units have no abilities
+
     console.log(`System baseline (no rules): 0.0005ms`);
     console.log(`Expected with optimized rules: ~0.005ms`);
   });

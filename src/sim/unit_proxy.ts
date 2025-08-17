@@ -38,8 +38,6 @@ interface DataQuery {
  */
 export class UnitProxy implements Unit {
   private _cachedIndex: number | undefined;
-  private readonly _posCache: Vec2 = { x: 0, y: 0 };
-  private readonly _moveCache: Vec2 = { x: 0, y: 0 };
   
   constructor(
     public readonly id: string,
@@ -50,75 +48,43 @@ export class UnitProxy implements Unit {
   }
 
   get pos(): Vec2 {
-    if (this._cachedIndex !== undefined) {
-      const manager = this.query as UnitProxyManager;
-      // Reuse the same Vec2 object - just update its values
-      this._posCache.x = manager.arrays.posX[this._cachedIndex];
-      this._posCache.y = manager.arrays.posY[this._cachedIndex];
-      return this._posCache;
-    }
-    // Fallback also reuses the cache object
-    const pos = this.query.getPosition(this.id);
-    this._posCache.x = pos.x;
-    this._posCache.y = pos.y;
-    return this._posCache;
+    const manager = this.query as UnitProxyManager;
+    return {
+      x: manager.arrays.posX[this._cachedIndex!],
+      y: manager.arrays.posY[this._cachedIndex!]
+    };
   }
 
   get intendedMove(): Vec2 {
-    if (this._cachedIndex !== undefined) {
-      const manager = this.query as UnitProxyManager;
-      // Reuse the same Vec2 object
-      this._moveCache.x = manager.arrays.intendedMoveX[this._cachedIndex];
-      this._moveCache.y = manager.arrays.intendedMoveY[this._cachedIndex];
-      return this._moveCache;
-    }
-    // Fallback also reuses the cache object
-    const move = this.query.getIntendedMove(this.id);
-    this._moveCache.x = move.x;
-    this._moveCache.y = move.y;
-    return this._moveCache;
+    const manager = this.query as UnitProxyManager;
+    return {
+      x: manager.arrays.intendedMoveX[this._cachedIndex!],
+      y: manager.arrays.intendedMoveY[this._cachedIndex!]
+    };
   }
 
   get hp(): number {
-    if (this._cachedIndex !== undefined) {
-      return (this.query as UnitProxyManager).getHpByIndex(this._cachedIndex);
-    }
-    return this.query.getHp(this.id);
+    return (this.query as UnitProxyManager).getHpByIndex(this._cachedIndex!);
   }
 
   get maxHp(): number {
-    if (this._cachedIndex !== undefined) {
-      return (this.query as UnitProxyManager).getMaxHpByIndex(this._cachedIndex);
-    }
-    return this.query.getMaxHp(this.id);
+    return (this.query as UnitProxyManager).getMaxHpByIndex(this._cachedIndex!);
   }
 
   get dmg(): number {
-    if (this._cachedIndex !== undefined) {
-      return (this.query as UnitProxyManager).getDamageByIndex(this._cachedIndex);
-    }
-    return this.query.getDamage(this.id);
+    return (this.query as UnitProxyManager).getDamageByIndex(this._cachedIndex!);
   }
 
   get team(): "friendly" | "hostile" | "neutral" {
-    if (this._cachedIndex !== undefined) {
-      return (this.query as UnitProxyManager).getTeamByIndex(this._cachedIndex);
-    }
-    return this.query.getTeam(this.id);
+    return (this.query as UnitProxyManager).getTeamByIndex(this._cachedIndex!);
   }
 
   get state(): UnitState {
-    if (this._cachedIndex !== undefined) {
-      return (this.query as UnitProxyManager).getStateByIndex(this._cachedIndex);
-    }
-    return this.query.getState(this.id);
+    return (this.query as UnitProxyManager).getStateByIndex(this._cachedIndex!);
   }
 
   get mass(): number {
-    if (this._cachedIndex !== undefined) {
-      return (this.query as UnitProxyManager).getMassByIndex(this._cachedIndex);
-    }
-    return this.query.getMass(this.id);
+    return (this.query as UnitProxyManager).getMassByIndex(this._cachedIndex!);
   }
 
   get sprite(): string {
@@ -189,19 +155,19 @@ export class UnitProxyManager implements DataQuery {
   private indexCache: { [key: string]: number } = Object.create(null);
   
   private getIndex(unitId: string): number {
-    // Fast path - check if we have a direct index from the proxy
-    // This avoids the Map/object lookup entirely for most calls
+
+
     let index = this.indexCache[unitId];
     if (index !== undefined) return index;
     
-    // Fallback to Map
+
     index = this.idToIndex.get(unitId);
     if (index !== undefined) {
       this.indexCache[unitId] = index; // Cache in object
       return index;
     }
     
-    // Slow path - rebuild index if needed
+
     this.rebuildIndex();
     index = this.idToIndex.get(unitId);
     if (index === undefined) {
@@ -211,7 +177,7 @@ export class UnitProxyManager implements DataQuery {
     return index;
   }
   
-  // Fast methods that bypass getIndex() lookup - called by proxies with cached index
+
   getPositionByIndex(index: number): Vec2 {
     return { x: this.arrays.posX[index], y: this.arrays.posY[index] };
   }
@@ -467,7 +433,7 @@ export class UnitProxyManager implements DataQuery {
     if (!unitId) {
       throw new Error(`No unit at index ${index}`);
     }
-    // Always create fresh - it's just a lightweight view
+
     return new UnitProxy(unitId, this, index);
   }
 
@@ -546,10 +512,10 @@ export class UnitProxyManager implements DataQuery {
     const allies = new Map<string, string | null>();
     const radiusSq = searchRadius * searchRadius;
 
-    // Count active units (already tracked)
+
     const activeCount = this.arrays.activeCount;
 
-    // Use optimized approach for smaller unit counts, grid for larger
+
     if (activeCount <= 75) {
       return this.batchFindTargetsSimple(radiusSq, enemies, allies);
     } else {
@@ -577,11 +543,11 @@ export class UnitProxyManager implements DataQuery {
       let minEnemyDistSq = Infinity;
       let minAllyDistSq = Infinity;
 
-      // Optimized inner loop with early distance checks
+
       for (const j of this.arrays.activeIndices) {
         if (i === j || this.arrays.state[j] === 3) continue;
 
-        // Quick distance pre-filter using manhattan distance
+
         const absDx = Math.abs(this.arrays.posX[j] - x1);
         const absDy = Math.abs(this.arrays.posY[j] - y1);
         if (absDx + absDy > 15) continue; // Skip if too far (manhattan distance > search radius)
@@ -619,13 +585,13 @@ export class UnitProxyManager implements DataQuery {
   ): { enemies: Map<string, string | null>; allies: Map<string, string | null>; } {
     const capacity = this.arrays.capacity;
 
-    // Grid implementation for large unit counts
+
     const gridSize = Math.ceil(searchRadius / 2);
     const gridWidth = Math.ceil(100 / gridSize);
     const gridHeight = Math.ceil(100 / gridSize);
     const grid: number[][] = Array(gridWidth * gridHeight).fill(null).map(() => []);
 
-    // Populate grid
+
     for (const i of this.arrays.activeIndices) {
       if (this.arrays.state[i] === 3) continue;
       
@@ -748,7 +714,7 @@ export class UnitProxyManager implements DataQuery {
 
           const distSq = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
           if (distSq > 4) {
-            // Stay close but not too close
+
             dx = x2 > x1 ? 1 : x2 < x1 ? -1 : 0;
             dy = y2 > y1 ? 1 : y2 < y1 ? -1 : 0;
           }
@@ -769,7 +735,7 @@ export class UnitProxyManager implements DataQuery {
           const distSq = distX * distX + distY * distY;
 
           if (distSq < 25) {
-            // Within 5 units
+
             avgX += this.arrays.posX[j];
             avgY += this.arrays.posY[j];
             count++;

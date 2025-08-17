@@ -79,7 +79,7 @@ class Simulator {
   public static rng: RNG = new RNG(12345);
   private static randomProtected: boolean = false;
 
-  // private lastFrameUnits: Unit[] = [];
+
   private changedUnits: Set<string> = new Set();
 
   private gridPartition: GridPartition;
@@ -87,14 +87,11 @@ class Simulator {
   public proxyManager: UnitProxyManager;
 
   get units(): readonly Unit[] {
-    // Don't cache proxies - create them on demand
+
     return this.proxyManager.getAllProxies();
   }
 
 
-  getUnitsForTransform(): Unit[] {
-    return this.units as Unit[];
-  }
 
   setUnitsFromTransform(units: Unit[]): void {
     throw new Error(
@@ -259,7 +256,7 @@ class Simulator {
 
     this.unitColdData = new Map();
 
-    // this.unitDataStore = new UnitDataStore(this.unitArrays, this.unitColdData);
+
 
     this.proxyManager = new UnitProxyManager(
       this.unitArrays,
@@ -268,7 +265,7 @@ class Simulator {
 
     this.transform = new Transform(this);
 
-    // Scalar fields are now lazy-initialized via getters
+
 
     this.weather = {
       current: "clear",
@@ -343,14 +340,14 @@ class Simulator {
 
     this.commandProcessor = new CommandHandler(this, this.transform);
 
-    // Core rules that always run
+
     const coreRules = [
       new UnitBehavior(),
       new UnitMovement(),
       new Cleanup(),
     ];
     
-    // Combat and interaction rules
+
     const combatRules = [
       new Abilities(),
       new MeleeCombat(),
@@ -359,7 +356,7 @@ class Simulator {
       new Perdurance(),
     ];
     
-    // Environmental and special rules
+
     const specialRules = [
       new HugeUnits(),
       new SegmentedCreatures(),
@@ -371,7 +368,6 @@ class Simulator {
       new LightningStorm(),
       new AreaOfEffect(),
       new ProjectileMotion(),
-      new Particles(this),
       new Jumping(),
       new Tossing(),
     ];
@@ -444,7 +440,7 @@ class Simulator {
 
   markDirty(unitId: string) {
     this.dirtyUnits.add(unitId);
-    // Also mark as changed for current frame if we're in the middle of a step
+
     this.changedUnits.add(unitId);
   }
 
@@ -505,18 +501,18 @@ class Simulator {
     let needsSpatialRebuild =
       this.ticks === 0 || this.unitArrays.activeCount !== this.lastActiveCount;
 
-    // Skip movement check entirely - rebuild only when unit count changes
-    // Rules that need spatial queries will handle their own lookups
-    // This trades per-query cost for eliminating per-tick overhead
+
+
+
 
     if (needsSpatialRebuild) {
-      // Only use gridPartition - remove redundant spatial structures
+
       this.gridPartition.clear();
       this.unitCache.clear();
 
       const arrays = this.unitArrays;
 
-      // Use activeIndices for much faster iteration
+
       for (const i of arrays.activeIndices) {
         const id = arrays.unitIds[i];
         
@@ -531,17 +527,17 @@ class Simulator {
       this.lastActiveCount = arrays.activeCount;
     }
 
-    // Don't pre-populate proxy cache - let rules request what they need
+
     
-    // Create fresh context each step - it caches units internally
+
     const context = new TickContextImpl(this);
     
-    // PERFORMANCE: Only execute rules when needed
+
     for (const rule of this.rulebook) {
-      // Skip expensive rules when no relevant units exist
+
       const ruleName = rule.constructor.name;
       
-      // Execute all rules for correctness
+
       
       const commands = rule.execute(context);
       if (commands && commands.length > 0) {
@@ -571,14 +567,14 @@ class Simulator {
       }
 
       if (this.enableEnvironmentalEffects) {
-        // Only update expensive environmental effects occasionally
+
         if (this.ticks % 10 === 0) {
           this.updateScalarFields();
           this.updateWeather();
         }
 
         if (Simulator.rng.random() < 0.002) {
-          // Reduce to 0.2% chance per tick  
+
           this.spawnLeafParticle();
         }
       }
@@ -623,6 +619,7 @@ class Simulator {
     const arrays = this.particleArrays;
 
     arrays.updatePhysics();
+    arrays.applyGravity(0.1); // Moved from Particles rule
 
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
@@ -647,11 +644,15 @@ class Simulator {
         }
       }
 
+      const isStormCloud = type === 13;
       if (
         arrays.lifetime[i] <= 0 ||
-        arrays.posY[i] > this.fieldHeight * 8 ||
-        arrays.posX[i] < 0 ||
-        arrays.posX[i] > this.fieldWidth * 8
+        (arrays.landed[i] === 0 &&
+          !isStormCloud &&
+          (arrays.posX[i] < -50 ||
+            arrays.posX[i] > this.fieldWidth * 8 + 50 ||
+            arrays.posY[i] < -50 ||
+            arrays.posY[i] > this.fieldHeight * 8 + 50))
       ) {
         arrays.removeParticle(i);
       }
@@ -818,19 +819,19 @@ class Simulator {
 
 
   updateScalarFields() {
-    // Only update scalar fields every 500 ticks for performance
+
     if (this.ticks % 500 !== 0) return;
 
     this.temperatureField.decayAndDiffuse(0.002, 0.05); // Temperature
     this.humidityField.decayAndDiffuse(0.005, 0.08); // Humidity
     this.pressureField.decayAndDiffuse(0.01, 0.12); // Pressure
 
-    // Skip field interactions for now - too expensive
-    // this.applyFieldInteractions();
+
+
   }
 
   applyFieldInteractions() {
-    // Skip if fields not initialized
+
     if (!this.temperatureField || !this.humidityField) return;
     
     const startY = (this.ticks % 10) * Math.floor(this.fieldHeight / 10);
@@ -951,7 +952,7 @@ class Simulator {
   applyRainEffects() {
     const intensity = this.weather.intensity;
     
-    // Init fields if needed
+
 
     for (let i = 0; i < Math.ceil(intensity * 5); i++) {
       const x = Simulator.rng.random() * this.fieldWidth;
@@ -975,7 +976,7 @@ class Simulator {
   applyStormEffects() {
     this.applyRainEffects();
 
-    // Init fields if needed
+
     
     const intensity = this.weather.intensity;
 
@@ -991,7 +992,7 @@ class Simulator {
     const intensity = this.weather.intensity;
 
     if (Simulator.rng.random() < intensity * 0.3) {
-      // 30% chance per tick at full intensity
+
 
       const leafCount = 1 + Math.floor(Simulator.rng.random() * 3);
       for (let i = 0; i < leafCount; i++) {
@@ -1174,17 +1175,18 @@ class Simulator {
     return this;
   }
 
-  private hasGrapplingHooks(): boolean {
-    // Cache checks for expensive conditions
+  private activeRules: Rule[] = [];
+
+  private selectActiveRules(): void {
     const tick = this.ticks;
     
-    // Always active rules
+
     this.activeRules = [];
     
     for (const rule of this.rulebook) {
       const name = rule.constructor.name;
       
-      // Skip rules based on applicability
+
       switch(name) {
         case 'GrapplingPhysics':
           if (!this.hasGrapplingHooks()) continue;
@@ -1214,15 +1216,15 @@ class Simulator {
           if (!this.lightningActive) continue;
           break;
         case 'BiomeEffects':
-          // Only run if environmental effects enabled or weather active
+
           if (!this.enableEnvironmentalEffects && this.weather.current === 'clear') continue;
           break;
         case 'Cleanup':
-          // Only run if units died recently
+
           if (!this.hasDeadUnits()) continue;
           break;
         case 'Perdurance':
-          // Only needed for units with timers
+
           if (!this.hasUnitsWithTimers()) continue;
           break;
         case 'HugeUnits':
@@ -1231,29 +1233,29 @@ class Simulator {
         case 'SegmentedCreatures':
           if (!this.hasSegmentedCreatures()) continue;
           break;
-        // Always active - fundamental rules
+
         case 'UnitMovement':
-          // Always run - commands can create movement
+
           break;
         case 'UnitBehavior':
-          // Only if hostile units exist
+
           if (!this.hasHostileUnits()) continue;
           break;
         case 'MeleeCombat':
-          // Only if opposing teams exist
+
           if (!this.hasOpposingTeams()) continue;
           break;
         case 'Abilities':
-          // Only if units have abilities
+
           if (!this.hasUnitsWithAbilities()) continue;
           break;
         case 'Knockback':
-          // Only run after combat
+
           if (!this.hadRecentCombat) continue;
           break;
         case 'AmbientSpawning':
         case 'AmbientBehavior':
-          // Only run occasionally
+
           if (tick % 30 !== 0) continue;
           break;
       }
@@ -1263,7 +1265,7 @@ class Simulator {
   }
   
   private hasGrapplingHooks(): boolean {
-    // Check if any units have grappling hooks active
+
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
     
@@ -1276,7 +1278,7 @@ class Simulator {
   }
   
   private hasAirdrops(): boolean {
-    // Check if any units are airdrops
+
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
     
@@ -1289,7 +1291,7 @@ class Simulator {
   }
   
   private hasStatusEffects(): boolean {
-    // Check if any units have status effects
+
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
     
@@ -1353,7 +1355,7 @@ class Simulator {
   
   private hasMovingUnits(): boolean {
     const arrays = this.unitArrays;
-    // Check if any units have intended movement
+
     for (const i of arrays.activeIndices) {
       if (arrays.intendedMoveX[i] !== 0 || arrays.intendedMoveY[i] !== 0) return true;
     }
@@ -1363,7 +1365,7 @@ class Simulator {
   private hasHostileUnits(): boolean {
     const arrays = this.unitArrays;
     for (const i of arrays.activeIndices) {
-      if (arrays.team[i] === 1) return true; // hostile = 1
+      if (arrays.team[i] === 1) return true;
     }
     return false;
   }
@@ -1414,7 +1416,7 @@ class Simulator {
   }
   
   private hasAreaEffects(): boolean {
-    // Check if there are any area effects active
+
     return false; // TODO: Implement when we track area effects
   }
   
@@ -1658,7 +1660,7 @@ class Simulator {
         for (const cmd of command) {
           if (cmd.action === "move") {
             if (cmd.target) {
-              // Use ProxyManager API for consistency with SoA
+
               this.proxyManager.setIntendedMove(unit.id, cmd.target);
             }
           }
@@ -1712,7 +1714,7 @@ class Simulator {
   private forcedAbilitiesThisTick = new Set<string>();
 
   forceAbility(unitId: string, abilityName: string, target?: any): void {
-    // Track that this ability was forced for this unit
+
     const key = `${unitId}:${abilityName}`;
     this.forcedAbilitiesThisTick.add(key);
     const unit = this.units.find((u) => u.id === unitId);
@@ -1737,11 +1739,11 @@ class Simulator {
       return;
     }
 
-    // Use proper TickContext instead of manual context - simplifies god object
+
     const context = this.getTickContext();
 
     const primaryTarget = target || unit;
-    // Clear the rule's commands array before processing
+
     (abilitiesRule as any).commands = [];
     
     for (const effect of jsonAbility.effects) {
@@ -1753,11 +1755,11 @@ class Simulator {
       );
     }
     
-    // Collect the commands that were generated
+
     const generatedCommands = (abilitiesRule as any).commands || [];
     this.queuedCommands.push(...generatedCommands);
 
-    // Update lastAbilityTick immediately to prevent double-triggering
+
     const proxyManager = this.proxyManager;
     if (proxyManager) {
       const currentTick = { ...unit.lastAbilityTick, [abilityName]: this.ticks };

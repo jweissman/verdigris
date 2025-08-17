@@ -29,9 +29,10 @@ describe("New Units Integration", () => {
     expect(bigWorm.team).toBe('hostile');
     
 
-    const wormInRoster = sim.roster[wormId];
+    const context = sim.getTickContext();
+    const wormInRoster = context.findUnitById(wormId);
     expect(wormInRoster).toBeDefined();
-    expect(wormInRoster.id).toBe(wormId);
+    expect(wormInRoster?.id).toBe(wormId);
   });
 
   it("should create black faction units from encyclopaedia", () => {

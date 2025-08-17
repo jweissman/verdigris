@@ -5,7 +5,7 @@ describe('Trace getAllUnits calls', () => {
   test('Count getAllUnits calls per step', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 units
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -16,7 +16,7 @@ describe('Trace getAllUnits calls', () => {
       });
     }
     
-    // Instrument getAllUnits
+
     let callCount = 0;
     let proxyCreations = 0;
     
@@ -27,14 +27,14 @@ describe('Trace getAllUnits calls', () => {
       return originalGetAllUnits();
     };
     
-    // Instrument proxy creation
+
     const originalGetAllProxies = sim.proxyManager.getAllProxies.bind(sim.proxyManager);
     sim.proxyManager.getAllProxies = function() {
       proxyCreations++;
       return originalGetAllProxies();
     };
     
-    // Run one step
+
     console.log('\n=== Tracing getAllUnits calls ===');
     
     for (const rule of sim.rulebook) {

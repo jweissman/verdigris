@@ -61,7 +61,7 @@ export class FieldOverlays {
       for (let y = 0; y < this.sim.fieldHeight; y++) {
         const humidity = this.sim.humidityField.get(x, y);
         if (humidity > 0.5) {
-          // Only show significant humidity
+
           const { x: screenX, y: screenY } = toScreenCoords(x, y);
 
           const radius = Math.max(1, humidity * 3);

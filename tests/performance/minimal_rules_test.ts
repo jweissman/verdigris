@@ -5,7 +5,7 @@ describe('Minimal Rules Test', () => {
   test('Which rules are actually needed?', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 neutral units with no abilities
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -16,13 +16,13 @@ describe('Minimal Rules Test', () => {
       });
     }
     
-    // Disable rules one by one
+
     console.log('\n=== Testing with reduced rulebook ===');
     
-    // Save original rulebook
+
     const originalRulebook = [...sim.rulebook];
     
-    // Test with only essential rules
+
     sim.rulebook = [
       originalRulebook.find(r => r.constructor.name === 'UnitBehavior'),
       originalRulebook.find(r => r.constructor.name === 'UnitMovement'),
@@ -30,7 +30,7 @@ describe('Minimal Rules Test', () => {
     
     console.log('Rulebook size:', sim.rulebook.length);
     
-    // Measure performance
+
     const start = performance.now();
     for (let i = 0; i < 1000; i++) {
       sim.step();
@@ -41,7 +41,7 @@ describe('Minimal Rules Test', () => {
     console.log(`With minimal rules: ${avgStep.toFixed(4)}ms per step`);
     console.log(`Budget: 0.01ms, Actual: ${avgStep.toFixed(4)}ms (${(avgStep / 0.01).toFixed(1)}x over)`);
     
-    // Test with NO rules
+
     sim.rulebook = [];
     
     const start2 = performance.now();

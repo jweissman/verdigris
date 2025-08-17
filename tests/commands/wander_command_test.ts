@@ -44,7 +44,7 @@ describe('Wander Command', () => {
     sim.addUnit(soldier2);
     sim.addUnit(worm);
     
-    // Store initial positions
+
     const initialPositions = sim.units.map(u => ({ id: u.id, x: u.pos.x, y: u.pos.y }));
 
     sim.queuedCommands = [{
@@ -55,7 +55,7 @@ describe('Wander Command', () => {
 
     sim.step();
     
-    // Check that at least some units have moved
+
     const movedUnits = sim.units.filter(u => {
       const initial = initialPositions.find(p => p.id === u.id);
       return initial && (u.pos.x !== initial.x || u.pos.y !== initial.y);
@@ -74,7 +74,7 @@ describe('Wander Command', () => {
     sim.addUnit(friendlySoldier);
     sim.addUnit(hostileWorm);
     
-    // Store initial positions
+
     const friendlyInitialPos = { x: 5, y: 5 };
     const hostileInitialPos = { x: 10, y: 10 };
 
@@ -90,9 +90,9 @@ describe('Wander Command', () => {
     const friendlyUnit = sim.units.find(u => u.team === 'friendly');
     const hostileUnit = sim.units.find(u => u.team === 'hostile');
     
-    // Friendly unit should have moved
+
     expect(friendlyUnit?.pos.x !== friendlyInitialPos.x || friendlyUnit?.pos.y !== friendlyInitialPos.y).toBe(true);
-    // Hostile unit should not have moved
+
     expect(hostileUnit?.pos.x).toBe(hostileInitialPos.x);
     expect(hostileUnit?.pos.y).toBe(hostileInitialPos.y);
   });
@@ -101,7 +101,7 @@ describe('Wander Command', () => {
     const sim = new Simulator();
     
 
-    // Add a live soldier and a dead soldier
+
     const liveSoldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 10, y: 10 } };
     const deadSoldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 5, y: 5 }, hp: 0, state: 'dead' as const };
     
@@ -117,22 +117,22 @@ describe('Wander Command', () => {
     }];
     
 
-    // Verify dead unit is actually dead
+
     expect(deadUnit.state).toBe('dead');
     
-    // Check initial intendedMove before step
+
     
     sim.step();
     
 
-    // Check positions through proxy manager since dead units may not be in proxies
+
     const arrays2 = sim.proxyManager.arrays;
     if (arrays2) {
-      // Find the dead unit's index
+
       for (let i = 0; i < arrays2.capacity; i++) {
         if (arrays2.unitIds[i] === deadUnit.id) {
           console.log(`Dead unit after step: pos=(${arrays2.posX[i]}, ${arrays2.posY[i]}), intendedMove=(${arrays2.intendedMoveX[i]}, ${arrays2.intendedMoveY[i]}), state=${arrays2.state[i]}`);
-          // Dead unit should not have moved
+
           expect(arrays2.posX[i]).toBe(initialDeadPos.x);
           expect(arrays2.posY[i]).toBe(initialDeadPos.y);
           expect(arrays2.state[i]).toBe(3); // 3 = dead
@@ -141,7 +141,7 @@ describe('Wander Command', () => {
       }
     }
     
-    // Live unit should have moved
+
     const liveUnit = sim.units.find(u => u.hp > 0);
     expect(liveUnit?.pos.x !== initialLivePos.x || liveUnit?.pos.y !== initialLivePos.y).toBe(true);
   });
@@ -212,7 +212,7 @@ describe('Wander Command', () => {
     sim.addUnit(bear);
     sim.addUnit(owl);
     
-    // Store initial positions
+
     const initialPositions = sim.units.map(u => ({ id: u.id, x: u.pos.x, y: u.pos.y }));
 
     sim.queuedCommands = [{

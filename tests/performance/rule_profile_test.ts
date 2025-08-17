@@ -5,7 +5,7 @@ describe('Rule Performance Profiling', () => {
   test('Profile individual rule execution times', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 units
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -16,7 +16,7 @@ describe('Rule Performance Profiling', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
@@ -24,7 +24,7 @@ describe('Rule Performance Profiling', () => {
     const context = sim.getTickContext();
     const ruleTimes = new Map<string, { count: number, total: number, commands: number }>();
     
-    // Profile each rule over many iterations
+
     const iterations = 1000;
     
     for (let iter = 0; iter < iterations; iter++) {
@@ -46,7 +46,7 @@ describe('Rule Performance Profiling', () => {
       }
     }
     
-    // Sort by total time
+
     const sorted = Array.from(ruleTimes.entries())
       .sort((a, b) => b[1].total - a[1].total);
     

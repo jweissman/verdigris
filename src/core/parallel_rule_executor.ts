@@ -33,7 +33,7 @@ export class ParallelRuleExecutor {
   }
   
   private initializeWorkers(): void {
-    // Pre-create worker pool for reuse
+
     for (let i = 0; i < this.maxWorkers; i++) {
       const worker = new Worker(
         new URL("./rule_worker.ts", import.meta.url).href
@@ -50,10 +50,10 @@ export class ParallelRuleExecutor {
     rules: ParallelizableRule[],
     context: TickContext
   ): Promise<QueuedCommand[]> {
-    // 1. Analyze dependencies and create execution groups
+
     const groups = this.createExecutionGroups(rules);
     
-    // 2. Execute each group in sequence (within group = parallel)
+
     const allCommands: QueuedCommand[] = [];
     
     for (const group of groups) {
@@ -65,7 +65,7 @@ export class ParallelRuleExecutor {
   }
   
   private createExecutionGroups(rules: ParallelizableRule[]): ParallelizableRule[][] {
-    // Sort by priority
+
     const sorted = [...rules].sort((a, b) => {
       const aPriority = a.getDependencies().priority || 999;
       const bPriority = b.getDependencies().priority || 999;
@@ -78,24 +78,24 @@ export class ParallelRuleExecutor {
     for (const rule of sorted) {
       if (processed.has(rule)) continue;
       
-      // Create a new group with this rule
+
       const group: ParallelizableRule[] = [rule];
       processed.add(rule);
       
       const deps = rule.getDependencies();
       
-      // Find other rules that can run in parallel
+
       for (const other of sorted) {
         if (processed.has(other)) continue;
         
         const otherDeps = other.getDependencies();
         
-        // Check if they conflict
+
         if (!this.hasConflict(deps, otherDeps)) {
           group.push(other);
           processed.add(other);
           
-          // Update combined dependencies for the group
+
           deps.reads = new Set([...deps.reads, ...otherDeps.reads]);
           deps.writes = new Set([...deps.writes, ...otherDeps.writes]);
         }
@@ -108,16 +108,16 @@ export class ParallelRuleExecutor {
   }
   
   private hasConflict(a: RuleDependencies, b: RuleDependencies): boolean {
-    // Rules conflict if:
-    // 1. Both write to the same component
-    // 2. One writes what the other reads
+
+
+
     
-    // Check write-write conflicts
+
     for (const write of a.writes) {
       if (b.writes.has(write)) return true;
     }
     
-    // Check read-write conflicts
+
     for (const write of a.writes) {
       if (b.reads.has(write)) return true;
     }
@@ -136,10 +136,10 @@ export class ParallelRuleExecutor {
     
     for (const rule of group) {
       if (rule.canRunInWorker && this.workerPool.length > 0) {
-        // Execute in worker
+
         promises.push(this.executeInWorker(rule, context));
       } else {
-        // Execute inline
+
         promises.push(Promise.resolve(rule.execute(context)));
       }
     }
@@ -154,7 +154,7 @@ export class ParallelRuleExecutor {
   ): Promise<QueuedCommand[]> {
     const worker = this.workerPool.pop();
     if (!worker) {
-      // Fallback to inline execution if no workers available
+
       return rule.execute(context);
     }
     
@@ -164,7 +164,7 @@ export class ParallelRuleExecutor {
         resolve(event.data.commands);
       };
       
-      // Send rule name and context data to worker
+
       worker.postMessage({
         ruleName: rule.constructor.name,
         contextData: this.serializeContext(context)
@@ -173,9 +173,9 @@ export class ParallelRuleExecutor {
   }
   
   private serializeContext(context: TickContext): any {
-    // Serialize only the data needed by rules
-    // This is a simplified version - real implementation would need
-    // to carefully serialize only what's needed
+
+
+
     return {
       units: context.getAllUnits().map(u => ({
         id: u.id,
@@ -199,7 +199,7 @@ export class ParallelRuleExecutor {
   }
 }
 
-// Example of how to make a rule parallelizable
+
 export class ParallelMeleeCombat implements ParallelizableRule {
   getDependencies(): RuleDependencies {
     return {
@@ -212,7 +212,7 @@ export class ParallelMeleeCombat implements ParallelizableRule {
   canRunInWorker = true;
   
   execute(context: TickContext): QueuedCommand[] {
-    // Actual combat logic here
+
     return [];
   }
 }

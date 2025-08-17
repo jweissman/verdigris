@@ -294,12 +294,12 @@ describe("Perdurance System", () => {
     const constructUnit = sim.units.find(u => u.id === construct.id);
     console.debug(`Construct HP after 8 damage events: ${constructUnit?.hp}`);
     
-    // With fixpoint processing, all damage happens in one step
-    // Unit might be removed if dead, so check if it exists
+
+
     if (constructUnit) {
       expect(constructUnit.hp).toBe(0);
     } else {
-      // Unit was removed because it died - this is also correct
+
       const allUnits = sim.units.filter(u => u.id === construct.id);
       expect(allUnits.length).toBe(0); // Unit should be gone
     }

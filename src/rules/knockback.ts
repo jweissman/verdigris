@@ -29,7 +29,7 @@ export class Knockback extends Rule {
   private processKnockback(context: TickContext, a: Unit, b: Unit): void {
     if (a.team === b.team) return;
     
-    // Phantoms cannot be pushed
+
     if (b.meta?.phantom) return;
 
     const massDiff = (a.mass || 1) - (b.mass || 1);

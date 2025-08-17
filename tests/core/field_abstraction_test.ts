@@ -54,7 +54,7 @@ describe('Field Abstraction (Real vs Apparent)', () => {
   it('should allow huge units to move as single entity', () => {
     const sim = new Simulator(10, 10);
     
-    // Keep only movement and huge units rules
+
     sim.rulebook = [
       sim.rulebook.find(r => r.constructor.name === 'UnitMovement')!,
       sim.rulebook.find(r => r.constructor.name === 'HugeUnits')!

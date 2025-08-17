@@ -5,7 +5,7 @@ describe('No Rules Performance', () => {
   test('Performance with empty rulebook', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 50 neutral units
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -16,15 +16,15 @@ describe('No Rules Performance', () => {
       });
     }
     
-    // Clear rulebook entirely
+
     sim.rulebook = [];
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
     
-    // Measure
+
     const start = performance.now();
     const iterations = 10000;
     for (let i = 0; i < iterations; i++) {

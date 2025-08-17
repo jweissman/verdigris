@@ -38,6 +38,10 @@ export interface TickContext {
   getSandstormIntensity(): number;
   getSandstormDuration(): number;
   getQueuedEvents(): readonly any[];
+  
+  // SoA performance access for DSL
+  getUnitIndex(unitId: string): number | undefined;
+  getArrays(): { posX: number[], posY: number[], activeIndices: number[], team: number[], state: number[] };
 }
 
 /**
@@ -50,7 +54,7 @@ export class TickContextImpl implements TickContext {
   
 
   findUnitsInRadius(center: Vec2, radius: number): Unit[] {
-    // Moved from Simulator - TickContext should handle queries
+
     if (this.sim.gridPartition) {
       return this.sim.gridPartition.getNearby(center.x, center.y, radius);
     }
@@ -68,7 +72,7 @@ export class TickContextImpl implements TickContext {
 
   getAllUnits(): readonly Unit[] {
     if (!this.unitCache) {
-      // Cache proxies for this tick
+
       this.unitCache = this.sim.proxyManager.getAllProxies();
     }
     return this.unitCache;
@@ -78,7 +82,7 @@ export class TickContextImpl implements TickContext {
     return this.getAllUnits().filter((unit) => unit.team === team);
   }
   
-  // PERFORMANCE: New query methods to avoid getAllUnits() where possible
+
   getUnitsWithAbilities(): Unit[] {
     return this.getAllUnits().filter((unit) => 
       unit.abilities && unit.abilities.length > 0
@@ -179,5 +183,20 @@ export class TickContextImpl implements TickContext {
 
   getQueuedEvents(): readonly any[] {
     return this.sim.queuedEvents || [];
+  }
+
+  getUnitIndex(unitId: string): number | undefined {
+    return (this.sim as any).proxyManager?.idToIndex?.get(unitId);
+  }
+
+  getArrays(): { posX: number[], posY: number[], activeIndices: number[], team: number[], state: number[] } {
+    const arrays = (this.sim as any).unitArrays;
+    return {
+      posX: arrays.posX,
+      posY: arrays.posY,
+      activeIndices: arrays.activeIndices,
+      team: arrays.team,
+      state: arrays.state
+    };
   }
 }

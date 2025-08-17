@@ -57,7 +57,7 @@ describe('Grappling Mass Physics', () => {
     const context = sim.getTickContext();
     
 
-    // GrapplingPhysics generates commands that need to be queued
+
     const commands1 = grapplingPhysics.execute(context);
     sim.queuedCommands.push(...commands1);
     
@@ -65,7 +65,7 @@ describe('Grappling Mass Physics', () => {
     commandHandler.execute(context);
     
 
-    // Second round to apply pull effects
+
     const commands2 = grapplingPhysics.execute(context);
     sim.queuedCommands.push(...commands2);
     commandHandler.execute(context);

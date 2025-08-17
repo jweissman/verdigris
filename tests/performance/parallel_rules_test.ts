@@ -6,7 +6,7 @@ describe('Parallel Rule Execution Potential', () => {
   test('Measure rule independence and parallelization potential', () => {
     const sim = new Simulator(50, 50);
     
-    // Add 100 units
+
     for (let i = 0; i < 100; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -17,14 +17,14 @@ describe('Parallel Rule Execution Potential', () => {
       });
     }
     
-    // Warm up
+
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
     
     const context = sim.getTickContext();
     
-    // Test 1: Sequential execution (current)
+
     const seqStart = performance.now();
     const seqCommands = [];
     for (let i = 0; i < 100; i++) {
@@ -37,8 +37,8 @@ describe('Parallel Rule Execution Potential', () => {
     }
     const seqTime = performance.now() - seqStart;
     
-    // Test 2: Simulated parallel (batch rules that don't conflict)
-    // Group rules by whether they only read or also write
+
+
     const readOnlyRules = ['BiomeEffects', 'AmbientSpawning', 'LightningStorm'];
     const combatRules = ['MeleeCombat', 'Abilities', 'Knockback'];
     const movementRules = ['UnitMovement', 'UnitBehavior', 'AmbientBehavior'];
@@ -46,7 +46,7 @@ describe('Parallel Rule Execution Potential', () => {
     const parStart = performance.now();
     const parCommands = [];
     for (let i = 0; i < 100; i++) {
-      // Simulate parallel execution of independent rule groups
+
       const batch1Start = performance.now();
       for (const rule of sim.rulebook.filter(r => readOnlyRules.includes(r.constructor.name))) {
         const commands = rule.execute(context);
@@ -68,12 +68,12 @@ describe('Parallel Rule Execution Potential', () => {
       }
       const batch3Time = performance.now() - batch3Start;
       
-      // Simulated parallel time is the max of the batches
-      // (in real parallel execution, they'd run simultaneously)
+
+
     }
     const parTime = performance.now() - parStart;
     
-    // Test 3: Measure individual rule times to find parallelization opportunity
+
     const ruleTimes = new Map<string, number>();
     for (const rule of sim.rulebook) {
       const start = performance.now();
@@ -83,7 +83,7 @@ describe('Parallel Rule Execution Potential', () => {
       ruleTimes.set(rule.constructor.name, performance.now() - start);
     }
     
-    // Find rules that could run in parallel
+
     const sorted = Array.from(ruleTimes.entries()).sort((a, b) => b[1] - a[1]);
     const top5Time = sorted.slice(0, 5).reduce((sum, [_, time]) => sum + time, 0);
     const totalTime = sorted.reduce((sum, [_, time]) => sum + time, 0);

@@ -9,7 +9,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 describe('Systematic Creature Tests', () => {
 
   // TODO couldn't these be the real beast names from Encyclopedia? 
-  // Note I think some are confabulated?
+
   const creatureNames = [
     'soldier', 'worm', 'squirrel', 'big-worm', 'megasquirrel',
     'grappler', 'toymaker', 'mechatron', 'mechanist', 'toy',
@@ -88,7 +88,7 @@ describe('Systematic Creature Tests', () => {
       const sim = new Simulator(30, 30);
       
 
-      // Use creatures that don't spawn additional units
+
       const abilityCreatures = ['grappler', 'warrior', 'paladin', 'ranger', 'mage'];
       
       abilityCreatures.forEach((name, i) => {
@@ -120,9 +120,9 @@ describe('Systematic Creature Tests', () => {
       
 
       const survivors = sim.units.filter(u => u.hp > 0);
-      // Expect at least some casualties from combat (but account for spawning)
+
       expect(survivors.length).toBeLessThanOrEqual(initialCount);
-      // But also ensure the test isn't completely broken (some units should survive)
+
       expect(survivors.length).toBeGreaterThan(0);
     });
   });

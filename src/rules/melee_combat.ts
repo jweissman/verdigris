@@ -43,9 +43,9 @@ export class MeleeCombat extends Rule {
     const coldData = (context as any).sim?.unitColdData;
     
     if (arrays && coldData) {
-      // Fast path - direct array access with squared distance
+
       for (const i of arrays.activeIndices) {
-        if (arrays.state[i] === 3 || arrays.hp[i] <= 0) continue; // dead
+        if (arrays.state[i] === 3 || arrays.hp[i] <= 0) continue;
         
         const attackerId = arrays.unitIds[i];
         if (this.engagements.has(attackerId)) continue;
@@ -57,10 +57,10 @@ export class MeleeCombat extends Rule {
         const y1 = arrays.posY[i];
         const team1 = arrays.team[i];
         
-        // Check nearby units
+
         for (const j of arrays.activeIndices) {
           if (i === j || arrays.state[j] === 3 || arrays.hp[j] <= 0) continue;
-          if (team1 === arrays.team[j]) continue; // same team
+          if (team1 === arrays.team[j]) continue;
           
           const dx = arrays.posX[j] - x1;
           const dy = arrays.posY[j] - y1;
@@ -71,7 +71,7 @@ export class MeleeCombat extends Rule {
             const targetCold = coldData.get(targetId);
             if (targetCold?.meta?.jumping || targetCold?.tags?.includes("noncombatant")) continue;
             
-            // Process hit
+
             this.engagements.set(attackerId, targetId);
             this.lastAttacks.set(attackerId, context.getCurrentTick());
             
@@ -104,7 +104,7 @@ export class MeleeCombat extends Rule {
         }
       }
     } else {
-      // Fallback to proxy path
+
       const allUnits = context.getAllUnits();
       for (const attacker of allUnits) {
         if (this.engagements.has(attacker.id)) continue;

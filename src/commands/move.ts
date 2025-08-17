@@ -11,7 +11,7 @@ export class MoveCommand extends Command {
     const unit = this.sim.units.find((u) => u.id === targetId);
     if (!unit) return;
 
-    // If absolute position is provided, calculate the delta
+
     if (params.x !== undefined && params.y !== undefined) {
       const newX = params.x as number;
       const newY = params.y as number;
@@ -22,7 +22,7 @@ export class MoveCommand extends Command {
         intendedMove: { x: dx, y: dy },
       };
       
-      // Handle z coordinate for jumping/tossing
+
       if (params.z !== undefined) {
         if (!updates.meta) updates.meta = {};
         updates.meta.z = params.z;
@@ -30,7 +30,7 @@ export class MoveCommand extends Command {
       
       transform.updateUnit(targetId, updates);
     } else {
-      // Use dx/dy directly for intended move
+
       const dx = (params.dx as number) || 0;
       const dy = (params.dy as number) || 0;
 
