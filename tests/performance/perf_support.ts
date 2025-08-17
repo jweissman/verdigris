@@ -84,6 +84,7 @@ export function formatPerformanceTable(results: Map<string, TimingResult>): stri
   lines.push('---------------------------- | ----------- | -------- | -----------');
   
   let totalMedian = 0;
+  let totalPercentOfIndividualBudgets = 0;
   const sorted = Array.from(results.entries()).sort((a, b) => b[1].median - a[1].median);
   
   for (const [name, timing] of sorted) {
@@ -93,13 +94,14 @@ export function formatPerformanceTable(results: Map<string, TimingResult>): stri
       `${name.padEnd(28)} | ${timing.median.toFixed(4).padStart(11)} | ${timing.avg.toFixed(4).padStart(8)} | ${percent.toFixed(0).padStart(3)}% ${status}`
     );
     totalMedian += timing.median;
+    totalPercentOfIndividualBudgets += percent;
   }
   
   lines.push('---------------------------- | ----------- | -------- | -----------');
-  const totalPercent = (totalMedian / PerfBudgets.total_step_ms) * 100;
-  const totalStatus = totalPercent > 100 ? '❌' : totalPercent > 80 ? '⚠️ ' : '✅';
+  // Show sum of individual percentages (should ideally be <= 1000% for 10 rules at 100% each)
+  const totalStatus = totalPercentOfIndividualBudgets > 1000 ? '❌' : totalPercentOfIndividualBudgets > 800 ? '⚠️ ' : '✅';
   lines.push(
-    `TOTAL                        | ${totalMedian.toFixed(4).padStart(11)} |          | ${totalPercent.toFixed(0).padStart(3)}% ${totalStatus}`
+    `TOTAL                        | ${totalMedian.toFixed(4).padStart(11)} |          | ${totalPercentOfIndividualBudgets.toFixed(0).padStart(3)}% ${totalStatus}`
   );
   
   return lines.join('\n');

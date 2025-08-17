@@ -124,6 +124,16 @@ export default class DSL {
       }
     }
     
+    // Fast path for "closest.ally() != null" - just check if alone
+    if (expression === "closest.ally() != null") {
+      for (const u of allUnits) {
+        if (u.team === subject.team && u.id !== subject.id && u.state !== "dead") {
+          return true; // Found an ally, not alone
+        }
+      }
+      return false; // No allies found, alone
+    }
+    
     // Fast path for common trigger patterns - just check if ANY enemy is in range
     // Only use this for pure distance checks, not when we need the actual enemy object
     const distancePattern =
@@ -180,6 +190,7 @@ export default class DSL {
       return dx * dx + dy * dy;
     };
 
+    // Create noun helpers lazily
     let weakest: any;
     let strongest: any;
     let mostInjured: any;
@@ -189,6 +200,7 @@ export default class DSL {
     let furthest: any;
     let farthest: any;
 
+    // Only create if actually used in expression
     if (expression.includes("weakest")) {
       weakest = this.noun(
         subject,
@@ -273,41 +285,76 @@ export default class DSL {
       }
     };
 
-    let allies = () =>
-      allUnits.filter(
-        (u) =>
-          u.team === subject.team && u.state !== "dead" && u.id !== subject.id,
-      );
-    let enemies = () =>
-      allUnits.filter((u) => u.team !== subject.team && u.state !== "dead");
-    let all = () => allUnits.filter((u) => u.state !== "dead");
+    // Create function helpers lazily - only if used
+    let allies: any;
+    let enemies: any;
+    let all: any;
+    let wounded: any;
+    let within_range: any;
+    
+    if (expression.includes("allies")) {
+      allies = () =>
+        allUnits.filter(
+          (u) =>
+            u.team === subject.team && u.state !== "dead" && u.id !== subject.id,
+        );
+    }
+    if (expression.includes("enemies")) {
+      enemies = () =>
+        allUnits.filter((u) => u.team !== subject.team && u.state !== "dead");
+    }
+    if (expression.includes("all(")) {
+      all = () => allUnits.filter((u) => u.state !== "dead");
+    }
+    if (expression.includes("wounded")) {
+      wounded = (u: Unit) => u.hp < u.maxHp;
+    }
+    if (expression.includes("within_range")) {
+      within_range = (range: number) => (u: Unit) => distance(u) <= range;
+    }
 
-    let wounded = (u: Unit) => u.hp < u.maxHp;
-    let within_range = (range: number) => (u: Unit) => distance(u) <= range;
-
-    let centroid = {
-      allies: () => {
-        const units = allies();
-        if (units.length === 0) return null;
-        const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
-        const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
-        return { x: Math.round(x), y: Math.round(y) };
-      },
-      enemies: () => {
-        const units = enemies();
-        if (units.length === 0) return null;
-        const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
-        const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
-        return { x: Math.round(x), y: Math.round(y) };
-      },
-      wounded_allies: () => {
-        const units = allies().filter(wounded);
-        if (units.length === 0) return null;
-        const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
-        const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
-        return { x: Math.round(x), y: Math.round(y) };
-      },
-    };
+    let centroid: any;
+    if (expression.includes("centroid")) {
+      // Make sure allies/enemies are defined if centroid needs them
+      if (!allies && expression.includes("centroid.allies")) {
+        allies = () =>
+          allUnits.filter(
+            (u) =>
+              u.team === subject.team && u.state !== "dead" && u.id !== subject.id,
+          );
+      }
+      if (!enemies && expression.includes("centroid.enemies")) {
+        enemies = () =>
+          allUnits.filter((u) => u.team !== subject.team && u.state !== "dead");
+      }
+      if (!wounded && expression.includes("wounded_allies")) {
+        wounded = (u: Unit) => u.hp < u.maxHp;
+      }
+      
+      centroid = {
+        allies: () => {
+          const units = allies();
+          if (units.length === 0) return null;
+          const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
+          const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
+          return { x: Math.round(x), y: Math.round(y) };
+        },
+        enemies: () => {
+          const units = enemies();
+          if (units.length === 0) return null;
+          const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
+          const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
+          return { x: Math.round(x), y: Math.round(y) };
+        },
+        wounded_allies: () => {
+          const units = allies().filter(wounded);
+          if (units.length === 0) return null;
+          const x = units.reduce((sum, u) => sum + u.pos.x, 0) / units.length;
+          const y = units.reduce((sum, u) => sum + u.pos.y, 0) / units.length;
+          return { x: Math.round(x), y: Math.round(y) };
+        },
+      };
+    }
 
     let random = {
       position: () => ({
