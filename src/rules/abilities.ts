@@ -36,14 +36,14 @@ export class Abilities extends Rule {
     this.commands = [];
 
     const currentTick = context.getCurrentTick();
-    const allUnits = context.getAllUnits(); // Get units once
+    const allUnits = context.getAllUnits();
     
     // Pre-filter units that have abilities or are burrowed
     const relevantUnits = allUnits.filter(u => 
       (u.abilities && u.abilities.length > 0) || u.meta?.burrowed
     );
     
-    // If no units have abilities, return early
+    // Early exit if no units have abilities - massive performance gain
     if (relevantUnits.length === 0) {
       return this.commands;
     }

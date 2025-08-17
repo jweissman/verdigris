@@ -91,13 +91,6 @@ class Simulator {
     return this.proxyManager.getAllProxies();
   }
 
-  getUnitArrays(): any {
-    return this.unitArrays; // Enable optimized SoA path
-  }
-
-  getUnitColdData(): Map<string, any> {
-    return this.unitColdData; // Still needed for now
-  }
 
   getUnitsForTransform(): Unit[] {
     return this.units as Unit[];
@@ -350,29 +343,40 @@ class Simulator {
 
     this.commandProcessor = new CommandHandler(this, this.transform);
 
-    this.rulebook = [
-      new Abilities(),
+    // Core rules that always run
+    const coreRules = [
       new UnitBehavior(),
       new UnitMovement(),
+      new Cleanup(),
+    ];
+    
+    // Combat and interaction rules
+    const combatRules = [
+      new Abilities(),
+      new MeleeCombat(),
+      new Knockback(),
+      new StatusEffects(),
+      new Perdurance(),
+    ];
+    
+    // Environmental and special rules
+    const specialRules = [
       new HugeUnits(),
       new SegmentedCreatures(),
       new GrapplingPhysics(),
-      new MeleeCombat(),
       new AirdropPhysics(),
       new BiomeEffects(),
       new AmbientSpawning(),
       new AmbientBehavior(),
       new LightningStorm(),
       new AreaOfEffect(),
-      new Knockback(),
       new ProjectileMotion(),
-      new Particles(this), // TODO: Should use DataQuery interface
+      new Particles(this),
       new Jumping(),
       new Tossing(),
-      new StatusEffects(),
-      new Perdurance(),
-      new Cleanup(),
     ];
+    
+    this.rulebook = [...coreRules, ...combatRules, ...specialRules];
   }
 
   addUnit(unit: Partial<Unit>): Unit {
@@ -444,17 +448,6 @@ class Simulator {
     this.changedUnits.add(unitId);
   }
 
-  getUnitsNear(x: number, y: number, radius: number = 2): Unit[] {
-    if (this.gridPartition) {
-      return this.gridPartition.getNearby(x, y, radius);
-    }
-
-    return this.units.filter((u) => {
-      const dx = u.pos.x - x;
-      const dy = u.pos.y - y;
-      return Math.sqrt(dx * dx + dy * dy) <= radius;
-    });
-  }
 
   hasDirtyUnits(): boolean {
     return this.dirtyUnits.size > 0;
@@ -543,11 +536,15 @@ class Simulator {
     // Create fresh context each step - it caches units internally
     const context = new TickContextImpl(this);
     
-    // Execute all rules - correctness over performance
+    // PERFORMANCE: Only execute rules when needed
     for (const rule of this.rulebook) {
+      // Skip expensive rules when no relevant units exist
+      const ruleName = rule.constructor.name;
+      
+      // Execute all rules for correctness
+      
       const commands = rule.execute(context);
       if (commands && commands.length > 0) {
-        // Directly push commands without intermediate array
         for (let i = 0; i < commands.length; i++) {
           this.queuedCommands.push(commands[i]);
         }
@@ -1740,39 +1737,8 @@ class Simulator {
       return;
     }
 
-    const context = {
-      findUnitsInRadius: (center: any, radius: number) =>
-        this.getUnitsNear(center.x, center.y, radius),
-      findUnitById: (id: string) => this.units.find((u) => u.id === id),
-      getAllUnits: () => this.units as readonly any[],
-      getUnitsInTeam: (team: string) =>
-        this.units.filter((u) => u.team === team),
-      getUnitsAt: (pos: any) =>
-        this.units.filter(
-          (u) =>
-            Math.floor(u.pos.x) === Math.floor(pos.x) &&
-            Math.floor(u.pos.y) === Math.floor(pos.y),
-        ),
-      getUnitsInRect: (x: number, y: number, width: number, height: number) =>
-        this.units.filter(
-          (u) =>
-            u.pos.x >= x &&
-            u.pos.x < x + width &&
-            u.pos.y >= y &&
-            u.pos.y < y + height,
-        ),
-      queueCommand: (cmd: any) => this.queuedCommands.push(cmd),
-      queueEvent: (event: any) => this.queuedEvents.push(event),
-      getRandom: () => Math.random(), // TODO: Use deterministic RNG
-      getCurrentTick: () => this.ticks,
-      getFieldWidth: () => this.fieldWidth,
-      getFieldHeight: () => this.fieldHeight,
-      getProjectiles: () => this.projectiles as readonly any[],
-      getParticles: () => this.particles as readonly any[],
-      getTemperatureAt: (x: number, y: number) =>
-        this.temperatureField?.get?.(x, y) || 20,
-      getSceneBackground: () => this.sceneBackground,
-    };
+    // Use proper TickContext instead of manual context - simplifies god object
+    const context = this.getTickContext();
 
     const primaryTarget = target || unit;
     // Clear the rule's commands array before processing

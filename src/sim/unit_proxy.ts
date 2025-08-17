@@ -52,21 +52,31 @@ export class UnitProxy implements Unit {
   get pos(): Vec2 {
     if (this._cachedIndex !== undefined) {
       const manager = this.query as UnitProxyManager;
+      // Reuse the same Vec2 object - just update its values
       this._posCache.x = manager.arrays.posX[this._cachedIndex];
       this._posCache.y = manager.arrays.posY[this._cachedIndex];
       return this._posCache;
     }
-    return this.query.getPosition(this.id);
+    // Fallback also reuses the cache object
+    const pos = this.query.getPosition(this.id);
+    this._posCache.x = pos.x;
+    this._posCache.y = pos.y;
+    return this._posCache;
   }
 
   get intendedMove(): Vec2 {
     if (this._cachedIndex !== undefined) {
       const manager = this.query as UnitProxyManager;
+      // Reuse the same Vec2 object
       this._moveCache.x = manager.arrays.intendedMoveX[this._cachedIndex];
       this._moveCache.y = manager.arrays.intendedMoveY[this._cachedIndex];
       return this._moveCache;
     }
-    return this.query.getIntendedMove(this.id);
+    // Fallback also reuses the cache object
+    const move = this.query.getIntendedMove(this.id);
+    this._moveCache.x = move.x;
+    this._moveCache.y = move.y;
+    return this._moveCache;
   }
 
   get hp(): number {
@@ -475,7 +485,6 @@ export class UnitProxyManager implements DataQuery {
       this.arrays.rebuildActiveIndices();
     }
 
-    // Create fresh proxies
     const proxies: UnitProxy[] = [];
     for (const i of this.arrays.activeIndices) {
       const unitId = this.arrays.unitIds[i];

@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
+import { PerfBudgets } from './perf_support';
 
 describe('Step Phase Profiling', () => {
   test('Detailed step phase breakdown', () => {
@@ -178,8 +179,8 @@ describe('Step Phase Profiling', () => {
     console.log('----------------------------------------');
     console.log(`TOTAL:             ${phases.total.toFixed(4)}ms`);
     console.log(`Overhead:          ${overhead.toFixed(4)}ms (${((overhead / phases.total) * 100).toFixed(1)}%)`);
-    console.log(`\nBudget: 0.01ms, Actual: ${phases.total.toFixed(4)}ms (${(phases.total / 0.01).toFixed(1)}x over)`);
+    console.log(`\nBudget: ${PerfBudgets.total_step_ms}ms, Actual: ${phases.total.toFixed(4)}ms (${(phases.total / PerfBudgets.total_step_ms).toFixed(1)}x over)`);
     
-    expect(phases.total).toBeLessThan(0.01);
+    expect(phases.total).toBeLessThan(PerfBudgets.total_step_ms);
   });
 });

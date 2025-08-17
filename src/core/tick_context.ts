@@ -18,8 +18,6 @@ export interface TickContext {
   getUnitsInTeam(team: string): Unit[];
   getUnitsAt(pos: Vec2): Unit[];
   getUnitsInRect(x: number, y: number, width: number, height: number): Unit[];
-  // Fast path for rules that can work with arrays directly
-  getUnitArrays?(): any;
   queueCommand(command: { type: string; params: any }): void;
   queueEvent(event: {
     kind: string;
@@ -50,12 +48,18 @@ export class TickContextImpl implements TickContext {
 
   constructor(private sim: Simulator) {}
   
-  getUnitArrays(): any {
-    return this.sim.proxyManager.arrays;
-  }
 
   findUnitsInRadius(center: Vec2, radius: number): Unit[] {
-    return this.sim.getUnitsNear(center.x, center.y, radius);
+    // Moved from Simulator - TickContext should handle queries
+    if (this.sim.gridPartition) {
+      return this.sim.gridPartition.getNearby(center.x, center.y, radius);
+    }
+
+    return this.getAllUnits().filter((u) => {
+      const dx = u.pos.x - center.x;
+      const dy = u.pos.y - center.y;
+      return Math.sqrt(dx * dx + dy * dy) <= radius;
+    });
   }
 
   findUnitById(id: string): Unit | undefined {
@@ -64,7 +68,7 @@ export class TickContextImpl implements TickContext {
 
   getAllUnits(): readonly Unit[] {
     if (!this.unitCache) {
-      // Use the proxy manager's cached array directly
+      // Cache proxies for this tick
       this.unitCache = this.sim.proxyManager.getAllProxies();
     }
     return this.unitCache;
@@ -72,6 +76,17 @@ export class TickContextImpl implements TickContext {
 
   getUnitsInTeam(team: string): Unit[] {
     return this.getAllUnits().filter((unit) => unit.team === team);
+  }
+  
+  // PERFORMANCE: New query methods to avoid getAllUnits() where possible
+  getUnitsWithAbilities(): Unit[] {
+    return this.getAllUnits().filter((unit) => 
+      unit.abilities && unit.abilities.length > 0
+    );
+  }
+  
+  getUnitsWithState(state: string): Unit[] {
+    return this.getAllUnits().filter((unit) => unit.state === state);
   }
 
   getUnitsAt(pos: Vec2): Unit[] {

@@ -47,19 +47,23 @@ describe('End-to-end combat', () => {
 
     for (let t = 0; t < 100; t++) {
       if (t === 0 || t === 1 || t === 99) {
-        console.debug(`Step ${t}: giant at (${sim.roster.giant?.pos.x},${sim.roster.giant?.pos.y}) hp=${sim.roster.giant?.hp}`);
-        console.debug(`  minion0 at (${sim.roster.minion0?.pos.x},${sim.roster.minion0?.pos.y}) hp=${sim.roster.minion0?.hp} intendedMove=(${sim.roster.minion0?.intendedMove.x},${sim.roster.minion0?.intendedMove.y})`);
+        const giant = sim.units.find(u => u.id === 'giant');
+        const minion0 = sim.units.find(u => u.id === 'minion0');
+        console.debug(`Step ${t}: giant at (${giant?.pos.x},${giant?.pos.y}) hp=${giant?.hp}`);
+        console.debug(`  minion0 at (${minion0?.pos.x},${minion0?.pos.y}) hp=${minion0?.hp} intendedMove=(${minion0?.intendedMove.x},${minion0?.intendedMove.y})`);
       }
       sim.step();
     }
 
 
-    expect(sim.roster.giant.state).not.toBe('dead');
-    expect(sim.roster.giant.hp).toBeGreaterThan(0);
+    const giantAfter = sim.units.find(u => u.id === 'giant');
+    expect(giantAfter?.state).not.toBe('dead');
+    expect(giantAfter?.hp).toBeGreaterThan(0);
     
 
     for (let i = 0; i < 10; i++) {
-      expect(sim.roster[`minion${i}`]).toBeUndefined(); // Dead units are culled
+      const minion = sim.units.find(u => u.id === `minion${i}`);
+      expect(minion).toBeUndefined(); // Dead units are culled
     }
     
 

@@ -17,7 +17,7 @@ export class ForcesCommand extends Command {
   }
 
   private applyAllForces(): void {
-    const arrays = this.sim.getUnitArrays();
+    const arrays = this.sim.proxyManager.arrays;
 
     const capacity = arrays.capacity;
     const fieldWidth = this.sim.fieldWidth;

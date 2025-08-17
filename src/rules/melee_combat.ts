@@ -37,28 +37,96 @@ export class MeleeCombat extends Rule {
     commands: QueuedCommand[],
   ): void {
     const meleeRange = 1.5;
+    const meleeRangeSq = meleeRange * meleeRange;
 
-    const allUnits = context.getAllUnits();
-    for (const attacker of allUnits) {
-      if (this.engagements.has(attacker.id)) continue;
+    const arrays = (context as any).sim?.unitArrays;
+    const coldData = (context as any).sim?.unitColdData;
+    
+    if (arrays && coldData) {
+      // Fast path - direct array access with squared distance
+      for (const i of arrays.activeIndices) {
+        if (arrays.state[i] === 3 || arrays.hp[i] <= 0) continue; // dead
+        
+        const attackerId = arrays.unitIds[i];
+        if (this.engagements.has(attackerId)) continue;
+        
+        const cold = coldData.get(attackerId);
+        if (cold?.meta?.jumping || cold?.tags?.includes("noncombatant")) continue;
+        
+        const x1 = arrays.posX[i];
+        const y1 = arrays.posY[i];
+        const team1 = arrays.team[i];
+        
+        // Check nearby units
+        for (const j of arrays.activeIndices) {
+          if (i === j || arrays.state[j] === 3 || arrays.hp[j] <= 0) continue;
+          if (team1 === arrays.team[j]) continue; // same team
+          
+          const dx = arrays.posX[j] - x1;
+          const dy = arrays.posY[j] - y1;
+          const distSq = dx * dx + dy * dy;
+          
+          if (distSq <= meleeRangeSq) {
+            const targetId = arrays.unitIds[j];
+            const targetCold = coldData.get(targetId);
+            if (targetCold?.meta?.jumping || targetCold?.tags?.includes("noncombatant")) continue;
+            
+            // Process hit
+            this.engagements.set(attackerId, targetId);
+            this.lastAttacks.set(attackerId, context.getCurrentTick());
+            
+            commands.push({
+              type: "halt",
+              params: { unitId: attackerId },
+            });
+            
+            commands.push({
+              type: "meta",
+              params: {
+                unitId: attackerId,
+                meta: { lastAttacked: context.getCurrentTick() },
+                state: "attack",
+              },
+            });
+            
+            commands.push({
+              type: "damage",
+              params: {
+                targetId: targetId,
+                amount: arrays.dmg[i] || 1,
+                aspect: "physical",
+                sourceId: attackerId,
+              },
+            });
+            
+            break; // Only one target per attacker
+          }
+        }
+      }
+    } else {
+      // Fallback to proxy path
+      const allUnits = context.getAllUnits();
+      for (const attacker of allUnits) {
+        if (this.engagements.has(attacker.id)) continue;
 
-      if (attacker.hp <= 0) continue;
-      if (attacker.meta?.jumping) continue;
-      if (attacker.tags?.includes("noncombatant")) continue;
+        if (attacker.hp <= 0) continue;
+        if (attacker.meta?.jumping) continue;
+        if (attacker.tags?.includes("noncombatant")) continue;
 
-      const nearbyUnits = context.findUnitsInRadius(attacker.pos, meleeRange);
+        const nearbyUnits = context.findUnitsInRadius(attacker.pos, meleeRange);
 
-      for (const target of nearbyUnits) {
-        if (target.id === attacker.id) continue;
+        for (const target of nearbyUnits) {
+          if (target.id === attacker.id) continue;
 
-        if (target.hp <= 0) continue;
-        if (target.meta?.jumping) continue;
-        if (target.tags?.includes("noncombatant")) continue;
+          if (target.hp <= 0) continue;
+          if (target.meta?.jumping) continue;
+          if (target.tags?.includes("noncombatant")) continue;
 
-        if (attacker.team === target.team) continue;
+          if (attacker.team === target.team) continue;
 
-        this.processHit(context, attacker, target, commands);
-        break; // Only attack one target per attacker
+          this.processHit(context, attacker, target, commands);
+          break;
+        }
       }
     }
   }

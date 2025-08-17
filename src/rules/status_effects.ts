@@ -27,9 +27,11 @@ export class StatusEffects extends Rule {
 
       if (unit.meta.statusEffects && unit.meta.statusEffects.length > 0) {
         this.updateStatusEffects(context, unit);
+        this.applyStatusEffectMechanics(context, unit);
+      } else if (unit.meta.chilled || unit.meta.stunned) {
+        // Only clear if flags are set
+        this.applyStatusEffectMechanics(context, unit);
       }
-
-      this.applyStatusEffectMechanics(context, unit);
     }
 
     return this.commands;

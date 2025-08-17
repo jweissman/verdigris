@@ -46,32 +46,24 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should establish tether when grapple hits target unit', () => {
     const sim = new Simulator();
-
-    
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
       pos: { x: 5, y: 5 },
       lastAbilityTick: {}
     };
-    
     const target = {
       ...Encyclopaedia.unit('soldier'),
       id: 'target-1',
       pos: { x: 8, y: 5 },
       team: 'hostile' as const
     };
-    
     sim.addUnit(grappler);
     sim.addUnit(target);
-    
-
     sim.step(); // Abilities queues the grapple command
     sim.step(); // CommandHandler processes the grapple command
-    
     for (let i = 0; i < 20; i++) {
       sim.step();
-      
       const g = sim.units.find(u => u.id === 'grappler-1');
       if (g?.meta.grapplingTarget === 'target-1') {
         break;

@@ -125,8 +125,8 @@ describe('Wander Command', () => {
     sim.step();
     
 
-    // Check positions directly from arrays since dead units may not be in proxies
-    const arrays2 = sim.getUnitArrays();
+    // Check positions through proxy manager since dead units may not be in proxies
+    const arrays2 = sim.proxyManager.arrays;
     if (arrays2) {
       // Find the dead unit's index
       for (let i = 0; i < arrays2.capacity; i++) {
