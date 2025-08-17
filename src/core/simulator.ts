@@ -89,7 +89,7 @@ class Simulator {
     // Returns lightweight snapshots for performance
     return this.proxyManager.getAllProxies();
   }
-  
+
   /**
    * Get units with real proxies that stay in sync with arrays
    * FOR TESTS ONLY - production code should use 'units'
@@ -1644,12 +1644,12 @@ class Simulator {
               const mag = Math.sqrt(dx * dx + dy * dy) || 1;
               const speed = 1; // Could be parameterized
               const vel = { x: (dx / mag) * speed, y: (dy / mag) * speed };
-              
+
               // Create projectile slightly ahead of unit in direction of target
               const offset = 0.5;
               const projX = unit.pos.x + (dx / mag) * offset;
               const projY = unit.pos.y + (dy / mag) * offset;
-              
+
               this.projectiles.push({
                 id: `proj_${unit.id}_${Date.now()}`,
                 pos: { x: projX, y: projY },

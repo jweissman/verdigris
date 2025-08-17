@@ -14,7 +14,8 @@ export class MeleeCombat extends Rule {
     // Work directly with arrays to avoid proxy creation
     const arrays = context.getArrays();
     for (const i of arrays.activeIndices) {
-      if (arrays.state[i] === 2) { // attack state
+      if (arrays.state[i] === 2) {
+        // attack state
         const unitId = arrays.unitIds[i];
         const coldData = context.getUnitColdData(unitId);
         if (coldData?.meta?.lastAttacked) {

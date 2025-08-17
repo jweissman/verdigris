@@ -52,26 +52,30 @@ export class UnitProxy implements Unit {
    * This is a plain object with values, not a proxy with getters
    */
   static createLightweight(
-    unitId: string, 
-    index: number, 
+    unitId: string,
+    index: number,
     arrays: UnitArrays,
-    metadataStore: Map<string, any>
+    metadataStore: Map<string, any>,
   ): Unit {
     const coldData = metadataStore.get(unitId) || {};
     const stateId = arrays.state[index];
     const teamId = arrays.team[index];
-    
+
     return {
       id: unitId,
       pos: { x: arrays.posX[index], y: arrays.posY[index] },
-      intendedMove: { x: arrays.intendedMoveX[index], y: arrays.intendedMoveY[index] },
+      intendedMove: {
+        x: arrays.intendedMoveX[index],
+        y: arrays.intendedMoveY[index],
+      },
       hp: arrays.hp[index],
       maxHp: arrays.maxHp[index],
       dmg: arrays.dmg[index],
       team: teamId === 1 ? "friendly" : teamId === 2 ? "hostile" : "neutral",
-      state: (["idle", "walk", "attack", "dead"] as UnitState[])[stateId] || "idle",
+      state:
+        (["idle", "walk", "attack", "dead"] as UnitState[])[stateId] || "idle",
       mass: arrays.mass[index],
-      sprite: coldData.sprite || 'default',
+      sprite: coldData.sprite || "default",
       abilities: coldData.abilities || [],
       tags: coldData.tags,
       meta: coldData.meta || {},
@@ -79,9 +83,9 @@ export class UnitProxy implements Unit {
       posture: coldData.posture,
       intendedTarget: coldData.intendedTarget,
       lastAbilityTick: coldData.lastAbilityTick,
-      get isAlive() { 
-        return this.state !== 'dead' && this.hp > 0; 
-      }
+      get isAlive() {
+        return this.state !== "dead" && this.hp > 0;
+      },
     };
   }
 
@@ -174,7 +178,7 @@ export class UnitProxyManager implements DataQuery {
   public readonly arrays: UnitArrays;
   private metadataStore: Map<string, any>;
   private idToIndex: Map<string, number> = new Map();
-  
+
   // Flag to control lightweight vs real proxies
   // Tests can set this to false to get real proxies
   public useLightweightProxies: boolean = true;
@@ -493,7 +497,12 @@ export class UnitProxyManager implements DataQuery {
     for (const i of this.arrays.activeIndices) {
       const unitId = this.arrays.unitIds[i];
       // Use lightweight objects instead of proxy classes for performance
-      const lightweight = UnitProxy.createLightweight(unitId, i, this.arrays, this.metadataStore);
+      const lightweight = UnitProxy.createLightweight(
+        unitId,
+        i,
+        this.arrays,
+        this.metadataStore,
+      );
       proxies.push(lightweight as any);
     }
 

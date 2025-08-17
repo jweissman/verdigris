@@ -1,7 +1,5 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import { CommandHandler } from '../../src/rules/command_handler';
-import { EventHandler } from '../../src/rules/event_handler';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('Wander Command', () => {

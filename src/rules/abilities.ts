@@ -33,7 +33,6 @@ export class Abilities extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
-    DSL.clearCache(); // Clear cache each tick for fresh evaluations
 
     const currentTick = context.getCurrentTick();
 
@@ -42,14 +41,14 @@ export class Abilities extends Rule {
     const relevantUnits: Unit[] = [];
 
     for (const unit of allUnits) {
-      if (unit.state === 'dead' || unit.hp <= 0) continue;
-      
-      if ((unit.abilities && unit.abilities.length > 0) || unit.meta?.burrowed) {
+      if (unit.state === "dead" || unit.hp <= 0) continue;
+
+      if (unit.abilities?.length > 0 || unit.meta?.burrowed) {
         relevantUnits.push(unit);
       }
     }
 
-    DSL.clearCache();
+    DSL.clearCache(); // Clear cache each tick for fresh evaluations
 
     if (relevantUnits.length === 0) {
       return this.commands;
@@ -61,9 +60,7 @@ export class Abilities extends Rule {
     const allyCache = new Map<string, any>(); // Cache closest ally per unit
 
     for (const unit of relevantUnits) {
-      if (unit.state === "dead" || unit.hp <= 0) {
-        continue;
-      }
+      // Already filtered for dead units above
 
       const meta = unit.meta; // Cache meta access
       if (
@@ -111,7 +108,6 @@ export class Abilities extends Rule {
           : undefined;
         let ready =
           lastTick === undefined || currentTick - lastTick >= ability.cooldown;
-        
 
         if (!ready) {
           continue;
@@ -1211,7 +1207,9 @@ export class Abilities extends Rule {
 
     if (effect.effects) {
       for (const nestedEffect of effect.effects) {
-        const unitsInCone = (this.cachedAllUnits || context.getAllUnits()).filter((u) => {
+        const unitsInCone = (
+          this.cachedAllUnits || context.getAllUnits()
+        ).filter((u) => {
           if (u.id === caster.id || u.team === caster.team) return false;
 
           const dist = Math.sqrt(
@@ -1323,9 +1321,10 @@ export class Abilities extends Rule {
     const pos = target.pos || target;
     const radius = this.resolveValue(effect.radius, caster, target) || 3;
 
-    const allUnits = this.cachedAllUnits && this.cachedAllUnits.length > 0 
-      ? this.cachedAllUnits 
-      : context.getAllUnits();
+    const allUnits =
+      this.cachedAllUnits && this.cachedAllUnits.length > 0
+        ? this.cachedAllUnits
+        : context.getAllUnits();
     const unitsInArea = allUnits.filter((u) => {
       const dist = Math.sqrt(
         Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
@@ -1452,12 +1451,14 @@ export class Abilities extends Rule {
     const pos = target.pos || target;
     const radius = effect.radius || 6;
 
-    const unitsInArea = (this.cachedAllUnits || context.getAllUnits()).filter((u) => {
-      const dist = Math.sqrt(
-        Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
-      );
-      return dist <= (typeof radius === "number" ? radius : Number(radius));
-    });
+    const unitsInArea = (this.cachedAllUnits || context.getAllUnits()).filter(
+      (u) => {
+        const dist = Math.sqrt(
+          Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
+        );
+        return dist <= (typeof radius === "number" ? radius : Number(radius));
+      },
+    );
 
     for (const unit of unitsInArea) {
       if (unit.meta.hidden || unit.meta.invisible) {
@@ -1591,17 +1592,19 @@ export class Abilities extends Rule {
       "squirrel",
       "bird",
     ];
-    const unitsInArea = (this.cachedAllUnits || context.getAllUnits()).filter((u) => {
-      const dist = Math.sqrt(
-        Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
-      );
-      return (
-        dist <= radius &&
-        (u.tags?.includes("animal") ||
-          u.tags?.includes("beast") ||
-          beastSprites.includes(u.sprite))
-      );
-    });
+    const unitsInArea = (this.cachedAllUnits || context.getAllUnits()).filter(
+      (u) => {
+        const dist = Math.sqrt(
+          Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
+        );
+        return (
+          dist <= radius &&
+          (u.tags?.includes("animal") ||
+            u.tags?.includes("beast") ||
+            beastSprites.includes(u.sprite))
+        );
+      },
+    );
 
     for (const unit of unitsInArea) {
       this.commands.push({

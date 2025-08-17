@@ -26,6 +26,9 @@ export default class DSL {
         return dx * dx + dy * dy;
       });
 
+    // Early exit optimization for common case
+    const isDistanceSort = sort && sort.toString().includes("dist2");
+
     return {
       ally: () => {
         let bestAlly: Unit | null = null;
@@ -59,14 +62,12 @@ export default class DSL {
         for (const u of allUnits) {
           if (u.team !== unit.team && u.state !== "dead" && filter(u)) {
             if (!sort) {
+              return u; // Return first enemy found when not sorting
+            }
+            const score = sort(u, unit);
+            if (score < bestScore) {
+              bestScore = score;
               bestEnemy = u;
-              break; // Take first match if no sorting
-            } else {
-              const score = sort(u, unit);
-              if (score < bestScore) {
-                bestScore = score;
-                bestEnemy = u;
-              }
             }
           }
         }
@@ -82,7 +83,6 @@ export default class DSL {
         let bestEnemy: Unit | null = null;
         let bestScore = sort ? Infinity : 0;
         const rangeSq = range * range;
-        
 
         for (const u of allUnits) {
           if (u.team !== unit.team && u.state !== "dead" && filter(u)) {
@@ -115,12 +115,59 @@ export default class DSL {
   ): any {
     const allUnits = cachedAllUnits || context.getAllUnits();
 
-    const arrays = context.getArrays();
-    const subjectIndex = context.getUnitIndex(subject.id);
+    // Fast path for self HP checks
+    if (expression.match(/^self\.hp\s*<\s*self\.maxHp\s*\*\s*[\d.]+$/)) {
+      const factorMatch = expression.match(/\*\s*([\d.]+)$/);
+      if (factorMatch) {
+        const factor = parseFloat(factorMatch[1]);
+        return subject.hp < subject.maxHp * factor;
+      }
+    }
+    
+    // Fast path for common trigger patterns - just check if ANY enemy is in range
+    // Only use this for pure distance checks, not when we need the actual enemy object
+    const distancePattern =
+      /^distance\(closest\.enemy\(\)\?\.pos\)\s*(<=|>)\s*(\d+)$/;
+    const match = expression.match(distancePattern);
+    if (match) {
+      const operator = match[1];
+      const rangeSq = Math.pow(parseInt(match[2]), 2);
+
+      if (operator === "<=") {
+        // Check if ANY enemy is within range
+        for (const u of allUnits) {
+          if (u.team !== subject.team && u.state !== "dead") {
+            const dx = u.pos.x - subject.pos.x;
+            const dy = u.pos.y - subject.pos.y;
+            if (dx * dx + dy * dy <= rangeSq) {
+              return true;
+            }
+          }
+        }
+        return false;
+      } else if (operator === ">") {
+        // Check if ALL enemies are beyond range (or no enemies)
+        let hasCloseEnemy = false;
+        for (const u of allUnits) {
+          if (u.team !== subject.team && u.state !== "dead") {
+            const dx = u.pos.x - subject.pos.x;
+            const dy = u.pos.y - subject.pos.y;
+            if (dx * dx + dy * dy <= rangeSq) {
+              hasCloseEnemy = true;
+              break;
+            }
+          }
+        }
+        return !hasCloseEnemy;
+      }
+    }
+
+    const arrays = (context as any).getArrays?.();
+    const subjectIndex = (context as any).getUnitIndex?.(subject.id);
 
     let dist2 = (unit1: Unit, unit2: Unit) => {
-      const idx1 = context.getUnitIndex(unit1.id);
-      const idx2 = context.getUnitIndex(unit2.id);
+      const idx1 = (context as any).getUnitIndex?.(unit1.id);
+      const idx2 = (context as any).getUnitIndex?.(unit2.id);
 
       if (idx1 !== undefined && idx2 !== undefined) {
         const dx = arrays.posX[idx1] - arrays.posX[idx2];
@@ -177,7 +224,7 @@ export default class DSL {
         subject,
         allUnits,
         context,
-        (a, b) => (b.hp / b.maxHp) - (a.hp / a.maxHp), // LOWEST score wins, so invert: we want highest health%
+        (a, b) => b.hp / b.maxHp - a.hp / a.maxHp, // LOWEST score wins, so invert: we want highest health%
         undefined,
         dist2,
       );

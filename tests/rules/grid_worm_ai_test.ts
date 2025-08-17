@@ -4,8 +4,11 @@ import { UnitMovement } from '../../src/rules/unit_movement';
 
 describe('Grid Worm AI', () => {
   it('worms move on a grid and wander randomly', () => {
+    const originalWanderRate = UnitMovement.wanderRate;
     UnitMovement.wanderRate = 1; // Set wander rate for testing
-    const sim = new Simulator();
+    
+    try {
+      const sim = new Simulator();
     sim.addUnit({
       id: 'worm1',
       pos: { x: 48, y: 48 },
@@ -35,5 +38,8 @@ describe('Grid Worm AI', () => {
     const finalUnit = sim.units[0];
     const moved = finalUnit.pos.x !== initialPos.x || finalUnit.pos.y !== initialPos.y;
     expect(moved).toBe(true);
+    } finally {
+      UnitMovement.wanderRate = originalWanderRate; // Reset to original value
+    }
   });
 });
