@@ -101,12 +101,10 @@ describe("GridPartition", () => {
     
 
     const nearbyFromS1 = grid.getNearby(5, 5, 1.5);
-    console.log(`From (5,5) with radius 1.5: found ${nearbyFromS1.length} units:`, nearbyFromS1.map(u => `${u.id} at (${u.pos.x},${u.pos.y})`));
     expect(nearbyFromS1.length).toBe(2); // Should find both
     
 
     const nearbyFromS2 = grid.getNearby(6, 5, 1.5);
-    console.log(`From (6,5) with radius 1.5: found ${nearbyFromS2.length} units:`, nearbyFromS2.map(u => `${u.id} at (${u.pos.x},${u.pos.y})`));
     expect(nearbyFromS2.length).toBe(2); // Should find both
   });
   
@@ -218,28 +216,16 @@ describe("GridPartition", () => {
       dmg: 3
     };
     
-    console.log("Inserting soldier1 at (5,5)");
     grid.insert(soldier1 as any);
     
-    console.log("Inserting soldier2 at (6,5)");
     grid.insert(soldier2 as any);
     
 
-    const cell1 = grid.getCell(5, 5);
-    const cell2 = grid.getCell(6, 5);
-    console.log(`Cell at (5,5) has ${cell1.length} units`);
-    console.log(`Cell at (6,5) has ${cell2.length} units`);
     
 
     const meleeRange = 1.5;
     const nearbyFromS1 = grid.getNearby(5, 5, meleeRange);
-    console.log(`From soldier1 at (5,5), found ${nearbyFromS1.length} units within range ${meleeRange}`);
-    for (const unit of nearbyFromS1) {
-      const dx = unit.pos.x - 5;
-      const dy = unit.pos.y - 5;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      console.log(`  - ${unit.id} at (${unit.pos.x},${unit.pos.y}), distance=${dist.toFixed(2)}`);
-    }
+
     
     expect(nearbyFromS1.length).toBe(2);
     expect(nearbyFromS1.find(u => u.id === "soldier1")).toBeDefined();

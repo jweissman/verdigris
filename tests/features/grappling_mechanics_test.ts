@@ -67,27 +67,13 @@ describe('Grappling Mechanics - Core Physics', () => {
     
 
     sim.step(); // Abilities queues the grapple command
-    
-
-    const grapplesAfterStep = sim.projectiles.filter(p => p.type === 'grapple');
-    console.log('Grapple projectiles after first step:', grapplesAfterStep.length);
-    
     sim.step(); // CommandHandler processes the grapple command
     
-
     for (let i = 0; i < 20; i++) {
       sim.step();
       
-
-      const hitUnits = sim.units.filter(u => u.meta.grappleHit);
-      if (hitUnits.length > 0) {
-        console.log('Units with grappleHit:', hitUnits.map(u => u.id));
-      }
-      
-
       const g = sim.units.find(u => u.id === 'grappler-1');
       if (g?.meta.grapplingTarget === 'target-1') {
-        console.log('Tether established at step', i);
         break;
       }
     }
@@ -98,16 +84,12 @@ describe('Grappling Mechanics - Core Physics', () => {
 
   it('should damage and pin segments when grappling segmented creature', () => {
     const sim = new Simulator();
-
-    
     const grappler = {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
       pos: { x: 5, y: 5 },
       lastAbilityTick: {}
     };
-    
-
     const worm = {
       ...Encyclopaedia.unit('big-worm'),
       id: 'worm-1',
@@ -118,61 +100,21 @@ describe('Grappling Mechanics - Core Physics', () => {
         segmentCount: 2
       }
     };
-    
     sim.addUnit(grappler);
     sim.addUnit(worm);
-    
-
     sim.step();
-    
-
     const segment1 = sim.units.find(u => 
       u.meta?.segment && 
       u.meta?.parentId === 'worm-1' && 
       u.meta?.segmentIndex === 1
     );
-    
     expect(segment1).toBeDefined();
-    console.log('Segment initial hp:', segment1!.hp);
-    console.log('Segment id:', segment1!.id);
     const initialSegmentHp = segment1!.hp;
     const segmentId = segment1!.id;
-    
-
     sim.forceAbility('grappler-1', 'grapplingHook', worm);
-    
-
     for (let i = 0; i < 20; i++) {
-
-      const segmentBefore = sim.units.find(u => u.id === segmentId);
-      const wormBefore = sim.units.find(u => u.id === 'worm-1');
-      
       sim.step();
-      
-
-      const segmentAfter = sim.units.find(u => u.id === segmentId);
-      const wormAfter = sim.units.find(u => u.id === 'worm-1');
-      
-
-      if (i < 3 || (segmentBefore && segmentAfter && segmentBefore.hp !== segmentAfter.hp)) {
-        console.log(`\n=== Step ${i} ===`);
-        if (segmentBefore && segmentAfter) {
-          console.log(`Segment HP: ${segmentBefore.hp} -> ${segmentAfter.hp}`);
-          console.log(`Segment pinned: ${segmentBefore.meta?.pinned} -> ${segmentAfter.meta?.pinned}`);
-        }
-        if (wormBefore && wormAfter) {
-          console.log(`Worm grappleHit: ${wormBefore.meta?.grappleHit} -> ${wormAfter.meta?.grappleHit}`);
-          console.log(`Worm grappled: ${wormBefore.meta?.grappled} -> ${wormAfter.meta?.grappled}`);
-        }
-      }
-      
-      if (!segmentAfter) {
-        console.log(`\nSegment died at step ${i}, had ${segmentBefore?.hp} HP before death`);
-        break;
-      }
     }
-    
-
     const finalSegment = sim.units.find(u => u.id === segmentId);
     expect(finalSegment).toBeDefined();
     expect(finalSegment!.hp).toBeLessThan(initialSegmentHp);

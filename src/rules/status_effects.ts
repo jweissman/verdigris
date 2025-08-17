@@ -137,7 +137,8 @@ export class StatusEffects extends Rule {
       }
     });
 
-    if (statusEffects.length === 0) {
+    // Only clear status flags if they were previously set
+    if (statusEffects.length === 0 && (unit.meta.chilled || unit.meta.stunned)) {
       this.commands.push({
         type: "meta",
         params: {

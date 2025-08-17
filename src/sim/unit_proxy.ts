@@ -38,6 +38,8 @@ interface DataQuery {
  */
 export class UnitProxy implements Unit {
   private _cachedIndex: number | undefined;
+  private readonly _posCache: Vec2 = { x: 0, y: 0 };
+  private readonly _moveCache: Vec2 = { x: 0, y: 0 };
   
   constructor(
     public readonly id: string,
@@ -49,14 +51,20 @@ export class UnitProxy implements Unit {
 
   get pos(): Vec2 {
     if (this._cachedIndex !== undefined) {
-      return (this.query as UnitProxyManager).getPositionByIndex(this._cachedIndex);
+      const manager = this.query as UnitProxyManager;
+      this._posCache.x = manager.arrays.posX[this._cachedIndex];
+      this._posCache.y = manager.arrays.posY[this._cachedIndex];
+      return this._posCache;
     }
     return this.query.getPosition(this.id);
   }
 
   get intendedMove(): Vec2 {
     if (this._cachedIndex !== undefined) {
-      return (this.query as UnitProxyManager).getIntendedMoveByIndex(this._cachedIndex);
+      const manager = this.query as UnitProxyManager;
+      this._moveCache.x = manager.arrays.intendedMoveX[this._cachedIndex];
+      this._moveCache.y = manager.arrays.intendedMoveY[this._cachedIndex];
+      return this._moveCache;
     }
     return this.query.getIntendedMove(this.id);
   }
@@ -147,9 +155,8 @@ export class UnitProxy implements Unit {
  * Manager to handle the proxy lifecycle and implement DataQuery
  */
 export class UnitProxyManager implements DataQuery {
-  private arrays: UnitArrays;
+  public readonly arrays: UnitArrays;
   private metadataStore: Map<string, any>;
-  private proxyCache: Map<string, UnitProxy> = new Map(); // Cache by ID now
   private idToIndex: Map<string, number> = new Map();
 
   constructor(arrays: UnitArrays, metadataStore: Map<string, any>) {
@@ -450,10 +457,8 @@ export class UnitProxyManager implements DataQuery {
     if (!unitId) {
       throw new Error(`No unit at index ${index}`);
     }
-    if (!this.proxyCache.has(unitId)) {
-      this.proxyCache.set(unitId, new UnitProxy(unitId, this, index));
-    }
-    return this.proxyCache.get(unitId)!;
+    // Always create fresh - it's just a lightweight view
+    return new UnitProxy(unitId, this, index);
   }
 
   getProxyById(id: string): UnitProxy | undefined {
@@ -464,29 +469,23 @@ export class UnitProxyManager implements DataQuery {
     return undefined;
   }
 
-  private proxyArrayCache: UnitProxy[] | null = null;
 
   getAllProxies(): UnitProxy[] {
     if (this.arrays.activeIndices.length === 0 && this.arrays.activeCount > 0) {
       this.arrays.rebuildActiveIndices();
     }
 
-    // Rebuild proxy array cache if invalidated
-    if (!this.proxyArrayCache) {
-      const proxies: UnitProxy[] = [];
-      for (const i of this.arrays.activeIndices) {
-        const proxy = this.getProxy(i);
-        proxies.push(proxy);
-      }
-      this.proxyArrayCache = proxies;
+    // Create fresh proxies
+    const proxies: UnitProxy[] = [];
+    for (const i of this.arrays.activeIndices) {
+      const unitId = this.arrays.unitIds[i];
+      proxies.push(new UnitProxy(unitId, this, i));
     }
     
-    return this.proxyArrayCache;
+    return proxies;
   }
 
   clearCache(): void {
-    this.proxyCache.clear();
-    this.proxyArrayCache = null; // Invalidate array cache too
     this.indexCache = Object.create(null); // Clear index cache
     this.rebuildIndex();
   }
@@ -494,14 +493,11 @@ export class UnitProxyManager implements DataQuery {
   notifyUnitAdded(unitId: string, index: number): void {
     this.idToIndex.set(unitId, index);
     this.indexCache[unitId] = index;
-    this.proxyArrayCache = null; // Invalidate array cache
   }
 
   notifyUnitRemoved(unitId: string): void {
     this.idToIndex.delete(unitId);
     delete this.indexCache[unitId];
-    this.proxyCache.delete(unitId);
-    this.proxyArrayCache = null; // Invalidate array cache
   }
 
   /**

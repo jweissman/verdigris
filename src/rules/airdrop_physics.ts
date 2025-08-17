@@ -10,10 +10,8 @@ export class AirdropPhysics extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
     const units = context.getAllUnits();
-    // console.log(`AirdropPhysics: checking ${units.length} units, sim.units.length=${(context as any).sim.units.length}`);
     units.forEach((unit) => {
       if (unit.meta.dropping && unit.meta.z > 0) {
-        console.log(`Found dropping unit: ${unit.id}, z=${unit.meta.z}, dropSpeed=${unit.meta.dropSpeed}`);
         const newZ = unit.meta.z - (unit.meta.dropSpeed || 0.5);
 
         if (context.getCurrentTick() % 3 === 0) {

@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'bun:test';
 import { SceneLoader } from '../../src/core/scene_loader';
 import { Simulator } from '../../src/core/simulator';
+import perfConfig from '../perf.json';
 
 describe('Performance Tests', () => {
   const scenarios = ['simple', 'complex', 'healing', 'projectile', 'squirrel'];
   const SIMULATION_STEPS = 1500;
-  const EXECUTION_TIME_PER_STEP = 0.01;
+  const EXECUTION_TIME_PER_STEP = perfConfig.budgets.total_step_ms;
   const MAX_EXECUTION_TIME = SIMULATION_STEPS * EXECUTION_TIME_PER_STEP + 10;
 
   scenarios.forEach(scenario => {

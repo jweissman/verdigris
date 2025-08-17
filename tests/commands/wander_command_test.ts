@@ -121,14 +121,6 @@ describe('Wander Command', () => {
     expect(deadUnit.state).toBe('dead');
     
     // Check initial intendedMove before step
-    const arrays = sim.getUnitArrays();
-    if (arrays) {
-      for (let i = 0; i < arrays.capacity; i++) {
-        if (arrays.unitIds[i] === deadUnit.id) {
-          console.log(`Dead unit before step: pos=(${arrays.posX[i]}, ${arrays.posY[i]}), intendedMove=(${arrays.intendedMoveX[i]}, ${arrays.intendedMoveY[i]}), state=${arrays.state[i]}`);
-        }
-      }
-    }
     
     sim.step();
     

@@ -132,6 +132,11 @@ export class CommandHandler {
   private executeOne(queuedCommand: QueuedCommand, context: TickContext): boolean {
     if (!queuedCommand.type) return false;
 
+    // Trace meta command source
+    if (queuedCommand.type === "meta" && this.sim.enableProfiling) {
+      console.trace("Meta command generated");
+    }
+
     const command = this.commands.get(queuedCommand.type);
     if (command) {
       command.execute(queuedCommand.unitId || null, queuedCommand.params);

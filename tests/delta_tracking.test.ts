@@ -15,13 +15,9 @@ test('delta tracking system works', () => {
     pos: { x: 5, y: 5 }
   });
   
-  console.log('After addUnit, dirtyUnits:', Array.from((sim as any).dirtyUnits));
-  
 
   sim.step();
-  console.log('After step, changedUnits:', Array.from((sim as any).changedUnits));
   let changedUnits = sim.getChangedUnits();
-  console.log('getChangedUnits returned:', changedUnits);
   expect(changedUnits).toContain('test-unit');
   
 

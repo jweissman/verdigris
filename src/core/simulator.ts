@@ -85,16 +85,10 @@ class Simulator {
   private gridPartition: GridPartition;
 
   public proxyManager: UnitProxyManager;
-  // private unitDataStore: UnitDataStore;
-  private proxyCache: UnitProxy[] = [];
-  private proxyCacheValid = false;
 
   get units(): readonly Unit[] {
-    if (!this.proxyCacheValid) {
-      this.proxyCache = this.proxyManager.getAllProxies();
-      this.proxyCacheValid = true;
-    }
-    return this.proxyCache;
+    // Don't cache proxies - create them on demand
+    return this.proxyManager.getAllProxies();
   }
 
   getUnitArrays(): any {
@@ -130,8 +124,6 @@ class Simulator {
         this.proxyManager.notifyUnitRemoved(unitId);
         this.unitCache.delete(unitId);
         this.unitColdData.delete(unitId);
-
-        this.proxyCacheValid = false;
         return;
       }
     }
@@ -349,8 +341,6 @@ class Simulator {
     this.unitArrays.clear();
     this.unitCache.clear();
     this.unitColdData.clear();
-    this.proxyCache = [];
-    this.proxyCacheValid = false;
 
     this.proxyManager.clearCache();
 
@@ -404,7 +394,6 @@ class Simulator {
 
     const index = this.unitArrays.addUnit(u);
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
-    this.proxyCacheValid = false; // Invalidate proxy cache
     this.proxyManager.rebuildIndex(); // Ensure proxy index is updated
 
     this.unitColdData.set(u.id, {
@@ -419,8 +408,6 @@ class Simulator {
     });
 
     this.proxyManager.notifyUnitAdded(u.id, index);
-
-    this.proxyCacheValid = false;
 
     const proxy = this.proxyManager.getProxy(index);
     this.unitCache.set(u.id, proxy);
@@ -445,8 +432,6 @@ class Simulator {
     this.proxyManager.notifyUnitAdded(newUnit.id, index);
 
     this.dirtyUnits.add(newUnit.id); // Mark as dirty for rendering
-
-    this.proxyCacheValid = false;
 
     const proxy = this.proxyManager.getProxy(index);
     this.unitCache.set(newUnit.id, proxy);
@@ -527,80 +512,33 @@ class Simulator {
     let needsSpatialRebuild =
       this.ticks === 0 || this.unitArrays.activeCount !== this.lastActiveCount;
 
-    if (!needsSpatialRebuild) {
-      const arrays = this.unitArrays;
-      // Use activeIndices to only check active units
-      for (const i of arrays.activeIndices) {
-        const id = arrays.unitIds[i];
-        const lastPos = this.lastUnitPositions.get(id);
-        if (
-          !lastPos ||
-          Math.abs(lastPos.x - arrays.posX[i]) > 0.5 || // Only rebuild if moved significantly
-          Math.abs(lastPos.y - arrays.posY[i]) > 0.5
-        ) {
-          needsSpatialRebuild = true;
-          break;
-        }
-      }
-    }
+    // Skip movement check entirely - rebuild only when unit count changes
+    // Rules that need spatial queries will handle their own lookups
+    // This trades per-query cost for eliminating per-tick overhead
 
     if (needsSpatialRebuild) {
-      this.spatialHash.clear();
-      this.positionMap.clear();
+      // Only use gridPartition - remove redundant spatial structures
       this.gridPartition.clear();
       this.unitCache.clear();
 
       const arrays = this.unitArrays;
 
-      const hasHugeUnits = (this.hasHugeUnitsRule ??= this.rulebook.some(
-        (r) => r.constructor.name === "HugeUnits",
-      ));
-
       // Use activeIndices for much faster iteration
       for (const i of arrays.activeIndices) {
-
         const id = arrays.unitIds[i];
-        const x = arrays.posX[i];
-        const y = arrays.posY[i];
-
-        this.spatialHash.insert(id, x, y);
-
+        
         let proxy = this.unitCache.get(id);
         if (!proxy) {
           proxy = this.proxyManager.getProxy(i);
           this.unitCache.set(id, proxy);
         }
         this.gridPartition.insert(proxy);
-
-        const coldData = this.unitColdData.get(id);
-        if (hasHugeUnits && coldData?.meta?.huge) {
-          const positions = this.getHugeUnitBodyPositions(proxy);
-          for (const pos of positions) {
-            const key = `${Math.round(pos.x)},${Math.round(pos.y)}`;
-            if (!this.positionMap.has(key)) {
-              this.positionMap.set(key, new Set());
-            }
-            this.positionMap.get(key)!.add(proxy);
-          }
-        } else {
-          const key = `${Math.round(x)},${Math.round(y)}`;
-          if (!this.positionMap.has(key)) {
-            this.positionMap.set(key, new Set());
-          }
-          this.positionMap.get(key)!.add(proxy);
-        }
-
-        this.lastUnitPositions.set(id, { x, y });
       }
 
       this.lastActiveCount = arrays.activeCount;
     }
 
-    // Pre-populate proxy cache before rule execution
-    if (!this.proxyCacheValid) {
-      this.proxyCache = this.proxyManager.getAllProxies();
-      this.proxyCacheValid = true;
-    }
+    // Don't pre-populate proxy cache - let rules request what they need
     
     // Create fresh context each step - it caches units internally
     const context = new TickContextImpl(this);
@@ -1749,8 +1687,6 @@ class Simulator {
         }
       }
     }
-    // Invalidate proxy cache after direct SoA updates
-    this.proxyCacheValid = false;
     return this;
   }
 

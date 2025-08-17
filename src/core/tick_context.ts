@@ -18,6 +18,8 @@ export interface TickContext {
   getUnitsInTeam(team: string): Unit[];
   getUnitsAt(pos: Vec2): Unit[];
   getUnitsInRect(x: number, y: number, width: number, height: number): Unit[];
+  // Fast path for rules that can work with arrays directly
+  getUnitArrays?(): any;
   queueCommand(command: { type: string; params: any }): void;
   queueEvent(event: {
     kind: string;
@@ -47,28 +49,33 @@ export class TickContextImpl implements TickContext {
   private unitCache: readonly Unit[] | null = null;
 
   constructor(private sim: Simulator) {}
+  
+  getUnitArrays(): any {
+    return this.sim.proxyManager.arrays;
+  }
 
   findUnitsInRadius(center: Vec2, radius: number): Unit[] {
     return this.sim.getUnitsNear(center.x, center.y, radius);
   }
 
   findUnitById(id: string): Unit | undefined {
-    return this.sim.units.find((unit) => unit.id === id);
+    return this.getAllUnits().find((unit) => unit.id === id);
   }
 
   getAllUnits(): readonly Unit[] {
     if (!this.unitCache) {
-      this.unitCache = this.sim.units;
+      // Use the proxy manager's cached array directly
+      this.unitCache = this.sim.proxyManager.getAllProxies();
     }
     return this.unitCache;
   }
 
   getUnitsInTeam(team: string): Unit[] {
-    return this.sim.units.filter((unit) => unit.team === team);
+    return this.getAllUnits().filter((unit) => unit.team === team);
   }
 
   getUnitsAt(pos: Vec2): Unit[] {
-    return this.sim.units.filter(
+    return this.getAllUnits().filter(
       (unit) =>
         Math.floor(unit.pos.x) === Math.floor(pos.x) &&
         Math.floor(unit.pos.y) === Math.floor(pos.y),
@@ -76,7 +83,7 @@ export class TickContextImpl implements TickContext {
   }
 
   getUnitsInRect(x: number, y: number, width: number, height: number): Unit[] {
-    return this.sim.units.filter(
+    return this.getAllUnits().filter(
       (unit) =>
         unit.pos.x >= x &&
         unit.pos.x < x + width &&
