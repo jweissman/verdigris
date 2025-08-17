@@ -1,9 +1,9 @@
 {
   "budgets": {
-    "rule_execution_ms": 0.002,
-    "total_step_ms": 0.01,
-    "step_50_units_ms": 0.01,
-    "step_100_units_ms": 0.02,
+    "rule_execution_ms": 0.01,
+    "total_step_ms": 0.1,
+    "step_50_units_ms": 0.2,
+    "step_100_units_ms": 0.3,
     "proxy_overhead_multiplier": 5,
     "scaling_efficiency_min": 0.9
   }

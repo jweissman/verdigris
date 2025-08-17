@@ -47,8 +47,13 @@ export interface TickContext {
     team: number[];
     state: number[];
     unitIds: string[];
+    hp: number[];
+    maxHp: number[];
+    mass: number[];
   };
   getUnitColdData(unitId: string): any;
+  getUnitColdDataByIndex(index: number): any;
+  isAbilityForced(unitId: string, abilityName: string): boolean;
 }
 
 /**
@@ -196,6 +201,7 @@ export class TickContextImpl implements TickContext {
     team: number[];
     state: number[];
     unitIds: string[];
+    hp: number[];
   } {
     const arrays = (this.sim as any).unitArrays;
     return {
@@ -205,10 +211,24 @@ export class TickContextImpl implements TickContext {
       team: arrays.team,
       state: arrays.state,
       unitIds: arrays.unitIds,
+      hp: arrays.hp,
+      maxHp: arrays.maxHp,
+      mass: arrays.mass,
     };
   }
 
   getUnitColdData(unitId: string): any {
     return (this.sim as any).unitColdData.get(unitId);
+  }
+
+  getUnitColdDataByIndex(index: number): any {
+    const arrays = (this.sim as any).unitArrays;
+    const unitId = arrays.unitIds[index];
+    return (this.sim as any).unitColdData.get(unitId);
+  }
+
+  isAbilityForced(unitId: string, abilityName: string): boolean {
+    const key = `${unitId}:${abilityName}`;
+    return (this.sim as any).forcedAbilitiesThisTick?.has(key) || false;
   }
 }

@@ -108,14 +108,14 @@ describe('Mechatron', () => {
   
   it('combat battery', () => {
 
-    const mechatron = { ...Encyclopaedia.unit('mechatron'), pos: { x: 10, y: 10 } };
-    sim.addUnit(mechatron);
+    const mechatronData = { ...Encyclopaedia.unit('mechatron'), pos: { x: 10, y: 10 } };
+    const mechatron = sim.addUnit(mechatronData);
     
 
-    const closeEnemy = { ...Encyclopaedia.unit('worm'), pos: { x: 15, y: 10 }, team: 'hostile' as const }; // 5 cells away - missile range
-    const veryCloseEnemy = { ...Encyclopaedia.unit('worm'), pos: { x: 12, y: 10 }, team: 'hostile' as const }; // 2 cells away - EMP range
-    sim.addUnit(closeEnemy);
-    sim.addUnit(veryCloseEnemy);
+    const closeEnemyData = { ...Encyclopaedia.unit('worm'), pos: { x: 15, y: 10 }, team: 'hostile' as const }; // 5 cells away - missile range
+    const veryCloseEnemyData = { ...Encyclopaedia.unit('worm'), pos: { x: 12, y: 10 }, team: 'hostile' as const }; // 2 cells away - EMP range
+    const closeEnemy = sim.addUnit(closeEnemyData);
+    const veryCloseEnemy = sim.addUnit(veryCloseEnemyData);
     
 
     const initialProjectiles = sim.projectiles.length;
@@ -250,9 +250,10 @@ describe('Mechatron', () => {
     
     if (deployedMechatron && mechatronist.abilities?.includes('tacticalOverride')) {
 
-      if (!deployedMechatron.lastAbilityTick) deployedMechatron.lastAbilityTick = {};
-      deployedMechatron.lastAbilityTick.missileBarrage = sim.ticks - 30;
-      deployedMechatron.lastAbilityTick.laserSweep = sim.ticks - 20;
+      // Force abilities to be on cooldown by using them earlier
+      sim.forceAbility(deployedMechatron.id, 'missileBarrage', {x: 0, y: 0});
+      sim.forceAbility(deployedMechatron.id, 'laserSweep', {x: 0, y: 0});
+      sim.step(); // Process the forced abilities
       
 
       sim.forceAbility(mechatronist.id, 'tacticalOverride', mechatronist.pos);
@@ -337,29 +338,29 @@ describe('Mechatron', () => {
 
   it('should demonstrate Mechatronist tactical override ability', () => {
 
-    const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 5, y: 5 } };
-    const construct1 = { ...Encyclopaedia.unit('clanker'), pos: { x: 7, y: 5 } };
-    const construct2 = { ...Encyclopaedia.unit('freezebot'), pos: { x: 8, y: 6 } };
+    const mechatronistData = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 5, y: 5 } };
+    const construct1Data = { ...Encyclopaedia.unit('clanker'), pos: { x: 7, y: 5 } };
+    const construct2Data = { ...Encyclopaedia.unit('freezebot'), pos: { x: 8, y: 6 } };
     
 
-    if (!construct1.tags) construct1.tags = [];
-    if (!construct1.tags.includes('mechanical')) construct1.tags.push('mechanical');
-    if (!construct2.tags) construct2.tags = [];
-    if (!construct2.tags.includes('mechanical')) construct2.tags.push('mechanical');
+    // Ensure constructs have mechanical tag
+    if (!construct1Data.tags) construct1Data.tags = [];
+    if (!construct1Data.tags.includes('mechanical')) construct1Data.tags.push('mechanical');
+    if (!construct2Data.tags) construct2Data.tags = [];
+    if (!construct2Data.tags.includes('mechanical')) construct2Data.tags.push('mechanical');
     
-    sim.addUnit(mechatronist);
-    sim.addUnit(construct1);
-    sim.addUnit(construct2);
+    const mechatronist = sim.addUnit(mechatronistData);
+    const construct1 = sim.addUnit(construct1Data);
+    const construct2 = sim.addUnit(construct2Data);
     
 
     sim.ticks = 50;
-    construct1.lastAbilityTick = { explode: 45 };
-    construct2.lastAbilityTick = { freezeAura: 40 };
     
     expect(mechatronist.abilities).toContain('tacticalOverride');
     
 
     sim.forceAbility(mechatronist.id, 'tacticalOverride', mechatronist.pos);
+    sim.step(); // Process the commands
       
 
     expect(construct1.meta.tacticalBoost).toBe(true);

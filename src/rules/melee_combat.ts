@@ -11,17 +11,23 @@ export class MeleeCombat extends Rule {
     const commands: QueuedCommand[] = [];
     const currentTick = context.getCurrentTick();
 
-    for (const unit of context.getAllUnits()) {
-      if (unit.state === "attack" && unit.meta?.lastAttacked) {
-        const ticksSinceAttack = currentTick - unit.meta.lastAttacked;
-        if (ticksSinceAttack > 2) {
-          commands.push({
-            type: "meta",
-            params: {
-              unitId: unit.id,
-              state: "idle",
-            },
-          });
+    // Work directly with arrays to avoid proxy creation
+    const arrays = context.getArrays();
+    for (const i of arrays.activeIndices) {
+      if (arrays.state[i] === 2) { // attack state
+        const unitId = arrays.unitIds[i];
+        const coldData = context.getUnitColdData(unitId);
+        if (coldData?.meta?.lastAttacked) {
+          const ticksSinceAttack = currentTick - coldData.meta.lastAttacked;
+          if (ticksSinceAttack > 2) {
+            commands.push({
+              type: "meta",
+              params: {
+                unitId: unitId,
+                state: "idle",
+              },
+            });
+          }
         }
       }
     }

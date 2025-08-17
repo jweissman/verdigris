@@ -1633,14 +1633,20 @@ class Simulator {
               const mag = Math.sqrt(dx * dx + dy * dy) || 1;
               const speed = 1; // Could be parameterized
               const vel = { x: (dx / mag) * speed, y: (dy / mag) * speed };
+              
+              // Create projectile slightly ahead of unit in direction of target
+              const offset = 0.5;
+              const projX = unit.pos.x + (dx / mag) * offset;
+              const projY = unit.pos.y + (dy / mag) * offset;
+              
               this.projectiles.push({
                 id: `proj_${unit.id}_${Date.now()}`,
-                pos: { ...unit.pos },
+                pos: { x: projX, y: projY },
                 vel,
                 radius: 1.5,
                 damage: 5,
                 team: unit.team,
-                type: "bullet",
+                type: "bullet" as const,
               });
             }
           }

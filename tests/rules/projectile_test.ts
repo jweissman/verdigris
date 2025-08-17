@@ -40,13 +40,15 @@ describe('Projectile simulation', () => {
     sim.addUnit({ id: 'target', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'idle', hp: 10, maxHp: 10, mass: 1 });
 
 
-    sim.accept({
+    // Debug: check unit ids
+    console.log('Units in sim:', sim.units.map(u => u.id));
+    
+    // Don't call accept which calls step - just handle input  
+    sim.handleInput({
       commands: {
         shooter: [{ action: 'fire', target: 'target' }]
       }
     });
-
-
 
     expect(sim.projectiles.length).toBe(1);
     const proj = sim.projectiles[0];

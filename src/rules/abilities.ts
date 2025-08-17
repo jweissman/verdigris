@@ -37,32 +37,25 @@ export class Abilities extends Rule {
 
     const currentTick = context.getCurrentTick();
 
-    const arrays = context.getArrays();
+    // Get all units once and filter for those with abilities
+    const allUnits = context.getAllUnits();
     const relevantUnits: Unit[] = [];
 
-    // CRITICAL: Get allUnits ONCE not inside the loop!
-    const allUnits = context.getAllUnits();
-    
-    
-    for (const idx of arrays.activeIndices) {
-      if (arrays.state[idx] === 3) continue; // Skip dead
-
-      const unit = allUnits.find((u) => context.getUnitIndex(u.id) === idx);
-      if (
-        unit &&
-        ((unit.abilities && unit.abilities.length > 0) || unit.meta?.burrowed)
-      ) {
+    for (const unit of allUnits) {
+      if (unit.state === 'dead' || unit.hp <= 0) continue;
+      
+      if ((unit.abilities && unit.abilities.length > 0) || unit.meta?.burrowed) {
         relevantUnits.push(unit);
       }
     }
-
-    this.cachedAllUnits = relevantUnits; // Cache for all helper methods
 
     DSL.clearCache();
 
     if (relevantUnits.length === 0) {
       return this.commands;
     }
+
+    this.cachedAllUnits = allUnits; // Cache for DSL operations
 
     const enemyCache = new Map<string, any>(); // Cache closest enemy per unit
     const allyCache = new Map<string, any>(); // Cache closest ally per unit
@@ -105,6 +98,11 @@ export class Abilities extends Rule {
       for (const abilityName of abilities) {
         const ability = this.ability(abilityName);
         if (!ability) {
+          continue;
+        }
+
+        // Skip if this ability was forced this tick
+        if (context.isAbilityForced(unit.id, abilityName)) {
           continue;
         }
 
@@ -152,8 +150,9 @@ export class Abilities extends Rule {
           try {
             if (ability.target === "closest.enemy()") {
               if (!enemyCache.has(unit.id)) {
+                const units = allUnits;
                 const enemy =
-                  allUnits.find(
+                  units.find(
                     (u) =>
                       u.team !== unit.team &&
                       u.id !== unit.id &&
@@ -201,7 +200,7 @@ export class Abilities extends Rule {
                 unit,
                 context,
                 undefined,
-                context.getAllUnits(), // Get fresh units for DSL
+                allUnits,
               );
             }
           } catch (error) {
@@ -368,7 +367,7 @@ export class Abilities extends Rule {
           caster,
           context,
           undefined,
-          context.getAllUnits(),
+          this.cachedAllUnits,
         );
       } catch (error) {
         console.warn(`Failed to resolve target '${targetExpression}':`, error);
@@ -392,7 +391,7 @@ export class Abilities extends Rule {
           caster,
           context,
           target,
-          context.getAllUnits(),
+          this.cachedAllUnits,
         );
       } catch (error) {
         console.warn(`Failed to resolve DSL value '${value}':`, error);
@@ -438,7 +437,7 @@ export class Abilities extends Rule {
           caster,
           context,
           undefined,
-          context.getAllUnits(),
+          this.cachedAllUnits,
         );
         return conditionResult
           ? value.$conditional.then
@@ -1212,7 +1211,7 @@ export class Abilities extends Rule {
 
     if (effect.effects) {
       for (const nestedEffect of effect.effects) {
-        const unitsInCone = context.getAllUnits().filter((u) => {
+        const unitsInCone = (this.cachedAllUnits || context.getAllUnits()).filter((u) => {
           if (u.id === caster.id || u.team === caster.team) return false;
 
           const dist = Math.sqrt(
@@ -1324,7 +1323,10 @@ export class Abilities extends Rule {
     const pos = target.pos || target;
     const radius = this.resolveValue(effect.radius, caster, target) || 3;
 
-    const unitsInArea = context.getAllUnits().filter((u) => {
+    const allUnits = this.cachedAllUnits && this.cachedAllUnits.length > 0 
+      ? this.cachedAllUnits 
+      : context.getAllUnits();
+    const unitsInArea = allUnits.filter((u) => {
       const dist = Math.sqrt(
         Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
       );
@@ -1340,17 +1342,12 @@ export class Abilities extends Rule {
           }
 
           const safeUnit = { ...u, tags: u.tags || [] };
-          const context = {
-            ...safeUnit,
-            target: safeUnit, // Make target reference the same unit with safe tags
-            self: safeUnit,
-          };
           return DSL.evaluate(
             effect.condition,
+            safeUnit,
             context,
-            this.sim,
-            undefined,
-            this.sim.getAllUnits(),
+            safeUnit,
+            this.cachedAllUnits || context.getAllUnits(),
           );
         } catch (error) {
           console.warn(
@@ -1366,15 +1363,27 @@ export class Abilities extends Rule {
 
     for (const unit of unitsInArea) {
       if (effect.buff) {
-        if (!unit.meta) unit.meta = {};
-        Object.assign(unit.meta, effect.buff);
+        // Use commands to update meta, not direct assignment
+        this.commands.push({
+          type: "meta",
+          params: {
+            unitId: unit.id,
+            meta: effect.buff,
+          },
+        });
 
-        if (effect.buff.resetCooldowns) {
-          if (unit.lastAbilityTick) {
-            for (const abilityName in unit.lastAbilityTick) {
-              unit.lastAbilityTick[abilityName] = 0;
-            }
+        if (effect.buff.resetCooldowns && unit.lastAbilityTick) {
+          const resetCooldowns: Record<string, number> = {};
+          for (const abilityName in unit.lastAbilityTick) {
+            resetCooldowns[abilityName] = 0;
           }
+          this.commands.push({
+            type: "meta",
+            params: {
+              unitId: unit.id,
+              lastAbilityTick: resetCooldowns,
+            },
+          });
         }
       }
     }
@@ -1395,8 +1404,13 @@ export class Abilities extends Rule {
     if (!target || !target.id) return;
 
     if (effect.debuff) {
-      if (!target.meta) target.meta = {};
-      Object.assign(target.meta, effect.debuff);
+      this.commands.push({
+        type: "meta",
+        params: {
+          unitId: target.id,
+          meta: effect.debuff,
+        },
+      });
     }
   }
 
@@ -1438,7 +1452,7 @@ export class Abilities extends Rule {
     const pos = target.pos || target;
     const radius = effect.radius || 6;
 
-    const unitsInArea = context.getAllUnits().filter((u) => {
+    const unitsInArea = (this.cachedAllUnits || context.getAllUnits()).filter((u) => {
       const dist = Math.sqrt(
         Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
       );
@@ -1577,7 +1591,7 @@ export class Abilities extends Rule {
       "squirrel",
       "bird",
     ];
-    const unitsInArea = context.getAllUnits().filter((u) => {
+    const unitsInArea = (this.cachedAllUnits || context.getAllUnits()).filter((u) => {
       const dist = Math.sqrt(
         Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
       );

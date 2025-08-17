@@ -12,51 +12,56 @@ export class ProjectileMotion extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
     const projectiles = context.getProjectiles();
-    const units = context.getAllUnits();
+    const arrays = context.getArrays();
 
     for (const projectile of projectiles) {
+      const radiusSq = (projectile.radius || 1) * (projectile.radius || 1);
+      
       if (projectile.type === "grapple") {
-        for (const unit of units) {
-          if (unit.hp > 0) {
-            const dx = unit.pos.x - projectile.pos.x;
-            const dy = unit.pos.y - projectile.pos.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+        // Check collision with any unit
+        for (const idx of arrays.activeIndices) {
+          if (arrays.hp[idx] <= 0) continue;
+          
+          const dx = arrays.posX[idx] - projectile.pos.x;
+          const dy = arrays.posY[idx] - projectile.pos.y;
+          const distSq = dx * dx + dy * dy;
 
-            if (distance < (projectile.radius || 1)) {
-              this.commands.push({
-                type: "meta",
-                params: {
-                  unitId: unit.id,
-                  meta: {
-                    grappleHit: true,
-                    grapplerID: projectile.sourceId || "unknown",
-                    grappleOrigin: { ...projectile.pos },
-                  },
+          if (distSq < radiusSq) {
+            this.commands.push({
+              type: "meta",
+              params: {
+                unitId: arrays.unitIds[idx],
+                meta: {
+                  grappleHit: true,
+                  grapplerID: projectile.sourceId || "unknown",
+                  grappleOrigin: { ...projectile.pos },
                 },
-              });
+              },
+            });
 
-              this.commands.push({
-                type: "removeProjectile",
-                params: { id: projectile.id },
-              });
-              break;
-            }
+            this.commands.push({
+              type: "removeProjectile",
+              params: { id: projectile.id },
+            });
+            break;
           }
         }
       } else {
-        for (const unit of units) {
-          if (unit.team !== projectile.team && unit.hp > 0) {
-            const dx = unit.pos.x - projectile.pos.x;
-            const dy = unit.pos.y - projectile.pos.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const collisionRadius =
-              projectile.radius !== undefined ? projectile.radius : 1;
+        // Check collision with enemy units
+        const projectileTeam = projectile.team === "friendly" ? 0 : projectile.team === "hostile" ? 1 : 2;
+        
+        for (const idx of arrays.activeIndices) {
+          if (arrays.team[idx] === projectileTeam || arrays.hp[idx] <= 0) continue;
+          
+          const dx = arrays.posX[idx] - projectile.pos.x;
+          const dy = arrays.posY[idx] - projectile.pos.y;
+          const distSq = dx * dx + dy * dy;
 
-            if (distance < collisionRadius) {
-              this.commands.push({
-                type: "damage",
-                params: {
-                  targetId: unit.id,
+          if (distSq < radiusSq) {
+            this.commands.push({
+              type: "damage",
+              params: {
+                targetId: arrays.unitIds[idx],
                   amount: projectile.damage || 10,
                   aspect: projectile.aspect || "physical",
                   origin: projectile.pos,
@@ -68,7 +73,6 @@ export class ProjectileMotion extends Rule {
                 params: { id: projectile.id },
               });
               break;
-            }
           }
         }
       }
@@ -78,17 +82,20 @@ export class ProjectileMotion extends Rule {
         projectile.lifetime &&
         projectile.lifetime >= 30
       ) {
-        const units = context.getAllUnits();
         const explosionRadius = projectile.explosionRadius || 3;
+        const explosionRadiusSq = explosionRadius * explosionRadius;
         const explosionDamage = projectile.damage || 20;
+        const projectileTeam = projectile.team === "friendly" ? 0 : projectile.team === "hostile" ? 1 : 2;
 
-        for (const unit of units) {
-          if (unit.team !== projectile.team) {
-            const dx = unit.pos.x - projectile.pos.x;
-            const dy = unit.pos.y - projectile.pos.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+        for (const idx of arrays.activeIndices) {
+          if (arrays.team[idx] === projectileTeam) continue;
+          
+          const dx = arrays.posX[idx] - projectile.pos.x;
+          const dy = arrays.posY[idx] - projectile.pos.y;
+          const distSq = dx * dx + dy * dy;
 
-            if (distance <= explosionRadius) {
+          if (distSq <= explosionRadiusSq) {
+            const distance = Math.sqrt(distSq);
               const damageMultiplier = Math.max(
                 0.3,
                 1 - (distance / explosionRadius) * 0.5,
@@ -99,7 +106,7 @@ export class ProjectileMotion extends Rule {
                 this.commands.push({
                   type: "damage",
                   params: {
-                    targetId: unit.id,
+                    targetId: arrays.unitIds[idx],
                     amount: damage,
                     aspect: "explosion",
                   },
@@ -114,15 +121,14 @@ export class ProjectileMotion extends Rule {
                 this.commands.push({
                   type: "move",
                   params: {
-                    unitId: unit.id,
-                    x: unit.pos.x + knockbackX,
-                    y: unit.pos.y + knockbackY,
+                    unitId: arrays.unitIds[idx],
+                    x: arrays.posX[idx] + knockbackX,
+                    y: arrays.posY[idx] + knockbackY,
                   },
                 });
               }
             }
           }
-        }
 
         this.commands.push({
           type: "removeProjectile",

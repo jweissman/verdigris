@@ -164,18 +164,22 @@ describe('Mechatronist Deployment System', () => {
     const ally1 = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 7, y: 5 } };
     const ally2 = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 3, y: 5 } };
     
-    sim.addUnit(commander);
-    sim.addUnit(ally1);
-    sim.addUnit(ally2);
+    const commanderUnit = sim.addUnit(commander);
+    const ally1Unit = sim.addUnit(ally1);
+    const ally2Unit = sim.addUnit(ally2);
     
 
-    sim.forceAbility(commander.id, 'tacticalOverride', commander.pos);
+    sim.forceAbility(commanderUnit.id, 'tacticalOverride', commander.pos);
     sim.step(); // Process the ability
     
 
-    expect(ally1.meta.tacticalBoost).toBe(true);
-    expect(ally2.meta.tacticalBoost).toBe(true);
-    expect(ally1.meta.tacticalBoostDuration).toBe(40);
+    // Get the actual units from the simulator
+    const actualAlly1 = sim.units.find(u => u.id === ally1Unit.id);
+    const actualAlly2 = sim.units.find(u => u.id === ally2Unit.id);
+    
+    expect(actualAlly1.meta.tacticalBoost).toBe(true);
+    expect(actualAlly2.meta.tacticalBoost).toBe(true);
+    expect(actualAlly1.meta.tacticalBoostDuration).toBe(40);
     
 
     const energyParticles = sim.particles.filter(p => p.type === 'energy');
