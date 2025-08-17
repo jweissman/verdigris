@@ -56,6 +56,10 @@ export class Abilities extends Rule {
 
     this.cachedAllUnits = allUnits; // Cache for DSL operations
 
+    // Pre-compute teams for faster filtering
+    const friendlyUnits = allUnits.filter(u => u.team === 'friendly' && u.state !== 'dead');
+    const hostileUnits = allUnits.filter(u => u.team === 'hostile' && u.state !== 'dead');
+    
     const enemyCache = new Map<string, any>(); // Cache closest enemy per unit
     const allyCache = new Map<string, any>(); // Cache closest ally per unit
 

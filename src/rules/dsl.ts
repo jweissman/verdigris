@@ -3,8 +3,10 @@ import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 
 export default class DSL {
+  private static expressionCache = new Map<string, any>();
+  
   static clearCache() {
-    // No cache to clear
+    this.expressionCache.clear();
   }
 
   static noun = (
@@ -113,6 +115,9 @@ export default class DSL {
     target?: any,
     cachedAllUnits?: readonly Unit[],
   ): any {
+    // Don't cache - it's not helping because we clear every tick
+    // and evaluate different expressions per unit
+    
     const allUnits = cachedAllUnits || context.getAllUnits();
 
     // === COMMON FAST PATHS ===
@@ -312,6 +317,14 @@ export default class DSL {
       return dx * dx + dy * dy;
     };
 
+    // Skip all helper creation if we can parse simply
+    // Use a special sentinel value to indicate "couldn't parse"
+    const COULD_NOT_PARSE = Symbol('COULD_NOT_PARSE');
+    const simpleResult = this.trySimpleParse(expression, subject, allUnits, context, COULD_NOT_PARSE);
+    if (simpleResult !== COULD_NOT_PARSE) {
+      return simpleResult;
+    }
+    
     // Create noun helpers lazily
     let weakest: any;
     let strongest: any;
@@ -511,13 +524,9 @@ export default class DSL {
     });
 
     let self = subject;
-
-    // Try simple expression parsing for common patterns to avoid eval
-    // This handles most ability triggers without the eval() overhead
-    const simpleParseResult = this.trySimpleParse(expression, subject, allUnits, context);
-    if (simpleParseResult !== undefined) {
-      return simpleParseResult;
-    }
+    
+    // Track what expressions still need eval (for debugging)
+    // console.warn(`[DSL] Eval fallback for: "${expression}"`);
     
     // Fall back to eval for complex expressions
     try {
@@ -534,11 +543,13 @@ export default class DSL {
   
   // Simple parser for common DSL patterns to avoid eval
   // This handles 99% of ability expressions without eval overhead
+  // Returns a special COULD_NOT_PARSE symbol if it can't parse the expression
   private static trySimpleParse(
     expression: string,
     subject: Unit,
     allUnits: readonly Unit[],
-    context: TickContext
+    context: TickContext,
+    COULD_NOT_PARSE: symbol = Symbol('COULD_NOT_PARSE')
   ): any {
     // Handle backtick-wrapped expressions with eval (escape hatch for complex expressions)
     if (expression.startsWith('`') && expression.endsWith('`')) {
@@ -669,8 +680,9 @@ export default class DSL {
       const maxDist = parseFloat(distStr);
       
       // Parse the target expression
-      const targetPos = this.trySimpleParse(targetExpr, subject, allUnits, context);
-      if (!targetPos) return undefined;
+      const targetPos = this.trySimpleParse(targetExpr, subject, allUnits, context, COULD_NOT_PARSE);
+      if (targetPos === COULD_NOT_PARSE) return COULD_NOT_PARSE;
+      if (!targetPos) return false; // No target found
       
       const dx = targetPos.x - subject.pos.x;
       const dy = targetPos.y - subject.pos.y;
@@ -803,11 +815,11 @@ export default class DSL {
     if (expression.includes(" && ")) {
       const parts = expression.split(" && ");
       if (parts.length === 2) {
-        const left = this.trySimpleParse(parts[0].trim(), subject, allUnits, context);
+        const left = this.trySimpleParse(parts[0].trim(), subject, allUnits, context, COULD_NOT_PARSE);
+        if (left === COULD_NOT_PARSE) return COULD_NOT_PARSE; // Can't parse
         if (left === false) return false; // Short circuit
-        if (left === undefined) return undefined; // Can't parse
-        const right = this.trySimpleParse(parts[1].trim(), subject, allUnits, context);
-        if (right === undefined) return undefined; // Can't parse
+        const right = this.trySimpleParse(parts[1].trim(), subject, allUnits, context, COULD_NOT_PARSE);
+        if (right === COULD_NOT_PARSE) return COULD_NOT_PARSE; // Can't parse
         return left && right;
       }
     }
@@ -816,21 +828,21 @@ export default class DSL {
     if (expression.includes(" || ")) {
       const parts = expression.split(" || ");
       if (parts.length === 2) {
-        const left = this.trySimpleParse(parts[0].trim(), subject, allUnits, context);
+        const left = this.trySimpleParse(parts[0].trim(), subject, allUnits, context, COULD_NOT_PARSE);
+        if (left === COULD_NOT_PARSE) return COULD_NOT_PARSE; // Can't parse
         if (left === true) return true; // Short circuit
-        if (left === undefined) return undefined; // Can't parse
-        const right = this.trySimpleParse(parts[1].trim(), subject, allUnits, context);
-        if (right === undefined) return undefined; // Can't parse
+        const right = this.trySimpleParse(parts[1].trim(), subject, allUnits, context, COULD_NOT_PARSE);
+        if (right === COULD_NOT_PARSE) return COULD_NOT_PARSE; // Can't parse
         return left || right;
       }
     }
     
     // Handle parenthesized expressions
     if (expression.startsWith('(') && expression.endsWith(')')) {
-      return this.trySimpleParse(expression.slice(1, -1), subject, allUnits, context);
+      return this.trySimpleParse(expression.slice(1, -1), subject, allUnits, context, COULD_NOT_PARSE);
     }
     
-    // Return undefined to indicate we couldn't parse it
-    return undefined;
+    // Return the sentinel to indicate we couldn't parse it
+    return COULD_NOT_PARSE;
   }
 }
