@@ -274,7 +274,6 @@ export class SegmentedCreatures extends Rule {
           if (parent) {
             const transferDamage = Math.floor(segment.meta.damageTaken * 0.5);
             if (transferDamage > 0) {
-
               commands.push({
                 type: "damage",
                 params: {

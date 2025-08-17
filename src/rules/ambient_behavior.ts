@@ -48,7 +48,6 @@ export class AmbientBehavior extends Rule {
     }
 
     if (context.getRandom() < 0.02) {
-
       creature.meta.wanderTarget = this.getNewWanderTarget(context, creature);
     }
 

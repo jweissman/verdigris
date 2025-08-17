@@ -39,7 +39,6 @@ export class ForcesCommand extends Command {
       moveY[i] = 0;
     }
 
-
     this.resolveCollisionsSoA(arrays);
   }
 
@@ -74,8 +73,6 @@ export class ForcesCommand extends Command {
       this.sim.projectiles.splice(toRemove[i], 1);
     }
   }
-
-
 
   private resolveCollisionsSoA(arrays: any): void {
     const grid = new Map<number, number>();

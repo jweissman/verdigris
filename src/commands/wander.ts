@@ -33,7 +33,6 @@ export class Wander extends Command {
       );
 
       if (!hasNearbyEnemy && Simulator.rng.random() < chance) {
-
         const roll = Simulator.rng.random();
         const dx = roll < 0.5 ? -1 : 1;
         const dy = Simulator.rng.random() < 0.5 ? -1 : 1;
@@ -48,7 +47,6 @@ export class Wander extends Command {
           newY >= 0 &&
           newY < context.getFieldHeight()
         ) {
-
           this.sim.getTransform().updateUnit(unit.id, {
             intendedMove: { x: dx, y: dy },
           });

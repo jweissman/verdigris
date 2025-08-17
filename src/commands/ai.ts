@@ -26,11 +26,10 @@ export class AICommand extends Command {
   private processAIBatched(): void {
     const postures = new Map<string, string>();
     const context = this.sim.getTickContext();
-    
 
     for (const unit of context.getAllUnits()) {
-      if (unit.state === 'dead' || unit.hp <= 0) continue;
-      
+      if (unit.state === "dead" || unit.hp <= 0) continue;
+
       let posture = unit.posture || unit.meta?.posture;
       if (!posture && unit.tags) {
         if (unit.tags.includes("hunt")) posture = "hunt";
@@ -39,12 +38,15 @@ export class AICommand extends Command {
         else if (unit.tags.includes("wander")) posture = "wander";
         else if (unit.tags.includes("aggressive")) posture = "bully";
       }
-      
 
-      if (!posture && unit.team === 'neutral' && (!unit.tags || unit.tags.length === 0)) {
+      if (
+        !posture &&
+        unit.team === "neutral" &&
+        (!unit.tags || unit.tags.length === 0)
+      ) {
         continue;
       }
-      
+
       postures.set(unit.id, posture || "wait");
     }
 
@@ -61,9 +63,7 @@ export class AICommand extends Command {
     }
   }
 
-
   private handleWoodlandSummoning(): void {
     // TODO: Implement woodland summoning logic
-
   }
 }

@@ -79,7 +79,6 @@ class Simulator {
   public static rng: RNG = new RNG(12345);
   private static randomProtected: boolean = false;
 
-
   private changedUnits: Set<string> = new Set();
 
   private gridPartition: GridPartition;
@@ -87,11 +86,8 @@ class Simulator {
   public proxyManager: UnitProxyManager;
 
   get units(): readonly Unit[] {
-
     return this.proxyManager.getAllProxies();
   }
-
-
 
   setUnitsFromTransform(units: Unit[]): void {
     throw new Error(
@@ -158,24 +154,36 @@ class Simulator {
   private _temperatureField: ScalarField | null = null;
   private _humidityField: ScalarField | null = null;
   private _pressureField: ScalarField | null = null;
-  
+
   get temperatureField(): ScalarField {
     if (!this._temperatureField) {
-      this._temperatureField = new ScalarField(this.fieldWidth, this.fieldHeight, 20);
+      this._temperatureField = new ScalarField(
+        this.fieldWidth,
+        this.fieldHeight,
+        20,
+      );
     }
     return this._temperatureField;
   }
-  
+
   get humidityField(): ScalarField {
     if (!this._humidityField) {
-      this._humidityField = new ScalarField(this.fieldWidth, this.fieldHeight, 0.3);
+      this._humidityField = new ScalarField(
+        this.fieldWidth,
+        this.fieldHeight,
+        0.3,
+      );
     }
     return this._humidityField;
   }
-  
+
   get pressureField(): ScalarField {
     if (!this._pressureField) {
-      this._pressureField = new ScalarField(this.fieldWidth, this.fieldHeight, 1.0);
+      this._pressureField = new ScalarField(
+        this.fieldWidth,
+        this.fieldHeight,
+        1.0,
+      );
     }
     return this._pressureField;
   }
@@ -256,16 +264,12 @@ class Simulator {
 
     this.unitColdData = new Map();
 
-
-
     this.proxyManager = new UnitProxyManager(
       this.unitArrays,
       this.unitColdData,
     );
 
     this.transform = new Transform(this);
-
-
 
     this.weather = {
       current: "clear",
@@ -275,7 +279,7 @@ class Simulator {
 
     this.reset();
   }
-  
+
   private tickContext?: TickContext;
 
   parseCommand(inputString: string) {
@@ -340,13 +344,7 @@ class Simulator {
 
     this.commandProcessor = new CommandHandler(this, this.transform);
 
-
-    const coreRules = [
-      new UnitBehavior(),
-      new UnitMovement(),
-      new Cleanup(),
-    ];
-    
+    const coreRules = [new UnitBehavior(), new UnitMovement(), new Cleanup()];
 
     const combatRules = [
       new Abilities(),
@@ -355,7 +353,6 @@ class Simulator {
       new StatusEffects(),
       new Perdurance(),
     ];
-    
 
     const specialRules = [
       new HugeUnits(),
@@ -371,7 +368,7 @@ class Simulator {
       new Jumping(),
       new Tossing(),
     ];
-    
+
     this.rulebook = [...coreRules, ...combatRules, ...specialRules];
   }
 
@@ -444,7 +441,6 @@ class Simulator {
     this.changedUnits.add(unitId);
   }
 
-
   hasDirtyUnits(): boolean {
     return this.dirtyUnits.size > 0;
   }
@@ -501,21 +497,15 @@ class Simulator {
     let needsSpatialRebuild =
       this.ticks === 0 || this.unitArrays.activeCount !== this.lastActiveCount;
 
-
-
-
-
     if (needsSpatialRebuild) {
-
       this.gridPartition.clear();
       this.unitCache.clear();
 
       const arrays = this.unitArrays;
 
-
       for (const i of arrays.activeIndices) {
         const id = arrays.unitIds[i];
-        
+
         let proxy = this.unitCache.get(id);
         if (!proxy) {
           proxy = this.proxyManager.getProxy(i);
@@ -527,18 +517,11 @@ class Simulator {
       this.lastActiveCount = arrays.activeCount;
     }
 
-
-    
-
     const context = new TickContextImpl(this);
-    
 
     for (const rule of this.rulebook) {
-
       const ruleName = rule.constructor.name;
-      
 
-      
       const commands = rule.execute(context);
       if (commands && commands.length > 0) {
         for (let i = 0; i < commands.length; i++) {
@@ -567,14 +550,12 @@ class Simulator {
       }
 
       if (this.enableEnvironmentalEffects) {
-
         if (this.ticks % 10 === 0) {
           this.updateScalarFields();
           this.updateWeather();
         }
 
         if (Simulator.rng.random() < 0.002) {
-
           this.spawnLeafParticle();
         }
       }
@@ -795,7 +776,7 @@ class Simulator {
       particle.vel.y = 0;
       particle.lifetime = Math.min(particle.lifetime, 30); // Fade quickly when landed
 
-        this.humidityField.addGradient(gridX, gridY, 1, 0.05);
+      this.humidityField.addGradient(gridX, gridY, 1, 0.05);
     }
   }
 
@@ -817,23 +798,17 @@ class Simulator {
     });
   }
 
-
   updateScalarFields() {
-
     if (this.ticks % 500 !== 0) return;
 
     this.temperatureField.decayAndDiffuse(0.002, 0.05); // Temperature
     this.humidityField.decayAndDiffuse(0.005, 0.08); // Humidity
     this.pressureField.decayAndDiffuse(0.01, 0.12); // Pressure
-
-
-
   }
 
   applyFieldInteractions() {
-
     if (!this.temperatureField || !this.humidityField) return;
-    
+
     const startY = (this.ticks % 10) * Math.floor(this.fieldHeight / 10);
     const endY = Math.min(
       startY + Math.floor(this.fieldHeight / 10),
@@ -951,8 +926,6 @@ class Simulator {
 
   applyRainEffects() {
     const intensity = this.weather.intensity;
-    
-
 
     for (let i = 0; i < Math.ceil(intensity * 5); i++) {
       const x = Simulator.rng.random() * this.fieldWidth;
@@ -976,8 +949,6 @@ class Simulator {
   applyStormEffects() {
     this.applyRainEffects();
 
-
-    
     const intensity = this.weather.intensity;
 
     for (let i = 0; i < Math.ceil(intensity * 3); i++) {
@@ -992,8 +963,6 @@ class Simulator {
     const intensity = this.weather.intensity;
 
     if (Simulator.rng.random() < intensity * 0.3) {
-
-
       const leafCount = 1 + Math.floor(Simulator.rng.random() * 3);
       for (let i = 0; i < leafCount; i++) {
         this.particleArrays.addParticle({
@@ -1179,96 +1148,89 @@ class Simulator {
 
   private selectActiveRules(): void {
     const tick = this.ticks;
-    
 
     this.activeRules = [];
-    
+
     for (const rule of this.rulebook) {
       const name = rule.constructor.name;
-      
 
-      switch(name) {
-        case 'GrapplingPhysics':
+      switch (name) {
+        case "GrapplingPhysics":
           if (!this.hasGrapplingHooks()) continue;
           break;
-        case 'AirdropPhysics':
+        case "AirdropPhysics":
           if (!this.hasAirdrops()) continue;
           break;
-        case 'StatusEffects':
+        case "StatusEffects":
           if (!this.hasStatusEffects()) continue;
           break;
-        case 'Jumping':
+        case "Jumping":
           if (!this.hasJumpingUnits()) continue;
           break;
-        case 'Tossing':
+        case "Tossing":
           if (!this.hasTossedUnits()) continue;
           break;
-        case 'AreaOfEffect':
+        case "AreaOfEffect":
           if (!this.hasAreaEffects()) continue;
           break;
-        case 'ProjectileMotion':
+        case "ProjectileMotion":
           if (!this.projectiles || this.projectiles.length === 0) continue;
           break;
-        case 'Particles':
-          if (!this.particleArrays || this.particleArrays.activeCount === 0) continue;
+        case "Particles":
+          if (!this.particleArrays || this.particleArrays.activeCount === 0)
+            continue;
           break;
-        case 'LightningStorm':
+        case "LightningStorm":
           if (!this.lightningActive) continue;
           break;
-        case 'BiomeEffects':
-
-          if (!this.enableEnvironmentalEffects && this.weather.current === 'clear') continue;
+        case "BiomeEffects":
+          if (
+            !this.enableEnvironmentalEffects &&
+            this.weather.current === "clear"
+          )
+            continue;
           break;
-        case 'Cleanup':
-
+        case "Cleanup":
           if (!this.hasDeadUnits()) continue;
           break;
-        case 'Perdurance':
-
+        case "Perdurance":
           if (!this.hasUnitsWithTimers()) continue;
           break;
-        case 'HugeUnits':
+        case "HugeUnits":
           if (!this.hasHugeUnits()) continue;
           break;
-        case 'SegmentedCreatures':
+        case "SegmentedCreatures":
           if (!this.hasSegmentedCreatures()) continue;
           break;
 
-        case 'UnitMovement':
-
+        case "UnitMovement":
           break;
-        case 'UnitBehavior':
-
+        case "UnitBehavior":
           if (!this.hasHostileUnits()) continue;
           break;
-        case 'MeleeCombat':
-
+        case "MeleeCombat":
           if (!this.hasOpposingTeams()) continue;
           break;
-        case 'Abilities':
-
+        case "Abilities":
           if (!this.hasUnitsWithAbilities()) continue;
           break;
-        case 'Knockback':
-
+        case "Knockback":
           if (!this.hadRecentCombat) continue;
           break;
-        case 'AmbientSpawning':
-        case 'AmbientBehavior':
-
+        case "AmbientSpawning":
+        case "AmbientBehavior":
           if (tick % 30 !== 0) continue;
           break;
       }
-      
+
       this.activeRules.push(rule);
     }
   }
-  
-  private hasGrapplingHooks(): boolean {
 
+  private hasGrapplingHooks(): boolean {
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
@@ -1276,37 +1238,36 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hasAirdrops(): boolean {
-
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
-      if (data?.tags?.includes('airdrop')) return true;
+      if (data?.tags?.includes("airdrop")) return true;
     }
     return false;
   }
-  
+
   private hasStatusEffects(): boolean {
-
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
-      if (data?.meta?.statusEffects && data.meta.statusEffects.length > 0) return true;
+      if (data?.meta?.statusEffects && data.meta.statusEffects.length > 0)
+        return true;
     }
     return false;
   }
-  
+
   private hasJumpingUnits(): boolean {
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
@@ -1314,11 +1275,11 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hasTossedUnits(): boolean {
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
@@ -1326,11 +1287,11 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hasHugeUnits(): boolean {
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
@@ -1338,11 +1299,11 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hasSegmentedCreatures(): boolean {
     const arrays = this.unitArrays;
     const coldData = this.unitColdData;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
@@ -1350,18 +1311,19 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hadRecentCombat = false;
-  
+
   private hasMovingUnits(): boolean {
     const arrays = this.unitArrays;
 
     for (const i of arrays.activeIndices) {
-      if (arrays.intendedMoveX[i] !== 0 || arrays.intendedMoveY[i] !== 0) return true;
+      if (arrays.intendedMoveX[i] !== 0 || arrays.intendedMoveY[i] !== 0)
+        return true;
     }
     return false;
   }
-  
+
   private hasHostileUnits(): boolean {
     const arrays = this.unitArrays;
     for (const i of arrays.activeIndices) {
@@ -1369,12 +1331,12 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hasOpposingTeams(): boolean {
     const arrays = this.unitArrays;
     let hasFriendly = false;
     let hasHostile = false;
-    
+
     for (const i of arrays.activeIndices) {
       if (arrays.team[i] === 0) hasFriendly = true;
       if (arrays.team[i] === 1) hasHostile = true;
@@ -1382,11 +1344,11 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hasUnitsWithAbilities(): boolean {
     const coldData = this.unitColdData;
     const arrays = this.unitArrays;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
@@ -1394,7 +1356,7 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hasDeadUnits(): boolean {
     const arrays = this.unitArrays;
     for (const i of arrays.activeIndices) {
@@ -1402,31 +1364,31 @@ class Simulator {
     }
     return false;
   }
-  
+
   private hasUnitsWithTimers(): boolean {
     const coldData = this.unitColdData;
     const arrays = this.unitArrays;
-    
+
     for (const i of arrays.activeIndices) {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
-      if (data?.meta?.timers || data?.meta?.lifespan || data?.meta?.ttl) return true;
+      if (data?.meta?.timers || data?.meta?.lifespan || data?.meta?.ttl)
+        return true;
     }
     return false;
   }
-  
-  private hasAreaEffects(): boolean {
 
+  private hasAreaEffects(): boolean {
     return false; // TODO: Implement when we track area effects
   }
-  
+
   private hasKnockbackUnits(): boolean {
     for (const unit of this.units) {
       if (unit.meta?.knockback) return true;
     }
     return false;
   }
-  
+
   clone() {
     const newSimulator = new Simulator();
 
@@ -1660,7 +1622,6 @@ class Simulator {
         for (const cmd of command) {
           if (cmd.action === "move") {
             if (cmd.target) {
-
               this.proxyManager.setIntendedMove(unit.id, cmd.target);
             }
           }
@@ -1714,7 +1675,6 @@ class Simulator {
   private forcedAbilitiesThisTick = new Set<string>();
 
   forceAbility(unitId: string, abilityName: string, target?: any): void {
-
     const key = `${unitId}:${abilityName}`;
     this.forcedAbilitiesThisTick.add(key);
     const unit = this.units.find((u) => u.id === unitId);
@@ -1739,13 +1699,12 @@ class Simulator {
       return;
     }
 
-
     const context = this.getTickContext();
 
     const primaryTarget = target || unit;
 
     (abilitiesRule as any).commands = [];
-    
+
     for (const effect of jsonAbility.effects) {
       (abilitiesRule as Abilities).processEffectAsCommand(
         context,
@@ -1754,15 +1713,16 @@ class Simulator {
         primaryTarget,
       );
     }
-    
 
     const generatedCommands = (abilitiesRule as any).commands || [];
     this.queuedCommands.push(...generatedCommands);
 
-
     const proxyManager = this.proxyManager;
     if (proxyManager) {
-      const currentTick = { ...unit.lastAbilityTick, [abilityName]: this.ticks };
+      const currentTick = {
+        ...unit.lastAbilityTick,
+        [abilityName]: this.ticks,
+      };
       proxyManager.setLastAbilityTick(unit.id, currentTick);
     }
 

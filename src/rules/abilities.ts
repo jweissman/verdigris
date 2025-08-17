@@ -6,11 +6,11 @@ import { Unit } from "../types/Unit";
 import * as abilitiesJson from "../../data/abilities.json";
 import type { TickContext } from "../core/tick_context";
 import type { QueuedCommand } from "./command_handler";
+import { UnitProxy } from "../sim/unit_proxy";
 
 export class Abilities extends Rule {
   // @ts-ignore
   static all: { [key: string]: Ability } = abilitiesJson as any;
-  
 
   private static abilityCache = new Map<string, Ability | undefined>();
 
@@ -30,39 +30,47 @@ export class Abilities extends Rule {
   ability = (name: string): Ability | undefined => {
     return Abilities.abilityCache.get(name);
   };
-  
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
+    DSL.clearCache(); // Clear cache each tick for fresh evaluations
 
     const currentTick = context.getCurrentTick();
-    const allUnits = context.getAllUnits();
-    this.cachedAllUnits = allUnits; // Cache for all helper methods
-    
-    // Clear DSL cache for each step to enable lazy evaluation
-    DSL.clearCache();
-    
 
-    const relevantUnits = allUnits.filter(u => 
-      (u.abilities && u.abilities.length > 0) || u.meta?.burrowed
-    );
+    const arrays = context.getArrays();
+    const relevantUnits: Unit[] = [];
+
+    // CRITICAL: Get allUnits ONCE not inside the loop!
+    const allUnits = context.getAllUnits();
     
+    
+    for (const idx of arrays.activeIndices) {
+      if (arrays.state[idx] === 3) continue; // Skip dead
+
+      const unit = allUnits.find((u) => context.getUnitIndex(u.id) === idx);
+      if (
+        unit &&
+        ((unit.abilities && unit.abilities.length > 0) || unit.meta?.burrowed)
+      ) {
+        relevantUnits.push(unit);
+      }
+    }
+
+    this.cachedAllUnits = relevantUnits; // Cache for all helper methods
+
+    DSL.clearCache();
 
     if (relevantUnits.length === 0) {
       return this.commands;
     }
-    
 
     const enemyCache = new Map<string, any>(); // Cache closest enemy per unit
-    const allyCache = new Map<string, any>();  // Cache closest ally per unit
-
+    const allyCache = new Map<string, any>(); // Cache closest ally per unit
 
     for (const unit of relevantUnits) {
-
-      if (unit.state === 'dead' || unit.hp <= 0) {
+      if (unit.state === "dead" || unit.hp <= 0) {
         continue;
       }
-      
 
       const meta = unit.meta; // Cache meta access
       if (
@@ -87,7 +95,6 @@ export class Abilities extends Rule {
         }
       }
 
-
       const abilities = unit.abilities; // Cache abilities access
       if (!abilities || abilities.length === 0) {
         continue; // Skip this unit
@@ -96,7 +103,6 @@ export class Abilities extends Rule {
       const lastAbilityTick = unit.lastAbilityTick; // Cache property access
 
       for (const abilityName of abilities) {
-
         const ability = this.ability(abilityName);
         if (!ability) {
           continue;
@@ -107,6 +113,7 @@ export class Abilities extends Rule {
           : undefined;
         let ready =
           lastTick === undefined || currentTick - lastTick >= ability.cooldown;
+        
 
         if (!ready) {
           continue;
@@ -120,47 +127,64 @@ export class Abilities extends Rule {
           }
         }
 
-
         let shouldTrigger = true;
         let target = unit;
-        
 
         if (ability.trigger) {
           try {
-            shouldTrigger = DSL.evaluate(ability.trigger, unit, context, undefined, allUnits);
+            shouldTrigger = DSL.evaluate(
+              ability.trigger,
+              unit,
+              context,
+              undefined,
+              allUnits,
+            );
           } catch (error) {
             continue;
           }
-          
+
           if (!shouldTrigger) {
             continue;
           }
         }
 
-
         if (ability.target && ability.target !== "self") {
           try {
-
             if (ability.target === "closest.enemy()") {
               if (!enemyCache.has(unit.id)) {
-
-                const enemy = allUnits.find(u => u.team !== unit.team && u.id !== unit.id && u.state !== 'dead') || null;
+                const enemy =
+                  allUnits.find(
+                    (u) =>
+                      u.team !== unit.team &&
+                      u.id !== unit.id &&
+                      u.state !== "dead",
+                  ) || null;
                 enemyCache.set(unit.id, enemy);
               }
               target = enemyCache.get(unit.id);
             } else if (ability.target === "closest.ally()") {
               if (!allyCache.has(unit.id)) {
-
                 const nearbyUnits = context.findUnitsInRadius(unit.pos, 15);
-                const ally = nearbyUnits.find(u => u.team === unit.team && u.id !== unit.id && u.state !== 'dead') || null;
+                const ally =
+                  nearbyUnits.find(
+                    (u) =>
+                      u.team === unit.team &&
+                      u.id !== unit.id &&
+                      u.state !== "dead",
+                  ) || null;
                 allyCache.set(unit.id, ally);
               }
               target = allyCache.get(unit.id);
             } else if (ability.target === "closest.enemy()?.pos") {
               if (!enemyCache.has(unit.id)) {
-
                 const nearbyUnits = context.findUnitsInRadius(unit.pos, 15);
-                const enemy = nearbyUnits.find(u => u.team !== unit.team && u.id !== unit.id && u.state !== 'dead') || null;
+                const enemy =
+                  nearbyUnits.find(
+                    (u) =>
+                      u.team !== unit.team &&
+                      u.id !== unit.id &&
+                      u.state !== "dead",
+                  ) || null;
                 enemyCache.set(unit.id, enemy);
               }
               const enemy = enemyCache.get(unit.id);
@@ -170,16 +194,20 @@ export class Abilities extends Rule {
             } else if (ability.target === "self") {
               target = unit;
             } else if (ability.target === "target") {
-
               target = unit;
             } else {
-
-              target = DSL.evaluate(ability.target, unit, context, undefined, allUnits);
+              target = DSL.evaluate(
+                ability.target,
+                unit,
+                context,
+                undefined,
+                context.getAllUnits(), // Get fresh units for DSL
+              );
             }
           } catch (error) {
             continue;
           }
-          
+
           if (!target) {
             continue;
           }
@@ -335,7 +363,13 @@ export class Abilities extends Rule {
 
     if (typeof targetExpression === "string") {
       try {
-        return DSL.evaluate(targetExpression, caster, context, undefined, this.cachedAllUnits);
+        return DSL.evaluate(
+          targetExpression,
+          caster,
+          context,
+          undefined,
+          context.getAllUnits(),
+        );
       } catch (error) {
         console.warn(`Failed to resolve target '${targetExpression}':`, error);
         return null;
@@ -353,7 +387,13 @@ export class Abilities extends Rule {
   ): any {
     if (typeof value === "string") {
       try {
-        return DSL.evaluate(value, caster, context, target, this.cachedAllUnits);
+        return DSL.evaluate(
+          value,
+          caster,
+          context,
+          target,
+          context.getAllUnits(),
+        );
       } catch (error) {
         console.warn(`Failed to resolve DSL value '${value}':`, error);
         return value;
@@ -393,7 +433,13 @@ export class Abilities extends Rule {
             : value.$conditional.else;
         }
 
-        const conditionResult = DSL.evaluate(condition, caster, context, undefined, this.cachedAllUnits);
+        const conditionResult = DSL.evaluate(
+          condition,
+          caster,
+          context,
+          undefined,
+          context.getAllUnits(),
+        );
         return conditionResult
           ? value.$conditional.then
           : value.$conditional.else;
@@ -1299,7 +1345,13 @@ export class Abilities extends Rule {
             target: safeUnit, // Make target reference the same unit with safe tags
             self: safeUnit,
           };
-          return DSL.evaluate(effect.condition, context, this.sim, undefined, this.cachedAllUnits);
+          return DSL.evaluate(
+            effect.condition,
+            context,
+            this.sim,
+            undefined,
+            this.sim.getAllUnits(),
+          );
         } catch (error) {
           console.warn(
             `Failed to evaluate condition '${effect.condition}':`,

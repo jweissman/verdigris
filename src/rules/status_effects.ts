@@ -29,7 +29,6 @@ export class StatusEffects extends Rule {
         this.updateStatusEffects(context, unit);
         this.applyStatusEffectMechanics(context, unit);
       } else if (unit.meta.chilled || unit.meta.stunned) {
-
         this.applyStatusEffectMechanics(context, unit);
       }
     }
@@ -124,7 +123,6 @@ export class StatusEffects extends Rule {
           break;
         case "burn":
           if (context.getCurrentTick() % 8 === 0) {
-
             this.commands.push({
               type: "damage",
               params: {
@@ -139,8 +137,10 @@ export class StatusEffects extends Rule {
       }
     });
 
-
-    if (statusEffects.length === 0 && (unit.meta.chilled || unit.meta.stunned)) {
+    if (
+      statusEffects.length === 0 &&
+      (unit.meta.chilled || unit.meta.stunned)
+    ) {
       this.commands.push({
         type: "meta",
         params: {

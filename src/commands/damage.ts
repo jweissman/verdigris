@@ -50,16 +50,13 @@ export class Damage extends Command {
       if (perdurance === "sturdiness") {
         finalDamage = 1;
       }
-      
 
       if (perdurance === "swarm") {
-
         finalDamage = amount;
       }
     }
 
     const newHp = Math.max(0, target.hp - finalDamage); // Clamp HP to minimum 0
-
 
     const damageTaken = target.meta?.segment ? finalDamage : undefined;
 
@@ -69,7 +66,8 @@ export class Damage extends Command {
       meta: {
         ...target.meta,
         impactFrame: this.sim.ticks,
-        damageTaken: damageTaken !== undefined ? damageTaken : target.meta?.damageTaken,
+        damageTaken:
+          damageTaken !== undefined ? damageTaken : target.meta?.damageTaken,
       },
     });
 

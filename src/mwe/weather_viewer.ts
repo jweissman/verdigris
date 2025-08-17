@@ -238,7 +238,6 @@ export default class SceneWeatherViewer {
     const deltaTime = currentTime - this.lastTime;
 
     if (this.isPlaying && deltaTime > 100) {
-
       this.sim.step();
       this.lastTime = currentTime;
     }

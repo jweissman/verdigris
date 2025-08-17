@@ -287,8 +287,6 @@ export class Jukebox {
           ) {
             const pattern = Simulator.rng.random();
             if (pattern > 0.25) {
-
-
               const arpNotes = chordNotes.slice(0, 3).map((note, i) => {
                 const octave = i === 0 ? 4 : 5; // Mix octaves, not too high
                 return AudioWorkstation.noteToFrequency(note, octave);
@@ -388,7 +386,6 @@ export class Jukebox {
 
     setTimeout(() => {
       if (!this.isPlaying) {
-
         this.playProgression("victory-fanfare", false);
       }
     }, 500);
@@ -441,14 +438,12 @@ export class Jukebox {
 
     const playRandomBirdSong = () => {
       if (Math.random() < 0.3) {
-
         this.playBirdSong();
       }
     };
 
     const playRandomAmbience = () => {
       if (Math.random() < 0.2) {
-
         this.playForestAmbience();
       }
     };

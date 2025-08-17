@@ -140,7 +140,7 @@ describe('Performance Test Suite', () => {
   test('getAllUnits call frequency', () => {
     const sim = new Simulator(50, 50);
     
-    // Add units with abilities to trigger expensive DSL evaluations
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `unit_${i}`,
@@ -187,7 +187,7 @@ describe('Performance Test Suite', () => {
     console.log(`\nTOTAL: ${callCount} getAllUnits calls, ${proxyCreations} proxy creations per step`);
     console.log(`With 50 units = ${proxyCreations * 50} proxy objects created per step`);
     
-    // This is the smoking gun - we should cache getAllUnits results!
+
     expect(callCount).toBeLessThan(100); // Reasonable limit
   });
 

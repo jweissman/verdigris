@@ -11,26 +11,23 @@ export class MoveCommand extends Command {
     const unit = this.sim.units.find((u) => u.id === targetId);
     if (!unit) return;
 
-
     if (params.x !== undefined && params.y !== undefined) {
       const newX = params.x as number;
       const newY = params.y as number;
       const dx = newX - unit.pos.x;
       const dy = newY - unit.pos.y;
-      
+
       const updates: any = {
         intendedMove: { x: dx, y: dy },
       };
-      
 
       if (params.z !== undefined) {
         if (!updates.meta) updates.meta = {};
         updates.meta.z = params.z;
       }
-      
+
       transform.updateUnit(targetId, updates);
     } else {
-
       const dx = (params.dx as number) || 0;
       const dy = (params.dy as number) || 0;
 

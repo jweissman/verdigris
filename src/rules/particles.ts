@@ -14,7 +14,6 @@ export default class Particles extends Rule {
     if (!this.sim.particleArrays) return [];
 
     const arrays = this.sim.particleArrays;
-    
 
     const activeCount = arrays.activeCount;
     if (activeCount === 0) return [];
@@ -24,13 +23,11 @@ export default class Particles extends Rule {
 
     const fieldHeight = context.getFieldHeight() * 8; // Convert to pixel coords
     const fieldWidth = context.getFieldWidth() * 8;
-    
 
     if (arrays.activeIndices) {
       for (const i of arrays.activeIndices) {
         const typeId = arrays.type[i];
         if (typeId === 3) {
-
           if (arrays.posY[i] >= fieldHeight - 1) {
             arrays.landed[i] = 1;
             arrays.posY[i] = fieldHeight - 1;
@@ -48,12 +45,10 @@ export default class Particles extends Rule {
             arrays.posY[i] < -50 ||
             arrays.posY[i] > fieldHeight + 50)
         ) {
-
           arrays.removeParticle(i);
         }
       }
     } else {
-
       let processed = 0;
       for (let i = 0; i < arrays.capacity && processed < activeCount; i++) {
         if (arrays.active[i] === 0) continue;
@@ -61,7 +56,6 @@ export default class Particles extends Rule {
 
         const typeId = arrays.type[i];
         if (typeId === 3) {
-
           if (arrays.posY[i] >= fieldHeight - 1) {
             arrays.landed[i] = 1;
             arrays.posY[i] = fieldHeight - 1;
@@ -79,7 +73,6 @@ export default class Particles extends Rule {
             arrays.posY[i] < -50 ||
             arrays.posY[i] > fieldHeight + 50)
         ) {
-
           arrays.removeParticle(i);
         }
       }

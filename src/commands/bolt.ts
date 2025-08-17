@@ -22,7 +22,6 @@ export class BoltCommand extends Command {
     const pixelX = strikePos.x * 8 + 4;
     const pixelY = strikePos.y * 8 + 4;
 
-
     for (let i = 0; i < 8; i++) {
       this.sim.queuedCommands.push({
         type: "particle",

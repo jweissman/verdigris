@@ -28,7 +28,6 @@ export class Knockback extends Rule {
 
   private processKnockback(context: TickContext, a: Unit, b: Unit): void {
     if (a.team === b.team) return;
-    
 
     if (b.meta?.phantom) return;
 

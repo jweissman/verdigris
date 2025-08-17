@@ -54,7 +54,6 @@ export type QueuedCommand = {
 };
 
 export class CommandHandler {
-
   private commands: Map<string, Command> = new Map();
   private transform: any; // Transform object for mutations
   private sim: any;
@@ -129,195 +128,187 @@ export class CommandHandler {
     this.commands.set("humidity", new HumidityCommand(sim, this.transform));
   }
 
-  private executeOne(queuedCommand: QueuedCommand, context: TickContext): boolean {
+  private executeOne(
+    queuedCommand: QueuedCommand,
+    context: TickContext,
+  ): boolean {
     if (!queuedCommand.type) return false;
-
-
 
     const command = this.commands.get(queuedCommand.type);
     if (command) {
       command.execute(queuedCommand.unitId || null, queuedCommand.params);
       return true;
     }
-    
+
     return false;
   }
 
   execute(context: TickContext): Command[] {
-
     let iterations = 0;
     const maxIterations = 10; // Prevent infinite loops
-    
-    while ((this.sim.queuedCommands?.length > 0 || this.sim.queuedEvents?.length > 0) && iterations < maxIterations) {
+
+    while (
+      (this.sim.queuedCommands?.length > 0 ||
+        this.sim.queuedEvents?.length > 0) &&
+      iterations < maxIterations
+    ) {
       iterations++;
       this.executeOnce(context);
     }
-    
+
     if (iterations >= maxIterations) {
-      console.warn(`Command handler hit max iterations (${maxIterations}) - possible infinite loop`);
+      console.warn(
+        `Command handler hit max iterations (${maxIterations}) - possible infinite loop`,
+      );
     }
-    
+
     return [];
   }
-  
+
   private executeOnce(context: TickContext): void {
     if (!this.sim.queuedCommands?.length && !this.sim.queuedEvents?.length) {
       return;
     }
 
-
-
     const processedCommandIds = new Set<string>(); // Track processed command IDs
 
     if (this.sim.queuedCommands?.length > 0) {
-        const commandsToProcess = [];
-        const commandsToKeep = [];
+      const commandsToProcess = [];
+      const commandsToKeep = [];
 
-        for (const queuedCommand of this.sim.queuedCommands) {
-          if (
-            queuedCommand.tick !== undefined &&
-            queuedCommand.tick > this.sim.ticks
-          ) {
-            commandsToKeep.push(queuedCommand);
-          } else {
-            if (queuedCommand.id && processedCommandIds.has(queuedCommand.id)) {
-              continue; // Skip duplicate
-            }
-
-            if (queuedCommand.id) {
-              processedCommandIds.add(queuedCommand.id);
-            }
-
-            commandsToProcess.push(queuedCommand);
+      for (const queuedCommand of this.sim.queuedCommands) {
+        if (
+          queuedCommand.tick !== undefined &&
+          queuedCommand.tick > this.sim.ticks
+        ) {
+          commandsToKeep.push(queuedCommand);
+        } else {
+          if (queuedCommand.id && processedCommandIds.has(queuedCommand.id)) {
+            continue; // Skip duplicate
           }
+
+          if (queuedCommand.id) {
+            processedCommandIds.add(queuedCommand.id);
+          }
+
+          commandsToProcess.push(queuedCommand);
         }
+      }
 
-        const commandCounts: { [key: string]: number } = {};
+      const commandCounts: { [key: string]: number } = {};
 
-        const metaBatch: { [unitId: string]: any } = {};
-        const moveBatch: { [unitId: string]: any } = {};
-        const otherCommands: any[] = [];
+      const metaBatch: { [unitId: string]: any } = {};
+      const moveBatch: { [unitId: string]: any } = {};
+      const otherCommands: any[] = [];
 
-        for (const queuedCommand of commandsToProcess) {
-          if (!queuedCommand.type) continue;
+      for (const queuedCommand of commandsToProcess) {
+        if (!queuedCommand.type) continue;
 
-          commandCounts[queuedCommand.type] =
-            (commandCounts[queuedCommand.type] || 0) + 1;
+        commandCounts[queuedCommand.type] =
+          (commandCounts[queuedCommand.type] || 0) + 1;
 
-          if (queuedCommand.type === "meta" && queuedCommand.params?.unitId) {
-            const unitId = queuedCommand.params.unitId as string;
-            if (!metaBatch[unitId]) {
-              metaBatch[unitId] = { meta: {}, state: null };
-            }
-            if (queuedCommand.params.meta !== undefined) {
-              const cleanMeta = {};
-              for (const [key, value] of Object.entries(
-                queuedCommand.params.meta,
-              )) {
-                if (value !== undefined) {
-                  cleanMeta[key] = value;
-                }
-              }
-
-              if (Object.keys(cleanMeta).length > 0) {
-                Object.assign(metaBatch[unitId].meta, cleanMeta);
+        if (queuedCommand.type === "meta" && queuedCommand.params?.unitId) {
+          const unitId = queuedCommand.params.unitId as string;
+          if (!metaBatch[unitId]) {
+            metaBatch[unitId] = { meta: {}, state: null };
+          }
+          if (queuedCommand.params.meta !== undefined) {
+            const cleanMeta = {};
+            for (const [key, value] of Object.entries(
+              queuedCommand.params.meta,
+            )) {
+              if (value !== undefined) {
+                cleanMeta[key] = value;
               }
             }
-            if (queuedCommand.params.state) {
-              metaBatch[unitId].state = queuedCommand.params.state;
-            }
-          } else if (
-            queuedCommand.type === "move" &&
-            queuedCommand.params?.unitId
-          ) {
-            const unitId = queuedCommand.params.unitId as string;
-            moveBatch[unitId] = queuedCommand.params; // Last move command wins
-          } else {
-            otherCommands.push(queuedCommand);
-          }
-        }
 
-        const metaCommand = this.commands.get("meta");
-        if (metaCommand) {
-          for (const [unitId, updates] of Object.entries(metaBatch)) {
-            const params = {
-              unitId: unitId,
-              meta: updates.meta,
-              state: updates.state,
-            };
-            metaCommand.execute(null, params);
-          }
-        }
-
-
-        const moveCommand = this.commands.get("move");
-        if (moveCommand && Object.keys(moveBatch).length > 0) {
-
-          const moveEntries = Object.entries(moveBatch);
-          for (const [unitId, params] of moveEntries) {
-            moveCommand.execute(unitId, params);
-          }
-        }
-
-
-        const commandsByType = new Map<string, QueuedCommand[]>();
-        for (const queuedCommand of otherCommands) {
-          if (!queuedCommand.type) continue;
-          if (!commandsByType.has(queuedCommand.type)) {
-            commandsByType.set(queuedCommand.type, []);
-          }
-          commandsByType.get(queuedCommand.type)!.push(queuedCommand);
-        }
-
-
-        for (const [cmdType, cmds] of commandsByType) {
-          const command = this.commands.get(cmdType);
-          if (command) {
-
-            for (const queuedCommand of cmds) {
-              command.execute(queuedCommand.unitId || null, queuedCommand.params);
+            if (Object.keys(cleanMeta).length > 0) {
+              Object.assign(metaBatch[unitId].meta, cleanMeta);
             }
           }
+          if (queuedCommand.params.state) {
+            metaBatch[unitId].state = queuedCommand.params.state;
+          }
+        } else if (
+          queuedCommand.type === "move" &&
+          queuedCommand.params?.unitId
+        ) {
+          const unitId = queuedCommand.params.unitId as string;
+          moveBatch[unitId] = queuedCommand.params; // Last move command wins
+        } else {
+          otherCommands.push(queuedCommand);
         }
+      }
 
+      const metaCommand = this.commands.get("meta");
+      if (metaCommand) {
+        for (const [unitId, updates] of Object.entries(metaBatch)) {
+          const params = {
+            unitId: unitId,
+            meta: updates.meta,
+            state: updates.state,
+          };
+          metaCommand.execute(null, params);
+        }
+      }
 
+      const moveCommand = this.commands.get("move");
+      if (moveCommand && Object.keys(moveBatch).length > 0) {
+        const moveEntries = Object.entries(moveBatch);
+        for (const [unitId, params] of moveEntries) {
+          moveCommand.execute(unitId, params);
+        }
+      }
 
+      const commandsByType = new Map<string, QueuedCommand[]>();
+      for (const queuedCommand of otherCommands) {
+        if (!queuedCommand.type) continue;
+        if (!commandsByType.has(queuedCommand.type)) {
+          commandsByType.set(queuedCommand.type, []);
+        }
+        commandsByType.get(queuedCommand.type)!.push(queuedCommand);
+      }
 
-        const newCommands: QueuedCommand[] = [];
-        for (const cmd of this.sim.queuedCommands) {
-          if (!commandsToProcess.includes(cmd) && !commandsToKeep.includes(cmd)) {
-            newCommands.push(cmd);
+      for (const [cmdType, cmds] of commandsByType) {
+        const command = this.commands.get(cmdType);
+        if (command) {
+          for (const queuedCommand of cmds) {
+            command.execute(queuedCommand.unitId || null, queuedCommand.params);
           }
         }
-        
-        // Remove god object access - profiling should be handled through context
-        if (newCommands.length > 0) {
-          // console.debug(`Preserving ${newCommands.length} commands generated during processing`);
-        }
-        
-        this.sim.queuedCommands = [...commandsToKeep, ...newCommands];
+      }
 
-        if (this.transform) {
-          this.transform.commit();
+      const newCommands: QueuedCommand[] = [];
+      for (const cmd of this.sim.queuedCommands) {
+        if (!commandsToProcess.includes(cmd) && !commandsToKeep.includes(cmd)) {
+          newCommands.push(cmd);
         }
+      }
+
+      if (newCommands.length > 0) {
+      }
+
+      this.sim.queuedCommands = [...commandsToKeep, ...newCommands];
+
+      if (this.transform) {
+        this.transform.commit();
+      }
     }
 
     if (this.sim.queuedEvents?.length > 0) {
-        const eventsToProcess = [...this.sim.queuedEvents];
+      const eventsToProcess = [...this.sim.queuedEvents];
 
-        const eventHandler = new EventHandler();
-        const eventCommands = eventHandler.execute(context);
+      const eventHandler = new EventHandler();
+      const eventCommands = eventHandler.execute(context);
 
+      if (eventCommands && eventCommands.length > 0) {
+        this.sim.queuedCommands.push(...eventCommands);
+      }
 
-        if (eventCommands && eventCommands.length > 0) {
-          this.sim.queuedCommands.push(...eventCommands);
-        }
+      this.sim.recordProcessedEvents(eventsToProcess);
 
-        this.sim.recordProcessedEvents(eventsToProcess);
-
-        this.sim.queuedEvents = [];
+      this.sim.queuedEvents = [];
     }
-
   }
 
   private convertArgsToParams(

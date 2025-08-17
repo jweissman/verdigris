@@ -93,17 +93,14 @@ export class ScalarField {
   }
 
   decayAndDiffuse(decayRate: number = 0.01, diffuseRate: number = 0.1): void {
-
-
     const decayFactor = 1 - decayRate - diffuseRate * 0.5; // Combine decay and diffusion loss
-    
+
     const data = this.data;
     const size = this.size;
-    
 
     let i = 0;
     const size8 = Math.floor(size / 8) * 8;
-    
+
     for (; i < size8; i += 8) {
       data[i] *= decayFactor;
       data[i + 1] *= decayFactor;
@@ -114,7 +111,6 @@ export class ScalarField {
       data[i + 6] *= decayFactor;
       data[i + 7] *= decayFactor;
     }
-    
 
     for (; i < size; i++) {
       data[i] *= decayFactor;

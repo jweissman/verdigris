@@ -10,7 +10,6 @@ export class Perdurance extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
 
-
     for (const unit of context.getAllUnits()) {
       if (unit.meta?.pendingDamage) {
         this.processPendingDamage(context, unit, commands);

@@ -38,11 +38,11 @@ interface DataQuery {
  */
 export class UnitProxy implements Unit {
   private _cachedIndex: number | undefined;
-  
+
   constructor(
     public readonly id: string,
     private query: DataQuery,
-    index?: number
+    index?: number,
   ) {
     this._cachedIndex = index;
   }
@@ -51,7 +51,7 @@ export class UnitProxy implements Unit {
     const manager = this.query as UnitProxyManager;
     return {
       x: manager.arrays.posX[this._cachedIndex!],
-      y: manager.arrays.posY[this._cachedIndex!]
+      y: manager.arrays.posY[this._cachedIndex!],
     };
   }
 
@@ -59,7 +59,7 @@ export class UnitProxy implements Unit {
     const manager = this.query as UnitProxyManager;
     return {
       x: manager.arrays.intendedMoveX[this._cachedIndex!],
-      y: manager.arrays.intendedMoveY[this._cachedIndex!]
+      y: manager.arrays.intendedMoveY[this._cachedIndex!],
     };
   }
 
@@ -72,7 +72,9 @@ export class UnitProxy implements Unit {
   }
 
   get dmg(): number {
-    return (this.query as UnitProxyManager).getDamageByIndex(this._cachedIndex!);
+    return (this.query as UnitProxyManager).getDamageByIndex(
+      this._cachedIndex!,
+    );
   }
 
   get team(): "friendly" | "hostile" | "neutral" {
@@ -153,20 +155,16 @@ export class UnitProxyManager implements DataQuery {
   }
 
   private indexCache: { [key: string]: number } = Object.create(null);
-  
+
   private getIndex(unitId: string): number {
-
-
     let index = this.indexCache[unitId];
     if (index !== undefined) return index;
-    
 
     index = this.idToIndex.get(unitId);
     if (index !== undefined) {
       this.indexCache[unitId] = index; // Cache in object
       return index;
     }
-    
 
     this.rebuildIndex();
     index = this.idToIndex.get(unitId);
@@ -176,46 +174,45 @@ export class UnitProxyManager implements DataQuery {
     this.indexCache[unitId] = index;
     return index;
   }
-  
 
   getPositionByIndex(index: number): Vec2 {
     return { x: this.arrays.posX[index], y: this.arrays.posY[index] };
   }
-  
+
   getIntendedMoveByIndex(index: number): Vec2 {
     return {
       x: this.arrays.intendedMoveX[index],
       y: this.arrays.intendedMoveY[index],
     };
   }
-  
+
   getHpByIndex(index: number): number {
     return this.arrays.hp[index];
   }
-  
+
   getMaxHpByIndex(index: number): number {
     return this.arrays.maxHp[index];
   }
-  
+
   getTeamByIndex(index: number): "friendly" | "hostile" | "neutral" {
     const teamId = this.arrays.team[index];
     return teamId === 1 ? "friendly" : teamId === 2 ? "hostile" : "neutral";
   }
-  
+
   getStateByIndex(index: number): UnitState {
     const stateId = this.arrays.state[index];
     const stateMap: UnitState[] = ["idle", "walk", "attack", "dead"];
     return stateMap[stateId] || "idle";
   }
-  
+
   getMassByIndex(index: number): number {
     return this.arrays.mass[index];
   }
-  
+
   getDamageByIndex(index: number): number {
     return this.arrays.dmg[index];
   }
-  
+
   isAliveByIndex(index: number): boolean {
     return this.arrays.state[index] !== 3 && this.arrays.hp[index] > 0;
   }
@@ -445,7 +442,6 @@ export class UnitProxyManager implements DataQuery {
     return undefined;
   }
 
-
   getAllProxies(): UnitProxy[] {
     if (this.arrays.activeIndices.length === 0 && this.arrays.activeCount > 0) {
       this.arrays.rebuildActiveIndices();
@@ -456,7 +452,7 @@ export class UnitProxyManager implements DataQuery {
       const unitId = this.arrays.unitIds[i];
       proxies.push(new UnitProxy(unitId, this, i));
     }
-    
+
     return proxies;
   }
 
@@ -512,9 +508,7 @@ export class UnitProxyManager implements DataQuery {
     const allies = new Map<string, string | null>();
     const radiusSq = searchRadius * searchRadius;
 
-
     const activeCount = this.arrays.activeCount;
-
 
     if (activeCount <= 75) {
       return this.batchFindTargetsSimple(radiusSq, enemies, allies);
@@ -526,8 +520,11 @@ export class UnitProxyManager implements DataQuery {
   private batchFindTargetsSimple(
     radiusSq: number,
     enemies: Map<string, string | null>,
-    allies: Map<string, string | null>
-  ): { enemies: Map<string, string | null>; allies: Map<string, string | null>; } {
+    allies: Map<string, string | null>,
+  ): {
+    enemies: Map<string, string | null>;
+    allies: Map<string, string | null>;
+  } {
     const capacity = this.arrays.capacity;
 
     for (const i of this.arrays.activeIndices) {
@@ -543,10 +540,8 @@ export class UnitProxyManager implements DataQuery {
       let minEnemyDistSq = Infinity;
       let minAllyDistSq = Infinity;
 
-
       for (const j of this.arrays.activeIndices) {
         if (i === j || this.arrays.state[j] === 3) continue;
-
 
         const absDx = Math.abs(this.arrays.posX[j] - x1);
         const absDy = Math.abs(this.arrays.posY[j] - y1);
@@ -581,26 +576,29 @@ export class UnitProxyManager implements DataQuery {
     searchRadius: number,
     radiusSq: number,
     enemies: Map<string, string | null>,
-    allies: Map<string, string | null>
-  ): { enemies: Map<string, string | null>; allies: Map<string, string | null>; } {
+    allies: Map<string, string | null>,
+  ): {
+    enemies: Map<string, string | null>;
+    allies: Map<string, string | null>;
+  } {
     const capacity = this.arrays.capacity;
-
 
     const gridSize = Math.ceil(searchRadius / 2);
     const gridWidth = Math.ceil(100 / gridSize);
     const gridHeight = Math.ceil(100 / gridSize);
-    const grid: number[][] = Array(gridWidth * gridHeight).fill(null).map(() => []);
-
+    const grid: number[][] = Array(gridWidth * gridHeight)
+      .fill(null)
+      .map(() => []);
 
     for (const i of this.arrays.activeIndices) {
       if (this.arrays.state[i] === 3) continue;
-      
+
       const x = this.arrays.posX[i];
       const y = this.arrays.posY[i];
       const gx = Math.floor(x / gridSize);
       const gy = Math.floor(y / gridSize);
       const gridIdx = gy * gridWidth + gx;
-      
+
       if (gridIdx >= 0 && gridIdx < grid.length) {
         grid[gridIdx].push(i);
       }
@@ -628,7 +626,13 @@ export class UnitProxyManager implements DataQuery {
           const checkGx = gx + dx;
           const checkGy = gy + dy;
 
-          if (checkGx < 0 || checkGx >= gridWidth || checkGy < 0 || checkGy >= gridHeight) continue;
+          if (
+            checkGx < 0 ||
+            checkGx >= gridWidth ||
+            checkGy < 0 ||
+            checkGy >= gridHeight
+          )
+            continue;
 
           const gridIdx = checkGy * gridWidth + checkGx;
           const cellUnits = grid[gridIdx];
@@ -714,7 +718,6 @@ export class UnitProxyManager implements DataQuery {
 
           const distSq = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
           if (distSq > 4) {
-
             dx = x2 > x1 ? 1 : x2 < x1 ? -1 : 0;
             dy = y2 > y1 ? 1 : y2 < y1 ? -1 : 0;
           }
@@ -735,7 +738,6 @@ export class UnitProxyManager implements DataQuery {
           const distSq = distX * distX + distY * distY;
 
           if (distSq < 25) {
-
             avgX += this.arrays.posX[j];
             avgY += this.arrays.posY[j];
             count++;

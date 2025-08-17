@@ -41,45 +41,47 @@ export class MeleeCombat extends Rule {
 
     const arrays = (context as any).sim?.unitArrays;
     const coldData = (context as any).sim?.unitColdData;
-    
-    if (arrays && coldData) {
 
+    if (arrays && coldData) {
       for (const i of arrays.activeIndices) {
         if (arrays.state[i] === 3 || arrays.hp[i] <= 0) continue;
-        
+
         const attackerId = arrays.unitIds[i];
         if (this.engagements.has(attackerId)) continue;
-        
+
         const cold = coldData.get(attackerId);
-        if (cold?.meta?.jumping || cold?.tags?.includes("noncombatant")) continue;
-        
+        if (cold?.meta?.jumping || cold?.tags?.includes("noncombatant"))
+          continue;
+
         const x1 = arrays.posX[i];
         const y1 = arrays.posY[i];
         const team1 = arrays.team[i];
-        
 
         for (const j of arrays.activeIndices) {
           if (i === j || arrays.state[j] === 3 || arrays.hp[j] <= 0) continue;
           if (team1 === arrays.team[j]) continue;
-          
+
           const dx = arrays.posX[j] - x1;
           const dy = arrays.posY[j] - y1;
           const distSq = dx * dx + dy * dy;
-          
+
           if (distSq <= meleeRangeSq) {
             const targetId = arrays.unitIds[j];
             const targetCold = coldData.get(targetId);
-            if (targetCold?.meta?.jumping || targetCold?.tags?.includes("noncombatant")) continue;
-            
+            if (
+              targetCold?.meta?.jumping ||
+              targetCold?.tags?.includes("noncombatant")
+            )
+              continue;
 
             this.engagements.set(attackerId, targetId);
             this.lastAttacks.set(attackerId, context.getCurrentTick());
-            
+
             commands.push({
               type: "halt",
               params: { unitId: attackerId },
             });
-            
+
             commands.push({
               type: "meta",
               params: {
@@ -88,7 +90,7 @@ export class MeleeCombat extends Rule {
                 state: "attack",
               },
             });
-            
+
             commands.push({
               type: "damage",
               params: {
@@ -98,13 +100,12 @@ export class MeleeCombat extends Rule {
                 sourceId: attackerId,
               },
             });
-            
+
             break; // Only one target per attacker
           }
         }
       }
     } else {
-
       const allUnits = context.getAllUnits();
       for (const attacker of allUnits) {
         if (this.engagements.has(attacker.id)) continue;

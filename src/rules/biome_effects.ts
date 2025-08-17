@@ -171,15 +171,12 @@ export class BiomeEffects extends Rule {
   private commands: QueuedCommand[] = [];
 
   execute(context: TickContext): QueuedCommand[] {
-
     this.commands = [];
-    
 
     const sim = (context as any).sim;
-    if (sim && sim.weather && sim.weather.current === 'rain') {
+    if (sim && sim.weather && sim.weather.current === "rain") {
       const intensity = sim.weather.intensity || 0.5;
       const humidityIncrease = 0.005 * intensity;
-      
 
       for (let x = 0; x < context.getFieldWidth(); x++) {
         for (let y = 0; y < context.getFieldHeight(); y++) {
@@ -188,12 +185,11 @@ export class BiomeEffects extends Rule {
             params: {
               x: x,
               y: y,
-              delta: humidityIncrease
-            }
+              delta: humidityIncrease,
+            },
           });
         }
       }
-      
 
       const allUnits = context.getAllUnits();
       for (const unit of allUnits) {
@@ -205,14 +201,14 @@ export class BiomeEffects extends Rule {
               meta: {
                 onFire: false,
                 burnDuration: undefined,
-                burnStartTick: undefined
-              }
-            }
+                burnStartTick: undefined,
+              },
+            },
           });
         }
       }
     }
-    
+
     if (context.isWinterActive()) {
       if (context.getCurrentTick() % 5 === 0) {
         for (let i = 0; i < 3; i++) {
@@ -676,7 +672,6 @@ export class BiomeEffects extends Rule {
 
       case "heat_stress":
         if (context.getCurrentTick() % 8 === 0) {
-
           this.commands.push({
             type: "applyStatusEffect",
             params: {

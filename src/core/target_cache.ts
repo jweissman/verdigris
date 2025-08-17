@@ -46,7 +46,6 @@ export class TargetCache {
         dataA.closestEnemyDist = dist;
       }
       if (dist <= 2) {
-
         dataA.nearbyEnemies.push(unitB.id);
       }
 
@@ -55,7 +54,6 @@ export class TargetCache {
         dataB.closestEnemyDist = dist;
       }
       if (dist <= 2) {
-
         dataB.nearbyEnemies.push(unitA.id);
       }
     } else {
@@ -64,7 +62,6 @@ export class TargetCache {
         dataA.closestAllyDist = dist;
       }
       if (dist <= 5) {
-
         dataA.nearbyAllies.push(unitB.id);
       }
 
@@ -73,7 +70,6 @@ export class TargetCache {
         dataB.closestAllyDist = dist;
       }
       if (dist <= 5) {
-
         dataB.nearbyAllies.push(unitA.id);
       }
     }

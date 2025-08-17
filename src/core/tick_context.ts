@@ -38,10 +38,17 @@ export interface TickContext {
   getSandstormIntensity(): number;
   getSandstormDuration(): number;
   getQueuedEvents(): readonly any[];
-  
-  // SoA performance access for DSL
+
   getUnitIndex(unitId: string): number | undefined;
-  getArrays(): { posX: number[], posY: number[], activeIndices: number[], team: number[], state: number[] };
+  getArrays(): {
+    posX: number[];
+    posY: number[];
+    activeIndices: number[];
+    team: number[];
+    state: number[];
+    unitIds: string[];
+  };
+  getUnitColdData(unitId: string): any;
 }
 
 /**
@@ -51,10 +58,8 @@ export class TickContextImpl implements TickContext {
   private unitCache: readonly Unit[] | null = null;
 
   constructor(private sim: Simulator) {}
-  
 
   findUnitsInRadius(center: Vec2, radius: number): Unit[] {
-
     if (this.sim.gridPartition) {
       return this.sim.gridPartition.getNearby(center.x, center.y, radius);
     }
@@ -71,24 +76,19 @@ export class TickContextImpl implements TickContext {
   }
 
   getAllUnits(): readonly Unit[] {
-    if (!this.unitCache) {
-
-      this.unitCache = this.sim.proxyManager.getAllProxies();
-    }
-    return this.unitCache;
+    return this.sim.proxyManager.getAllProxies();
   }
 
   getUnitsInTeam(team: string): Unit[] {
     return this.getAllUnits().filter((unit) => unit.team === team);
   }
-  
 
   getUnitsWithAbilities(): Unit[] {
-    return this.getAllUnits().filter((unit) => 
-      unit.abilities && unit.abilities.length > 0
+    return this.getAllUnits().filter(
+      (unit) => unit.abilities && unit.abilities.length > 0,
     );
   }
-  
+
   getUnitsWithState(state: string): Unit[] {
     return this.getAllUnits().filter((unit) => unit.state === state);
   }
@@ -189,14 +189,26 @@ export class TickContextImpl implements TickContext {
     return (this.sim as any).proxyManager?.idToIndex?.get(unitId);
   }
 
-  getArrays(): { posX: number[], posY: number[], activeIndices: number[], team: number[], state: number[] } {
+  getArrays(): {
+    posX: number[];
+    posY: number[];
+    activeIndices: number[];
+    team: number[];
+    state: number[];
+    unitIds: string[];
+  } {
     const arrays = (this.sim as any).unitArrays;
     return {
       posX: arrays.posX,
       posY: arrays.posY,
       activeIndices: arrays.activeIndices,
       team: arrays.team,
-      state: arrays.state
+      state: arrays.state,
+      unitIds: arrays.unitIds,
     };
+  }
+
+  getUnitColdData(unitId: string): any {
+    return (this.sim as any).unitColdData.get(unitId);
   }
 }
