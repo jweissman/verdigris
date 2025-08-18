@@ -25,14 +25,11 @@ export class GrapplingPhysics extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
-    // Cache units once for entire execution
-    const allUnits = context.getAllUnits();
-    
-    this.handleGrappleCollisions(context, commands, allUnits);
+    this.handleGrappleCollisions(context, commands);
 
-    this.updateGrappleLines(context, commands, allUnits);
+    this.updateGrappleLines(context, commands);
 
-    this.applyPinningEffects(context, commands, allUnits);
+    this.applyPinningEffects(context, commands);
 
     this.cleanupExpiredGrapples(context, commands);
 
@@ -42,12 +39,12 @@ export class GrapplingPhysics extends Rule {
   private handleGrappleCollisions(
     context: TickContext,
     commands: QueuedCommand[],
-    allUnits: readonly Unit[]
   ) {
+    const allUnits = context.getAllUnits();
 
     for (const unit of allUnits) {
       if (unit.meta.grappleHit) {
-        this.processGrappleHit(context, unit, commands, allUnits);
+        this.processGrappleHit(context, unit, commands);
       }
     }
   }
@@ -56,7 +53,6 @@ export class GrapplingPhysics extends Rule {
     context: TickContext,
     hitUnit: Unit,
     commands: QueuedCommand[],
-    allUnits: readonly Unit[]
   ) {
     if (hitUnit.meta.grappleHit) {
       const grapplerID = hitUnit.meta.grapplerID || "unknown";
@@ -107,7 +103,8 @@ export class GrapplingPhysics extends Rule {
         }
 
         if (hitUnit.meta.segmented) {
-          const firstSegment = allUnits
+          const firstSegment = context
+            .getAllUnits()
             .find(
               (u) =>
                 u.meta.segment &&
@@ -166,16 +163,10 @@ export class GrapplingPhysics extends Rule {
     }
   }
 
-  private updateGrappleLines(context: TickContext, commands: QueuedCommand[], allUnits: readonly Unit[]) {
-    // Build unit map for fast lookups
-    const unitMap = new Map<string, Unit>();
-    for (const unit of allUnits) {
-      unitMap.set(unit.id, unit);
-    }
-    
+  private updateGrappleLines(context: TickContext, commands: QueuedCommand[]) {
     for (const [lineID, grappleLine] of this.grappleLines.entries()) {
-      const grappler = unitMap.get(grappleLine.grapplerID);
-      const target = unitMap.get(grappleLine.targetID);
+      const grappler = context.findUnitById(grappleLine.grapplerID);
+      const target = context.findUnitById(grappleLine.targetID);
 
       if (!grappler || !target || grappler.hp <= 0 || target.hp <= 0) {
         this.removeGrappleLine(context, lineID);
@@ -290,8 +281,8 @@ export class GrapplingPhysics extends Rule {
     }
   }
 
-  private applyPinningEffects(context: TickContext, commands: QueuedCommand[], allUnits: readonly Unit[]) {
-    for (const unit of allUnits) {
+  private applyPinningEffects(context: TickContext, commands: QueuedCommand[]) {
+    for (const unit of context.getAllUnits()) {
       if (!unit.meta) continue;
 
       if (unit.meta.grappled && unit.meta.grappledDuration > 0) {

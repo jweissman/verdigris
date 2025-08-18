@@ -6,16 +6,22 @@ import { Unit } from "../types/Unit";
 import * as abilitiesJson from "../../data/abilities.json";
 import type { TickContext } from "../core/tick_context";
 import type { QueuedCommand } from "./command_handler";
-import { UnitProxy } from "../sim/unit_proxy";
-import { getCompiledExpression } from "./precompiled_expressions";
+import { dslCompiler } from "../dmg/dsl_compiler";
+import Encyclopaedia from "../dmg/encyclopaedia";
 
 export class Abilities extends Rule {
   // @ts-ignore
   static all: { [key: string]: Ability } = abilitiesJson as any;
 
   private static abilityCache = new Map<string, Ability | undefined>();
-  private static compiledTriggers = new Map<string, Function>();
-  private static compiledTargets = new Map<string, Function>();
+  private static precompiledAbilities = new Map<
+    string,
+    {
+      trigger?: Function;
+      target?: Function;
+      ability: Ability;
+    }
+  >();
 
   private commands: QueuedCommand[] = [];
   private cachedAllUnits: readonly Unit[] = []; // Cache for current execution
@@ -23,26 +29,37 @@ export class Abilities extends Rule {
   constructor() {
     super();
 
-    if (Abilities.abilityCache.size === 0) {
+    // Compile all abilities once globally
+    if (Abilities.precompiledAbilities.size === 0) {
       for (const name in Abilities.all) {
         const ability = Abilities.all[name];
         Abilities.abilityCache.set(name, ability);
-        
-        // Precompile triggers
+
+        const compiled: {
+          trigger?: Function;
+          target?: Function;
+          ability: Ability;
+        } = { ability };
+
         if (ability.trigger) {
-          const compiled = getCompiledExpression(ability.trigger);
-          if (compiled) {
-            Abilities.compiledTriggers.set(name, compiled);
+          try {
+            compiled.trigger = dslCompiler.compile(ability.trigger);
+          } catch (err) {
+            console.error(`Failed to compile trigger for ${name}: "${ability.trigger}"`, err);
+            throw err;
           }
         }
-        
-        // Precompile targets  
+
         if (ability.target) {
-          const compiled = getCompiledExpression(ability.target);
-          if (compiled) {
-            Abilities.compiledTargets.set(name, compiled);
+          try {
+            compiled.target = dslCompiler.compile(ability.target);
+          } catch (err) {
+            console.error(`Failed to compile target for ${name}: "${ability.target}"`, err);
+            throw err;
           }
         }
+
+        Abilities.precompiledAbilities.set(name, compiled);
       }
     }
   }
@@ -76,10 +93,6 @@ export class Abilities extends Rule {
 
     this.cachedAllUnits = allUnits; // Cache for DSL operations
 
-    // Pre-compute teams for faster filtering
-    const friendlyUnits = allUnits.filter(u => u.team === 'friendly' && u.state !== 'dead');
-    const hostileUnits = allUnits.filter(u => u.team === 'hostile' && u.state !== 'dead');
-    
     const enemyCache = new Map<string, any>(); // Cache closest enemy per unit
     const allyCache = new Map<string, any>(); // Cache closest ally per unit
 
@@ -146,25 +159,20 @@ export class Abilities extends Rule {
         }
 
         let shouldTrigger = true;
-        let target: any = unit;
+        let target = unit;
 
         if (ability.trigger) {
-          try {
-            // Use precompiled function if available
-            const compiledTrigger = Abilities.compiledTriggers.get(abilityName);
-            if (compiledTrigger) {
-              shouldTrigger = compiledTrigger(unit, context);
-            } else {
-              // Fallback to DSL.evaluate for complex expressions
-              shouldTrigger = DSL.evaluate(
-                ability.trigger,
-                unit,
-                context,
-                undefined,
-                allUnits,
-              );
+          const precompiled = Abilities.precompiledAbilities.get(abilityName);
+          if (precompiled?.trigger) {
+            try {
+              (context as any).cachedUnits = allUnits;
+              shouldTrigger = precompiled.trigger(unit, context);
+            } catch (error) {
+              console.error(`Error evaluating trigger for ${abilityName}:`, error);
+              continue;
             }
-          } catch (error) {
+          } else {
+            console.error(`No compiled trigger for ${abilityName}`);
             continue;
           }
 
@@ -174,63 +182,16 @@ export class Abilities extends Rule {
         }
 
         if (ability.target && ability.target !== "self") {
-          try {
-            if (ability.target === "closest.enemy()") {
-              if (!enemyCache.has(unit.id)) {
-                const units = allUnits;
-                const enemy =
-                  units.find(
-                    (u) =>
-                      u.team !== unit.team &&
-                      u.id !== unit.id &&
-                      u.state !== "dead",
-                  ) || null;
-                enemyCache.set(unit.id, enemy);
-              }
-              target = enemyCache.get(unit.id);
-            } else if (ability.target === "closest.ally()") {
-              if (!allyCache.has(unit.id)) {
-                const nearbyUnits = context.findUnitsInRadius(unit.pos, 15);
-                const ally =
-                  nearbyUnits.find(
-                    (u) =>
-                      u.team === unit.team &&
-                      u.id !== unit.id &&
-                      u.state !== "dead",
-                  ) || null;
-                allyCache.set(unit.id, ally);
-              }
-              target = allyCache.get(unit.id);
-            } else if (ability.target === "closest.enemy()?.pos") {
-              if (!enemyCache.has(unit.id)) {
-                const nearbyUnits = context.findUnitsInRadius(unit.pos, 15);
-                const enemy =
-                  nearbyUnits.find(
-                    (u) =>
-                      u.team !== unit.team &&
-                      u.id !== unit.id &&
-                      u.state !== "dead",
-                  ) || null;
-                enemyCache.set(unit.id, enemy);
-              }
-              const enemy = enemyCache.get(unit.id);
-              target = enemy ? enemy.pos : null;
-            } else if (ability.target === "self.pos") {
-              target = unit.pos;
-            } else if (ability.target === "self") {
-              target = unit;
-            } else if (ability.target === "target") {
-              target = unit;
-            } else {
-              target = DSL.evaluate(
-                ability.target,
-                unit,
-                context,
-                undefined,
-                allUnits,
-              );
+          const precompiled = Abilities.precompiledAbilities.get(abilityName);
+          if (precompiled?.target) {
+            try {
+              target = precompiled.target(unit, context);
+            } catch (error) {
+              console.error(`Error evaluating target for ${abilityName}:`, error);
+              continue;
             }
-          } catch (error) {
+          } else {
+            console.error(`No compiled target for ${abilityName}`);
             continue;
           }
 
@@ -1007,7 +968,6 @@ export class Abilities extends Rule {
       "squirrel";
     const pos = caster.pos;
 
-    const Encyclopaedia = require("../dmg/encyclopaedia").default;
     const summonedUnit = {
       ...Encyclopaedia.unit(unitType),
       id: `${unitType}_${caster.id}_${context.getCurrentTick()}`,
@@ -1502,20 +1462,9 @@ export class Abilities extends Rule {
     if (!target || !target.id) return;
 
     if (effect.effectsToRemove && target.meta) {
-      // Create a meta update that explicitly sets removed effects to undefined
-      const metaUpdate: any = {};
       for (const effectName of effect.effectsToRemove) {
-        metaUpdate[effectName] = undefined;
+        delete target.meta[effectName];
       }
-      
-      // Push a meta command to update the unit's meta
-      this.commands.push({
-        type: "meta",
-        params: {
-          unitId: target.id,
-          meta: metaUpdate
-        }
-      });
     }
   }
 

@@ -19,7 +19,6 @@ import { JumpCommand } from "../commands/jump";
 import { CleanupCommand } from "../commands/cleanup";
 import { RemoveCommand } from "../commands/remove";
 import { MoveCommand } from "../commands/move";
-import { MovesCommand } from "../commands/moves";
 import { KnockbackCommand } from "../commands/knockback";
 
 import {
@@ -45,6 +44,7 @@ import { RemoveProjectileCommand } from "../commands/update_projectile";
 import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
 import { HumidityCommand } from "../commands/humidity";
+import { MovesCommand } from "../commands/moves";
 
 export type QueuedCommand = {
   type: string;
@@ -88,7 +88,7 @@ export class CommandHandler {
     this.commands.set("cleanup", new CleanupCommand(sim));
     this.commands.set("remove", new RemoveCommand(sim));
     this.commands.set("move", new MoveCommand(sim));
-    this.commands.set("moves", new MovesCommand(sim)); // Batch move command
+    this.commands.set("moves", new MovesCommand(sim));
     this.commands.set("knockback", new KnockbackCommand(sim));
 
     this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim));
@@ -215,8 +215,18 @@ export class CommandHandler {
             metaBatch[unitId] = { meta: {}, state: null };
           }
           if (queuedCommand.params.meta !== undefined) {
-            // Just merge all meta updates - last one wins
-            Object.assign(metaBatch[unitId].meta, queuedCommand.params.meta);
+            const cleanMeta = {};
+            for (const [key, value] of Object.entries(
+              queuedCommand.params.meta,
+            )) {
+              if (value !== undefined) {
+                cleanMeta[key] = value;
+              }
+            }
+
+            if (Object.keys(cleanMeta).length > 0) {
+              Object.assign(metaBatch[unitId].meta, cleanMeta);
+            }
           }
           if (queuedCommand.params.state) {
             metaBatch[unitId].state = queuedCommand.params.state;

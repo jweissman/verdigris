@@ -12,10 +12,9 @@ export class SegmentedCreatures extends Rule {
   }
 
   execute(context: TickContext): QueuedCommand[] {
-    const allUnits = context.getAllUnits(); // Cache once
-    const segmentedCreatures = allUnits.filter((unit) => {
+    const segmentedCreatures = context.getAllUnits().filter((unit) => {
       const meta = unit.meta || {};
-      return meta.segmented && !this.hasSegments(allUnits, unit);
+      return meta.segmented && !this.hasSegments(context, unit);
     });
     const commands: QueuedCommand[] = [];
     for (let i = 0; i < segmentedCreatures.length; i++) {
@@ -26,18 +25,19 @@ export class SegmentedCreatures extends Rule {
         );
         throw new Error("SegmentedCreatures infinite loop detected");
       }
-      this.createSegments(context, creature, commands, allUnits);
+      this.createSegments(context, creature, commands);
     }
 
-    this.updateSegmentPositions(context, commands, allUnits);
-    this.handleSegmentDamage(context, commands, allUnits);
-    this.handleSegmentGrappling(context, commands, allUnits);
-    this.cleanupOrphanedSegments(context, commands, allUnits);
+    this.updateSegmentPositions(context, commands);
+    this.handleSegmentDamage(context, commands);
+    this.handleSegmentGrappling(context, commands);
+    this.cleanupOrphanedSegments(context, commands);
     return commands;
   }
 
-  private hasSegments(allUnits: readonly Unit[], creature: Unit): boolean {
-    const hasExistingSegments = allUnits
+  private hasSegments(context: TickContext, creature: Unit): boolean {
+    const hasExistingSegments = context
+      .getAllUnits()
       .some((unit) => unit.meta.segment && unit.meta.parentId === creature.id);
 
     const hasQueuedSegments = false;
@@ -49,7 +49,6 @@ export class SegmentedCreatures extends Rule {
     context: TickContext,
     creature: Unit,
     commands: QueuedCommand[],
-    allUnits: readonly Unit[],
   ) {
     const segmentCount = creature.meta.segmentCount || 4; // Default to 4 segments
 
@@ -168,10 +167,9 @@ export class SegmentedCreatures extends Rule {
   private updateSegmentPositions(
     context: TickContext,
     commands: QueuedCommand[],
-    allUnits: readonly Unit[],
   ): void {
-    const segmentGroups = this.getSegmentGroups(allUnits);
-    const units = allUnits;
+    const segmentGroups = this.getSegmentGroups(context);
+    const units = context.getAllUnits();
 
     for (const [parentId, segments] of segmentGroups) {
       const parent = units.find((u) => u.id === parentId);
@@ -212,9 +210,9 @@ export class SegmentedCreatures extends Rule {
     }
   }
 
-  private getSegmentGroups(allUnits: readonly Unit[]): Map<string, Unit[]> {
+  private getSegmentGroups(context: TickContext): Map<string, Unit[]> {
     const groups = new Map<string, Unit[]>();
-    const units = allUnits;
+    const units = context.getAllUnits();
 
     units
       .filter((unit) => unit.meta.segment && unit.meta.parentId)
@@ -238,14 +236,15 @@ export class SegmentedCreatures extends Rule {
   private cleanupOrphanedSegments(
     context: TickContext,
     commands: QueuedCommand[],
-    allUnits: readonly Unit[],
   ) {
-    const orphanedSegments = allUnits
+    const orphanedSegments = context
+      .getAllUnits()
       .filter(
         (unit) =>
           unit.meta.segment &&
           unit.meta.parentId &&
-          !allUnits
+          !context
+            .getAllUnits()
             .some((parent) => parent.id === unit.meta.parentId),
       );
 
@@ -263,12 +262,14 @@ export class SegmentedCreatures extends Rule {
     }
   }
 
-  private handleSegmentDamage(context: TickContext, commands: QueuedCommand[], allUnits: readonly Unit[]) {
-    allUnits
+  private handleSegmentDamage(context: TickContext, commands: QueuedCommand[]) {
+    context
+      .getAllUnits()
       .filter((unit) => unit.meta.segment)
       .forEach((segment) => {
         if (segment.meta.damageTaken && segment.meta.parentId) {
-          const parent = allUnits
+          const parent = context
+            .getAllUnits()
             .find((u) => u.id === segment.meta.parentId);
           if (parent) {
             const transferDamage = Math.floor(segment.meta.damageTaken * 0.5);
@@ -303,7 +304,8 @@ export class SegmentedCreatures extends Rule {
         }
 
         if (segment.hp <= 0 && segment.meta.segmentIndex) {
-          const adjacentSegments = allUnits
+          const adjacentSegments = context
+            .getAllUnits()
             .filter(
               (u) =>
                 u.meta.segment &&
@@ -332,9 +334,8 @@ export class SegmentedCreatures extends Rule {
   private handleSegmentGrappling(
     context: TickContext,
     commands: QueuedCommand[],
-    allUnits: readonly Unit[],
   ) {
-    const units = allUnits;
+    const units = context.getAllUnits();
 
     units
       .filter((unit) => unit.meta.segment)
@@ -427,7 +428,6 @@ export class SegmentedCreatures extends Rule {
     context: TickContext,
     pos: { x: number; y: number },
   ): boolean {
-    // Use cached allUnits from execute if available
     return context
       .getAllUnits()
       .some((unit) => unit.pos.x === pos.x && unit.pos.y === pos.y);

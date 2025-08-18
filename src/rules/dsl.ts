@@ -3,24 +3,8 @@ import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 
 export default class DSL {
-  private static expressionCache = new Map<string, any>();
-  private static compiledCache = new Map<string, Function>();
-  
   static clearCache() {
-    this.expressionCache.clear();
-  }
-
-  static compile(expression: string): (subject: Unit, context: TickContext, target?: any) => any {
-    if (this.compiledCache.has(expression)) {
-      return this.compiledCache.get(expression) as (subject: Unit, context: TickContext, target?: any) => any;
-    }
-
-    const fn = (subject: Unit, context: TickContext, target?: any) => {
-      return DSL.evaluate(expression, subject, context, target);
-    };
-
-    this.compiledCache.set(expression, fn);
-    return fn;
+    // No cache to clear
   }
 
   static noun = (
@@ -129,19 +113,9 @@ export default class DSL {
     target?: any,
     cachedAllUnits?: readonly Unit[],
   ): any {
-    // Don't cache - it's not helping because we clear every tick
-    // and evaluate different expressions per unit
-    
     const allUnits = cachedAllUnits || context.getAllUnits();
 
-    // === COMMON FAST PATHS ===
-    // These patterns are extremely common and can be evaluated without full DSL parsing
-    
-    // Simple booleans
-    if (expression === "true") return true;
-    if (expression === "false") return false;
-    
-    // Self HP checks - very common in abilities
+    // Fast path for self HP checks
     if (expression.match(/^self\.hp\s*<\s*self\.maxHp\s*\*\s*[\d.]+$/)) {
       const factorMatch = expression.match(/\*\s*([\d.]+)$/);
       if (factorMatch) {
@@ -149,11 +123,6 @@ export default class DSL {
         return subject.hp < subject.maxHp * factor;
       }
     }
-    
-    // Direct self property checks
-    if (expression === "self.hp < 10") return subject.hp < 10;
-    if (expression === "self.hp < 5") return subject.hp < 5;
-    if (expression === "self.hp == self.maxHp") return subject.hp === subject.maxHp;
     
     // Fast path for "closest.ally() != null" - just check if alone
     if (expression === "closest.ally() != null") {
@@ -163,16 +132,6 @@ export default class DSL {
         }
       }
       return false; // No allies found, alone
-    }
-    
-    // Fast path for "closest.enemy() != null" - just check if enemies exist
-    if (expression === "closest.enemy() != null") {
-      for (const u of allUnits) {
-        if (u.team !== subject.team && u.state !== "dead") {
-          return true; // Found an enemy
-        }
-      }
-      return false; // No enemies
     }
     
     // Fast path for common trigger patterns - just check if ANY enemy is in range
@@ -212,106 +171,6 @@ export default class DSL {
         return !hasCloseEnemy;
       }
     }
-    
-    // Fast paths for exact distance checks - most common ability triggers
-    const exactDistanceChecks: { [key: string]: number } = {
-      "distance(closest.enemy()?.pos) <= 1": 1,
-      "distance(closest.enemy()?.pos) <= 2": 4,
-      "distance(closest.enemy()?.pos) <= 3": 9,
-      "distance(closest.enemy()?.pos) <= 5": 25,
-      "distance(closest.enemy()?.pos) <= 6": 36,
-      "distance(closest.enemy()?.pos) <= 8": 64,
-      "distance(closest.enemy()?.pos) <= 10": 100,
-      "distance(closest.enemy()?.pos) <= 12": 144,
-      "distance(closest.enemy()?.pos) <= 15": 225,
-      "distance(closest.enemy()?.pos) <= 20": 400,
-    };
-    
-    if (exactDistanceChecks[expression] !== undefined) {
-      const rangeSq = exactDistanceChecks[expression];
-      for (const u of allUnits) {
-        if (u.team !== subject.team && u.state !== "dead") {
-          const dx = u.pos.x - subject.pos.x;
-          const dy = u.pos.y - subject.pos.y;
-          if (dx * dx + dy * dy <= rangeSq) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-    
-    // Fast paths for > distance checks
-    const greaterDistanceChecks: { [key: string]: number } = {
-      "distance(closest.enemy()?.pos) > 8": 64,
-      "distance(closest.enemy()?.pos) > 10": 100,
-      "distance(closest.enemy()?.pos) > 2": 4,
-      "distance(closest.enemy()?.pos) > 5": 25,
-    };
-    
-    if (greaterDistanceChecks[expression] !== undefined) {
-      const rangeSq = greaterDistanceChecks[expression];
-      let hasCloseEnemy = false;
-      for (const u of allUnits) {
-        if (u.team !== subject.team && u.state !== "dead") {
-          const dx = u.pos.x - subject.pos.x;
-          const dy = u.pos.y - subject.pos.y;
-          if (dx * dx + dy * dy <= rangeSq) {
-            hasCloseEnemy = true;
-            break;
-          }
-        }
-      }
-      return !hasCloseEnemy;
-    }
-    
-    // Fast path for "enemies().length > 0" check
-    if (expression === "enemies().length > 0") {
-      for (const u of allUnits) {
-        if (u.team !== subject.team && u.state !== "dead") {
-          return true;
-        }
-      }
-      return false;
-    }
-    
-    // Fast path for combined distance checks with && operator
-    if (expression === "distance(closest.enemy()?.pos) <= 14 && distance(closest.enemy()?.pos) > 5") {
-      let foundInRange = false;
-      for (const u of allUnits) {
-        if (u.team !== subject.team && u.state !== "dead") {
-          const dx = u.pos.x - subject.pos.x;
-          const dy = u.pos.y - subject.pos.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq <= 196 && distSq > 25) { // 14^2 and 5^2
-            foundInRange = true;
-            break;
-          }
-        }
-      }
-      return foundInRange;
-    }
-    
-    if (expression === "distance(closest.enemy()?.pos) <= 10 && distance(closest.enemy()?.pos) > 2") {
-      let foundInRange = false;
-      for (const u of allUnits) {
-        if (u.team !== subject.team && u.state !== "dead") {
-          const dx = u.pos.x - subject.pos.x;
-          const dy = u.pos.y - subject.pos.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq <= 100 && distSq > 4) { // 10^2 and 2^2
-            foundInRange = true;
-            break;
-          }
-        }
-      }
-      return foundInRange;
-    }
-    
-    // Fast path for simple OR expressions
-    if (expression === "distance(closest.enemy()?.pos) <= 12 || true") {
-      return true; // Always true due to || true
-    }
 
     const arrays = (context as any).getArrays?.();
     const subjectIndex = (context as any).getUnitIndex?.(subject.id);
@@ -331,14 +190,6 @@ export default class DSL {
       return dx * dx + dy * dy;
     };
 
-    // Skip all helper creation if we can parse simply
-    // Use a special sentinel value to indicate "couldn't parse"
-    const COULD_NOT_PARSE = Symbol('COULD_NOT_PARSE');
-    const simpleResult = this.trySimpleParse(expression, subject, allUnits, context, COULD_NOT_PARSE);
-    if (simpleResult !== COULD_NOT_PARSE) {
-      return simpleResult;
-    }
-    
     // Create noun helpers lazily
     let weakest: any;
     let strongest: any;
@@ -538,11 +389,7 @@ export default class DSL {
     });
 
     let self = subject;
-    
-    // Track what expressions still need eval (for debugging)
-    // console.warn(`[DSL] Eval fallback for: "${expression}"`);
-    
-    // Fall back to eval for complex expressions
+
     try {
       let ret = eval(expression);
       if (ret === undefined || ret === null) {
@@ -553,310 +400,5 @@ export default class DSL {
       console.warn(`DSL evaluation error for expression: ${expression}`, error);
       return null;
     }
-  }
-  
-  // Simple parser for common DSL patterns to avoid eval
-  // This handles 99% of ability expressions without eval overhead
-  // Returns a special COULD_NOT_PARSE symbol if it can't parse the expression
-  private static trySimpleParse(
-    expression: string,
-    subject: Unit,
-    allUnits: readonly Unit[],
-    context: TickContext,
-    COULD_NOT_PARSE: symbol = Symbol('COULD_NOT_PARSE')
-  ): any {
-    // Handle backtick-wrapped expressions with eval (escape hatch for complex expressions)
-    if (expression.startsWith('`') && expression.endsWith('`')) {
-      // Remove backticks and fall through to eval
-      return undefined; // Let eval handle it
-    }
-    // Handle simple property access patterns
-    if (expression.startsWith("self.")) {
-      const prop = expression.substring(5);
-      if (prop === "hp") return subject.hp;
-      if (prop === "maxHp") return subject.maxHp;
-      if (prop === "pos") return subject.pos;
-      if (prop === "team") return subject.team;
-      if (prop === "state") return subject.state;
-      if (prop === "id") return subject.id;
-      if (prop.startsWith("meta.")) {
-        const metaProp = prop.substring(5);
-        return subject.meta?.[metaProp];
-      }
-    }
-    
-    // Handle simple numeric comparisons
-    const comparisonMatch = expression.match(/^self\.(\w+)\s*([<>=]+)\s*([\d.]+)$/);
-    if (comparisonMatch) {
-      const [, prop, op, valueStr] = comparisonMatch;
-      const value = parseFloat(valueStr);
-      const propValue = (subject as any)[prop];
-      
-      if (propValue !== undefined) {
-        switch (op) {
-          case "<": return propValue < value;
-          case "<=": return propValue <= value;
-          case ">": return propValue > value;
-          case ">=": return propValue >= value;
-          case "==": return propValue === value;
-          case "!=": return propValue !== value;
-        }
-      }
-    }
-    
-    // Handle closest.enemy() and closest.ally() - most common
-    if (expression === "closest.enemy()") {
-      let closestEnemy: Unit | null = null;
-      let minDistSq = Infinity;
-      for (const u of allUnits) {
-        if (u.team !== subject.team && u.state !== "dead") {
-          const dx = u.pos.x - subject.pos.x;
-          const dy = u.pos.y - subject.pos.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < minDistSq) {
-            minDistSq = distSq;
-            closestEnemy = u;
-          }
-        }
-      }
-      return closestEnemy;
-    }
-    
-    if (expression === "closest.ally()") {
-      let closestAlly: Unit | null = null;
-      let minDistSq = Infinity;
-      for (const u of allUnits) {
-        if (u.team === subject.team && u.id !== subject.id && u.state !== "dead") {
-          const dx = u.pos.x - subject.pos.x;
-          const dy = u.pos.y - subject.pos.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < minDistSq) {
-            minDistSq = distSq;
-            closestAlly = u;
-          }
-        }
-      }
-      return closestAlly;
-    }
-    
-    // Handle weakest.ally() and similar
-    if (expression === "weakest.ally()") {
-      let weakestAlly: Unit | null = null;
-      let lowestHp = Infinity;
-      for (const u of allUnits) {
-        if (u.team === subject.team && u.id !== subject.id && u.state !== "dead") {
-          if (u.hp < lowestHp) {
-            lowestHp = u.hp;
-            weakestAlly = u;
-          }
-        }
-      }
-      return weakestAlly;
-    }
-    
-    // Handle closest.enemy()?.pos
-    if (expression === "closest.enemy()?.pos") {
-      let closestEnemy: Unit | null = null;
-      let minDistSq = Infinity;
-      for (const u of allUnits) {
-        if (u.team !== subject.team && u.state !== "dead") {
-          const dx = u.pos.x - subject.pos.x;
-          const dy = u.pos.y - subject.pos.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < minDistSq) {
-            minDistSq = distSq;
-            closestEnemy = u;
-          }
-        }
-      }
-      return closestEnemy?.pos || null;
-    }
-    
-    // Handle weakest.ally()?.pos  
-    if (expression === "weakest.ally()?.pos") {
-      let weakestAlly: Unit | null = null;
-      let lowestHp = Infinity;
-      for (const u of allUnits) {
-        if (u.team === subject.team && u.id !== subject.id && u.state !== "dead") {
-          if (u.hp < lowestHp) {
-            lowestHp = u.hp;
-            weakestAlly = u;
-          }
-        }
-      }
-      return weakestAlly?.pos || null;
-    }
-    
-    // Handle distance(X) <= Y or distance(X) > Y patterns
-    const distanceMatch = expression.match(/^distance\((.+?)\)\s*([<>=]+)\s*(\d+(?:\.\d+)?)$/);
-    if (distanceMatch) {
-      const [, targetExpr, op, distStr] = distanceMatch;
-      const maxDist = parseFloat(distStr);
-      
-      // Parse the target expression
-      const targetPos = this.trySimpleParse(targetExpr, subject, allUnits, context, COULD_NOT_PARSE);
-      if (targetPos === COULD_NOT_PARSE) return COULD_NOT_PARSE;
-      if (!targetPos) return false; // No target found
-      
-      const dx = targetPos.x - subject.pos.x;
-      const dy = targetPos.y - subject.pos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      
-      switch (op) {
-        case '<': return dist < maxDist;
-        case '<=': return dist <= maxDist;
-        case '>': return dist > maxDist;
-        case '>=': return dist >= maxDist;
-        case '==': return dist === maxDist;
-        default: return undefined;
-      }
-    }
-    
-    // Handle property access with ?. operator
-    if (expression.includes('?.')) {
-      const parts = expression.split('?.');
-      if (parts[0] === 'closest.ally()') {
-        let closestAlly: Unit | null = null;
-        let minDistSq = Infinity;
-        for (const u of allUnits) {
-          if (u.team === subject.team && u.id !== subject.id && u.state !== "dead") {
-            const dx = u.pos.x - subject.pos.x;
-            const dy = u.pos.y - subject.pos.y;
-            const distSq = dx * dx + dy * dy;
-            if (distSq < minDistSq) {
-              minDistSq = distSq;
-              closestAlly = u;
-            }
-          }
-        }
-        
-        if (!closestAlly) return null;
-        
-        // Handle the rest of the property access
-        let result: any = closestAlly;
-        for (let i = 1; i < parts.length; i++) {
-          if (!result) return null;
-          
-          // Handle method calls like includes('construct')
-          const methodMatch = parts[i].match(/^(\w+)\((.*)\)$/);
-          if (methodMatch) {
-            const [, method, args] = methodMatch;
-            if (method === 'includes' && result.includes) {
-              // Parse the argument (remove quotes)
-              const arg = args.replace(/['"`]/g, '');
-              return result.includes(arg);
-            }
-          }
-          
-          // Handle comparisons like hp < maxHp * 0.7
-          const compMatch = parts[i].match(/^(\w+)\s*([<>=]+)\s*(.+)$/);
-          if (compMatch) {
-            const [, prop, op, rightExpr] = compMatch;
-            const leftVal = result[prop];
-            
-            // Parse right side (handle maxHp * 0.7 pattern)
-            const multMatch = rightExpr.match(/^(\w+)\s*\*\s*([\d.]+)$/);
-            let rightVal;
-            if (multMatch) {
-              const [, rightProp, factor] = multMatch;
-              rightVal = result[rightProp] * parseFloat(factor);
-            } else {
-              rightVal = parseFloat(rightExpr);
-            }
-            
-            switch (op) {
-              case '<': return leftVal < rightVal;
-              case '<=': return leftVal <= rightVal;
-              case '>': return leftVal > rightVal;
-              case '>=': return leftVal >= rightVal;
-              case '==': return leftVal === rightVal;
-              default: return undefined;
-            }
-          }
-          
-          // Simple property access
-          const propMatch = parts[i].match(/^(\w+)$/);
-          if (propMatch) {
-            result = result[propMatch[1]];
-          }
-        }
-        return result;
-      }
-      
-      if (parts[0] === 'closest.enemy()') {
-        let closestEnemy: Unit | null = null;
-        let minDistSq = Infinity;
-        for (const u of allUnits) {
-          if (u.team !== subject.team && u.state !== "dead") {
-            const dx = u.pos.x - subject.pos.x;
-            const dy = u.pos.y - subject.pos.y;
-            const distSq = dx * dx + dy * dy;
-            if (distSq < minDistSq) {
-              minDistSq = distSq;
-              closestEnemy = u;
-            }
-          }
-        }
-        
-        if (!closestEnemy) return null;
-        
-        // Handle the rest like tags?.includes('megabeast')
-        let result: any = closestEnemy;
-        for (let i = 1; i < parts.length; i++) {
-          if (!result) return null;
-          
-          // Handle method calls
-          const methodMatch = parts[i].match(/^(\w+)\((.*)\)$/);
-          if (methodMatch) {
-            const [, method, args] = methodMatch;
-            if (method === 'includes' && result.includes) {
-              const arg = args.replace(/['"`]/g, '');
-              return result.includes(arg);
-            }
-          }
-          
-          // Simple property access
-          const propMatch = parts[i].match(/^(\w+)$/);
-          if (propMatch) {
-            result = result[propMatch[1]];
-          }
-        }
-        return result;
-      }
-    }
-    
-    // Handle simple && expressions (must come after other checks)
-    if (expression.includes(" && ")) {
-      const parts = expression.split(" && ");
-      if (parts.length === 2) {
-        const left = this.trySimpleParse(parts[0].trim(), subject, allUnits, context, COULD_NOT_PARSE);
-        if (left === COULD_NOT_PARSE) return COULD_NOT_PARSE; // Can't parse
-        if (left === false) return false; // Short circuit
-        const right = this.trySimpleParse(parts[1].trim(), subject, allUnits, context, COULD_NOT_PARSE);
-        if (right === COULD_NOT_PARSE) return COULD_NOT_PARSE; // Can't parse
-        return left && right;
-      }
-    }
-    
-    // Handle simple || expressions (must come after other checks)
-    if (expression.includes(" || ")) {
-      const parts = expression.split(" || ");
-      if (parts.length === 2) {
-        const left = this.trySimpleParse(parts[0].trim(), subject, allUnits, context, COULD_NOT_PARSE);
-        if (left === COULD_NOT_PARSE) return COULD_NOT_PARSE; // Can't parse
-        if (left === true) return true; // Short circuit
-        const right = this.trySimpleParse(parts[1].trim(), subject, allUnits, context, COULD_NOT_PARSE);
-        if (right === COULD_NOT_PARSE) return COULD_NOT_PARSE; // Can't parse
-        return left || right;
-      }
-    }
-    
-    // Handle parenthesized expressions
-    if (expression.startsWith('(') && expression.endsWith(')')) {
-      return this.trySimpleParse(expression.slice(1, -1), subject, allUnits, context, COULD_NOT_PARSE);
-    }
-    
-    // Return the sentinel to indicate we couldn't parse it
-    return COULD_NOT_PARSE;
   }
 }

@@ -454,9 +454,7 @@ export class BiomeEffects extends Rule {
             },
           },
         });
-      } else if (temp > 5 && temp <= 15 && unit.meta.frozen) {
-        // Only unfreeze if temperature is in the "thawing" range (5-15 degrees)
-        // Don't touch frozen status at normal room temperature (20 degrees)
+      } else if (temp > 0 && unit.meta.frozen) {
         this.commands.push({
           type: "meta",
           params: {

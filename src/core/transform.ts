@@ -99,7 +99,7 @@ export class Transform {
     if (changes.meta !== undefined) {
       const existingMeta = proxyManager.getMeta(unitId);
       const newMeta = { ...existingMeta };
-      
+
       // Apply meta changes, treating undefined as "delete"
       for (const [key, value] of Object.entries(changes.meta)) {
         if (value === undefined) {
@@ -108,7 +108,7 @@ export class Transform {
           newMeta[key] = value;
         }
       }
-      
+
       proxyManager.setMeta(unitId, newMeta);
     }
   }

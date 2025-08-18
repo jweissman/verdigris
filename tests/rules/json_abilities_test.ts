@@ -87,7 +87,6 @@ describe('Abilities', () => {
     const context = sim.getTickContext();
     const commands = abilities.execute(context);
 
-
     expect(commands.length).toBe(2);
     expect(commands[0].type).toBe('heal');
     expect(commands[0].unitId).toBe('healer1');

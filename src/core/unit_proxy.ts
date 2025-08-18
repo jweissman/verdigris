@@ -141,7 +141,7 @@ export class UnitProxy implements Unit {
   }
 
   get abilities() {
-    return this.storage.getField(this.id, "abilities") || {};
+    return this.storage.getField(this.id, "abilities") || [];
   }
 
   set abilities(value) {
@@ -196,12 +196,44 @@ export class UnitProxy implements Unit {
     this.storage.setField(this.id, "effects", value);
   }
 
+  get lastAbilityTick() {
+    return this.storage.getField(this.id, "lastAbilityTick");
+  }
+
+  set lastAbilityTick(value) {
+    this.storage.setField(this.id, "lastAbilityTick", value);
+  }
+
+  get type() {
+    return this.storage.getField(this.id, "type");
+  }
+
+  set type(value) {
+    this.storage.setField(this.id, "type", value);
+  }
+
   get vel() {
     return this.storage.getField(this.id, "vel");
   }
 
   set vel(value) {
     this.storage.setField(this.id, "vel", value);
+  }
+
+  get intendedTarget() {
+    return this.storage.getField(this.id, "intendedTarget");
+  }
+
+  set intendedTarget(value) {
+    this.storage.setField(this.id, "intendedTarget", value);
+  }
+
+  get intendedProtectee() {
+    return this.storage.getField(this.id, "intendedProtectee");
+  }
+
+  set intendedProtectee(value) {
+    this.storage.setField(this.id, "intendedProtectee", value);
   }
 
   toJSON() {

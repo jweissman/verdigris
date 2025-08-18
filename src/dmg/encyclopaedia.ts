@@ -1,9 +1,9 @@
-import { Abilities } from "../rules/abilities";
 import { Unit, UnitState } from "../types/Unit";
 import units from "../../data/units.json";
+import * as abilitiesJson from "../../data/abilities.json";
 
 export default class Encyclopaedia {
-  static abilities = Abilities.all;
+  static abilities = abilitiesJson;
 
   static bestiary: { [key: string]: Partial<Unit> } = {
     ...units,
@@ -48,14 +48,17 @@ export default class Encyclopaedia {
     // Pre-compile ability triggers by running eval ONCE at unit creation
     if (u.abilities && u.abilities.length > 0) {
       const compiledTriggers: { [expression: string]: Function } = {};
-      
+
       for (const abilityName of u.abilities) {
         const ability = this.abilities[abilityName];
         if (ability?.trigger) {
           try {
             // Create a function that captures the expression
             // This runs eval() ONCE here, not every tick
-            const triggerFn = new Function('self', 'context', 'allUnits', 
+            const triggerFn = new Function(
+              "self",
+              "context",
+              "allUnits",
               `const closest = { 
                 enemy: () => {
                   let result = null;
@@ -81,7 +84,7 @@ export default class Encyclopaedia {
                 const dy = t.y - self.pos.y;
                 return Math.sqrt(dx * dx + dy * dy);
               };
-              return ${ability.trigger};`
+              return ${ability.trigger};`,
             );
             compiledTriggers[ability.trigger] = triggerFn;
           } catch (e) {
@@ -89,7 +92,7 @@ export default class Encyclopaedia {
           }
         }
       }
-      
+
       if (Object.keys(compiledTriggers).length > 0) {
         u.meta.compiledTriggers = compiledTriggers;
       }

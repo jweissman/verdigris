@@ -60,7 +60,7 @@ export class AICommand extends Command {
         nonZeroMoves.set(unitId, move);
       }
     }
-    
+
     // Queue a single batch move command instead of individual moves
     if (nonZeroMoves.size > 0) {
       this.sim.queuedCommands.push({

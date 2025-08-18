@@ -41,6 +41,7 @@ import { GridPartition } from "./grid_partition";
 import { ScalarField } from "./ScalarField";
 import { TargetCache } from "./target_cache";
 import { ParticleArrays } from "../sim/particle_arrays";
+import Encyclopaedia from "../dmg/encyclopaedia";
 
 class Simulator {
   public sceneBackground: string = "winter";
@@ -385,13 +386,12 @@ class Simulator {
     // If type is provided, look up the unit definition
     let baseUnit = unit;
     if ((unit as any).type) {
-      const Encyclopaedia = require("../dmg/encyclopaedia").default;
       const unitData = Encyclopaedia.unit((unit as any).type);
       if (unitData) {
         baseUnit = { ...unitData, ...unit };
       }
     }
-    
+
     const hp = baseUnit.hp === undefined ? 100 : baseUnit.hp;
     let u = {
       ...baseUnit,
@@ -407,7 +407,7 @@ class Simulator {
       abilities: baseUnit.abilities || [],
       meta: baseUnit.meta || {},
     } as Unit;
-    
+
     // Don't pre-compile here - let DSL handle it at runtime
 
     const index = this.unitArrays.addUnit(u);
