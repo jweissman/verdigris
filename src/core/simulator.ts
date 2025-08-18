@@ -407,6 +407,8 @@ class Simulator {
       abilities: baseUnit.abilities || [],
       meta: baseUnit.meta || {},
     } as Unit;
+    
+    // Don't pre-compile here - let DSL handle it at runtime
 
     const index = this.unitArrays.addUnit(u);
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering

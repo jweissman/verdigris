@@ -45,6 +45,56 @@ export default class Encyclopaedia {
       u.meta = {};
     }
 
+    // Pre-compile ability triggers by running eval ONCE at unit creation
+    if (u.abilities && u.abilities.length > 0) {
+      const compiledTriggers: { [expression: string]: Function } = {};
+      
+      for (const abilityName of u.abilities) {
+        const ability = this.abilities[abilityName];
+        if (ability?.trigger) {
+          try {
+            // Create a function that captures the expression
+            // This runs eval() ONCE here, not every tick
+            const triggerFn = new Function('self', 'context', 'allUnits', 
+              `const closest = { 
+                enemy: () => {
+                  let result = null;
+                  let minDist = Infinity;
+                  for (const u of allUnits) {
+                    if (u.team !== self.team && u.state !== "dead") {
+                      const dx = u.pos.x - self.pos.x;
+                      const dy = u.pos.y - self.pos.y;
+                      const dist = dx * dx + dy * dy;
+                      if (dist < minDist) {
+                        minDist = dist;
+                        result = u;
+                      }
+                    }
+                  }
+                  return result;
+                }
+              };
+              const distance = (target) => {
+                if (!target) return Infinity;
+                const t = target.pos || target;
+                const dx = t.x - self.pos.x;
+                const dy = t.y - self.pos.y;
+                return Math.sqrt(dx * dx + dy * dy);
+              };
+              return ${ability.trigger};`
+            );
+            compiledTriggers[ability.trigger] = triggerFn;
+          } catch (e) {
+            // Skip pre-compilation for this trigger
+          }
+        }
+      }
+      
+      if (Object.keys(compiledTriggers).length > 0) {
+        u.meta.compiledTriggers = compiledTriggers;
+      }
+    }
+
     return u;
   }
 }

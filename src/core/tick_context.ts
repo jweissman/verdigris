@@ -69,6 +69,10 @@ export class TickContextImpl implements TickContext {
 
   constructor(private sim: Simulator) {}
 
+  clearCache(): void {
+    this.unitCache = null;
+  }
+
   findUnitsInRadius(center: Vec2, radius: number): Unit[] {
     if (this.sim.gridPartition) {
       return this.sim.gridPartition.getNearby(center.x, center.y, radius);
@@ -86,7 +90,10 @@ export class TickContextImpl implements TickContext {
   }
 
   getAllUnits(): readonly Unit[] {
-    return this.sim.proxyManager.getAllProxies();
+    if (!this.unitCache) {
+      this.unitCache = this.sim.proxyManager.getAllProxies();
+    }
+    return this.unitCache;
   }
 
   getUnitsInTeam(team: string): Unit[] {

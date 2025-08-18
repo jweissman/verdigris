@@ -98,7 +98,18 @@ export class Transform {
 
     if (changes.meta !== undefined) {
       const existingMeta = proxyManager.getMeta(unitId);
-      proxyManager.setMeta(unitId, { ...existingMeta, ...changes.meta });
+      const newMeta = { ...existingMeta };
+      
+      // Apply meta changes, treating undefined as "delete"
+      for (const [key, value] of Object.entries(changes.meta)) {
+        if (value === undefined) {
+          delete newMeta[key];
+        } else {
+          newMeta[key] = value;
+        }
+      }
+      
+      proxyManager.setMeta(unitId, newMeta);
     }
   }
 

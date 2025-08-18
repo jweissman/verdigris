@@ -1475,9 +1475,20 @@ export class Abilities extends Rule {
     if (!target || !target.id) return;
 
     if (effect.effectsToRemove && target.meta) {
+      // Create a meta update that explicitly sets removed effects to undefined
+      const metaUpdate: any = {};
       for (const effectName of effect.effectsToRemove) {
-        delete target.meta[effectName];
+        metaUpdate[effectName] = undefined;
       }
+      
+      // Push a meta command to update the unit's meta
+      this.commands.push({
+        type: "meta",
+        params: {
+          unitId: target.id,
+          meta: metaUpdate
+        }
+      });
     }
   }
 

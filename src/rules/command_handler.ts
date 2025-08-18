@@ -215,18 +215,8 @@ export class CommandHandler {
             metaBatch[unitId] = { meta: {}, state: null };
           }
           if (queuedCommand.params.meta !== undefined) {
-            const cleanMeta = {};
-            for (const [key, value] of Object.entries(
-              queuedCommand.params.meta,
-            )) {
-              if (value !== undefined) {
-                cleanMeta[key] = value;
-              }
-            }
-
-            if (Object.keys(cleanMeta).length > 0) {
-              Object.assign(metaBatch[unitId].meta, cleanMeta);
-            }
+            // Just merge all meta updates - last one wins
+            Object.assign(metaBatch[unitId].meta, queuedCommand.params.meta);
           }
           if (queuedCommand.params.state) {
             metaBatch[unitId].state = queuedCommand.params.state;
