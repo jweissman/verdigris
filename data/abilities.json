@@ -1030,5 +1030,38 @@
         }
       }
     ]
+  },
+  "riddle": {
+    "name": "Sphinx's Riddle",
+    "cooldown": 100,
+    "trigger": "closest.ally() != null && distance(closest.ally()?.pos) <= 2",
+    "target": "closest.ally()",
+    "effects": [
+      {
+        "type": "buff",
+        "stat": "wisdom",
+        "duration": 50,
+        "meta": {
+          "riddleText": "Answer my riddle for wisdom...",
+          "interactionType": "dialogue"
+        }
+      }
+    ]
+  },
+  "teleport": {
+    "name": "Ancient Teleport",
+    "cooldown": 30,
+    "trigger": "distance(closest.enemy()?.pos) <= 3",
+    "target": "randomPos(self.pos.x, self.pos.y, 10)",
+    "effects": [
+      {
+        "type": "move",
+        "teleport": true,
+        "meta": {
+          "particles": "ancient_dust",
+          "sound": "phase_shift"
+        }
+      }
+    ]
   }
 }

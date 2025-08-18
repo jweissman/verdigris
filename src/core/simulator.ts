@@ -382,20 +382,30 @@ class Simulator {
   }
 
   addUnit(unit: Partial<Unit>): Unit {
-    const hp = unit.hp === undefined ? 100 : unit.hp;
+    // If type is provided, look up the unit definition
+    let baseUnit = unit;
+    if ((unit as any).type) {
+      const Encyclopaedia = require("../dmg/encyclopaedia").default;
+      const unitData = Encyclopaedia.unit((unit as any).type);
+      if (unitData) {
+        baseUnit = { ...unitData, ...unit };
+      }
+    }
+    
+    const hp = baseUnit.hp === undefined ? 100 : baseUnit.hp;
     let u = {
-      ...unit,
-      id: unit.id || `unit_${Date.now()}`,
+      ...baseUnit,
+      id: baseUnit.id || `unit_${Date.now()}`,
       hp: hp,
-      team: unit.team || "friendly",
-      pos: unit.pos || { x: 1, y: 1 },
-      intendedMove: unit.intendedMove || { x: 0, y: 0 },
-      maxHp: unit.maxHp || unit.hp || 100,
-      sprite: unit.sprite || "default",
-      state: unit.state || (hp <= 0 ? "dead" : "idle"),
-      mass: unit.mass || 1,
-      abilities: unit.abilities || [],
-      meta: unit.meta || {},
+      team: baseUnit.team || "friendly",
+      pos: baseUnit.pos || { x: 1, y: 1 },
+      intendedMove: baseUnit.intendedMove || { x: 0, y: 0 },
+      maxHp: baseUnit.maxHp || baseUnit.hp || 100,
+      sprite: baseUnit.sprite || "default",
+      state: baseUnit.state || (hp <= 0 ? "dead" : "idle"),
+      mass: baseUnit.mass || 1,
+      abilities: baseUnit.abilities || [],
+      meta: baseUnit.meta || {},
     } as Unit;
 
     const index = this.unitArrays.addUnit(u);

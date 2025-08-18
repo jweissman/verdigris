@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero Day - Gauntlet MWE</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: monospace;
+        }
+        #gameCanvas {
+            background: #222;
+            border: 2px solid #444;
+            image-rendering: pixelated;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+        }
+        .ability-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: white;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="controls">
+        <div>Arrow Keys: Move</div>
+        <div>Space: Jump (3x)</div>
+        <div>Shift + Down: Ground Pound</div>
+        <div>Z: Fast Slash Attack</div>
+        <div>X: Dash</div>
+    </div>
+    <div class="ability-indicator" id="abilityStatus"></div>
+
+    <script type="module">
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Gauntlet-style dungeon background
+        const TILE_SIZE = 32;
+        const MAP_WIDTH = 25;
+        const MAP_HEIGHT = 19;
+        
+        // Hero state
+        const hero = {
+            x: 400,
+            y: 300,
+            vx: 0,
+            vy: 0,
+            width: 24,
+            height: 32,
+            speed: 4,
+            jumpPower: -12,
+            jumpsRemaining: 3,
+            isGrounding: false,
+            groundPoundPower: 20,
+            isSlashing: false,
+            slashCooldown: 0,
+            dashCooldown: 0,
+            facing: 'right',
+            color: '#4CAF50',
+            grounded: true
+        };
+        
+        // Input handling
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            // Jump on space
+            if (e.key === ' ' && hero.jumpsRemaining > 0) {
+                hero.vy = hero.jumpPower;
+                hero.jumpsRemaining--;
+                hero.grounded = false;
+                e.preventDefault();
+            }
+            
+            // Fast slash on Z
+            if (e.key === 'z' && hero.slashCooldown <= 0) {
+                hero.isSlashing = true;
+                hero.slashCooldown = 20;
+            }
+            
+            // Dash on X
+            if (e.key === 'x' && hero.dashCooldown <= 0) {
+                hero.vx = hero.facing === 'right' ? 15 : -15;
+                hero.dashCooldown = 30;
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Draw dungeon tiles
+        function drawBackground() {
+            // Draw stone floor pattern
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid pattern
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                for (let y = 0; y < MAP_HEIGHT; y++) {
+                    ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    
+                    // Add some texture
+                    if ((x + y) % 2 === 0) {
+                        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+            }
+            
+            // Draw walls on edges
+            ctx.fillStyle = '#444';
+            // Top wall
+            ctx.fillRect(0, 0, canvas.width, TILE_SIZE);
+            // Bottom wall
+            ctx.fillRect(0, canvas.height - TILE_SIZE, canvas.width, TILE_SIZE);
+            // Left wall
+            ctx.fillRect(0, 0, TILE_SIZE, canvas.height);
+            // Right wall
+            ctx.fillRect(canvas.width - TILE_SIZE, 0, TILE_SIZE, canvas.height);
+        }
+        
+        // Draw hero
+        function drawHero() {
+            ctx.save();
+            
+            // Hero body
+            ctx.fillStyle = hero.color;
+            ctx.fillRect(hero.x - hero.width/2, hero.y - hero.height/2, hero.width, hero.height);
+            
+            // Draw slash effect
+            if (hero.isSlashing) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                const slashX = hero.facing === 'right' ? hero.x + 20 : hero.x - 20;
+                ctx.arc(slashX, hero.y, 25, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Draw ground pound effect
+            if (hero.isGrounding) {
+                ctx.strokeStyle = '#ff6b6b';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.arc(hero.x, hero.y + hero.height/2, 40, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Draw dash trail
+            if (hero.dashCooldown > 20) {
+                ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
+                const trailX = hero.facing === 'right' ? hero.x - 30 : hero.x + 30;
+                ctx.fillRect(trailX - hero.width/2, hero.y - hero.height/2, hero.width, hero.height);
+            }
+            
+            ctx.restore();
+        }
+        
+        // Update hero physics
+        function updateHero() {
+            // Horizontal movement
+            if (keys['ArrowLeft']) {
+                hero.vx = -hero.speed;
+                hero.facing = 'left';
+            } else if (keys['ArrowRight']) {
+                hero.vx = hero.speed;
+                hero.facing = 'right';
+            } else {
+                hero.vx *= 0.8; // Friction
+            }
+            
+            // Ground pound
+            if (keys['Shift'] && keys['ArrowDown'] && !hero.grounded) {
+                hero.isGrounding = true;
+                hero.vy = hero.groundPoundPower;
+            }
+            
+            // Gravity
+            if (!hero.grounded) {
+                hero.vy += 0.8;
+            }
+            
+            // Update position
+            hero.x += hero.vx;
+            hero.y += hero.vy;
+            
+            // Boundaries
+            const leftBound = TILE_SIZE + hero.width/2;
+            const rightBound = canvas.width - TILE_SIZE - hero.width/2;
+            const topBound = TILE_SIZE + hero.height/2;
+            const bottomBound = canvas.height - TILE_SIZE - hero.height/2;
+            
+            hero.x = Math.max(leftBound, Math.min(rightBound, hero.x));
+            hero.y = Math.max(topBound, Math.min(bottomBound, hero.y));
+            
+            // Ground detection
+            if (hero.y >= bottomBound) {
+                hero.y = bottomBound;
+                hero.vy = 0;
+                hero.grounded = true;
+                hero.jumpsRemaining = 3;
+                
+                if (hero.isGrounding) {
+                    // Ground pound impact
+                    hero.isGrounding = false;
+                }
+            }
+            
+            // Update cooldowns
+            if (hero.slashCooldown > 0) {
+                hero.slashCooldown--;
+                if (hero.slashCooldown === 15) {
+                    hero.isSlashing = false;
+                }
+            }
+            
+            if (hero.dashCooldown > 0) {
+                hero.dashCooldown--;
+            }
+        }
+        
+        // Update ability status display
+        function updateAbilityStatus() {
+            const status = document.getElementById('abilityStatus');
+            const abilities = [];
+            
+            if (hero.jumpsRemaining > 0) {
+                abilities.push(`Jumps: ${hero.jumpsRemaining}`);
+            }
+            if (hero.slashCooldown <= 0) {
+                abilities.push('Slash: Ready');
+            } else {
+                abilities.push(`Slash: ${hero.slashCooldown}`);
+            }
+            if (hero.dashCooldown <= 0) {
+                abilities.push('Dash: Ready');
+            } else {
+                abilities.push(`Dash: ${hero.dashCooldown}`);
+            }
+            
+            status.innerHTML = abilities.join('<br>');
+        }
+        
+        // Game loop
+        function gameLoop() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw everything
+            drawBackground();
+            drawHero();
+            
+            // Update
+            updateHero();
+            updateAbilityStatus();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start game
+        gameLoop();
+    </script>
+</body>
+</html>

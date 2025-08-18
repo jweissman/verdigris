@@ -934,5 +934,24 @@
       "armorPiercing": 8,
       "winchSpeed": 2
     }
+  },
+  "sphinx": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "neutral",
+    "sprite": "priest",
+    "state": "idle",
+    "hp": 100,
+    "maxHp": 100,
+    "mass": 2,
+    "dmg": 0,
+    "tags": ["noncombatant", "dialogue", "quest_giver", "ancient", "wise"],
+    "abilities": ["riddle", "teleport"],
+    "meta": {
+      "dialogueId": "sphinx_riddles",
+      "questId": "sphinx_challenge",
+      "interactable": true,
+      "facing": "down",
+      "description": "An ancient guardian who speaks in riddles"
+    }
   }
 }

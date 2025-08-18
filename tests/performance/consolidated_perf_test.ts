@@ -192,21 +192,36 @@ describe('Performance Test Suite', () => {
   });
 
   test('Performance summary', () => {
-    const sim = createTestSimulator(50);
-    const results = profileRules(sim, 100);
-    
-    console.log('\n' + formatPerformanceTable(results));
-    
+    const rounds = 10;
+    let ruleMedians = new Map();
+    let totalMedians = [];
 
-    let totalMedian = 0;
-    for (const [_, timing] of results) {
-      totalMedian += timing.median;
+    for (let round = 0; round < rounds; round++) {
+      const sim = createTestSimulator(50);
+      const results = profileRules(sim, 100);
+      let totalMedian = 0;
+      for (const [rule, timing] of results) {
+        totalMedian += timing.median;
+        if (!ruleMedians.has(rule)) ruleMedians.set(rule, []);
+        ruleMedians.get(rule).push(timing.median);
+      }
+      totalMedians.push(totalMedian);
     }
-    
+
+    // Build Map<string, {median: number, avg: number}> for formatPerformanceTable
+    const avgResults = new Map();
+    for (const [rule, medians] of ruleMedians.entries()) {
+      const avgMedian = medians.reduce((a, b) => a + b, 0) / medians.length;
+      avgResults.set(rule, { median: avgMedian, avg: avgMedian });
+    }
+
+    console.log('\n' + formatPerformanceTable(avgResults));
+
+    const avgTotalMedian = totalMedians.reduce((a, b) => a + b, 0) / totalMedians.length;
     console.log(`\nBudget: ${PerfBudgets.total_step_ms}ms`);
-    console.log(`Actual: ${totalMedian.toFixed(4)}ms`);
-    console.log(`Performance: ${((PerfBudgets.total_step_ms / totalMedian) * 100).toFixed(0)}% of budget used`);
-    
-    expect(totalMedian).toBeLessThan(PerfBudgets.total_step_ms);
+    console.log(`Actual: ${avgTotalMedian.toFixed(4)}ms (avg of ${rounds} rounds)`);
+  console.log(`Performance: ${((avgTotalMedian / PerfBudgets.total_step_ms) * 100).toFixed(0)}% of budget used`);
+
+    expect(avgTotalMedian).toBeLessThan(PerfBudgets.total_step_ms);
   });
 });

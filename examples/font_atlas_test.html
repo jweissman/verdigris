@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Atlas Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: monospace;
+        }
+        canvas {
+            border: 1px solid #333;
+            display: block;
+            margin: 20px 0;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #666;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #444;
+        }
+        #status {
+            padding: 10px;
+            background: #111;
+            border: 1px solid #333;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Font Atlas Loading Test</h1>
+    <div id="status">Status: Initializing...</div>
+    
+    <div class="controls">
+        <button onclick="fontAtlas.generateAtlas()">Generate Atlas</button>
+        <button onclick="fontAtlas.testRender()">Test Render Text</button>
+        <button onclick="fontAtlas.showAtlas()">Show Atlas</button>
+    </div>
+    
+    <canvas id="atlasCanvas" width="512" height="512"></canvas>
+    <canvas id="testCanvas" width="800" height="200"></canvas>
+
+    <script>
+        class FontAtlas {
+            constructor() {
+                this.canvas = document.getElementById('atlasCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.testCanvas = document.getElementById('testCanvas');
+                this.testCtx = this.testCanvas.getContext('2d');
+                
+                this.characters = '';
+                // Generate ASCII printable characters
+                for (let i = 32; i < 127; i++) {
+                    this.characters += String.fromCharCode(i);
+                }
+                
+                this.charMap = new Map();
+                this.fontSize = 24;
+                this.font = `${this.fontSize}px monospace`;
+                this.atlasGenerated = false;
+                
+                this.updateStatus('Font Atlas initialized');
+            }
+            
+            updateStatus(message) {
+                document.getElementById('status').textContent = `Status: ${message}`;
+            }
+            
+            generateAtlas() {
+                this.updateStatus('Generating font atlas...');
+                
+                // Setup canvas
+                this.ctx.fillStyle = 'transparent';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Setup font
+                this.ctx.font = this.font;
+                this.ctx.fillStyle = 'white';
+                this.ctx.textBaseline = 'top';
+                
+                let x = 0;
+                let y = 0;
+                const padding = 2;
+                let maxHeight = 0;
+                
+                // Measure and draw each character
+                for (const char of this.characters) {
+                    const metrics = this.ctx.measureText(char);
+                    const width = Math.ceil(metrics.width);
+                    const height = this.fontSize + padding * 2;
+                    
+                    // Check if we need to wrap to next row
+                    if (x + width + padding > this.canvas.width) {
+                        x = 0;
+                        y += maxHeight + padding;
+                        maxHeight = 0;
+                    }
+                    
+                    // Draw character
+                    this.ctx.fillText(char, x + padding, y + padding);
+                    
+                    // Store character mapping
+                    this.charMap.set(char, {
+                        x: x,
+                        y: y,
+                        width: width + padding * 2,
+                        height: height,
+                        char: char
+                    });
+                    
+                    x += width + padding * 2;
+                    maxHeight = Math.max(maxHeight, height);
+                }
+                
+                this.atlasGenerated = true;
+                this.updateStatus('Font atlas generated successfully!');
+                
+                // Show some stats
+                console.log(`Atlas generated with ${this.charMap.size} characters`);
+                console.log('Character map:', this.charMap);
+            }
+            
+            renderText(text, x, y, targetCanvas = this.testCanvas) {
+                if (!this.atlasGenerated) {
+                    this.updateStatus('Error: Generate atlas first!');
+                    return;
+                }
+                
+                const ctx = targetCanvas.getContext('2d');
+                let currentX = x;
+                
+                for (const char of text) {
+                    const charData = this.charMap.get(char);
+                    if (charData) {
+                        // Copy character from atlas to target canvas
+                        ctx.drawImage(
+                            this.canvas,
+                            charData.x, charData.y, charData.width, charData.height,
+                            currentX, y, charData.width, charData.height
+                        );
+                        currentX += charData.width;
+                    } else {
+                        // Character not in atlas, skip with space
+                        currentX += this.fontSize / 2;
+                    }
+                }
+            }
+            
+            testRender() {
+                if (!this.atlasGenerated) {
+                    this.generateAtlas();
+                }
+                
+                // Clear test canvas
+                this.testCtx.fillStyle = '#222';
+                this.testCtx.fillRect(0, 0, this.testCanvas.width, this.testCanvas.height);
+                
+                // Render sample texts
+                const sampleTexts = [
+                    'Hello, Font Atlas!',
+                    'The quick brown fox jumps over the lazy dog',
+                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                    'abcdefghijklmnopqrstuvwxyz',
+                    '0123456789 !@#$%^&*()',
+                    'Testing: 1, 2, 3... Success!'
+                ];
+                
+                let yPos = 20;
+                for (const text of sampleTexts) {
+                    this.renderText(text, 10, yPos);
+                    yPos += 30;
+                }
+                
+                this.updateStatus('Test render complete!');
+            }
+            
+            showAtlas() {
+                if (!this.atlasGenerated) {
+                    this.generateAtlas();
+                }
+                
+                // Draw grid overlay to show character boundaries
+                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                this.ctx.lineWidth = 1;
+                
+                for (const [char, data] of this.charMap) {
+                    this.ctx.strokeRect(data.x, data.y, data.width, data.height);
+                }
+                
+                this.updateStatus('Atlas grid overlay shown');
+            }
+            
+            // Save atlas as image
+            saveAtlas() {
+                const link = document.createElement('a');
+                link.download = 'font-atlas.png';
+                link.href = this.canvas.toDataURL();
+                link.click();
+                this.updateStatus('Atlas saved as image');
+            }
+            
+            // Get character UV coordinates for WebGL usage
+            getCharacterUV(char) {
+                const data = this.charMap.get(char);
+                if (!data) return null;
+                
+                return {
+                    u1: data.x / this.canvas.width,
+                    v1: data.y / this.canvas.height,
+                    u2: (data.x + data.width) / this.canvas.width,
+                    v2: (data.y + data.height) / this.canvas.height,
+                    width: data.width,
+                    height: data.height
+                };
+            }
+        }
+        
+        // Initialize font atlas
+        const fontAtlas = new FontAtlas();
+        
+        // Auto-generate on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                fontAtlas.generateAtlas();
+                fontAtlas.testRender();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

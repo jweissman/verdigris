@@ -337,6 +337,9 @@ export class Abilities extends Rule {
       case "terrain":
         this.modifyTerrain(context, effect, caster, primaryTarget);
         break;
+      case "move":
+        this.move(context, effect, caster, primaryTarget);
+        break;
       default:
         console.warn(`Abilities: Unknown effect type ${effect.type}`);
         throw new Error(`Unknown effect type: ${effect.type}`);
@@ -1078,6 +1081,46 @@ export class Abilities extends Rule {
         },
       },
     });
+  }
+
+  private move(
+    context: TickContext,
+    effect: AbilityEffect,
+    caster: any,
+    primaryTarget: any,
+  ): void {
+    const target = this.resolveTarget(
+      context,
+      effect.target || "target",
+      caster,
+      primaryTarget,
+    );
+    if (!target) return;
+
+    const pos = target.pos || target;
+    const teleport = (effect as any).teleport || false;
+
+    if (teleport) {
+      // Teleport instantly
+      this.commands.push({
+        type: "teleport",
+        params: {
+          unitId: caster.id,
+          x: pos.x,
+          y: pos.y,
+        },
+      });
+    } else {
+      // Normal move
+      this.commands.push({
+        type: "move",
+        params: {
+          unitId: caster.id,
+          dx: pos.x - caster.pos.x,
+          dy: pos.y - caster.pos.y,
+        },
+      });
+    }
   }
 
   private modifyTerrain(
