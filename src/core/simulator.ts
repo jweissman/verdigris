@@ -541,6 +541,7 @@ class Simulator {
     }
 
     const context = new TickContextImpl(this);
+    context.clearCache(); // Clear any cached data from previous tick
 
     for (const rule of this.rulebook) {
       const ruleName = rule.constructor.name;

@@ -23,20 +23,9 @@ export class MetaCommand extends Command {
     const updates: any = {};
 
     if (params.meta) {
-      const unit = this.sim.units.find((u) => u.id === targetId);
-      if (unit) {
-        // Start with existing meta
-        updates.meta = { ...unit.meta };
-        
-        // Apply updates, treating undefined as "delete"
-        for (const [key, value] of Object.entries(params.meta)) {
-          if (value === undefined) {
-            delete updates.meta[key];
-          } else {
-            updates.meta[key] = value;
-          }
-        }
-      }
+      // Pass meta directly to transform.updateUnit
+      // The transform will handle merging with existing meta
+      updates.meta = params.meta;
     }
 
     if (params.state) {

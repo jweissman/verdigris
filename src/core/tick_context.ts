@@ -59,6 +59,7 @@ export interface TickContext {
   findUnitIndicesInRadius(center: Vec2, radius: number): number[];
   getActiveUnitIndices(): number[];
   getUnitIndicesWithAbilities(): number[];
+  getUnitProxyByIndex?(index: number): Unit | undefined;
 }
 
 /**
@@ -278,5 +279,9 @@ export class TickContextImpl implements TickContext {
     }
     
     return indices;
+  }
+
+  getUnitProxyByIndex(index: number): Unit | undefined {
+    return (this.sim as any).proxyManager?.getProxy(index);
   }
 }
