@@ -7,12 +7,15 @@ import * as abilitiesJson from "../../data/abilities.json";
 import type { TickContext } from "../core/tick_context";
 import type { QueuedCommand } from "./command_handler";
 import { UnitProxy } from "../sim/unit_proxy";
+import { getCompiledExpression } from "./precompiled_expressions";
 
 export class Abilities extends Rule {
   // @ts-ignore
   static all: { [key: string]: Ability } = abilitiesJson as any;
 
   private static abilityCache = new Map<string, Ability | undefined>();
+  private static compiledTriggers = new Map<string, Function>();
+  private static compiledTargets = new Map<string, Function>();
 
   private commands: QueuedCommand[] = [];
   private cachedAllUnits: readonly Unit[] = []; // Cache for current execution
@@ -22,7 +25,24 @@ export class Abilities extends Rule {
 
     if (Abilities.abilityCache.size === 0) {
       for (const name in Abilities.all) {
-        Abilities.abilityCache.set(name, Abilities.all[name]);
+        const ability = Abilities.all[name];
+        Abilities.abilityCache.set(name, ability);
+        
+        // Precompile triggers
+        if (ability.trigger) {
+          const compiled = getCompiledExpression(ability.trigger);
+          if (compiled) {
+            Abilities.compiledTriggers.set(name, compiled);
+          }
+        }
+        
+        // Precompile targets  
+        if (ability.target) {
+          const compiled = getCompiledExpression(ability.target);
+          if (compiled) {
+            Abilities.compiledTargets.set(name, compiled);
+          }
+        }
       }
     }
   }
@@ -130,13 +150,20 @@ export class Abilities extends Rule {
 
         if (ability.trigger) {
           try {
-            shouldTrigger = DSL.evaluate(
-              ability.trigger,
-              unit,
-              context,
-              undefined,
-              allUnits,
-            );
+            // Use precompiled function if available
+            const compiledTrigger = Abilities.compiledTriggers.get(abilityName);
+            if (compiledTrigger) {
+              shouldTrigger = compiledTrigger(unit, context);
+            } else {
+              // Fallback to DSL.evaluate for complex expressions
+              shouldTrigger = DSL.evaluate(
+                ability.trigger,
+                unit,
+                context,
+                undefined,
+                allUnits,
+              );
+            }
           } catch (error) {
             continue;
           }

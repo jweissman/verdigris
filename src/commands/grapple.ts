@@ -57,9 +57,9 @@ export class Grapple extends Command {
 
     const maxRange = 8; // Default range for grappling hook
     if (distance > maxRange) {
-      console.error(
-        `Target at (${targetX}, ${targetY}) is out of range for ${grappler.id} (distance: ${distance.toFixed(1)}, max: ${maxRange})`,
-      );
+      // console.error(
+      //   `Target at (${targetX}, ${targetY}) is out of range for ${grappler.id} (distance: ${distance.toFixed(1)}, max: ${maxRange})`,
+      // );
       return;
     }
 

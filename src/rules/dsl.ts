@@ -4,9 +4,23 @@ import { Vec2 } from "../types/Vec2";
 
 export default class DSL {
   private static expressionCache = new Map<string, any>();
+  private static compiledCache = new Map<string, Function>();
   
   static clearCache() {
     this.expressionCache.clear();
+  }
+
+  static compile(expression: string): (subject: Unit, context: TickContext, target?: any) => any {
+    if (this.compiledCache.has(expression)) {
+      return this.compiledCache.get(expression) as (subject: Unit, context: TickContext, target?: any) => any;
+    }
+
+    const fn = (subject: Unit, context: TickContext, target?: any) => {
+      return DSL.evaluate(expression, subject, context, target);
+    };
+
+    this.compiledCache.set(expression, fn);
+    return fn;
   }
 
   static noun = (

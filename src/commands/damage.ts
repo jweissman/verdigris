@@ -18,12 +18,10 @@ export class Damage extends Command {
 
     const target = this.sim.units.find((u) => u.id === targetId);
     if (!target) {
-      console.warn(`Damage command: target ${targetId} not found`);
       return;
     }
 
     if (typeof amount !== "number" || isNaN(amount)) {
-      console.warn(`Damage command: invalid amount ${amount}`);
       return;
     }
 
