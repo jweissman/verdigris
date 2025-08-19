@@ -401,15 +401,19 @@ export class DSLCompiler {
    */
   private generateOptimized(ast: ASTNode, expression: string): (unit: Unit, context: TickContext) => any {
     try {
-      // For very simple expressions, generate direct code
-      if (this.isSimpleExpression(expression)) {
-        const jsCode = this.astToDirectJS(ast);
-        const functionBody = `return ${jsCode};`;
+      // For simple expressions without helpers, use direct code
+      if (!expression.includes('closest') && !expression.includes('distance') && 
+          !expression.includes('weakest') && !expression.includes('healthiest') &&
+          !expression.includes('enemies') && !expression.includes('allies') &&
+          !expression.includes('pick') && !expression.includes('centroid')) {
+        // Simple property access like 'self.hp > 5'
+        const js = expression.replace(/\bself\b/g, 'unit').replace(/\btarget\b/g, 'unit');
+        const functionBody = `return ${js};`;
         return new Function('unit', 'context', functionBody) as any;
       }
       
-      // For complex expressions with helpers, use inline code
-      const jsCode = this.astToInlineJS(ast);
+      // For complex expressions, use the full AST-based generation
+      const jsCode = this.astToJS(ast);
       const functionBody = `return ${jsCode};`;
       return new Function('unit', 'context', functionBody) as any;
     } catch (e) {
@@ -726,21 +730,20 @@ export class DSLCompiler {
           case 'target':
             return 'unit';
           case 'closest':
-            return '{ enemy: _findClosestEnemy, ally: _findClosestAlly }';
+            // Use the inline version from astToInlineJS
+            return this.astToInlineJS(node);
           case 'weakest':
-            return '{ ally: _findWeakestAlly }';
-          case 'strongest':
-            return '{ enemy: _findStrongestEnemy }';
+            return this.astToInlineJS(node);
           case 'healthiest':
-            return '{ enemy: _findHealthiestEnemy, enemy_in_range: _findHealthiestEnemyInRange }';
+            return this.astToInlineJS(node);
           case 'centroid':
-            return '{ wounded_allies: _centroidWoundedAllies, allies: _centroidAllies, enemies: _centroidEnemies }';
+            return this.astToInlineJS(node);
           case 'Math':
             return 'Math';
           case 'enemies':
-            return '_units().filter(u => u.team !== unit.team && u.state !== "dead")';
+            return '(context.cachedUnits || context.getAllUnits()).filter(u => u.team !== unit.team && u.state !== "dead")';
           case 'allies':
-            return '_units().filter(u => u.team === unit.team && u.id !== unit.id && u.state !== "dead")';
+            return '(context.cachedUnits || context.getAllUnits()).filter(u => u.team === unit.team && u.id !== unit.id && u.state !== "dead")';
           default:
             return node.name;
         }
@@ -755,14 +758,22 @@ export class DSLCompiler {
       
       case 'call':
         if (node.func === 'distance') {
-          return `_distance(${this.astToJS(node.args[0])})`;
+          const target = this.astToJS(node.args[0]);
+          return `((t) => {
+            if (!t) return Infinity;
+            const dx = (t.pos ? t.pos.x : t.x) - unit.pos.x;
+            const dy = (t.pos ? t.pos.y : t.y) - unit.pos.y;
+            return Math.sqrt(dx * dx + dy * dy);
+          })(${target})`;
         }
         if (node.func === 'pick') {
           const arrArg = node.args[0];
           if (arrArg.type === 'literal' && Array.isArray(arrArg.value)) {
-            return `_pick(${JSON.stringify(arrArg.value)})`;
+            const arr = JSON.stringify(arrArg.value);
+            return `(${arr})[Math.floor((context.getRandom ? context.getRandom() : Math.random()) * ${arr}.length)]`;
           }
-          return `_pick(${this.astToJS(arrArg)})`;
+          const arr = this.astToJS(arrArg);
+          return `((arr) => arr[Math.floor((context.getRandom ? context.getRandom() : Math.random()) * arr.length)])(${arr})`;
         }
         if (node.func === 'method') {
           const obj = this.astToJS(node.args[0]);
