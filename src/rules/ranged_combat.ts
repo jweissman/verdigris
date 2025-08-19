@@ -44,16 +44,20 @@ export class RangedCombat extends Rule {
       const unitY = posY[idx];
       
       let closestEnemyIdx = -1;
-      let minDistSq = Infinity;
+      let minDistSq = 100; // 10² - max range squared
       
-      // Scan all units for enemies
+      // Scan all units for enemies within range
       for (const enemyIdx of activeIndices) {
+        if (enemyIdx === idx) continue;
         if (state[enemyIdx] === 5 || hp[enemyIdx] <= 0) continue;
         if (team[enemyIdx] === unitTeam) continue; // Same team
         
         const dx = posX[enemyIdx] - unitX;
         const dy = posY[enemyIdx] - unitY;
         const distSq = dx * dx + dy * dy;
+        
+        // Skip if too close or too far
+        if (distSq <= 4 || distSq > 100) continue; // 2² to 10²
         
         if (distSq < minDistSq) {
           minDistSq = distSq;
@@ -63,11 +67,6 @@ export class RangedCombat extends Rule {
       
       // No enemy found
       if (closestEnemyIdx === -1) continue;
-      
-      const dist = Math.sqrt(minDistSq);
-      
-      // Check range (2 < dist <= 10)
-      if (dist <= 2 || dist > 10) continue;
       
       // Calculate projectile velocity
       const enemyX = posX[closestEnemyIdx];
