@@ -40,6 +40,14 @@ export interface AbilityEffect {
   color?: string;
   size?: ValueExpression;
   stagger?: ValueExpression;
+  
+  speed?: ValueExpression;
+  style?: string;
+  effect?: string; // Backwards compat for single effect
+  weather?: string; // Backwards compat for weatherType
+  unitType?: string; // For summon effects
+  center?: ValueExpression;
+  lifetime?: ValueExpression;
 
   effects?: AbilityEffect[]; // For nested effects (cone, area effects)
   effectsToRemove?: string[]; // For cleanse effect - list of effect names to remove

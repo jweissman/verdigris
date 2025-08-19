@@ -83,7 +83,7 @@ class Simulator {
 
   private changedUnits: Set<string> = new Set();
 
-  private gridPartition: GridPartition;
+  public gridPartition: GridPartition;
 
   public proxyManager: UnitProxyManager;
 

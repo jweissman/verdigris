@@ -50,6 +50,7 @@ export interface TickContext {
     hp: number[];
     maxHp: number[];
     mass: number[];
+    dmg: number[];
   };
   getUnitColdData(unitId: string): any;
   getUnitColdDataByIndex(index: number): any;
@@ -215,6 +216,9 @@ export class TickContextImpl implements TickContext {
     state: number[];
     unitIds: string[];
     hp: number[];
+    maxHp: number[];
+    mass: number[];
+    dmg: number[];
   } {
     const arrays = (this.sim as any).unitArrays;
     return {
@@ -227,6 +231,7 @@ export class TickContextImpl implements TickContext {
       hp: arrays.hp,
       maxHp: arrays.maxHp,
       mass: arrays.mass,
+      dmg: arrays.dmg,
     };
   }
 

@@ -2,10 +2,13 @@ import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
 import type { Unit } from "../types/Unit";
 import type { QueuedCommand } from "./command_handler";
+import { ArrayGridPartition } from "../core/array_grid_partition";
 
 export class MeleeCombat extends Rule {
   private engagements: Map<string, string> = new Map();
   private lastAttacks: Map<string, number> = new Map();
+  private spatialGrid: ArrayGridPartition | null = null;
+  private lastRebuildTick: number = -1;
 
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
@@ -50,6 +53,19 @@ export class MeleeCombat extends Rule {
     const coldData = (context as any).sim?.unitColdData;
 
     if (arrays && coldData) {
+      // Initialize spatial grid if needed
+      if (!this.spatialGrid) {
+        // Estimate field size from typical game dimensions
+        this.spatialGrid = new ArrayGridPartition(100, 100, 4);
+      }
+      
+      // Only rebuild spatial grid once per tick
+      const currentTick = context.getCurrentTick();
+      if (this.lastRebuildTick !== currentTick) {
+        this.spatialGrid.rebuild(arrays);
+        this.lastRebuildTick = currentTick;
+      }
+
       for (const i of arrays.activeIndices) {
         if (arrays.state[i] === 3 || arrays.hp[i] <= 0) continue;
 
@@ -64,7 +80,10 @@ export class MeleeCombat extends Rule {
         const y1 = arrays.posY[i];
         const team1 = arrays.team[i];
 
-        for (const j of arrays.activeIndices) {
+        // Use spatial grid to find nearby units
+        const nearbyIndices = this.spatialGrid.getNearbyIndices(x1, y1, meleeRange);
+        
+        for (const j of nearbyIndices) {
           if (i === j || arrays.state[j] === 3 || arrays.hp[j] <= 0) continue;
           if (team1 === arrays.team[j]) continue;
 
