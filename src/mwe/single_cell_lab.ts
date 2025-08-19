@@ -157,7 +157,7 @@ export default class SingleCellLab {
       state: "idle" as any,
       hp: 1,
       maxHp: 1,
-      abilities: {},
+      abilities: [],
       tags: ["marker"],
       meta: {},
     });
@@ -179,7 +179,7 @@ export default class SingleCellLab {
       state: "idle" as any,
       hp: 30,
       maxHp: 30,
-      abilities: {},
+      abilities: [],
       tags: [type],
       meta: {},
     };
@@ -214,7 +214,7 @@ export default class SingleCellLab {
         type === "rain" ? "#4444FF" : type === "snow" ? "#FFFFFF" : "#FFFF00",
       lifetime: 100,
       z: type === "lightning" ? 0 : 10,
-      type: type,
+      type: type as any, // Cast to any since this is a test tool
     };
 
     this.sim.particles.push(particle);

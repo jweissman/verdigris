@@ -25,7 +25,7 @@ describe('DSL Compiler Comprehensive Tests', () => {
     getFieldHeight: () => 100,
     getCurrentTick: () => 0,
     findUnitById: (id: string) => units.find(u => u.id === id) || null,
-  } as TickContext);
+  } as unknown as TickContext); // Mock doesn't implement full interface
 
   describe('Math expressions', () => {
     it('should evaluate Math.floor', () => {
