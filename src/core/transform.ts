@@ -1,5 +1,7 @@
 import { Unit } from "../types/Unit";
 import { Simulator } from "./simulator";
+import { Action } from "../types/Action";
+import { Projectile } from "../types/Projectile";
 
 /**
  * Transform object that provides controlled mutation access
@@ -118,16 +120,11 @@ export class Transform {
    */
   updateUnits(updates: Map<string, Partial<Unit>>): void {
     const units = this.getWorkingCopy();
-    let hasChanges = false;
     for (const unit of units) {
       const changes = updates.get(unit.id);
       if (changes) {
         Object.assign(unit, changes);
-        hasChanges = true;
       }
-    }
-    if (hasChanges) {
-      this.setUnits(units);
     }
   }
 

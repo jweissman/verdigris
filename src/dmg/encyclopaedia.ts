@@ -6,7 +6,7 @@ export default class Encyclopaedia {
   static abilities = abilitiesJson;
 
   static bestiary: { [key: string]: Partial<Unit> } = {
-    ...units,
+    ...(units as { [key: string]: Partial<Unit> }),
   };
 
   static counts: { [seriesName: string]: number } = {};
