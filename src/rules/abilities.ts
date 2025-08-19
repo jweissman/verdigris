@@ -92,6 +92,30 @@ export class Abilities extends Rule {
     }
 
     this.cachedAllUnits = allUnits; // Cache for DSL operations
+    
+    // Quick check: are there even any hostile units? If not, skip all combat abilities
+    const hostileUnits = allUnits.filter(u => u.team === 'hostile' && u.state !== 'dead' && u.hp > 0);
+    const friendlyUnits = allUnits.filter(u => u.team === 'friendly' && u.state !== 'dead' && u.hp > 0);
+    
+    const hasEnemies = hostileUnits.length > 0 && friendlyUnits.length > 0;
+    
+    // Quick spatial check: is ANY enemy within max combat range (10 for ranged)?
+    let anyEnemyInRange = false;
+    if (hasEnemies) {
+      const MAX_COMBAT_RANGE = 10; // Max range for any combat ability
+      const MAX_COMBAT_RANGE_SQ = MAX_COMBAT_RANGE * MAX_COMBAT_RANGE;
+      
+      outer: for (const friendly of friendlyUnits) {
+        for (const hostile of hostileUnits) {
+          const dx = friendly.pos.x - hostile.pos.x;
+          const dy = friendly.pos.y - hostile.pos.y;
+          if (dx * dx + dy * dy <= MAX_COMBAT_RANGE_SQ) {
+            anyEnemyInRange = true;
+            break outer;
+          }
+        }
+      }
+    }
 
     for (const unit of relevantUnits) {
       // Already filtered for dead units above
@@ -127,7 +151,12 @@ export class Abilities extends Rule {
       const lastAbilityTick = unit.lastAbilityTick; // Cache property access
 
       for (const abilityName of abilities) {
-        const ability = this.ability(abilityName);
+        // Super fast path - skip known combat abilities if no enemies in range
+        if (!anyEnemyInRange && (abilityName === 'melee' || abilityName === 'ranged')) {
+          continue;
+        }
+        
+        const ability = Abilities.abilityCache.get(abilityName);
         if (!ability) {
           continue;
         }
@@ -197,7 +226,7 @@ export class Abilities extends Rule {
           }
         }
 
-        // Process effects inline for better performance
+        // Process effects inline
         for (const effect of ability.effects) {
           this.processEffectAsCommand(context, effect, unit, target);
         }
@@ -220,6 +249,54 @@ export class Abilities extends Rule {
     return this.commands;
   }
 
+  effectToCommand(effect: AbilityEffect, caster: any, target: any): QueuedCommand | null {
+    const targetId = target?.id;
+    const targetPos = target?.pos || target;
+    
+    switch (effect.type) {
+      case "damage":
+        if (!targetId) return null;
+        return {
+          type: "damage",
+          params: {
+            targetId,
+            amount: effect.amount || 0,
+            sourceId: caster.id
+          }
+        };
+        
+      case "heal":
+        if (!targetId) return null;
+        return {
+          type: "heal",
+          params: {
+            targetId,
+            amount: effect.amount || 0,
+            sourceId: caster.id
+          }
+        };
+        
+      case "projectile":
+        return {
+          type: "projectile",
+          params: {
+            origin: caster.pos,
+            destination: targetPos,
+            speed: effect.speed || 1,
+            damage: effect.damage || 0,
+            casterId: caster.id,
+            targetId: targetId,
+            effect: effect.effect,
+            style: effect.style || "bullet"
+          }
+        };
+        
+      default:
+        // For now, skip other effect types
+        return null;
+    }
+  }
+  
   processEffectAsCommand(
     context: TickContext,
     effect: AbilityEffect,
