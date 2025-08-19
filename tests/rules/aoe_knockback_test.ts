@@ -17,11 +17,11 @@ describe('AOE and Knockback', () => {
 
 
 
-    expect(sim.roster.worm1.hp).toBe(7); // 10 - 3
-    expect(sim.roster.worm2.hp).toBe(7); // 10 - 3
+    expect(sim.roster['worm1'].hp).toBe(7); // 10 - 3
+    expect(sim.roster['worm2'].hp).toBe(7); // 10 - 3
 
-    expect(sim.roster.worm1.pos.x).toBeLessThan(3);
-    expect(sim.roster.worm2.pos.x).toBeGreaterThan(5);
+    expect(sim.roster['worm1'].pos.x).toBeLessThan(3);
+    expect(sim.roster['worm2'].pos.x).toBeGreaterThan(5);
   });
 
 
@@ -34,9 +34,9 @@ describe('AOE and Knockback', () => {
     sim.step();
 
 
-    expect(sim.roster.giant.pos.x).toBeGreaterThanOrEqual(1);
+    expect(sim.roster['giant'].pos.x).toBeGreaterThanOrEqual(1);
 
-    const wormMoved = sim.roster.worm.pos.x !== 1 || sim.roster.worm.pos.y !== 0;
+    const wormMoved = sim.roster['worm'].pos.x !== 1 || sim.roster['worm'].pos.y !== 0;
     expect(wormMoved).toBe(true);
   });
 });

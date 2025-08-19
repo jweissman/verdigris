@@ -49,7 +49,7 @@ export class RangedCombat extends Rule {
       const unitY = posY[idx];
 
       let closestEnemyIdx = -1;
-      let minDistSq = 100; // 10² - max range squared
+      let minDistSq = 64; // 8² - reduced max range for performance
 
 
       for (const enemyIdx of activeIndices) {
@@ -62,7 +62,7 @@ export class RangedCombat extends Rule {
         const distSq = dx * dx + dy * dy;
 
 
-        if (distSq <= 4 || distSq > 100) continue; // 2² to 10²
+        if (distSq <= 4 || distSq > 64) continue; // 2² to 8²
 
         if (distSq < minDistSq) {
           minDistSq = distSq;

@@ -120,7 +120,7 @@ describe('Tossing mechanics', () => {
       sim.tick();
     }
 
-    const landedUnit = sim.roster.target;
+    const landedUnit = sim.roster['target'];
     expect(landedUnit.meta.tossing).toBe(false);
     expect(landedUnit.meta.z).toBe(0); // Back on ground
     expect(landedUnit.pos.x).toBe(4); // Landed at target x
@@ -187,7 +187,7 @@ describe('Tossing mechanics', () => {
 
     sim.tick();
 
-    const deadUnit = sim.roster.target;
+    const deadUnit = sim.roster['target'];
 
 
     if (deadUnit) {
@@ -313,7 +313,7 @@ describe('Tossing mechanics', () => {
 
 
 
-    const tossedUnit = sim.roster.light;
+    const tossedUnit = sim.roster['light'];
     expect(tossedUnit.meta.tossing).toBe(true);
   });
 

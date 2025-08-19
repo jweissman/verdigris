@@ -22,7 +22,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('skeleton'),
         id: 'enemy1',
         pos: { x: 15, y: 10 },
-        team: 'hostile'
+        team: 'hostile' as const
       };
       
       sim.addUnit(druid);
@@ -67,7 +67,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('skeleton'),
         id: 'enemy1',
         pos: { x: 12, y: 10 },
-        team: 'hostile'
+        team: 'hostile' as const
       };
       
       sim.addUnit(druid);
@@ -115,7 +115,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('giant-sandworm'),
         id: 'megabeast1',
         pos: { x: naturalist.pos.x + 2, y: naturalist.pos.y }, // Within range (distance 2, ability range is 3)
-        team: 'hostile',
+        team: 'hostile' as const,
         tags: ['megabeast', 'titan'] // Ensure it has megabeast tag
       };
       
@@ -164,7 +164,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('bear'),
         id: 'bear1',
         pos: { x: naturalist.pos.x + 1, y: naturalist.pos.y }, // Very close
-        team: 'hostile',
+        team: 'hostile' as const as const,
         intendedMove: { x: -1, y: 0 }, // Moving toward naturalist
         tags: ['animal', 'beast', 'forest'] // Ensure proper tags
       };
@@ -173,7 +173,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('owl'),
         id: 'owl1',
         pos: { x: naturalist.pos.x, y: naturalist.pos.y + 1 }, // Adjacent
-        team: 'hostile',
+        team: 'hostile' as const as const,
         intendedMove: { x: 0, y: -1 },
         tags: ['animal', 'beast', 'flying', 'forest']
       };
@@ -223,7 +223,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('squirrel'),
         id: 'squirrel1',
         pos: { x: 12, y: 10 },
-        team: 'hostile'
+        team: 'hostile' as const
       };
       
       sim.addUnit(naturalist);
@@ -266,7 +266,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('giant-sandworm'),
         id: 'worm1',
         pos: { x: naturalist.pos.x + 2, y: naturalist.pos.y }, // Within taming range
-        team: 'hostile' as const
+        team: 'hostile' as const as const
       };
 
       if (!giantWorm.tags) giantWorm.tags = [];
@@ -279,7 +279,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('skeleton'),
         id: 'skeleton1',
         pos: { x: druid.pos.x + 3, y: druid.pos.y }, // Near druid but not too close
-        team: 'hostile' as const
+        team: 'hostile' as const as const
       };
       
 

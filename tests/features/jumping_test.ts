@@ -10,7 +10,7 @@ describe('Jumping mechanics', () => {
       id: 'worm1',
       pos: { x: 0, y: 0 },
       abilities: ['jumps'],
-      team: 'hostile' // Ensure worm is hostile
+      team: 'hostile' as const // Ensure worm is hostile
     };
     sim.addUnit(worm);
     const enemy = sim.addUnit({

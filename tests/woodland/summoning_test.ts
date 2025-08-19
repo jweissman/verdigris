@@ -22,7 +22,7 @@ describe('Woodland Summoning', () => {
         pos: { x: 5 + i * 3, y: 10 },
         hp: 8,
         maxHp: 8,
-        team: 'neutral'
+        team: 'neutral' as const
       };
       sim.addUnit(squirrel);
     }
@@ -97,7 +97,7 @@ describe('Woodland Summoning', () => {
         pos: { x: (i % 5) * 4 + 2, y: Math.floor(i / 5) * 4 + 2 },
         hp: 8,
         maxHp: 8,
-        team: 'neutral'
+        team: 'neutral' as const
       };
       sim.addUnit(creature);
     }
@@ -143,7 +143,7 @@ describe('Woodland Summoning', () => {
         pos: { x: 5 + i * 2, y: 5 },
         hp: 8,
         maxHp: 8,
-        team: 'neutral'
+        team: 'neutral' as const
       };
       sim.addUnit(squirrel);
     }
