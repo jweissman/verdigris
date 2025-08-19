@@ -70,30 +70,33 @@ export class EnvironmentManager {
   }
 
   addHeat(x: number, y: number, intensity: number, radius: number = 2): void {
-    this.temperatureField.addValue(x, y, intensity, radius);
+    this.temperatureField.addGradient(x, y, radius, intensity);
   }
 
   addMoisture(x: number, y: number, amount: number, radius: number = 1): void {
-    this.humidityField.addValue(x, y, amount, radius);
+    this.humidityField.addGradient(x, y, radius, amount);
   }
 
   getTemperatureAt(x: number, y: number): number {
-    return this.temperatureField.getValue(x, y);
+    return this.temperatureField.get(x, y);
   }
 
   getHumidityAt(x: number, y: number): number {
-    return this.humidityField.getValue(x, y);
+    return this.humidityField.get(x, y);
   }
 
   updateScalarFields(): void {
     if (this._temperatureField) {
-      this._temperatureField.update();
+      this._temperatureField.diffuse();
+      this._temperatureField.decay();
     }
     if (this._humidityField) {
-      this._humidityField.update();
+      this._humidityField.diffuse();
+      this._humidityField.decay();
     }
     if (this._pressureField) {
-      this._pressureField.update();
+      this._pressureField.diffuse();
+      this._pressureField.decay();
     }
   }
 
@@ -106,10 +109,10 @@ export class EnvironmentManager {
     // Hot areas evaporate moisture
     for (let x = 0; x < this.fieldWidth; x++) {
       for (let y = 0; y < this.fieldHeight; y++) {
-        const t = temp.getValue(x, y);
+        const t = temp.get(x, y);
         if (t > 30) {
           const evaporation = (t - 30) * 0.01;
-          humidity.addValue(x, y, -evaporation, 1);
+          humidity.add(x, y, -evaporation);
         }
       }
     }

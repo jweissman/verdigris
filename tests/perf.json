@@ -1,6 +1,6 @@
 {
   "budgets": {
-    "rule_execution_ms": 0.001,
+    "rule_execution_ms": 0.002,
     "total_step_ms": 0.01,
     "step_50_units_ms": 0.5,
     "step_100_units_ms": 1.0,

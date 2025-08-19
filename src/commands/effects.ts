@@ -149,7 +149,7 @@ export class EffectsCommand extends Command {
         const dy = target.pos.y - caster.pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist > 0) {
-          const force = effect.force || 5;
+          const force = typeof effect.force === 'number' ? effect.force : (Number(effect.force) || 5);
           this.sim.queuedCommands.push({
             type: "knockback",
             params: {
