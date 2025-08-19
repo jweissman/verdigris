@@ -93,9 +93,6 @@ export class Abilities extends Rule {
 
     this.cachedAllUnits = allUnits; // Cache for DSL operations
 
-    const enemyCache = new Map<string, any>(); // Cache closest enemy per unit
-    const allyCache = new Map<string, any>(); // Cache closest ally per unit
-
     for (const unit of relevantUnits) {
       // Already filtered for dead units above
 
@@ -200,6 +197,7 @@ export class Abilities extends Rule {
           }
         }
 
+        // Process effects inline for better performance
         for (const effect of ability.effects) {
           this.processEffectAsCommand(context, effect, unit, target);
         }
@@ -417,13 +415,9 @@ export class Abilities extends Rule {
             : value.$conditional.else;
         }
 
-        const conditionResult = DSL.evaluate(
-          condition,
-          caster,
-          context,
-          undefined,
-          this.cachedAllUnits,
-        );
+        const compiledCondition = dslCompiler.compile(condition);
+        (context as any).cachedUnits = this.cachedAllUnits;
+        const conditionResult = compiledCondition(caster, context);
         return conditionResult
           ? value.$conditional.then
           : value.$conditional.else;
@@ -1369,13 +1363,9 @@ export class Abilities extends Rule {
           }
 
           const safeUnit = { ...u, tags: u.tags || [] };
-          return DSL.evaluate(
-            effect.condition,
-            safeUnit,
-            context,
-            safeUnit,
-            this.cachedAllUnits || context.getAllUnits(),
-          );
+          const compiledCondition = dslCompiler.compile(effect.condition);
+          (context as any).cachedUnits = this.cachedAllUnits || context.getAllUnits();
+          return compiledCondition(safeUnit, context);
         } catch (error) {
           console.warn(
             `Failed to evaluate condition '${effect.condition}':`,

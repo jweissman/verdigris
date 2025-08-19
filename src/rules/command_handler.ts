@@ -45,6 +45,8 @@ import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
 import { HumidityCommand } from "../commands/humidity";
 import { MovesCommand } from "../commands/moves";
+import { EffectsCommand } from "../commands/effects";
+import { AbilityEffectsCommand } from "../commands/ability_effects";
 
 export type QueuedCommand = {
   type: string;
@@ -128,6 +130,8 @@ export class CommandHandler {
 
     this.commands.set("toss", new Toss(sim, this.transform));
     this.commands.set("humidity", new HumidityCommand(sim, this.transform));
+    this.commands.set("effects", new EffectsCommand(sim, this.transform));
+    this.commands.set("ability_effects", new AbilityEffectsCommand(sim, this.transform));
   }
 
   private executeOne(
