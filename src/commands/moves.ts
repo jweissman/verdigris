@@ -11,18 +11,18 @@ export class MovesCommand extends Command {
 
     const transform = this.sim.getTransform();
 
-    // Batch update all moves at once
+
     const updates: Array<{ id: string; changes: any }> = [];
 
     for (const [id, move] of moves) {
-      // Find unit to check for status effects
+
       const unit = this.sim.units.find((u: any) => u.id === id);
       if (!unit) continue;
 
       let effectiveDx = move.dx;
       let effectiveDy = move.dy;
 
-      // Apply status effects
+
       if (unit.meta?.chilled) {
         const slowFactor = 1 - (unit.meta.chillIntensity || 0.5);
         effectiveDx *= slowFactor;
@@ -34,7 +34,7 @@ export class MovesCommand extends Command {
         effectiveDy = 0;
       }
 
-      // Update facing
+
       let facing = unit.meta?.facing || "right";
       if (!unit.meta?.jumping && !unit.meta?.tossing && move.dx !== 0) {
         facing = move.dx > 0 ? "right" : "left";
@@ -49,7 +49,7 @@ export class MovesCommand extends Command {
       });
     }
 
-    // Apply all updates in batch
+
     for (const update of updates) {
       transform.updateUnit(update.id, update.changes);
     }

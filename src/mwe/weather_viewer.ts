@@ -97,7 +97,7 @@ export default class SceneWeatherViewer {
   }
 
   placeTestCreatures() {
-    // Clear all units - weather viewer doesn't need creatures
+
     this.sim.reset();
   }
 
@@ -147,34 +147,47 @@ export default class SceneWeatherViewer {
   applyWeather() {
     const weather = this.weathers[this.currentWeatherIndex];
 
-    // Particles are cleared automatically when weather changes
-    // this.sim.particleArrays.clear(); // If we need to clear manually
+
+
 
     this.sim.lightningActive = false;
 
     switch (weather) {
       case "rain":
         this.sim.queuedCommands = [
-          { type: "weather", params: { type: "rain", intensity: 120, opacity: 0.8 } },
+          {
+            type: "weather",
+            params: { type: "rain", intensity: 120, opacity: 0.8 },
+          },
         ];
         break;
       case "winter":
-        this.sim.queuedCommands = [{ type: "weather", params: { type: "winter" } }];
+        this.sim.queuedCommands = [
+          { type: "weather", params: { type: "winter" } },
+        ];
         break;
       case "storm":
         this.sim.queuedCommands = [
-          { type: "weather", params: { type: "rain", intensity: 120, opacity: 1.0 } },
+          {
+            type: "weather",
+            params: { type: "rain", intensity: 120, opacity: 1.0 },
+          },
           { type: "lightning", params: { x: 16, y: 12 } },
         ];
         break;
       case "sandstorm":
         this.sim.queuedCommands = [
           { type: "temperature", params: { value: 35 } },
-          { type: "weather", params: { type: "sand", intensity: 200, opacity: 0.6 } },
+          {
+            type: "weather",
+            params: { type: "sand", intensity: 200, opacity: 0.6 },
+          },
         ];
         break;
       case "clear":
-        this.sim.queuedCommands = [{ type: "weather", params: { type: "clear" } }];
+        this.sim.queuedCommands = [
+          { type: "weather", params: { type: "clear" } },
+        ];
         break;
     }
 
@@ -196,8 +209,9 @@ export default class SceneWeatherViewer {
   }
 
   updateWeatherInfo() {
-    document.getElementById("particle-count").textContent =
-      String(this.sim.particles.length);
+    document.getElementById("particle-count").textContent = String(
+      this.sim.particles.length,
+    );
 
     let avgTemp = 20,
       avgHumidity = 0.5;

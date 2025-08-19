@@ -45,7 +45,7 @@ export default class Encyclopaedia {
       u.meta = {};
     }
 
-    // Pre-compile ability triggers by running eval ONCE at unit creation
+
     if (u.abilities && u.abilities.length > 0) {
       const compiledTriggers: { [expression: string]: Function } = {};
 
@@ -53,8 +53,8 @@ export default class Encyclopaedia {
         const ability = this.abilities[abilityName];
         if (ability?.trigger) {
           try {
-            // Create a function that captures the expression
-            // This runs eval() ONCE here, not every tick
+
+
             const triggerFn = new Function(
               "self",
               "context",
@@ -88,7 +88,7 @@ export default class Encyclopaedia {
             );
             compiledTriggers[ability.trigger] = triggerFn;
           } catch (e) {
-            // Skip pre-compilation for this trigger
+
           }
         }
       }

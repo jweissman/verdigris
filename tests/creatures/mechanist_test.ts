@@ -69,26 +69,26 @@ describe('Mechanist Showcase', () => {
       sim.step();
     }
     
-    // We start with 16 units, mechatron creates 3 phantoms = 19
-    // Some enemy units may die in combat, so we should have at least 15
+
+
     expect(sim.units.length).toBeGreaterThanOrEqual(15);
     
 
-    // Most mechanist crew should survive (at least 5 of 6)
+
     const survivingCrew = mechanistCrew.filter(({ type }) => 
       sim.liveUnits.find(u => u.type === type)
     );
     expect(survivingCrew.length).toBeGreaterThanOrEqual(5);
 
 
-    // Most constructs should survive (at least 4 of 5 - zapper may die from combat)
+
     const survivingConstructs = constructs.filter(({ type }) => 
       sim.liveUnits.find(u => u.type === type)
     );
     expect(survivingConstructs.length).toBeGreaterThanOrEqual(4);
 
 
-    // Should have the mechatron and its phantoms
+
     const mechatronUnits = sim.units.filter(u => u.type === 'mechatron');
     const phantomUnits = sim.units.filter(u => u.type === 'phantom');
     expect(mechatronUnits.length).toBe(1);
@@ -271,7 +271,7 @@ describe('Mechanist Showcase', () => {
       expect(repairedConstruct!.hp).toBe(Math.min(repairedConstruct!.maxHp, originalHp + 15));
       
 
-      // Cleanse should remove these effects (set to undefined or false)
+
       expect(repairedConstruct!.meta.stunned).not.toBe(true);
       expect(repairedConstruct!.meta.frozen).not.toBe(true);
   });

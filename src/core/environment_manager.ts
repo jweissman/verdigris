@@ -106,7 +106,7 @@ export class EnvironmentManager {
     const temp = this._temperatureField;
     const humidity = this._humidityField;
 
-    // Hot areas evaporate moisture
+
     for (let x = 0; x < this.fieldWidth; x++) {
       for (let y = 0; y < this.fieldHeight; y++) {
         const t = temp.get(x, y);

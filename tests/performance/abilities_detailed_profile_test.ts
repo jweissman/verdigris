@@ -6,7 +6,7 @@ describe.skip('Abilities Detailed Performance', () => {
   it('should profile where time is spent', () => {
     const sim = new Simulator(100, 100);
     
-    // Add 50 units like the benchmark
+
     for (let i = 0; i < 50; i++) {
       const unitType = i % 4;
       const abilities = unitType === 0 ? ['attack'] : 
@@ -29,12 +29,12 @@ describe.skip('Abilities Detailed Performance', () => {
     const abilities = new Abilities();
     const context = sim.getTickContext();
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       abilities.execute(context);
     }
     
-    // Measure phases
+
     const measurements = {
       total: [] as number[],
       getAllUnits: [] as number[],
@@ -45,17 +45,17 @@ describe.skip('Abilities Detailed Performance', () => {
       targetEval: [] as number[]
     };
     
-    // Override methods to measure
+
     const originalExecute = abilities.execute.bind(abilities);
     (abilities as any).execute = function(ctx: any) {
       const totalStart = performance.now();
       
-      // Measure getAllUnits
+
       const getUnitsStart = performance.now();
       const allUnits = ctx.getAllUnits();
       measurements.getAllUnits.push(performance.now() - getUnitsStart);
       
-      // Measure filtering
+
       const filterStart = performance.now();
       const relevantUnits = allUnits.filter((u: any) => 
         u.state !== "dead" && 
@@ -64,11 +64,11 @@ describe.skip('Abilities Detailed Performance', () => {
       );
       measurements.filterUnits.push(performance.now() - filterStart);
       
-      // Set up for ability checking
+
       (this as any).commands = [];
       (this as any).cachedAllUnits = allUnits;
       
-      // Process units
+
       const processStart = performance.now();
       for (const unit of relevantUnits) {
         if (unit.abilities) {
@@ -77,7 +77,7 @@ describe.skip('Abilities Detailed Performance', () => {
             
             const ability = (Abilities as any).precompiledAbilities?.get(abilityName);
             if (ability) {
-              // Measure trigger evaluation
+
               if (ability.trigger) {
                 const triggerStart = performance.now();
                 const shouldTrigger = ability.trigger(unit, ctx);
@@ -85,7 +85,7 @@ describe.skip('Abilities Detailed Performance', () => {
                 if (!shouldTrigger) continue;
               }
               
-              // Measure target evaluation  
+
               if (ability.target) {
                 const targetStart = performance.now();
                 const target = ability.target(unit, ctx);
@@ -104,12 +104,12 @@ describe.skip('Abilities Detailed Performance', () => {
       return (this as any).commands;
     };
     
-    // Run measurements
+
     for (let i = 0; i < 100; i++) {
       abilities.execute(context);
     }
     
-    // Calculate stats
+
     const getMedian = (arr: number[]) => {
       const sorted = [...arr].sort((a, b) => a - b);
       return sorted[Math.floor(sorted.length / 2)];
@@ -144,7 +144,7 @@ describe.skip('Abilities Detailed Performance', () => {
     console.log(`\nBudget: ${budget}ms`);
     console.log(`Status: ${median <= budget ? '✅' : '❌'} ${(median / budget).toFixed(1)}x`);
     
-    // Find where the time is going
+
     const timeBreakdown = {
       getAllUnits: getMedian(measurements.getAllUnits),
       filterUnits: getMedian(measurements.filterUnits),

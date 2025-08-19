@@ -17,6 +17,6 @@ T.................d.d.d
 # T = mechatronist (tactical leader)
 # X = mechatron (heavy artillery)
 # d = demon (tough enemies)
-bg: toyforge
-weather: storm
-lightning: 10,3
+bg toyforge
+weather storm
+lightning 10 3

@@ -41,7 +41,11 @@ export class RopeClimbing extends Rule {
       const nearbyLine = this.findNearbyGrappleLine(climber, lines);
 
       if (nearbyLine) {
-        const attachCommands = this.attachToGrappleLine(context, climber, nearbyLine);
+        const attachCommands = this.attachToGrappleLine(
+          context,
+          climber,
+          nearbyLine,
+        );
         commands.push(...attachCommands);
       }
     }

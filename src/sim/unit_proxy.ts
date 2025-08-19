@@ -176,8 +176,8 @@ export class UnitProxyManager implements DataQuery {
   private metadataStore: Map<string, any>;
   private idToIndex: Map<string, number> = new Map();
 
-  // Flag to control lightweight vs real proxies
-  // Tests can set this to false to get real proxies
+
+
   public useLightweightProxies: boolean = true;
 
   constructor(arrays: UnitArrays, metadataStore: Map<string, any>) {
@@ -493,7 +493,7 @@ export class UnitProxyManager implements DataQuery {
     const proxies: UnitProxy[] = [];
     for (const i of this.arrays.activeIndices) {
       const unitId = this.arrays.unitIds[i];
-      // Use lightweight objects instead of proxy classes for performance
+
       const lightweight = UnitProxy.createLightweight(
         unitId,
         i,

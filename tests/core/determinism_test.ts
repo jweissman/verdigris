@@ -41,14 +41,14 @@ describe.skip('Determinism Validation', () => {
   it('should have all simulations use seeded RNG for particles', () => {
     Simulator.rng.reset(123);
     const sim = new Simulator();
-    sim.weather = { type: 'rain', intensity: 0.5 };
+    sim.weather = { current: 'rain', duration: 100, intensity: 0.5 };
     for (let i = 0; i < 5; i++) {
       sim.step();
     }
     const particles1 = sim.particles.length;
     Simulator.rng.reset(123);
     const sim2 = new Simulator();
-    sim2.weather = { type: 'rain', intensity: 0.5 };
+    sim2.weather = { current: 'rain', duration: 100, intensity: 0.5 };
     for (let i = 0; i < 5; i++) {
       sim2.step();
     }

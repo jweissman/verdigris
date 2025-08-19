@@ -13,7 +13,7 @@ export class AbilityEffectsCommand extends Command {
     const caster = this.sim.units.find((u) => u.id === params.casterId);
     if (!caster) return;
 
-    // Target can be a unit or a position
+
     const target = params.target;
     const targetUnit = target?.id
       ? this.sim.units.find((u) => u.id === target.id)

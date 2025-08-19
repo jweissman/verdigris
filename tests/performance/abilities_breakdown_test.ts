@@ -9,7 +9,7 @@ describe('Abilities Breakdown', () => {
     
     if (!abilities) return;
     
-    // Count abilities
+
     const units = context.getAllUnits();
     let totalAbilities = 0;
     let unitsWithAbilities = 0;
@@ -26,7 +26,7 @@ describe('Abilities Breakdown', () => {
     console.log(`Total abilities to check: ${totalAbilities}`);
     console.log(`Average abilities per unit: ${(totalAbilities / unitsWithAbilities).toFixed(1)}`);
     
-    // Time the execute
+
     const times = [];
     for (let i = 0; i < 100; i++) {
       const start = performance.now();

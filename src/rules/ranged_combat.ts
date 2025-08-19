@@ -11,26 +11,26 @@ export class RangedCombat extends Rule {
     const commands: QueuedCommand[] = [];
     const currentTick = context.getCurrentTick();
 
-    // Use arrays directly - no proxy creation!
+
     const arrays = context.getArrays();
     if (!arrays) {
-      // Fallback if arrays not available
+
       return this.executeWithProxies(context);
     }
 
     const { posX, posY, team, state, hp, unitIds, activeIndices } = arrays;
 
-    // Fast scan for units with ranged ability
+
     for (const idx of activeIndices) {
-      // Skip dead units
+
       if (state[idx] === 5 || hp[idx] <= 0) continue;
 
-      // Get cold data for abilities and cooldown
+
       const unitId = unitIds[idx];
       const coldData = context.getUnitColdData(unitId);
       if (!coldData) continue;
 
-      // Check if unit has ranged ability
+
       const abilities = coldData.abilities;
       if (
         !abilities ||
@@ -39,11 +39,11 @@ export class RangedCombat extends Rule {
       )
         continue;
 
-      // Check cooldown (ranged has 6 tick cooldown)
+
       const lastTick = coldData.lastAbilityTick?.ranged;
       if (lastTick !== undefined && currentTick - lastTick < 6) continue;
 
-      // Find closest enemy using arrays
+
       const unitTeam = team[idx];
       const unitX = posX[idx];
       const unitY = posY[idx];
@@ -51,7 +51,7 @@ export class RangedCombat extends Rule {
       let closestEnemyIdx = -1;
       let minDistSq = 100; // 10² - max range squared
 
-      // Scan all units for enemies within range
+
       for (const enemyIdx of activeIndices) {
         if (enemyIdx === idx) continue;
         if (state[enemyIdx] === 5 || hp[enemyIdx] <= 0) continue;
@@ -61,7 +61,7 @@ export class RangedCombat extends Rule {
         const dy = posY[enemyIdx] - unitY;
         const distSq = dx * dx + dy * dy;
 
-        // Skip if too close or too far
+
         if (distSq <= 4 || distSq > 100) continue; // 2² to 10²
 
         if (distSq < minDistSq) {
@@ -70,10 +70,10 @@ export class RangedCombat extends Rule {
         }
       }
 
-      // No enemy found
+
       if (closestEnemyIdx === -1) continue;
 
-      // Calculate projectile velocity
+
       const enemyX = posX[closestEnemyIdx];
       const enemyY = posY[closestEnemyIdx];
       const dx = enemyX - unitX;
@@ -82,7 +82,7 @@ export class RangedCombat extends Rule {
       const vx = (dx / norm) * 2; // Speed = 2
       const vy = (dy / norm) * 2;
 
-      // Queue projectile command
+
       commands.push({
         type: "projectile",
         params: {
@@ -93,7 +93,7 @@ export class RangedCombat extends Rule {
           projectileType: "bullet",
           damage: 4,
           radius: 1.5,
-          // UnitArrays encoding: neutral=0, friendly=1, hostile=2
+
           team:
             unitTeam === 1
               ? "friendly"
@@ -104,7 +104,7 @@ export class RangedCombat extends Rule {
         unitId: unitIds[idx],
       });
 
-      // Update cooldown
+
       commands.push({
         type: "meta",
         params: {
@@ -122,7 +122,7 @@ export class RangedCombat extends Rule {
     return commands;
   }
 
-  // Fallback implementation using proxies
+
   private executeWithProxies(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
     const currentTick = context.getCurrentTick();
@@ -135,7 +135,7 @@ export class RangedCombat extends Rule {
       const lastTick = unit.lastAbilityTick?.ranged;
       if (lastTick !== undefined && currentTick - lastTick < 6) continue;
 
-      // Find closest enemy
+
       let closestEnemy = null;
       let minDist = Infinity;
 

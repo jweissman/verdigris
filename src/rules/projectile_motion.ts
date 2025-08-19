@@ -18,7 +18,7 @@ export class ProjectileMotion extends Rule {
       const radiusSq = (projectile.radius || 1) * (projectile.radius || 1);
 
       if (projectile.type === "grapple") {
-        // Check collision with any unit
+
         for (const idx of arrays.activeIndices) {
           if (arrays.hp[idx] <= 0) continue;
 
@@ -47,7 +47,7 @@ export class ProjectileMotion extends Rule {
           }
         }
       } else {
-        // Check collision with enemy units
+
         const projectileTeam =
           projectile.team === "friendly"
             ? 0

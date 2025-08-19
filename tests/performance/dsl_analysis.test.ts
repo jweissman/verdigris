@@ -9,16 +9,16 @@ describe('DSL Performance Analysis', () => {
     const allUnits = context.getAllUnits();
     const subject = allUnits[0];
     
-    // Common trigger patterns from abilities.json
+
     const patterns = [
-      // Most common patterns
+
       { expr: 'distance(closest.enemy()?.pos) <= 2', count: 5 },
       { expr: 'distance(closest.enemy()?.pos) <= 1', count: 4 },
       { expr: 'distance(closest.enemy()?.pos) <= 6', count: 3 },
       { expr: 'distance(closest.enemy()?.pos) <= 3', count: 3 },
       { expr: 'self.hp < self.maxHp * 0.5', count: 1 },
       { expr: 'closest.ally() != null', count: 1 },
-      // Target patterns
+
       { expr: 'closest.enemy()', count: 10 },
       { expr: 'closest.enemy()?.pos', count: 8 },
       { expr: 'self.pos', count: 5 },
@@ -39,7 +39,7 @@ describe('DSL Performance Analysis', () => {
         try {
           DSL.evaluate(expr, subject, context, undefined, allUnits);
         } catch (e) {
-          // Some patterns might fail, that's ok
+
         }
         times.push(performance.now() - start);
       }
@@ -56,10 +56,10 @@ describe('DSL Performance Analysis', () => {
     console.log(`TOTAL                                        | ${totalTime.toFixed(4).padStart(9)} | ${totalEvals.toString().padStart(11)}`);
     console.log(`\nAverage per evaluation: ${(totalTime / totalEvals).toFixed(4)}ms`);
     
-    // Test which parts of DSL are slow
+
     console.log('\n=== DSL Component Breakdown ===');
     
-    // Test just the noun creation
+
     const nounStart = performance.now();
     for (let i = 0; i < 1000; i++) {
       DSL.noun(subject, allUnits, context);
@@ -67,7 +67,7 @@ describe('DSL Performance Analysis', () => {
     const nounTime = (performance.now() - nounStart) / 1000;
     console.log(`DSL.noun creation: ${nounTime.toFixed(4)}ms`);
     
-    // Test just finding closest enemy manually
+
     const manualStart = performance.now();
     for (let i = 0; i < 1000; i++) {
       let closest = null;
@@ -87,7 +87,7 @@ describe('DSL Performance Analysis', () => {
     const manualTime = (performance.now() - manualStart) / 1000;
     console.log(`Manual closest enemy: ${manualTime.toFixed(4)}ms`);
     
-    // Test eval() overhead
+
     const evalStart = performance.now();
     for (let i = 0; i < 1000; i++) {
       try {

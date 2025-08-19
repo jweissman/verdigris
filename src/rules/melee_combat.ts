@@ -11,11 +11,11 @@ export class MeleeCombat extends Rule {
     const commands: QueuedCommand[] = [];
     const currentTick = context.getCurrentTick();
 
-    // Work directly with arrays to avoid proxy creation
+
     const arrays = context.getArrays();
     for (const i of arrays.activeIndices) {
       if (arrays.state[i] === 2) {
-        // attack state
+
         const unitId = arrays.unitIds[i];
         const coldData = context.getUnitColdData(unitId);
         if (coldData?.meta?.lastAttacked) {
@@ -53,16 +53,16 @@ export class MeleeCombat extends Rule {
       const activeIndices = arrays.activeIndices;
       const count = activeIndices.length;
 
-      // Process each pair only once (i,j where j > i)
+
       for (let i = 0; i < count; i++) {
         const idxA = activeIndices[i];
 
-        // Skip dead or already engaged units
+
         if (arrays.state[idxA] === 3 || arrays.hp[idxA] <= 0) continue;
         const attackerId = arrays.unitIds[idxA];
         if (this.engagements.has(attackerId)) continue;
 
-        // Skip noncombatants and jumping units
+
         const coldA = coldData.get(attackerId);
         if (coldA?.meta?.jumping || coldA?.tags?.includes("noncombatant"))
           continue;
@@ -71,34 +71,34 @@ export class MeleeCombat extends Rule {
         const y1 = arrays.posY[idxA];
         const team1 = arrays.team[idxA];
 
-        // Check against subsequent units to avoid duplicate pairs
+
         for (let j = i + 1; j < count; j++) {
           const idxB = activeIndices[j];
 
-          // Skip dead or same team
+
           if (arrays.state[idxB] === 3 || arrays.hp[idxB] <= 0) continue;
           if (team1 === arrays.team[idxB]) continue;
 
           const targetId = arrays.unitIds[idxB];
           if (this.engagements.has(targetId)) continue;
 
-          // Quick distance check first
+
           const dx = arrays.posX[idxB] - x1;
           const dy = arrays.posY[idxB] - y1;
           const distSq = dx * dx + dy * dy;
 
           if (distSq > meleeRangeSq) continue;
 
-          // Skip noncombatants and jumping units
+
           const coldB = coldData.get(targetId);
           if (coldB?.meta?.jumping || coldB?.tags?.includes("noncombatant"))
             continue;
 
-          // Both units can attack each other
+
           this.engagements.set(attackerId, targetId);
           this.engagements.set(targetId, attackerId);
 
-          // Attacker hits target
+
           this.registerHit(
             attackerId,
             targetId,
@@ -107,7 +107,7 @@ export class MeleeCombat extends Rule {
             commands,
           );
 
-          // Target hits attacker back
+
           this.registerHit(
             targetId,
             attackerId,

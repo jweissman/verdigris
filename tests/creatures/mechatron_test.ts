@@ -250,7 +250,7 @@ describe('Mechatron', () => {
     
     if (deployedMechatron && mechatronist.abilities?.includes('tacticalOverride')) {
 
-      // Force abilities to be on cooldown by using them earlier
+
       sim.forceAbility(deployedMechatron.id, 'missileBarrage', {x: 0, y: 0});
       sim.forceAbility(deployedMechatron.id, 'laserSweep', {x: 0, y: 0});
       sim.step(); // Process the forced abilities
@@ -343,7 +343,7 @@ describe('Mechatron', () => {
     const construct2Data = { ...Encyclopaedia.unit('freezebot'), pos: { x: 8, y: 6 } };
     
 
-    // Ensure constructs have mechanical tag
+
     if (!construct1Data.tags) construct1Data.tags = [];
     if (!construct1Data.tags.includes('mechanical')) construct1Data.tags.push('mechanical');
     if (!construct2Data.tags) construct2Data.tags = [];

@@ -6,22 +6,22 @@ describe('Proxy Overhead Measurement', () => {
     const sim = createTestSimulator(50);
     const context = sim.getTickContext();
     
-    // Measure getAllUnits() which creates lightweight proxies
+
     const iterations = 10000;
     
-    // Warm up
+
     for (let i = 0; i < 100; i++) {
       context.getAllUnits();
     }
     
-    // Measure getAllUnits
+
     const getAllUnitsStart = performance.now();
     for (let i = 0; i < iterations; i++) {
       const units = context.getAllUnits();
     }
     const getAllUnitsTime = (performance.now() - getAllUnitsStart) / iterations;
     
-    // Measure just the array access without proxy creation
+
     const arrays = (context as any).getArrays();
     const arrayAccessStart = performance.now();
     for (let i = 0; i < iterations; i++) {
@@ -33,7 +33,7 @@ describe('Proxy Overhead Measurement', () => {
     }
     const arrayAccessTime = (performance.now() - arrayAccessStart) / iterations;
     
-    // Measure the cost of creating 50 plain objects
+
     const objectCreationStart = performance.now();
     for (let i = 0; i < iterations; i++) {
       const objs = [];
@@ -57,8 +57,8 @@ describe('Proxy Overhead Measurement', () => {
     console.log(`Overhead vs arrays:            ${(getAllUnitsTime / arrayAccessTime).toFixed(1)}x`);
     console.log(`Overhead vs plain objects:     ${(getAllUnitsTime / objectCreationTime).toFixed(1)}x`);
     
-    // Calculate how much time is spent on proxy creation per frame
-    // Assuming 19 getAllUnits calls per frame (from trace)
+
+
     const proxyTimePerFrame = getAllUnitsTime * 19;
     console.log(`\nProxy creation per frame:      ${proxyTimePerFrame.toFixed(4)}ms`);
     console.log(`As % of 0.1ms budget:          ${(proxyTimePerFrame / 0.1 * 100).toFixed(0)}%`);

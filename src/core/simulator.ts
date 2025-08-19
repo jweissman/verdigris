@@ -86,7 +86,7 @@ class Simulator {
   public proxyManager: UnitProxyManager;
 
   get units(): readonly Unit[] {
-    // Returns lightweight snapshots for performance
+
     return this.proxyManager.getAllProxies();
   }
 
@@ -297,6 +297,12 @@ class Simulator {
     const params: Record<string, any> = {};
 
     switch (type) {
+      case "bg":
+        // Background command - queue as scene metadata
+        params.type = "bg";
+        params.value = parts[1];
+        type = "sceneMetadata";
+        break;
       case "weather":
         params.weatherType = parts[1];
         if (parts[2]) params.duration = parseInt(parts[2]);
@@ -383,7 +389,7 @@ class Simulator {
   }
 
   addUnit(unit: Partial<Unit>): Unit {
-    // If type is provided, look up the unit definition
+
     let baseUnit = unit;
     if ((unit as any).type) {
       const unitData = Encyclopaedia.unit((unit as any).type);
@@ -408,7 +414,7 @@ class Simulator {
       meta: baseUnit.meta || {},
     } as Unit;
 
-    // Don't pre-compile here - let DSL handle it at runtime
+
 
     const index = this.unitArrays.addUnit(u);
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
@@ -472,7 +478,7 @@ class Simulator {
 
   get roster() {
     const sim = this;
-    // Use real proxies for roster so tests can hold references across ticks
+
     const realProxies = this.proxyManager.getRealProxies();
     return new Proxy(
       {},
@@ -574,9 +580,9 @@ class Simulator {
       }
 
       if (this.enableEnvironmentalEffects) {
-        // Update unit temperature effects every tick
+
         this.updateUnitTemperatureEffects();
-        
+
         if (this.ticks % 10 === 0) {
           this.updateScalarFields();
           this.updateWeather();
@@ -826,14 +832,14 @@ class Simulator {
   }
 
   updateScalarFields() {
-    // Update scalar fields with gentler decay to maintain environmental effects
-    // Temperature should persist longer, humidity can decay a bit faster
+
+
     this.temperatureField.diffuse(0.02); // Just diffuse, minimal decay
     this.temperatureField.decay(0.0005); // Very slow decay towards ambient
-    
+
     this.humidityField.diffuse(0.03);
     this.humidityField.decay(0.001); // Slow evaporation
-    
+
     this.pressureField.decayAndDiffuse(0.01, 0.12); // Pressure normalizes faster
   }
 
@@ -862,11 +868,10 @@ class Simulator {
         }
       }
     }
-
   }
 
   updateUnitTemperatureEffects() {
-    // Update temperature and humidity from units
+
     for (const unit of this.units) {
       if (unit.meta.phantom) continue;
       if (unit.state === "dead") continue;
@@ -874,27 +879,27 @@ class Simulator {
       const pos = unit.pos;
       const x = Math.floor(pos.x);
       const y = Math.floor(pos.y);
-      
-      // Freezebots reduce temperature gradually toward zero
-      if (unit.type === 'freezebot') {
+
+
+      if (unit.type === "freezebot") {
         const currentTemp = this.temperatureField.get(x, y);
-        // Only cool if above freezing, and cool proportionally
+
         if (currentTemp > 0) {
           this.temperatureField.addGradient(x, y, 4, -0.5); // Gentler cooling gradient
-          // Set center slightly colder
+
           this.temperatureField.set(x, y, currentTemp * 0.95); // 5% cooling per tick
         }
-      } 
-      // Constructs generate more heat
-      else if (unit.tags?.includes('construct')) {
+      }
+
+      else if (unit.tags?.includes("construct")) {
         this.temperatureField.addGradient(x, y, 2, 1.0);
       }
-      // Living units generate heat
+
       else {
         this.temperatureField.addGradient(x, y, 2, 0.5);
       }
 
-      // Moving units increase humidity slightly
+
       if (unit.state === "walk" || unit.state === "attack") {
         this.humidityField.addGradient(x, y, 1.5, 0.02);
       }
@@ -1684,7 +1689,7 @@ class Simulator {
               const speed = 1; // Could be parameterized
               const vel = { x: (dx / mag) * speed, y: (dy / mag) * speed };
 
-              // Create projectile slightly ahead of unit in direction of target
+
               const offset = 0.5;
               const projX = unit.pos.x + (dx / mag) * offset;
               const projY = unit.pos.y + (dy / mag) * offset;

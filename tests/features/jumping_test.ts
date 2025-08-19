@@ -73,8 +73,8 @@ describe('Jumping mechanics', () => {
       }
     }
     expect(landed).toBe(true);
-    const finalEnemy1 = sim.roster.enemy1;
-    const finalEnemy2 = sim.roster.enemy2;
+    const finalEnemy1 = sim.roster['enemy1'];
+    const finalEnemy2 = sim.roster['enemy2'];
     const damageTaken = (initialHp1 - (finalEnemy1?.hp || 0)) + (initialHp2 - (finalEnemy2?.hp || 0));
     expect(damageTaken).toBeGreaterThan(0);
   });
@@ -84,7 +84,7 @@ describe('Jumping mechanics', () => {
     sim.addUnit({
       id: 'jumper',
       pos: { x: 10, y: 10 },
-      team: 'red',
+      team: 'hostile',
       hp: 10,
       meta: {
         facing: 'right',
@@ -96,12 +96,12 @@ describe('Jumping mechanics', () => {
     sim.addUnit({
       id: 'target',
       pos: { x: 5, y: 10 },
-      team: 'blue',
+      team: 'friendly',
       hp: 10
     });
-    const initialFacing = sim.roster.jumper.meta.facing;
+    const initialFacing = sim.roster['jumper'].meta.facing;
     sim.step();
-    expect(sim.roster.jumper.meta.facing).toBe(initialFacing);
+    expect(sim.roster['jumper'].meta.facing).toBe(initialFacing);
   });
 
   it('should not queue movement commands for jumping units with hunt tag', () => {
@@ -109,7 +109,7 @@ describe('Jumping mechanics', () => {
     sim.addUnit({
       id: 'hunter',
       pos: { x: 0, y: 0 },
-      team: 'red',
+      team: 'hostile',
       hp: 10,
       tags: ['hunt'],
       meta: {
@@ -121,7 +121,7 @@ describe('Jumping mechanics', () => {
     sim.addUnit({
       id: 'prey',
       pos: { x: 5, y: 0 },
-      team: 'blue',
+      team: 'friendly',
       hp: 10
     });
     sim.step();
@@ -136,7 +136,7 @@ describe('Jumping mechanics', () => {
     sim.addUnit({
       id: 'jumper',
       pos: { x: 5, y: 5 },
-      team: 'red',
+      team: 'hostile',
       hp: 10,
       meta: {
         jumping: true,
@@ -148,7 +148,7 @@ describe('Jumping mechanics', () => {
     const zValues = [];
     for (let i = 0; i < 12; i++) {
       sim.step();
-      const jumper = sim.roster.jumper;
+      const jumper = sim.roster['jumper'];
       if (jumper.meta?.jumping) {
         zValues.push(jumper.meta.z || 0);
       }
@@ -166,7 +166,7 @@ describe('Jumping mechanics', () => {
     sim.addUnit({
       id: 'jumper',
       pos: { x: 10, y: 10 },
-      team: 'red',
+      team: 'hostile',
       hp: 10,
       posture: 'pursue',
       meta: {
@@ -178,7 +178,7 @@ describe('Jumping mechanics', () => {
     sim.addUnit({
       id: 'enemy',
       pos: { x: 15, y: 10 },
-      team: 'blue',
+      team: 'friendly',
       hp: 10
     });
     sim.step();

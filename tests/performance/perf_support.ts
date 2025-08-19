@@ -32,7 +32,7 @@ export function timeExecution(fn: () => void, iterations: number = 1000): Timing
 export function createTestSimulator(unitCount: number = 50): Simulator {
   const sim = new Simulator(50, 50);
   
-  // Create units in actual combat range - place them in a smaller area
+
   for (let i = 0; i < unitCount; i++) {
     sim.addUnit({
       id: `unit_${i}`,
@@ -45,8 +45,8 @@ export function createTestSimulator(unitCount: number = 50): Simulator {
   }
   
 
-  // Don't run 100 steps - that kills all the units!
-  // Just run a few to stabilize
+
+
   for (let i = 0; i < 5; i++) {
     sim.step();
   }
@@ -101,7 +101,7 @@ export function formatPerformanceTable(results: Map<string, TimingResult>): stri
   }
   
   lines.push('---------------------------- | ----------- | -------- | -----------');
-  // Show sum of individual percentages (should ideally be <= 1000% for 10 rules at 100% each)
+
   const totalStatus = totalPercentOfIndividualBudgets > 1000 ? '❌' : totalPercentOfIndividualBudgets > 800 ? '⚠️ ' : '✅';
   lines.push(
     `TOTAL                        | ${totalMedian.toFixed(4).padStart(11)} |          | ${totalPercentOfIndividualBudgets.toFixed(0).padStart(3)}% ${totalStatus}`

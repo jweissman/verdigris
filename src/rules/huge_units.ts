@@ -43,7 +43,7 @@ export class HugeUnits extends Rule {
       if (this.isValidPosition(context, phantomPos)) {
         const phantom: Unit = {
           id: `${hugeUnit.id}_phantom_${i}`,
-          type: "phantom",  // Add the type field
+          type: "phantom", // Add the type field
           pos: phantomPos,
           intendedMove: { x: 0, y: 0 },
           team: hugeUnit.team,

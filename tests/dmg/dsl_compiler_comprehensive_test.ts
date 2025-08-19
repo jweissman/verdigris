@@ -4,7 +4,7 @@ import type { Unit } from '../../src/types/Unit';
 import type { TickContext } from '../../src/core/tick_context';
 
 describe('DSL Compiler Comprehensive Tests', () => {
-  // Mock unit for testing
+
   const createMockUnit = (overrides?: Partial<Unit>): Unit => ({
     id: 'test-unit',
     pos: { x: 10, y: 10 },
@@ -17,7 +17,7 @@ describe('DSL Compiler Comprehensive Tests', () => {
     ...overrides,
   } as Unit);
 
-  // Mock context
+
   const createMockContext = (units: Unit[] = []): TickContext => ({
     getAllUnits: () => units,
     getRandom: () => Math.random(),
@@ -75,7 +75,7 @@ describe('DSL Compiler Comprehensive Tests', () => {
       const compiled = dslCompiler.compile(expr);
       const unit = createMockUnit();
       
-      // Mock context with controlled random
+
       let randomValue = 0.25; // Should pick 'deer' (index 1)
       const context = {
         ...createMockContext(),
@@ -85,7 +85,7 @@ describe('DSL Compiler Comprehensive Tests', () => {
       const result = compiled(unit, context);
       expect(result).toBe('deer');
       
-      // Test with different random value
+
       randomValue = 0.75; // Should pick 'bear' (index 3)
       const result2 = compiled(unit, context);
       expect(result2).toBe('bear');
@@ -162,7 +162,7 @@ describe('DSL Compiler Comprehensive Tests', () => {
       const context = createMockContext([unit, closeEnemy, farEnemy]);
       const result = compiled(unit, context);
       
-      // Should only find the close enemy since far is out of range
+
       expect(result?.id).toBe('close');
     });
 
@@ -211,7 +211,7 @@ describe('DSL Compiler Comprehensive Tests', () => {
       const expr = 'distance(closest.enemy()?.pos)';
       const compiled = dslCompiler.compile(expr);
       
-      // No enemies case
+
       const unit = createMockUnit();
       const context = createMockContext([unit]);
       const result = compiled(unit, context);
@@ -286,7 +286,7 @@ describe('DSL Compiler Comprehensive Tests', () => {
       const expr = 'closest.enemy() || self';
       const compiled = dslCompiler.compile(expr);
       
-      // No enemies, should return self
+
       const unit = createMockUnit();
       const context = createMockContext([unit]);
       

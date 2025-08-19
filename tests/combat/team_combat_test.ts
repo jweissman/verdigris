@@ -19,7 +19,7 @@ describe('2v2 Combat Tests', () => {
     const sim = new Simulator(50, 50);
     sim.sceneBackground = 'arena'; // Prevent ambient spawning
     
-    // Team 1 (friendly)
+
     team1.forEach((creature, i) => {
       sim.addUnit({
         id: `team1_${i}`,
@@ -37,7 +37,7 @@ describe('2v2 Combat Tests', () => {
       });
     });
     
-    // Team 2 (hostile)
+
     team2.forEach((creature, i) => {
       sim.addUnit({
         id: `team2_${i}`,
@@ -83,8 +83,8 @@ describe('2v2 Combat Tests', () => {
 
   it('wolf & bear vs eagle & snake', () => {
     const sim = setup2v2(
-      [creatures[0], creatures[1]], // wolf & bear
-      [creatures[2], creatures[3]]  // eagle & snake
+      [creatures[0], creatures[1]],
+      [creatures[2], creatures[3]]
     );
     
     const result = runCombat(sim);
@@ -108,7 +108,7 @@ describe('2v2 Combat Tests', () => {
 
   it('tank vs dps composition', () => {
     const sim = setup2v2(
-      [creatures[4], creatures[3]], // golem & snake (tank + dps)
+      [creatures[4], creatures[3]],
       [creatures[0], creatures[0]]  // 2 wolves (balanced)
     );
     
@@ -120,8 +120,8 @@ describe('2v2 Combat Tests', () => {
 
   it('performance: 2v2 combat step time', () => {
     const sim = setup2v2(
-      [creatures[1], creatures[2]], // bear & eagle
-      [creatures[0], creatures[3]]  // wolf & snake
+      [creatures[1], creatures[2]],
+      [creatures[0], creatures[3]]
     );
     
     const times: number[] = [];
@@ -138,18 +138,18 @@ describe('2v2 Combat Tests', () => {
     expect(median).toBeLessThan(0.1); // Should be fast with only 4 units
   });
 
-  // Matrix test - all possible 2v2 combinations from 5 creatures
+
   describe('2v2 combination matrix', () => {
     const teamCombos: any[][] = [];
     
-    // Generate all 2-creature teams (5C2 = 10 combinations)
+
     for (let i = 0; i < creatures.length; i++) {
       for (let j = i + 1; j < creatures.length; j++) {
         teamCombos.push([creatures[i], creatures[j]]);
       }
     }
     
-    // Test a sample of matchups (not all 10x10=100 to save time)
+
     const sampleMatchups = [
       [0, 1], [0, 5], [1, 2], [3, 4], [6, 9], [2, 7]
     ];

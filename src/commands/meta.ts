@@ -23,8 +23,8 @@ export class MetaCommand extends Command {
     const updates: any = {};
 
     if (params.meta) {
-      // Pass meta directly to transform.updateUnit
-      // The transform will handle merging with existing meta
+
+
       updates.meta = params.meta;
     }
 

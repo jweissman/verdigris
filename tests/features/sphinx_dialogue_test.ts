@@ -35,7 +35,7 @@ describe("Sphinx Dialogue", () => {
       pos: { x: 25, y: 25 },
     });
     
-    // Check if units are close enough for interaction (within 1.5 units)
+
     const dx = sphinx.pos.x - player.pos.x;
     const dy = sphinx.pos.y - player.pos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -67,12 +67,12 @@ describe("Sphinx Dialogue", () => {
       team: "hostile",
     });
     
-    // Run a few ticks
+
     for (let i = 0; i < 5; i++) {
       sim.tick();
     }
     
-    // Sphinx should not have taken damage from combat
+
     expect(sphinx.hp).toBe(100);
   });
 });

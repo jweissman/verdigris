@@ -13,7 +13,7 @@ export class Knockback extends Rule {
 
     const arrays = context.getArrays();
 
-    // Process each active unit
+
     for (const i of arrays.activeIndices) {
       if (arrays.state[i] === 3 || arrays.mass[i] === 0) continue; // Skip dead or massless
 
@@ -22,7 +22,7 @@ export class Knockback extends Rule {
       const team1 = arrays.team[i];
       const mass1 = arrays.mass[i];
 
-      // Check against all other units
+
       for (const j of arrays.activeIndices) {
         if (i === j || arrays.state[j] === 3 || arrays.mass[j] === 0) continue;
         if (team1 === arrays.team[j]) continue; // Same team, no knockback
@@ -36,7 +36,7 @@ export class Knockback extends Rule {
           const massDiff = mass1 - mass2;
 
           if (massDiff > 0) {
-            // Check for phantom flag in cold data
+
             const coldData = context.getUnitColdDataByIndex(j);
             if (coldData?.meta?.phantom) continue;
 

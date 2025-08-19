@@ -14,7 +14,7 @@ describe('Scalar Field Tests', () => {
       sim.sceneBackground = 'arena'; // Prevent ambient spawning
       sim.enableEnvironmentalEffects = true; // Enable temperature updates
       
-      // Add a freezebot
+
       sim.addUnit({
         id: 'freezebot1',
         type: 'freezebot',
@@ -31,7 +31,7 @@ describe('Scalar Field Tests', () => {
         meta: {}
       });
 
-      // Set initial temperature
+
       const initialTemp = 20; // Room temperature
       for (let x = 0; x < 50; x++) {
         for (let y = 0; y < 50; y++) {
@@ -39,12 +39,12 @@ describe('Scalar Field Tests', () => {
         }
       }
 
-      // Run simulation for 100 ticks
+
       for (let i = 0; i < 100; i++) {
         sim.step();
       }
 
-      // Check temperature around freezebot has decreased
+
       const freezebotTemp = sim.getTemperature(25, 25);
       const nearbyTemp = sim.getTemperature(27, 27);
       const farTemp = sim.getTemperature(40, 40);
@@ -60,7 +60,7 @@ describe('Scalar Field Tests', () => {
       sim.enableEnvironmentalEffects = true;
       sim.sceneBackground = 'arena';
       
-      // Add some living creatures
+
       const creatures = [
         { id: 'wolf1', type: 'wolf', pos: { x: 10, y: 10 } },
         { id: 'bear1', type: 'bear', pos: { x: 30, y: 30 } },
@@ -84,7 +84,7 @@ describe('Scalar Field Tests', () => {
         });
       });
 
-      // Set base temperature
+
       const baseTemp = 15;
       for (let x = 0; x < 50; x++) {
         for (let y = 0; y < 50; y++) {
@@ -92,18 +92,18 @@ describe('Scalar Field Tests', () => {
         }
       }
 
-      // Run simulation
+
       for (let i = 0; i < 50; i++) {
         sim.step();
       }
 
-      // Check heat signatures
+
       creatures.forEach(creature => {
         const temp = sim.getTemperature(creature.pos.x, creature.pos.y);
         expect(temp).toBeGreaterThan(baseTemp);
       });
 
-      // Check that empty areas remain at base temperature
+
       const emptyTemp = sim.getTemperature(25, 5);
       expect(emptyTemp).toBeCloseTo(baseTemp, 1);
     });
@@ -113,7 +113,7 @@ describe('Scalar Field Tests', () => {
       sim.enableEnvironmentalEffects = true;
       sim.sceneBackground = 'arena';
       
-      // Add a construct and an organic unit
+
       sim.addUnit({
         id: 'turret1',
         type: 'turret',
@@ -148,7 +148,7 @@ describe('Scalar Field Tests', () => {
         meta: {}
       });
 
-      // Set base temperature
+
       const baseTemp = 15;
       for (let x = 0; x < 50; x++) {
         for (let y = 0; y < 50; y++) {
@@ -156,7 +156,7 @@ describe('Scalar Field Tests', () => {
         }
       }
 
-      // Run simulation with both units using abilities
+
       for (let i = 0; i < 100; i++) {
         sim.step();
       }
@@ -166,7 +166,7 @@ describe('Scalar Field Tests', () => {
 
       expect(turretTemp).toBeGreaterThan(baseTemp);
       expect(wolfTemp).toBeGreaterThan(baseTemp);
-      // Mechanical constructs should generate more heat
+
       expect(turretTemp).toBeGreaterThan(wolfTemp);
     });
 
@@ -174,32 +174,32 @@ describe('Scalar Field Tests', () => {
       const sim = new Simulator(50, 50);
       sim.enableEnvironmentalEffects = true;
       
-      // Create a hot spot
+
       const hotSpotX = 25;
       const hotSpotY = 25;
       const hotTemp = 100;
       const baseTemp = 20;
 
-      // Initialize field
+
       for (let x = 0; x < 50; x++) {
         for (let y = 0; y < 50; y++) {
           sim.temperatureField.set(x, y, baseTemp);
         }
       }
       
-      // Add heat at center
+
       sim.addHeat(hotSpotX, hotSpotY, hotTemp - baseTemp, 3);
 
-      // Check initial state
+
       const initialCenter = sim.getTemperature(hotSpotX, hotSpotY);
       expect(initialCenter).toBeGreaterThan(baseTemp);
 
-      // Run diffusion without any units - use step() which only updates fields every 10 ticks
+
       for (let i = 0; i < 50; i++) {
         sim.step();
       }
 
-      // Heat should have spread and decreased
+
       const finalCenter = sim.getTemperature(hotSpotX, hotSpotY);
       const nearby = sim.getTemperature(hotSpotX + 3, hotSpotY + 3);
       
@@ -214,7 +214,7 @@ describe('Scalar Field Tests', () => {
       const sim = new Simulator(50, 50);
       sim.enableEnvironmentalEffects = true;
       
-      // Set up hot and cold zones
+
       for (let x = 0; x < 25; x++) {
         for (let y = 0; y < 50; y++) {
           sim.temperatureField.set(x, y, 40); // Hot zone
@@ -226,7 +226,7 @@ describe('Scalar Field Tests', () => {
         }
       }
 
-      // Add moisture uniformly
+
       const initialMoisture = 50;
       for (let x = 0; x < 50; x++) {
         for (let y = 0; y < 50; y++) {
@@ -234,16 +234,16 @@ describe('Scalar Field Tests', () => {
         }
       }
 
-      // Run field interactions through normal simulation steps
+
       for (let i = 0; i < 50; i++) {
         sim.step();
       }
 
-      // Check that hot areas have less humidity
+
       const hotZoneHumidity = sim.getHumidity(12, 25);
       const coldZoneHumidity = sim.getHumidity(37, 25);
 
-      // Humidity should decay slightly over time
+
       expect(hotZoneHumidity).toBeLessThanOrEqual(initialMoisture);
       expect(coldZoneHumidity).toBeLessThanOrEqual(initialMoisture);
     });

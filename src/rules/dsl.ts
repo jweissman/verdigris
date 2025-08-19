@@ -3,7 +3,7 @@ import { Unit } from "../types/Unit";
 
 export default class DSL {
   static clearCache() {
-    // No cache to clear
+
   }
 
   static noun = (
@@ -25,7 +25,7 @@ export default class DSL {
         return dx * dx + dy * dy;
       });
 
-    // Early exit optimization for common case
+
     const isDistanceSort = sort && sort.toString().includes("dist2");
 
     return {

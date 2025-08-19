@@ -191,97 +191,97 @@ describe('Performance Test Suite', () => {
     expect(callCount).toBeLessThan(100); // Reasonable limit
   });
 
-  // test('DSL Expression Performance Profile', () => {
-  //   // Import DSL and SceneLoader for comprehensive testing
-  //   const DSL = require('../../src/rules/dsl').default;
-  //   const { SceneLoader } = require('../../src/core/scene_loader');
+
+
+
+
     
-  //   // Clear existing profile
-  //   DSL.clearProfile();
+
+
     
-  //   // Load ALL scenarios from SceneLoader
-  //   const allScenarios = Object.keys(SceneLoader.scenarios);
-  //   console.log(`Loading ${allScenarios.length} scenarios: ${allScenarios.join(', ')}`);
+
+
+
     
-  //   const simulators = [];
+
     
-  //   // Load each scenario
-  //   for (const scenarioName of allScenarios) {
-  //     const sim = new Simulator(100, 100);
-  //     const loader = new SceneLoader(sim);
-  //     loader.loadScene(scenarioName);
-  //     simulators.push({ name: scenarioName, sim });
-  //   }
+
+
+
+
+
+
+
     
-  //   // Warm up all simulators
-  //   for (const { sim } of simulators) {
-  //     for (let i = 0; i < 5; i++) {
-  //       sim.step();
-  //     }
-  //   }
+
+
+
+
+
+
     
-  //   // Clear profile after warmup
-  //   DSL.clearProfile();
+
+
     
-  //   // Run all simulators to gather comprehensive DSL evaluation data
-  //   for (const { name, sim } of simulators) {
-  //     console.log(`  Running ${name} scenario...`);
-  //     for (let i = 0; i < 20; i++) {
-  //       sim.step();
-  //     }
-  //   }
+
+
+
+
+
+
+
     
-  //   // Get profile results
-  //   const profile = DSL.getProfile();
+
+
     
-  //   console.log('\n=== DSL Expression Performance ===');
-  //   console.log('Expression                                          | Count | Total (ms) | Avg (ms) | % of Total');
-  //   console.log('--------------------------------------------------- | ----- | ---------- | -------- | ----------');
+
+
+
     
-  //   const totalTime = profile.reduce((sum, e) => sum + e.totalTime, 0);
-  //   const top15 = profile.slice(0, 15);
+
+
     
-  //   for (const entry of top15) {
-  //     const expr = entry.expression.length > 50 
-  //       ? entry.expression.substring(0, 47) + '...' 
-  //       : entry.expression;
-  //     const pct = ((entry.totalTime / totalTime) * 100).toFixed(1);
+
+
+
+
+
       
-  //     console.log(
-  //       `${expr.padEnd(50)} | ${entry.count.toString().padStart(5)} | ${
-  //         entry.totalTime.toFixed(4).padStart(10)
-  //       } | ${entry.avgTime.toFixed(4).padStart(8)} | ${pct.padStart(9)}%`
-  //     );
-  //   }
+
+
+
+
+
+
     
-  //   console.log('--------------------------------------------------- | ----- | ---------- | -------- | ----------');
+
     
-  //   const totalCount = profile.reduce((sum, e) => sum + e.count, 0);
-  //   console.log(`TOTAL: ${totalCount} evaluations, ${totalTime.toFixed(4)}ms total time`);
-  //   console.log(`Average: ${(totalTime / totalCount).toFixed(4)}ms per evaluation`);
+
+
+
     
-  //   // Identify slow expressions
-  //   const slowExpressions = profile.filter(e => e.avgTime > 0.01);
-  //   if (slowExpressions.length > 0) {
-  //     console.log(`\n⚠️  ${slowExpressions.length} expressions take >0.01ms average:`);
-  //     for (const slow of slowExpressions.slice(0, 5)) {
-  //       console.log(`   "${slow.expression.substring(0, 60)}" - ${slow.avgTime.toFixed(4)}ms`);
-  //     }
-  //   }
+
+
+
+
+
+
+
+
     
-  //   // Check if we're using eval vs fast paths
-  //   const evalCount = profile.filter(e => 
-  //     !e.expression.match(/^(true|false|distance\(closest|self\.|closest\.(ally|enemy)\(\) != null)/)
-  //   ).reduce((sum, e) => sum + e.count, 0);
+
+
+
+
     
-  //   const fastPathCount = totalCount - evalCount;
-  //   console.log(`\nFast path: ${fastPathCount} (${((fastPathCount/totalCount)*100).toFixed(1)}%)`);
-  //   console.log(`Eval path: ${evalCount} (${((evalCount/totalCount)*100).toFixed(1)}%)`);
+
+
+
     
-  //   // Performance assertion
-  //   const avgEvalTime = totalTime / totalCount;
-  //   expect(avgEvalTime).toBeLessThan(0.01); // Should average < 0.01ms per eval
-  // });
+
+
+
+
 
   test('Performance summary', () => {
     const rounds = 10;
@@ -300,7 +300,7 @@ describe('Performance Test Suite', () => {
       totalMedians.push(totalMedian);
     }
 
-    // Build Map<string, {median: number, avg: number}> for formatPerformanceTable
+
     const avgResults = new Map();
     for (const [rule, medians] of ruleMedians.entries()) {
       const avgMedian = medians.reduce((a, b) => a + b, 0) / medians.length;

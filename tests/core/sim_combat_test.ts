@@ -44,7 +44,7 @@ describe('End-to-end combat', () => {
     }
 
 
-    // Run combat simulation
+
     for (let t = 0; t < 100; t++) {
       sim.step();
     }

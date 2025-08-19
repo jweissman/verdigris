@@ -161,7 +161,7 @@ describe('DSL Compiler', () => {
 
   describe('distance function', () => {
     it('should calculate distance to a position', () => {
-      // Verify components work
+
       const enemyFn = dslCompiler.compile('closest.enemy()');
       const enemy = enemyFn(mockUnit, mockContext);
       expect(enemy).toBeDefined();
@@ -171,7 +171,7 @@ describe('DSL Compiler', () => {
       const pos = posFn(mockUnit, mockContext);
       expect(pos).toEqual({ x: 7, y: 5 });
       
-      // Now test distance
+
       const fn = dslCompiler.compile('distance(closest.enemy()?.pos)');
       const result = fn(mockUnit, mockContext);
       expect(result).toBe(2); // Distance from (5,5) to (7,5)
@@ -195,10 +195,10 @@ describe('DSL Compiler', () => {
       const trigger = 'distance(closest.enemy()?.pos) <= 10 && distance(closest.enemy()?.pos) > 2';
       const fn = dslCompiler.compile(trigger);
       
-      // Enemy is at distance 2, which is NOT > 2, so should be false
+
       expect(fn(mockUnit, mockContext)).toBe(false);
       
-      // Move enemy further away
+
       enemyUnit.pos.x = 10; // Now distance is 5
       expect(fn(mockUnit, mockContext)).toBe(true);
     });

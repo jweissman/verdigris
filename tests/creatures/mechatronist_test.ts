@@ -173,7 +173,7 @@ describe('Mechatronist Deployment System', () => {
     sim.step(); // Process the ability
     
 
-    // Get the actual units from the simulator
+
     const actualAlly1 = sim.units.find(u => u.id === ally1Unit.id);
     const actualAlly2 = sim.units.find(u => u.id === ally2Unit.id);
     

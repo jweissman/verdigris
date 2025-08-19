@@ -12,12 +12,12 @@ describe('Abilities Performance Profiling', () => {
       return;
     }
     
-    // Warm up
+
     for (let i = 0; i < 10; i++) {
       abilities.execute(context);
     }
     
-    // Profile different parts
+
     const times = {
       total: [],
       getAllUnits: [],
@@ -27,31 +27,31 @@ describe('Abilities Performance Profiling', () => {
       effects: []
     };
     
-    // Monkey patch to measure
+
     const originalExecute = abilities.execute.bind(abilities);
     let phaseStart;
     
     abilities.execute = function(ctx) {
       const start = performance.now();
       
-      // Measure getAllUnits
+
       phaseStart = performance.now();
       const units = ctx.getAllUnits();
       times.getAllUnits.push(performance.now() - phaseStart);
       
-      // Run the actual method
+
       const result = originalExecute(ctx);
       
       times.total.push(performance.now() - start);
       return result;
     };
     
-    // Run measurements
+
     for (let i = 0; i < 100; i++) {
       abilities.execute(context);
     }
     
-    // Calculate medians
+
     const median = (arr) => {
       const sorted = [...arr].sort((a, b) => a - b);
       return sorted[Math.floor(sorted.length / 2)];
@@ -62,12 +62,12 @@ describe('Abilities Performance Profiling', () => {
     console.log(`  getAllUnits: ${median(times.getAllUnits).toFixed(4)}ms`);
     console.log(`  Filtering: ~${(median(times.total) - median(times.getAllUnits)).toFixed(4)}ms`);
     
-    // Check how many units have abilities
+
     const allUnits = context.getAllUnits();
     const unitsWithAbilities = allUnits.filter(u => u.abilities?.length > 0);
     console.log(`\nUnits: ${allUnits.length} total, ${unitsWithAbilities.length} with abilities`);
     
-    // Check compilation cache hit rate
+
     const dslCompiler = require('../../src/dmg/dsl_compiler').dslCompiler;
     console.log(`DSL Cache size: ${dslCompiler.cache.size}`);
   });

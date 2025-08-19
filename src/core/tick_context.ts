@@ -56,7 +56,7 @@ export interface TickContext {
   getUnitColdDataByIndex(index: number): any;
   isAbilityForced(unitId: string, abilityName: string): boolean;
 
-  // High-performance index-based methods
+
   findUnitIndicesInRadius(center: Vec2, radius: number): number[];
   getActiveUnitIndices(): number[];
   getUnitIndicesWithAbilities(): number[];
@@ -249,10 +249,7 @@ export class TickContextImpl implements TickContext {
    * High-performance query: returns indices instead of proxies
    * Much faster than findUnitsInRadius for hot paths
    */
-  findUnitIndicesInRadius(
-    center: Vec2,
-    radius: number
-  ): number[] {
+  findUnitIndicesInRadius(center: Vec2, radius: number): number[] {
     const arrays = this.getArrays();
     const { posX, posY, activeIndices } = arrays;
     const radiusSq = radius * radius;
@@ -262,12 +259,12 @@ export class TickContextImpl implements TickContext {
       const dx = posX[idx] - center.x;
       const dy = posY[idx] - center.y;
       const distSq = dx * dx + dy * dy;
-      
+
       if (distSq <= radiusSq) {
         result.push(idx);
       }
     }
-    
+
     return result;
   }
 
@@ -278,44 +275,44 @@ export class TickContextImpl implements TickContext {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
   ): number[] {
     const arrays = this.getArrays();
     const { posX, posY, activeIndices } = arrays;
     const result: number[] = [];
-    
+
     const maxX = x + width;
     const maxY = y + height;
-    
+
     for (const idx of activeIndices) {
       const px = posX[idx];
       const py = posY[idx];
-      
+
       if (px >= x && px < maxX && py >= y && py < maxY) {
         result.push(idx);
       }
     }
-    
+
     return result;
   }
 
   /**
    * High-performance query: returns indices for team
    */
-  findUnitIndicesInTeam(team: 'friendly' | 'hostile' | 'neutral'): number[] {
+  findUnitIndicesInTeam(team: "friendly" | "hostile" | "neutral"): number[] {
     const arrays = this.getArrays();
     const { team: teamArray, activeIndices } = arrays;
     const result: number[] = [];
-    
-    // Team encoding: neutral=0, friendly=1, hostile=2
-    const teamCode = team === 'friendly' ? 1 : team === 'hostile' ? 2 : 0;
-    
+
+
+    const teamCode = team === "friendly" ? 1 : team === "hostile" ? 2 : 0;
+
     for (const idx of activeIndices) {
       if (teamArray[idx] === teamCode) {
         result.push(idx);
       }
     }
-    
+
     return result;
   }
 

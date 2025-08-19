@@ -184,6 +184,7 @@ export class SceneLoader {
     }
 
     const knownCommands = [
+      "bg",
       "weather",
       "deploy",
       "spawn",
@@ -200,7 +201,8 @@ export class SceneLoader {
     } else {
       if (command === "#") {
       } else {
-        console.warn(
+        // console.warn(
+        throw new Error(
           `Scene loader: Unrecognized command '${command}' - ignoring`,
         );
       }

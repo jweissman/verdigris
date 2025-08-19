@@ -23,8 +23,8 @@ describe('Abilities', () => {
   });
 
   it('should queue projectile for ranged ability', () => {
-    // Ranged is now handled by RangedCombat rule, not Abilities
-    // Test using the full simulator step
+
+
     const archer = {
       id: 'archer1',
       pos: { x: 2, y: 2 },
@@ -48,14 +48,14 @@ describe('Abilities', () => {
     sim.addUnit(archer);
     sim.addUnit(enemy);
 
-    // Run the simulator step to trigger RangedCombat rule
+
     sim.step();
 
-    // Debug: check what happened
+
     console.log('Projectiles:', sim.projectiles.length);
     console.log('Commands:', sim.queuedCommands.length);
     
-    // Check that projectile was created OR command was queued
+
     const hasProjectile = sim.projectiles.length > 0 || 
                          sim.queuedCommands.some(c => c.type === 'projectile');
     expect(hasProjectile).toBe(true);

@@ -30,7 +30,7 @@ export class Abilities extends Rule {
   constructor() {
     super();
 
-    // Compile all abilities once globally
+
     if (Abilities.precompiledAbilities.size === 0) {
       for (const name in Abilities.all) {
         const ability = Abilities.all[name];
@@ -81,23 +81,23 @@ export class Abilities extends Rule {
 
     const currentTick = context.getCurrentTick();
 
-    // Try to use arrays directly if available
+
     const arrays = (context as any).getArrays?.();
     const useArrays = arrays?.posX && arrays?.posY && arrays?.team;
 
-    // Get all units once and filter for those with abilities
+
     const allUnits = context.getAllUnits();
     const relevantUnits: Unit[] = [];
 
     for (const unit of allUnits) {
       if (unit.state === "dead" || unit.hp <= 0) continue;
 
-      // Skip units that only have combat abilities
+
       const abilities = unit.abilities;
       if (!abilities || !Array.isArray(abilities) || abilities.length === 0)
         continue;
 
-      // Check if unit has any non-combat abilities
+
       const hasNonCombatAbility = abilities.some(
         (a) => a !== "melee" && a !== "ranged",
       );
@@ -113,10 +113,10 @@ export class Abilities extends Rule {
     }
 
     this.cachedAllUnits = allUnits; // Cache for DSL operations
-    // Set it on context ONCE for all DSL evaluations
+
     (context as any).cachedUnits = allUnits;
 
-    // Quick check: are there even any hostile units? If not, skip all combat abilities
+
     const hostileUnits = allUnits.filter(
       (u) => u.team === "hostile" && u.state !== "dead" && u.hp > 0,
     );
@@ -126,7 +126,7 @@ export class Abilities extends Rule {
 
     const hasEnemies = hostileUnits.length > 0 && friendlyUnits.length > 0;
 
-    // Pre-compute closest enemy and distance for each unit
+
     const closestEnemyMap = new Map<string, any>();
     const enemyDistanceMap = new Map<string, number>();
 
@@ -154,7 +154,7 @@ export class Abilities extends Rule {
 
     for (const unit of relevantUnits) {
       const closestEnemyDist = enemyDistanceMap.get(unit.id) || Infinity;
-      // Already filtered for dead units above
+
 
       const meta = unit.meta; // Cache meta access
       if (
@@ -187,7 +187,7 @@ export class Abilities extends Rule {
       const lastAbilityTick = unit.lastAbilityTick; // Cache property access
 
       for (const abilityName of abilities) {
-        // Skip combat abilities - these should be handled by specialized rules
+
         if (abilityName === "melee" || abilityName === "ranged") {
           continue;
         }
@@ -197,7 +197,7 @@ export class Abilities extends Rule {
           continue;
         }
 
-        // Skip if this ability was forced this tick
+
         if (context.isAbilityForced(unit.id, abilityName)) {
           continue;
         }
@@ -223,7 +223,7 @@ export class Abilities extends Rule {
         let shouldTrigger = true;
         let target = unit;
 
-        // Skip trigger evaluation for melee/ranged - we already validated by distance
+
         if (
           ability.trigger &&
           abilityName !== "melee" &&
@@ -251,7 +251,7 @@ export class Abilities extends Rule {
         }
 
         if (ability.target && ability.target !== "self") {
-          // For melee/ranged, we already know the closest enemy
+
           if (
             (abilityName === "melee" || abilityName === "ranged") &&
             ability.target === "closest.enemy()"
@@ -280,8 +280,8 @@ export class Abilities extends Rule {
           }
         }
 
-        // Don't process effects here - just collect them
-        // Store effect data for batch processing later
+
+
         if (!this.pendingEffects) {
           this.pendingEffects = [];
         }
@@ -304,7 +304,7 @@ export class Abilities extends Rule {
       }
     } // Close for loop instead of forEach
 
-    // Now process all effects in batch (these get added to this.commands)
+
     if (this.pendingEffects && this.pendingEffects.length > 0) {
       for (const { effect, caster, target } of this.pendingEffects) {
         this.processEffectAsCommand(context, effect, caster, target);
@@ -312,7 +312,7 @@ export class Abilities extends Rule {
       this.pendingEffects = []; // Clear for next tick
     }
 
-    // Add meta commands after effect commands
+
     this.commands.push(...metaCommands);
 
     return this.commands;
@@ -365,7 +365,7 @@ export class Abilities extends Rule {
         };
 
       default:
-        // For now, skip other effect types
+
         return null;
     }
   }
@@ -501,7 +501,7 @@ export class Abilities extends Rule {
 
     if (typeof targetExpression === "string") {
       try {
-        // Use the compiled DSL compiler for performance
+
         const compiledFn = dslCompiler.compile(targetExpression);
         return compiledFn(caster, context);
       } catch (error) {
@@ -521,7 +521,7 @@ export class Abilities extends Rule {
   ): any {
     if (typeof value === "string") {
       try {
-        // Use the compiled DSL compiler for performance
+
         const compiledFn = dslCompiler.compile(value);
         return compiledFn(caster, context);
       } catch (error) {
@@ -1223,7 +1223,7 @@ export class Abilities extends Rule {
     const teleport = (effect as any).teleport || false;
 
     if (teleport) {
-      // Teleport instantly
+
       this.commands.push({
         type: "teleport",
         params: {
@@ -1233,7 +1233,7 @@ export class Abilities extends Rule {
         },
       });
     } else {
-      // Normal move
+
       this.commands.push({
         type: "move",
         params: {
@@ -1401,9 +1401,15 @@ export class Abilities extends Rule {
     caster: any,
     primaryTarget: any,
   ): void {
-    const count = this.resolveValue(context, effect.count, caster, primaryTarget) || 1;
+    const count =
+      this.resolveValue(context, effect.count, caster, primaryTarget) || 1;
     const stagger =
-      this.resolveValue(context, (effect as any).stagger, caster, primaryTarget) || 0;
+      this.resolveValue(
+        context,
+        (effect as any).stagger,
+        caster,
+        primaryTarget,
+      ) || 0;
 
     for (let i = 0; i < count; i++) {
       const projectileEffect = {
@@ -1490,7 +1496,8 @@ export class Abilities extends Rule {
     if (!target) return;
 
     const pos = target.pos || target;
-    const radius = this.resolveValue(context, effect.radius, caster, target) || 3;
+    const radius =
+      this.resolveValue(context, effect.radius, caster, target) || 3;
 
     const allUnits =
       this.cachedAllUnits && this.cachedAllUnits.length > 0
@@ -1530,7 +1537,7 @@ export class Abilities extends Rule {
 
     for (const unit of unitsInArea) {
       if (effect.buff) {
-        // Use commands to update meta, not direct assignment
+
         this.commands.push({
           type: "meta",
           params: {

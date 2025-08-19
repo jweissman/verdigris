@@ -10,6 +10,6 @@ s.......G.....w..s
 # g/G = grapplers with different positions
 # w = worms (basic grapple targets)
 # s = soldiers (heavier units to test mass physics)
-bg: mountain  
-weather: clear
-temperature: 22
+bg mountain  
+weather clear
+temperature 22
