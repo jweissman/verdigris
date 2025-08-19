@@ -11,6 +11,7 @@ import { Jumping } from "../rules/jumping";
 import { AirdropPhysics } from "../rules/airdrop_physics";
 import { Tossing } from "../rules/tossing";
 import { Abilities } from "../rules/abilities";
+import { RangedCombat } from "../rules/ranged_combat";
 import { EventHandler } from "../rules/event_handler";
 import { CommandHandler, QueuedCommand } from "../rules/command_handler";
 import { HugeUnits } from "../rules/huge_units";
@@ -357,8 +358,9 @@ class Simulator {
     const coreRules = [new UnitBehavior(), new UnitMovement(), new Cleanup()];
 
     const combatRules = [
-      new Abilities(),
-      new MeleeCombat(),
+      new MeleeCombat(),     // Handles melee combat directly  
+      new RangedCombat(),    // Handles ranged combat directly
+      new Abilities(),       // Handles all other abilities
       new Knockback(),
       new StatusEffects(),
       new Perdurance(),

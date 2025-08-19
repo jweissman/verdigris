@@ -57,6 +57,8 @@ describe('End-to-end combat', () => {
 
 
     const giantAfter = sim.units.find(u => u.id === 'giant');
+    console.log('Giant after:', giantAfter?.hp, giantAfter?.state);
+    console.log('Remaining units:', sim.units.map(u => ({ id: u.id, hp: u.hp })));
     expect(giantAfter?.state).not.toBe('dead');
     expect(giantAfter?.hp).toBeGreaterThan(0);
     

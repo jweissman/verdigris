@@ -86,9 +86,15 @@ export class Abilities extends Rule {
     for (const unit of allUnits) {
       if (unit.state === "dead" || unit.hp <= 0) continue;
 
-      if (unit.abilities?.length > 0 || unit.meta?.burrowed) {
-        relevantUnits.push(unit);
-      }
+      // Skip units that only have combat abilities
+      const abilities = unit.abilities;
+      if (!abilities || !Array.isArray(abilities) || abilities.length === 0) continue;
+      
+      // Check if unit has any non-combat abilities
+      const hasNonCombatAbility = abilities.some(a => a !== 'melee' && a !== 'ranged');
+      if (!hasNonCombatAbility && !unit.meta?.burrowed) continue;
+      
+      relevantUnits.push(unit);
     }
 
     DSL.clearCache(); // Clear cache each tick for fresh evaluations
@@ -165,12 +171,9 @@ export class Abilities extends Rule {
       const lastAbilityTick = unit.lastAbilityTick; // Cache property access
 
       for (const abilityName of abilities) {
-        // Skip combat abilities based on actual distance
-        if (abilityName === 'melee' && closestEnemyDist > 2) {
-          continue; // No enemy within melee range
-        }
-        if (abilityName === 'ranged' && (closestEnemyDist > 10 || closestEnemyDist <= 2)) {
-          continue; // No enemy in ranged range (3-10)
+        // Skip combat abilities - these should be handled by specialized rules
+        if (abilityName === 'melee' || abilityName === 'ranged') {
+          continue;
         }
         
         const ability = Abilities.abilityCache.get(abilityName);
