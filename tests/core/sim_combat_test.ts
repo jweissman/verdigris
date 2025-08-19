@@ -17,11 +17,8 @@ describe('End-to-end combat', () => {
       sprite: 'giant', 
       state: 'idle', 
       hp: 100, 
+      dmg: 15,  // MeleeCombat uses dmg field, not meta.meleeDamage!
       mass: 10, 
-      meta: { 
-        meleeDamage: 15,  // High damage to kill minions quickly
-        meleeRange: 2     // Extended range for giant
-      }, 
       maxHp: 100, 
       abilities: ['melee'], // Use the standard melee ability
       tags: ['giant']
@@ -37,6 +34,7 @@ describe('End-to-end combat', () => {
         sprite: 'tiny', 
         hp: 10, 
         maxHp: 10, 
+        dmg: 1,  // Minions do 1 damage each
         mass: 1, 
         state: 'idle', 
         abilities: [],
@@ -45,20 +43,13 @@ describe('End-to-end combat', () => {
     }
 
 
+    // Run combat simulation
     for (let t = 0; t < 100; t++) {
-      if (t === 0 || t === 1 || t === 99) {
-        const giant = sim.units.find(u => u.id === 'giant');
-        const minion0 = sim.units.find(u => u.id === 'minion0');
-        console.debug(`Step ${t}: giant at (${giant?.pos.x},${giant?.pos.y}) hp=${giant?.hp}`);
-        console.debug(`  minion0 at (${minion0?.pos.x},${minion0?.pos.y}) hp=${minion0?.hp} intendedMove=(${minion0?.intendedMove.x},${minion0?.intendedMove.y})`);
-      }
       sim.step();
     }
 
 
     const giantAfter = sim.units.find(u => u.id === 'giant');
-    console.log('Giant after:', giantAfter?.hp, giantAfter?.state);
-    console.log('Remaining units:', sim.units.map(u => ({ id: u.id, hp: u.hp })));
     expect(giantAfter?.state).not.toBe('dead');
     expect(giantAfter?.hp).toBeGreaterThan(0);
     
