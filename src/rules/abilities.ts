@@ -104,6 +104,8 @@ export class Abilities extends Rule {
     }
 
     this.cachedAllUnits = allUnits; // Cache for DSL operations
+    // Set it on context ONCE for all DSL evaluations
+    (context as any).cachedUnits = allUnits;
     
     // Quick check: are there even any hostile units? If not, skip all combat abilities
     const hostileUnits = allUnits.filter(u => u.team === 'hostile' && u.state !== 'dead' && u.hp > 0);
@@ -212,7 +214,6 @@ export class Abilities extends Rule {
           const precompiled = Abilities.precompiledAbilities.get(abilityName);
           if (precompiled?.trigger) {
             try {
-              (context as any).cachedUnits = allUnits;
               shouldTrigger = precompiled.trigger(unit, context);
             } catch (error) {
               console.error(`Error evaluating trigger for ${abilityName}:`, error);
@@ -471,7 +472,6 @@ export class Abilities extends Rule {
       try {
         // Use the compiled DSL compiler for performance
         const compiledFn = dslCompiler.compile(targetExpression);
-        (context as any).cachedUnits = this.cachedAllUnits;
         return compiledFn(caster, context);
       } catch (error) {
         console.warn(`Failed to resolve target '${targetExpression}':`, error);
@@ -492,7 +492,6 @@ export class Abilities extends Rule {
       try {
         // Use the compiled DSL compiler for performance
         const compiledFn = dslCompiler.compile(value);
-        (context as any).cachedUnits = this.cachedAllUnits;
         return compiledFn(caster, context);
       } catch (error) {
         console.warn(`Failed to resolve DSL value '${value}':`, error);
@@ -534,7 +533,6 @@ export class Abilities extends Rule {
         }
 
         const compiledCondition = dslCompiler.compile(condition);
-        (context as any).cachedUnits = this.cachedAllUnits;
         const conditionResult = compiledCondition(caster, context);
         return conditionResult
           ? value.$conditional.then
