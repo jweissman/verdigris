@@ -113,6 +113,7 @@ export default class DSL {
     target?: any,
     cachedAllUnits?: readonly Unit[],
   ): any {
+    throw new Error("Deprecated -- use compiled functions");
     const allUnits = cachedAllUnits || context.getAllUnits();
 
     // Fast path for self HP checks

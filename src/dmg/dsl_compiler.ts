@@ -24,6 +24,56 @@ type ASTNode =
 
 export class DSLCompiler {
   private cache = new Map<string, (unit: Unit, context: TickContext) => any>();
+  private static sharedHelpers: any = null;
+  
+  /**
+   * Initialize shared helper functions once
+   */
+  private static initSharedHelpers() {
+    if (DSLCompiler.sharedHelpers) return;
+    
+    // Create shared helper functions that can be reused
+    const helperCode = `
+      const _findClosestEnemy = (unit, units) => {
+        let c = null, m = Infinity;
+        const ux = unit.pos.x, uy = unit.pos.y, ut = unit.team;
+        for (let i = 0; i < units.length; i++) {
+          const e = units[i];
+          if (e.team !== ut && e.state !== 'dead' && e.hp > 0) {
+            const dx = e.pos.x - ux, dy = e.pos.y - uy;
+            const d = dx * dx + dy * dy;
+            if (d < m) { m = d; c = e; }
+          }
+        }
+        return c;
+      };
+      
+      const _findClosestAlly = (unit, units) => {
+        let c = null, m = Infinity;
+        const ux = unit.pos.x, uy = unit.pos.y, ut = unit.team, uid = unit.id;
+        for (let i = 0; i < units.length; i++) {
+          const a = units[i];
+          if (a.team === ut && a.id !== uid && a.state !== 'dead' && a.hp > 0) {
+            const dx = a.pos.x - ux, dy = a.pos.y - uy;
+            const d = dx * dx + dy * dy;
+            if (d < m) { m = d; c = a; }
+          }
+        }
+        return c;
+      };
+      
+      const _distance = (unit, target) => {
+        if (!target) return Infinity;
+        const dx = (target.pos ? target.pos.x : target.x) - unit.pos.x;
+        const dy = (target.pos ? target.pos.y : target.y) - unit.pos.y;
+        return Math.sqrt(dx * dx + dy * dy);
+      };
+      
+      return { _findClosestEnemy, _findClosestAlly, _distance };
+    `;
+    
+    DSLCompiler.sharedHelpers = new Function(helperCode)();
+  }
 
   /**
    * Compile a DSL expression into an efficient function
@@ -34,10 +84,19 @@ export class DSLCompiler {
     }
 
     const ast = this.parse(expression);
-    const fn = this.generate(ast);
-
-    this.cache.set(expression, fn);
-    return fn;
+    
+    // Try to compile to optimized JS first
+    try {
+      const fn = this.generateOptimized(ast, expression);
+      this.cache.set(expression, fn);
+      return fn;
+    } catch (e) {
+      // Fall back to interpreted AST if compilation fails
+      console.warn(`Failed to compile ${expression}, using interpreter:`, e);
+      const fn = this.generate(ast);
+      this.cache.set(expression, fn);
+      return fn;
+    }
   }
 
   /**
@@ -302,6 +361,17 @@ export class DSLCompiler {
     ) {
       return { type: "literal", value: token.slice(1, -1) };
     }
+    
+    // Array literals
+    if (token === "[") {
+      const elements: ASTNode[] = [];
+      while (pos.i < tokens.length && tokens[pos.i] !== "]") {
+        elements.push(this.parseExpression(tokens, pos));
+        if (tokens[pos.i] === ",") pos.i++;
+      }
+      pos.i++; // consume ]
+      return { type: "literal", value: elements.map(e => this.evaluateLiteral(e)) };
+    }
 
     // Parenthesized expression
     if (token === "(") {
@@ -315,7 +385,423 @@ export class DSLCompiler {
   }
 
   /**
-   * Generate optimized function from AST
+   * Evaluate literal node at parse time
+   */
+  private evaluateLiteral(node: ASTNode): any {
+    if (node.type === "literal") return node.value;
+    if (node.type === "identifier") {
+      // String literals in arrays
+      return node.name;
+    }
+    return undefined;
+  }
+  
+  /**
+   * Generate optimized compiled JavaScript function from AST
+   */
+  private generateOptimized(ast: ASTNode, expression: string): (unit: Unit, context: TickContext) => any {
+    try {
+      // For very simple expressions, generate direct code
+      if (this.isSimpleExpression(expression)) {
+        const jsCode = this.astToDirectJS(ast);
+        const functionBody = `return ${jsCode};`;
+        return new Function('unit', 'context', functionBody) as any;
+      }
+      
+      // For complex expressions with helpers, use inline code
+      const jsCode = this.astToInlineJS(ast);
+      const functionBody = `return ${jsCode};`;
+      return new Function('unit', 'context', functionBody) as any;
+    } catch (e) {
+      console.error(`Failed to compile '${expression}':`, e);
+      throw new Error(`Failed to compile expression '${expression}': ${e}`);
+    }
+  }
+  
+  /**
+   * Check if expression is simple enough for direct compilation
+   */
+  private isSimpleExpression(expression: string): boolean {
+    // Simple expressions don't use complex helpers
+    return !expression.includes('closest') && 
+           !expression.includes('weakest') && 
+           !expression.includes('healthiest') && 
+           !expression.includes('centroid') &&
+           !expression.includes('distance') &&
+           !expression.includes('enemies') &&
+           !expression.includes('allies') &&
+           !expression.includes('pick');
+  }
+  
+  /**
+   * Convert AST to direct JavaScript for simple expressions
+   */
+  private astToDirectJS(node: ASTNode): string {
+    switch (node.type) {
+      case 'literal':
+        return JSON.stringify(node.value);
+      
+      case 'identifier':
+        switch (node.name) {
+          case 'self':
+          case 'target':
+            return 'unit';
+          case 'Math':
+            return 'Math';
+          default:
+            return node.name;
+        }
+      
+      case 'property':
+        const obj = this.astToDirectJS(node.object);
+        return `(${obj}).${node.property}`;
+      
+      case 'optional':
+        const optObj = this.astToDirectJS(node.object);
+        return `((${optObj}) || {}).${node.property}`;
+      
+      case 'binary':
+        const left = this.astToDirectJS(node.left);
+        const right = this.astToDirectJS(node.right);
+        return `(${left} ${node.op} ${right})`;
+      
+      case 'unary':
+        return `${node.op}(${this.astToDirectJS(node.arg)})`;
+      
+      case 'call':
+        // Simple function calls
+        if (node.func === 'method' || node.func === 'optionalMethod') {
+          const obj = this.astToDirectJS(node.args[0]);
+          const method = node.args[1].type === 'literal' ? node.args[1].value : 'unknown';
+          const args = node.args.slice(2).map(a => this.astToDirectJS(a)).join(', ');
+          if (node.func === 'optionalMethod') {
+            return `((${obj}) && (${obj}).${method} ? (${obj}).${method}(${args}) : undefined)`;
+          }
+          return `(${obj}).${method}(${args})`;
+        }
+        const args = node.args.map(a => this.astToDirectJS(a)).join(', ');
+        return `${node.func}(${args})`;
+      
+      default:
+        throw new Error(`Cannot convert to direct JS: ${(node as any).type}`);
+    }
+  }
+  
+  /**
+   * Convert AST to inline JavaScript - generate actual code, not helper references
+   */
+  private astToInlineJS(node: ASTNode): string {
+    switch (node.type) {
+      case 'literal':
+        return JSON.stringify(node.value);
+      
+      case 'identifier':
+        switch (node.name) {
+          case 'self':
+          case 'target':
+            return 'unit';
+          case 'Math':
+            return 'Math';
+          case 'closest':
+            // Return an object with inline functions
+            return `(() => {
+              const units = context.cachedUnits || context.getAllUnits();
+              return {
+                enemy: () => {
+                  let c = null, m = Infinity;
+                  for (const e of units) {
+                    if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
+                      const dx = e.pos.x - unit.pos.x, dy = e.pos.y - unit.pos.y;
+                      const d = dx * dx + dy * dy;
+                      if (d < m) { m = d; c = e; }
+                    }
+                  }
+                  return c;
+                },
+                ally: () => {
+                  let c = null, m = Infinity;
+                  for (const a of units) {
+                    if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0) {
+                      const dx = a.pos.x - unit.pos.x, dy = a.pos.y - unit.pos.y;
+                      const d = dx * dx + dy * dy;
+                      if (d < m) { m = d; c = a; }
+                    }
+                  }
+                  return c;
+                }
+              };
+            })()`;
+          case 'weakest':
+            return `(() => {
+              const units = context.cachedUnits || context.getAllUnits();
+              return {
+                ally: () => {
+                  let w = null, minHp = Infinity;
+                  for (const a of units) {
+                    if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0 && a.hp < minHp) {
+                      minHp = a.hp;
+                      w = a;
+                    }
+                  }
+                  return w;
+                }
+              };
+            })()`;
+          case 'healthiest':
+            return `(() => {
+              const units = context.cachedUnits || context.getAllUnits();
+              return {
+                enemy: () => {
+                  let h = null, maxHp = 0;
+                  for (const e of units) {
+                    if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0 && e.hp > maxHp) {
+                      maxHp = e.hp;
+                      h = e;
+                    }
+                  }
+                  return h;
+                },
+                enemy_in_range: (range) => {
+                  let h = null, maxHp = 0;
+                  const rangeSq = range * range;
+                  for (const e of units) {
+                    if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
+                      const dx = e.pos.x - unit.pos.x, dy = e.pos.y - unit.pos.y;
+                      const distSq = dx * dx + dy * dy;
+                      if (distSq <= rangeSq && e.hp > maxHp) {
+                        maxHp = e.hp;
+                        h = e;
+                      }
+                    }
+                  }
+                  return h;
+                }
+              };
+            })()`;
+          case 'enemies':
+            return `(context.cachedUnits || context.getAllUnits()).filter(u => u.team !== unit.team && u.state !== 'dead')`;
+          case 'allies':
+            return `(context.cachedUnits || context.getAllUnits()).filter(u => u.team === unit.team && u.id !== unit.id && u.state !== 'dead')`;
+          case 'centroid':
+            return `(() => {
+              const units = context.cachedUnits || context.getAllUnits();
+              const allies = units.filter(u => u.team === unit.team && u.id !== unit.id && u.state !== 'dead');
+              const enemies = units.filter(u => u.team !== unit.team && u.state !== 'dead');
+              const woundedAllies = allies.filter(u => u.hp < u.maxHp);
+              
+              return {
+                wounded_allies: () => {
+                  if (woundedAllies.length === 0) return null;
+                  const x = woundedAllies.reduce((sum, u) => sum + u.pos.x, 0) / woundedAllies.length;
+                  const y = woundedAllies.reduce((sum, u) => sum + u.pos.y, 0) / woundedAllies.length;
+                  return { x: Math.round(x), y: Math.round(y) };
+                },
+                allies: () => {
+                  if (allies.length === 0) return null;
+                  const x = allies.reduce((sum, u) => sum + u.pos.x, 0) / allies.length;
+                  const y = allies.reduce((sum, u) => sum + u.pos.y, 0) / allies.length;
+                  return { x: Math.round(x), y: Math.round(y) };
+                },
+                enemies: () => {
+                  if (enemies.length === 0) return null;
+                  const x = enemies.reduce((sum, u) => sum + u.pos.x, 0) / enemies.length;
+                  const y = enemies.reduce((sum, u) => sum + u.pos.y, 0) / enemies.length;
+                  return { x: Math.round(x), y: Math.round(y) };
+                }
+              };
+            })()`;
+          default:
+            return node.name;
+        }
+      
+      case 'property':
+        const obj = this.astToInlineJS(node.object);
+        return `(${obj}).${node.property}`;
+      
+      case 'optional':
+        const optObj = this.astToInlineJS(node.object);
+        return `((${optObj}) || {}).${node.property}`;
+      
+      case 'call':
+        if (node.func === 'distance') {
+          const target = this.astToInlineJS(node.args[0]);
+          return `((t) => {
+            if (!t) return Infinity;
+            const dx = (t.pos ? t.pos.x : t.x) - unit.pos.x;
+            const dy = (t.pos ? t.pos.y : t.y) - unit.pos.y;
+            return Math.sqrt(dx * dx + dy * dy);
+          })(${target})`;
+        }
+        if (node.func === 'pick') {
+          const arr = this.astToInlineJS(node.args[0]);
+          return `((arr) => arr[Math.floor((context.getRandom ? context.getRandom() : Math.random()) * arr.length)])(${arr})`;
+        }
+        // Handle method calls
+        if (node.func === 'method' || node.func === 'optionalMethod') {
+          const obj = this.astToInlineJS(node.args[0]);
+          const method = node.args[1].type === 'literal' ? node.args[1].value : 'unknown';
+          const args = node.args.slice(2).map(a => this.astToInlineJS(a)).join(', ');
+          if (node.func === 'optionalMethod') {
+            return `((${obj}) && (${obj}).${method} ? (${obj}).${method}(${args}) : undefined)`;
+          }
+          return `(${obj}).${method}(${args})`;
+        }
+        // Other function calls
+        const args = node.args.map(a => this.astToInlineJS(a)).join(', ');
+        return `${node.func}(${args})`;
+      
+      case 'binary':
+        const left = this.astToInlineJS(node.left);
+        const right = this.astToInlineJS(node.right);
+        return `(${left} ${node.op} ${right})`;
+      
+      case 'unary':
+        return `${node.op}(${this.astToInlineJS(node.arg)})`;
+      
+      default:
+        throw new Error(`Cannot convert AST node to inline JS: ${(node as any).type}`);
+    }
+  }
+  
+  /**
+   * Convert AST to simple inline JavaScript - no helper functions
+   */
+  private astToSimpleJS(node: ASTNode): string {
+    switch (node.type) {
+      case 'literal':
+        return JSON.stringify(node.value);
+      
+      case 'identifier':
+        switch (node.name) {
+          case 'self':
+          case 'target':
+            return 'unit';
+          case 'true':
+            return 'true';
+          case 'false':
+            return 'false';
+          case 'Math':
+            return 'Math';
+          default:
+            // For anything complex, use the full astToJS
+            return this.astToJS(node);
+        }
+      
+      case 'property':
+        const obj = this.astToSimpleJS(node.object);
+        return `(${obj}).${node.property}`;
+      
+      case 'optional':
+        const optObj = this.astToSimpleJS(node.object);
+        return `((${optObj}) || {}).${node.property}`;
+      
+      case 'binary':
+        const left = this.astToSimpleJS(node.left);
+        const right = this.astToSimpleJS(node.right);
+        return `(${left} ${node.op} ${right})`;
+      
+      case 'unary':
+        return `${node.op}(${this.astToSimpleJS(node.arg)})`;
+      
+      case 'call':
+        // For complex function calls, use the full astToJS
+        return this.astToJS(node);
+      
+      default:
+        return this.astToJS(node);
+    }
+  }
+  
+  /**
+   * Convert AST to JavaScript code string
+   */
+  private astToJS(node: ASTNode): string {
+    switch (node.type) {
+      case 'literal':
+        return JSON.stringify(node.value);
+      
+      case 'identifier':
+        switch (node.name) {
+          case 'self':
+          case 'target':
+            return 'unit';
+          case 'closest':
+            return '{ enemy: _findClosestEnemy, ally: _findClosestAlly }';
+          case 'weakest':
+            return '{ ally: _findWeakestAlly }';
+          case 'strongest':
+            return '{ enemy: _findStrongestEnemy }';
+          case 'healthiest':
+            return '{ enemy: _findHealthiestEnemy, enemy_in_range: _findHealthiestEnemyInRange }';
+          case 'centroid':
+            return '{ wounded_allies: _centroidWoundedAllies, allies: _centroidAllies, enemies: _centroidEnemies }';
+          case 'Math':
+            return 'Math';
+          case 'enemies':
+            return '_units().filter(u => u.team !== unit.team && u.state !== "dead")';
+          case 'allies':
+            return '_units().filter(u => u.team === unit.team && u.id !== unit.id && u.state !== "dead")';
+          default:
+            return node.name;
+        }
+      
+      case 'property':
+        const obj = this.astToJS(node.object);
+        return `(${obj}).${node.property}`;
+      
+      case 'optional':
+        const optObj = this.astToJS(node.object);
+        return `((${optObj}) || {}).${node.property}`;
+      
+      case 'call':
+        if (node.func === 'distance') {
+          return `_distance(${this.astToJS(node.args[0])})`;
+        }
+        if (node.func === 'pick') {
+          const arrArg = node.args[0];
+          if (arrArg.type === 'literal' && Array.isArray(arrArg.value)) {
+            return `_pick(${JSON.stringify(arrArg.value)})`;
+          }
+          return `_pick(${this.astToJS(arrArg)})`;
+        }
+        if (node.func === 'method') {
+          const obj = this.astToJS(node.args[0]);
+          const method = node.args[1].type === 'literal' ? node.args[1].value : 'unknown';
+          const args = node.args.slice(2).map(a => this.astToJS(a)).join(', ');
+          return `(${obj}).${method}(${args})`;
+        }
+        if (node.func === 'optionalMethod') {
+          const obj = this.astToJS(node.args[0]);
+          const method = node.args[1].type === 'literal' ? node.args[1].value : 'unknown';
+          const args = node.args.slice(2).map(a => this.astToJS(a)).join(', ');
+          // Safe optional method call
+          return `((${obj}) && (${obj}).${method} ? (${obj}).${method}(${args}) : undefined)`;
+        }
+        // Default function call
+        const args = node.args.map(a => this.astToJS(a)).join(', ');
+        if (typeof node.func === 'string') {
+          return `${node.func}(${args})`;
+        }
+        return `(${this.astToJS(node.func)})(${args})`;
+      
+      case 'binary':
+        const left = this.astToJS(node.left);
+        const right = this.astToJS(node.right);
+        return `(${left} ${node.op} ${right})`;
+      
+      case 'unary':
+        return `${node.op}(${this.astToJS(node.arg)})`;
+      
+      case 'conditional':
+        return `(${this.astToJS(node.test)} ? ${this.astToJS(node.consequent)} : ${this.astToJS(node.alternate)})`;
+      
+      default:
+        throw new Error(`Cannot convert AST node to JS: ${(node as any).type}`);
+    }
+  }
+  
+  /**
+   * Generate interpreted function from AST (fallback)
    */
   private generate(ast: ASTNode): (unit: Unit, context: TickContext) => any {
     // Generate a function that works directly with arrays when possible
@@ -383,6 +869,10 @@ export class DSLCompiler {
         return this.createWeakestHelper(unit, context);
       case "strongest":
         return this.createStrongestHelper(unit, context);
+      case "healthiest":
+        return this.createHealthiestHelper(unit, context);
+      case "Math":
+        return Math;
       case "enemies":
         return this.getEnemies(unit, context);
       case "allies":
@@ -400,6 +890,12 @@ export class DSLCompiler {
   ): any {
     if (typeof func === "string") {
       switch (func) {
+        case "pick":
+          const arr = this.evaluate(args[0], unit, context);
+          if (!Array.isArray(arr)) return undefined;
+          const idx = Math.floor(context.getRandom() * arr.length);
+          return arr[idx];
+          
         case "distance":
           const target = this.evaluate(args[0], unit, context);
           if (!target || target === undefined || target === null)
@@ -585,6 +1081,13 @@ export class DSLCompiler {
       enemy: () => this.findStrongestEnemy(unit, context),
     };
   }
+  
+  private createHealthiestHelper(unit: Unit, context: TickContext) {
+    return {
+      enemy: () => this.findHealthiestEnemy(unit, context),
+      enemy_in_range: (range: number) => this.findHealthiestEnemyInRange(unit, context, range),
+    };
+  }
 
   // Fallback implementations using getAllUnits
   private findClosestEnemy(unit: Unit, context: TickContext): Unit | null {
@@ -681,6 +1184,54 @@ export class DSLCompiler {
     }
 
     return strongest;
+  }
+  
+  private findHealthiestEnemy(unit: Unit, context: TickContext): Unit | null {
+    const units = (context as any).cachedUnits || context.getAllUnits();
+    let healthiest = null;
+    let maxHp = 0;
+
+    for (const u of units) {
+      if (
+        u.team !== unit.team &&
+        u.state !== "dead" &&
+        u.state !== 3 &&
+        u.hp > 0
+      ) {
+        if (u.hp > maxHp) {
+          maxHp = u.hp;
+          healthiest = u;
+        }
+      }
+    }
+
+    return healthiest;
+  }
+
+  private findHealthiestEnemyInRange(unit: Unit, context: TickContext, range: number): Unit | null {
+    const units = (context as any).cachedUnits || context.getAllUnits();
+    let healthiest = null;
+    let maxHp = 0;
+    const rangeSq = range * range;
+
+    for (const u of units) {
+      if (
+        u.team !== unit.team &&
+        u.state !== "dead" &&
+        u.state !== 3 &&
+        u.hp > 0
+      ) {
+        const dx = u.pos.x - unit.pos.x;
+        const dy = u.pos.y - unit.pos.y;
+        const distSq = dx * dx + dy * dy;
+        if (distSq <= rangeSq && u.hp > maxHp) {
+          maxHp = u.hp;
+          healthiest = u;
+        }
+      }
+    }
+
+    return healthiest;
   }
 
   private getEnemies(unit: Unit, context: TickContext): Unit[] {

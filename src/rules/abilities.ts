@@ -353,13 +353,10 @@ export class Abilities extends Rule {
 
     if (typeof targetExpression === "string") {
       try {
-        return DSL.evaluate(
-          targetExpression,
-          caster,
-          context,
-          undefined,
-          this.cachedAllUnits,
-        );
+        // Use the compiled DSL compiler for performance
+        const compiledFn = dslCompiler.compile(targetExpression);
+        (context as any).cachedUnits = this.cachedAllUnits;
+        return compiledFn(caster, context);
       } catch (error) {
         console.warn(`Failed to resolve target '${targetExpression}':`, error);
         return null;
@@ -377,13 +374,10 @@ export class Abilities extends Rule {
   ): any {
     if (typeof value === "string") {
       try {
-        return DSL.evaluate(
-          value,
-          caster,
-          context,
-          target,
-          this.cachedAllUnits,
-        );
+        // Use the compiled DSL compiler for performance
+        const compiledFn = dslCompiler.compile(value);
+        (context as any).cachedUnits = this.cachedAllUnits;
+        return compiledFn(caster, context);
       } catch (error) {
         console.warn(`Failed to resolve DSL value '${value}':`, error);
         return value;
