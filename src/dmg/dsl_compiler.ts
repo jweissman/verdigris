@@ -34,120 +34,136 @@ export class DSLCompiler {
    * Compile expression directly to JavaScript function
    * Simple transformation with helper injection only when needed
    */
-  private compileExpression(expression: string): (unit: Unit, context: TickContext) => any {
+  private compileExpression(
+    expression: string,
+  ): (unit: Unit, context: TickContext) => any {
     // Optimize common distance checks without parsing
     if (this.isDistanceCheck(expression)) {
       return this.compileDistanceCheck(expression);
     }
-    
+
     // Start with simple text replacement
     let js = expression
-      .replace(/\bself\b/g, 'unit')
-      .replace(/\btarget\b/g, 'unit');
-    
+      .replace(/\bself\b/g, "unit")
+      .replace(/\btarget\b/g, "unit");
+
     // Build helper code only for what's needed
-    let helperCode = '';
-    
+    let helperCode = "";
+
     // Add helpers only if needed - check once, generate once
-    if (js.includes('closest.enemy()')) {
+    if (js.includes("closest.enemy()")) {
       helperCode += this.getClosestEnemyHelper();
-      js = js.replace(/closest\.enemy\(\)/g, '_closestEnemy()');
+      js = js.replace(/closest\.enemy\(\)/g, "_closestEnemy()");
     }
-    
-    if (js.includes('closest.ally()')) {
+
+    if (js.includes("closest.ally()")) {
       helperCode += this.getClosestAllyHelper();
-      js = js.replace(/closest\.ally\(\)/g, '_closestAlly()');
+      js = js.replace(/closest\.ally\(\)/g, "_closestAlly()");
     }
-    
+
     // Handle edge case where 'closest' is used without method call (for tests)
-    if (js === 'closest') {
+    if (js === "closest") {
       helperCode += this.getClosestEnemyHelper() + this.getClosestAllyHelper();
-      js = '{ enemy: _closestEnemy, ally: _closestAlly }';
+      js = "{ enemy: _closestEnemy, ally: _closestAlly }";
     }
-    
-    if (js.includes('distance(')) {
+
+    if (js.includes("distance(")) {
       helperCode += this.getDistanceHelper();
     }
-    
-    if (js.includes('weakest.ally()')) {
+
+    if (js.includes("weakest.ally()")) {
       helperCode += this.getWeakestAllyHelper();
-      js = js.replace(/weakest\.ally\(\)/g, '_weakestAlly()');
+      js = js.replace(/weakest\.ally\(\)/g, "_weakestAlly()");
     }
-    
-    if (js.includes('healthiest.enemy')) {
-      if (js.includes('healthiest.enemy()')) {
+
+    if (js.includes("healthiest.enemy")) {
+      if (js.includes("healthiest.enemy()")) {
         helperCode += this.getHealthiestEnemyHelper();
-        js = js.replace(/healthiest\.enemy\(\)/g, '_healthiestEnemy()');
+        js = js.replace(/healthiest\.enemy\(\)/g, "_healthiestEnemy()");
       }
-      if (js.includes('healthiest.enemy_in_range')) {
+      if (js.includes("healthiest.enemy_in_range")) {
         // Extract range and create specialized function
         const match = js.match(/healthiest\.enemy_in_range\((\d+)\)/);
         if (match) {
           const range = match[1];
           helperCode += this.getHealthiestEnemyInRangeHelper(range);
-          js = js.replace(/healthiest\.enemy_in_range\(\d+\)/g, '_healthiestEnemyInRange()');
+          js = js.replace(
+            /healthiest\.enemy_in_range\(\d+\)/g,
+            "_healthiestEnemyInRange()",
+          );
         }
       }
     }
-    
+
     // Check for centroid first as it defines allies and enemies
-    const hasCentroid = js.includes('centroid.');
-    
+    const hasCentroid = js.includes("centroid.");
+
     if (hasCentroid) {
       helperCode += this.getCentroidHelper();
     }
-    
+
     // Only add standalone helpers if centroid isn't already defining them
-    if (js.includes('enemies()') && !hasCentroid) {
+    if (js.includes("enemies()") && !hasCentroid) {
       helperCode += `
         const enemies = () => (context.cachedUnits || context.getAllUnits()).filter(u => u.team !== unit.team && u.state !== 'dead');`;
     }
-    
-    if (js.includes('allies()') && !hasCentroid) {
+
+    if (js.includes("allies()") && !hasCentroid) {
       helperCode += `
         const allies = () => (context.cachedUnits || context.getAllUnits()).filter(u => u.team === unit.team && u.id !== unit.id && u.state !== 'dead');`;
     }
-    
-    if (js.includes('pick(')) {
+
+    if (js.includes("pick(")) {
       helperCode += `
         const pick = (array) => array[Math.floor(context.getRandom() * array.length)];`;
     }
-    
-    if (js.includes('randomPos(')) {
+
+    if (js.includes("randomPos(")) {
       helperCode += `
         const randomPos = (centerX, centerY, range) => ({
           x: centerX + (context.getRandom() - 0.5) * 2 * range,
           y: centerY + (context.getRandom() - 0.5) * 2 * range
         });`;
     }
-    
+
     // Generate the function with minimal overhead
-    const functionBody = helperCode + `
+    const functionBody =
+      helperCode +
+      `
       return ${js};`;
-    return new Function('unit', 'context', functionBody) as any;
+    return new Function("unit", "context", functionBody) as any;
   }
-  
+
   /**
    * Check if expression is a distance check that can be optimized
    */
   private isDistanceCheck(expression: string): boolean {
-    return /^distance\(closest\.enemy\(\)\?\.pos\)\s*[<>=]+\s*\d+$/.test(expression);
+    return /^distance\(closest\.enemy\(\)\?\.pos\)\s*[<>=]+\s*\d+$/.test(
+      expression,
+    );
   }
-  
+
   /**
    * Compile optimized distance check - avoid finding closest enemy if we just need to check range
    */
-  private compileDistanceCheck(expression: string): (unit: Unit, context: TickContext) => any {
-    const match = expression.match(/^distance\(closest\.enemy\(\)\?\.pos\)\s*([<>=]+)\s*(\d+)$/);
-    if (!match) throw new Error('Invalid distance expression');
-    
+  private compileDistanceCheck(
+    expression: string,
+  ): (unit: Unit, context: TickContext) => any {
+    const match = expression.match(
+      /^distance\(closest\.enemy\(\)\?\.pos\)\s*([<>=]+)\s*(\d+)$/,
+    );
+    if (!match) throw new Error("Invalid distance expression");
+
     const op = match[1];
     const range = parseInt(match[2]);
     const rangeSq = range * range;
-    
-    if (op === '<=' || op === '<') {
-      const checkOp = op === '<=' ? '<=' : '<';
-      return new Function('unit', 'context', `
+
+    if (op === "<=" || op === "<") {
+      const checkOp = op === "<=" ? "<=" : "<";
+      return new Function(
+        "unit",
+        "context",
+        `
         // Use pre-computed distance if available
         if (context.precomputedEnemyDistance !== undefined) {
           return context.precomputedEnemyDistance ${op} ${range};
@@ -163,13 +179,17 @@ export class DSLCompiler {
           }
         }
         return false;
-      `) as any;
+      `,
+      ) as any;
     }
-    
+
     // For > and >= operators - check if NO enemy is within range
-    if (op === '>' || op === '>=') {
-      const checkOp = op === '>' ? '<=' : '<';
-      return new Function('unit', 'context', `
+    if (op === ">" || op === ">=") {
+      const checkOp = op === ">" ? "<=" : "<";
+      return new Function(
+        "unit",
+        "context",
+        `
         // Use pre-computed distance if available
         if (context.precomputedEnemyDistance !== undefined) {
           return context.precomputedEnemyDistance ${op} ${range};
@@ -185,12 +205,13 @@ export class DSLCompiler {
           }
         }
         return true;
-      `) as any;
+      `,
+      ) as any;
     }
-    
+
     throw new Error(`Unsupported distance operator: ${op}`);
   }
-  
+
   // Minimal helper generators - each returns just the code needed
   private getClosestEnemyHelper(): string {
     return `
@@ -208,7 +229,7 @@ export class DSLCompiler {
         return c;
       };`;
   }
-  
+
   private getClosestAllyHelper(): string {
     return `
       const _closestAlly = () => {
@@ -225,7 +246,7 @@ export class DSLCompiler {
         return c;
       };`;
   }
-  
+
   private getDistanceHelper(): string {
     return `
       const distance = (target) => {
@@ -235,7 +256,7 @@ export class DSLCompiler {
         return Math.sqrt(dx * dx + dy * dy);
       };`;
   }
-  
+
   private getWeakestAllyHelper(): string {
     return `
       const _weakestAlly = () => {
@@ -250,7 +271,7 @@ export class DSLCompiler {
         return w;
       };`;
   }
-  
+
   private getHealthiestEnemyHelper(): string {
     return `
       const _healthiestEnemy = () => {
@@ -265,7 +286,7 @@ export class DSLCompiler {
         return h;
       };`;
   }
-  
+
   private getHealthiestEnemyInRangeHelper(range: string): string {
     return `
       const _healthiestEnemyInRange = () => {
@@ -284,7 +305,7 @@ export class DSLCompiler {
         return h;
       };`;
   }
-  
+
   private getCentroidHelper(): string {
     return `
       const units = context.cachedUnits || context.getAllUnits();
@@ -313,7 +334,7 @@ export class DSLCompiler {
         }
       };`;
   }
-  
+
   clearCache() {
     this.cache.clear();
   }

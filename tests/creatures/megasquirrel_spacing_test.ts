@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import Encyclopaedia from '../../src/dmg/encyclopaedia.ts';
-import { HugeUnits } from '../../src/rules/huge_units.ts';
-import { Knockback } from '../../src/rules/knockback.ts';
+import Encyclopaedia from '../../src/dmg/encyclopaedia';
+import { HugeUnits } from '../../src/rules/huge_units';
+import { Knockback } from '../../src/rules/knockback';
 
 describe('Megasquirrel Spacing', () => {
   it('should push other units away from phantom feet cells', () => {

@@ -2,7 +2,7 @@ import { Rule } from "./rule";
 import { Simulator } from "../core/simulator";
 import { Vec2 } from "../types/Vec2";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 export class LightningStorm extends Rule {
   private commands: QueuedCommand[] = [];

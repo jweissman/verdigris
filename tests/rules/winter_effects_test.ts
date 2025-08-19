@@ -4,7 +4,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { BiomeEffects } from '../../src/rules/biome_effects';
 import { Perdurance } from '../../src/rules/perdurance';
 import { EventHandler } from '../../src/rules/event_handler';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 
 describe('Winter Effects System (BiomeEffects)', () => {
   beforeEach(() => {
@@ -63,7 +63,7 @@ describe('Winter Effects System (BiomeEffects)', () => {
 
   it('should freeze units in sub-zero temperatures', () => {
     const sim = new Simulator();
-    const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
+    const CommandHandler = require('../../src/core/command_handler').CommandHandler;
 
     
 
@@ -191,7 +191,7 @@ describe('Winter Effects System (BiomeEffects)', () => {
 
   it('should prevent frozen units from moving', () => {
     const sim = new Simulator();
-    const CommandHandler = require('../../src/rules/command_handler').CommandHandler;
+    const CommandHandler = require('../../src/core/command_handler').CommandHandler;
 
     
 

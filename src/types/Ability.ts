@@ -7,4 +7,5 @@ export interface Ability {
   target?: string;
   trigger?: string;
   effects: AbilityEffect[];
+  maxUses?: number;
 }

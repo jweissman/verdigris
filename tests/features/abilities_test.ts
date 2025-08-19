@@ -1,7 +1,8 @@
 
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import type { Unit, Ability } from '../../src/sim/types';
+import type { Unit } from '../../src/types/Unit';
+import type { Ability } from '../../src/types/Ability';
 
 describe('Abilities Rule', () => {
   it('should trigger a simple ability after its cooldown', () => {
@@ -20,7 +21,9 @@ describe('Abilities Rule', () => {
       mass: 1,
       abilities: ['explode'], // Self-destruct ability from JSON
       lastAbilityTick: {},
-      tags: ['construct']
+      tags: ['construct'],
+      dmg: 10,
+      meta: {}
     };
 
 
@@ -35,7 +38,10 @@ describe('Abilities Rule', () => {
       maxHp: 50,
       mass: 1,
       abilities: [],
-      lastAbilityTick: {}
+      lastAbilityTick: {},
+      tags: [],
+      dmg: 5,
+      meta: {}
     };
 
     sim.addUnit(unit);

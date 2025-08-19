@@ -1,7 +1,7 @@
 import { RNG } from "../core/rng";
 import type { TickContext } from "../core/tick_context";
 import type { Unit } from "../types/Unit";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 /**
  * Base class for all rules

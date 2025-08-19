@@ -40,7 +40,7 @@ export interface AbilityEffect {
   color?: string;
   size?: ValueExpression;
   stagger?: ValueExpression;
-  
+
   speed?: ValueExpression;
   style?: string;
   effect?: string; // Backwards compat for single effect

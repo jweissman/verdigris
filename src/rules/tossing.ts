@@ -1,7 +1,7 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/Unit";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 export class Tossing extends Rule {
   private commands: QueuedCommand[] = [];

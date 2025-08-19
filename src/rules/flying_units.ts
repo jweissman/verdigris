@@ -1,7 +1,6 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
-import { QueuedCommand } from "./command_handler";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 import { Unit } from "../types/Unit";
 
 /**
@@ -18,17 +17,19 @@ export class FlyingUnits extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     this.animationFrame = (this.animationFrame + 1) % 60; // Cycle for animation
+    const commands: QueuedCommand[] = [];
 
     for (const unit of context.getAllUnits()) {
       if (unit.tags?.includes("flying")) {
-        this.updateFlyingUnit(context, unit);
+        const unitCommands = this.updateFlyingUnit(context, unit);
+        commands.push(...unitCommands);
       }
     }
-    const commands: QueuedCommand[] = [];
     return commands;
   }
 
-  private updateFlyingUnit(context: TickContext, unit: Unit) {
+  private updateFlyingUnit(context: TickContext, unit: Unit): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const shouldFly = this.shouldUnitFly(context, unit);
 
     if (shouldFly && !this.flyingUnits.has(unit.id)) {
@@ -83,6 +84,7 @@ export class FlyingUnits extends Rule {
         },
       });
     }
+    return commands;
   }
 
   private shouldUnitFly(context: TickContext, unit: Unit): boolean {
@@ -102,7 +104,7 @@ export class FlyingUnits extends Rule {
 
     if (isMoving) return true;
 
-    if (unit.state === "attacking" || unit.state === "fleeing") return true;
+    if (unit.state === "attack") return true; // Note: "fleeing" is not a valid UnitState
 
     if (unit.meta.stunned || unit.meta.frozen) return false;
 

@@ -16,7 +16,7 @@ import toymakerBalanced from "./scenes/toymaker-balanced-challenge.battle.txt";
 import heroShowcase from "./scenes/hero-showcase.battle.txt";
 import titleBackground from "./scenes/title-background.battle.txt";
 import Encyclopaedia from "../dmg/encyclopaedia";
-import { CommandHandler } from "../rules/command_handler";
+import { CommandHandler } from "./command_handler";
 
 export class SceneLoader {
   static scenarios = {

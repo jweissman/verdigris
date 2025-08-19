@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import { Unit } from '../../src/sim/types.ts';
+import { Unit } from '../../src/types/Unit';
 
 describe('Field Abstraction (Real vs Apparent)', () => {
   it('should block movement into huge unit body cells', () => {

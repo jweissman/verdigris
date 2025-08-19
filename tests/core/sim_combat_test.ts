@@ -21,7 +21,8 @@ describe('End-to-end combat', () => {
       mass: 10, 
       maxHp: 100, 
       abilities: ['melee'], // Use the standard melee ability
-      tags: ['giant']
+      tags: ['giant'],
+      meta: {}
     });
 
 

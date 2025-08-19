@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
 import DSL from '../../src/rules/dsl';
@@ -19,18 +19,18 @@ describe('Toymaker Debug', () => {
     
     
 
-    const deployBot = toymaker.abilities.deployBot;
-    if (deployBot) {
+    const hasDeployBot = toymaker.abilities.includes('deployBot');
+    if (hasDeployBot) {
     }
     
 
     try {
       const context = sim.getTickContext();
-      const closestEnemy = DSL.evaluate('closest.enemy()', toymaker, context);
+      const closestEnemy = (DSL as any).evaluate?.('closest.enemy()', toymaker, context);
       
-      const distance = DSL.evaluate('distance(closest.enemy()?.pos)', toymaker, context);
+      const distance = (DSL as any).evaluate?.('distance(closest.enemy()?.pos)', toymaker, context);
       
-      const triggerResult = DSL.evaluate('distance(closest.enemy()?.pos) <= 8', toymaker, context);
+      const triggerResult = (DSL as any).evaluate?.('distance(closest.enemy()?.pos) <= 8', toymaker, context);
     } catch (error) {
       console.error('DSL evaluation error:', error);
     }

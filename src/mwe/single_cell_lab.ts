@@ -1,7 +1,7 @@
 import { Game } from "../core/game";
-import { Simulator } from "../simulator";
+import { Simulator } from "../core/simulator";
 import Isometric from "../views/isometric";
-import { createScaledRenderer } from "./scene_viewer";
+import { createScaledRenderer } from "../core/renderer";
 
 /**
  * Single Cell Lab
@@ -190,12 +190,12 @@ export default class SingleCellLab {
   private triggerCellEffect(effect: string) {
     this.testEffect = effect;
 
-    if (!this.sim.cellEffects) {
-      this.sim.cellEffects = new Map();
+    if (!(this.sim as any).cellEffects) {
+      (this.sim as any).cellEffects = new Map();
     }
 
     const key = `${this.currentCell.x},${this.currentCell.y}`;
-    this.sim.cellEffects.set(key, {
+    (this.sim as any).cellEffects.set(key, {
       type: effect,
       duration: 60,
       intensity: 1.0,
@@ -241,8 +241,8 @@ export default class SingleCellLab {
     );
 
     const key = `${this.currentCell.x},${this.currentCell.y}`;
-    if (this.sim.cellEffects) {
-      this.sim.cellEffects.delete(key);
+    if ((this.sim as any).cellEffects) {
+      (this.sim as any).cellEffects.delete(key);
     }
 
     this.sim.particles = this.sim.particles.filter((p) => {
@@ -285,11 +285,11 @@ export default class SingleCellLab {
         return p.lifetime > 0;
       });
 
-      if (this.sim.cellEffects) {
-        for (const [key, effect] of this.sim.cellEffects.entries()) {
+      if ((this.sim as any).cellEffects) {
+        for (const [key, effect] of (this.sim as any).cellEffects.entries()) {
           effect.duration--;
           if (effect.duration <= 0) {
-            this.sim.cellEffects.delete(key);
+            (this.sim as any).cellEffects.delete(key);
           }
         }
       }
@@ -316,7 +316,7 @@ export default class SingleCellLab {
       this.drawGrid();
     }
 
-    if (this.showEffects && this.sim.cellEffects) {
+    if (this.showEffects && (this.sim as any).cellEffects) {
       this.drawCellEffects();
     }
 
@@ -346,7 +346,7 @@ export default class SingleCellLab {
     const cellEffectsSprite = this.sprites.get("cell-effects");
     if (!cellEffectsSprite) return;
 
-    for (const [key, effect] of this.sim.cellEffects.entries()) {
+    for (const [key, effect] of (this.sim as any).cellEffects.entries()) {
       const [x, y] = key.split(",").map(Number);
 
       let frame = 0;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import type { Unit } from '../../src/sim/types';
-import { CommandHandler } from '../../src/rules/command_handler';
+import type { Unit } from '../../src/types/Unit';
+import { CommandHandler } from '../../src/core/command_handler';
 import { Tossing } from '../../src/rules/tossing';
 import { EventHandler } from '../../src/rules/event_handler';
 

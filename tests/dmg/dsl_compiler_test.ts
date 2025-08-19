@@ -12,10 +12,12 @@ describe('DSL Compiler', () => {
     maxHp: 20,
     state: 'idle' as any,
     abilities: [],
-    speed: 1,
-    radius: 1,
-    damage: 1,
-    tags: []
+    tags: [],
+    dmg: 1,
+    mass: 1,
+    intendedMove: { x: 0, y: 0 },
+    sprite: 'test',
+    meta: {}
   };
 
   const enemyUnit: Unit = {
@@ -26,10 +28,12 @@ describe('DSL Compiler', () => {
     maxHp: 15,
     state: 'idle' as any,
     abilities: [],
-    speed: 1,
-    radius: 1,
-    damage: 1,
-    tags: []
+    tags: [],
+    dmg: 1,
+    mass: 1,
+    intendedMove: { x: 0, y: 0 },
+    sprite: 'test',
+    meta: {}
   };
 
   const mockContext: TickContext = {

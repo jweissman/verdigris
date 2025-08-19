@@ -31,7 +31,7 @@ describe('Cute Animals System', () => {
       pos: { x: 7, y: 5 },
       hp: 8,
       maxHp: 8,
-      team: 'neutral',
+      team: 'neutral' as const,
       meta: {
         isAmbient: true,
         spawnTick: 0,
@@ -80,7 +80,7 @@ describe('Cute Animals System', () => {
       pos: { x: 7, y: 5 },
       hp: 8,
       maxHp: 8,
-      team: 'neutral',
+      team: 'neutral' as const,
       meta: {
         isAmbient: true,
         wanderTarget: { x: 10, y: 5 }
@@ -94,7 +94,7 @@ describe('Cute Animals System', () => {
       pos: { x: 8, y: 6 },
       hp: 8,
       maxHp: 8,
-      team: 'neutral',
+      team: 'neutral' as const,
       meta: {
         isAmbient: true,
         wanderTarget: { x: 4, y: 7 }

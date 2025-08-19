@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 
 describe('Mesoworm - Medium Segmented Creature', () => {
   it('should create a mesoworm with custom segment sprites', () => {

@@ -3,7 +3,7 @@ import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 import { Projectile } from "../types/Projectile";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 interface GrappleLine {
   grapplerID: string;

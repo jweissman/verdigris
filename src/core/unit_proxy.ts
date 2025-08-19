@@ -180,21 +180,23 @@ export class UnitProxy implements Unit {
     this.storage.setField(this.id, "dmg", value);
   }
 
-  get abilityUsageCount() {
-    return this.storage.getField(this.id, "abilityUsageCount");
-  }
+  // Note: abilityUsageCount and effects are not part of Unit interface
+  // They should be accessed through meta if needed
+  // get abilityUsageCount() {
+  //   return this.storage.getField(this.id, "abilityUsageCount");
+  // }
 
-  set abilityUsageCount(value) {
-    this.storage.setField(this.id, "abilityUsageCount", value);
-  }
+  // set abilityUsageCount(value) {
+  //   this.storage.setField(this.id, "abilityUsageCount", value);
+  // }
 
-  get effects() {
-    return this.storage.getField(this.id, "effects");
-  }
+  // get effects() {
+  //   return this.storage.getField(this.id, "effects");
+  // }
 
-  set effects(value) {
-    this.storage.setField(this.id, "effects", value);
-  }
+  // set effects(value) {
+  //   this.storage.setField(this.id, "effects", value);
+  // }
 
   get lastAbilityTick() {
     return this.storage.getField(this.id, "lastAbilityTick");
@@ -212,13 +214,14 @@ export class UnitProxy implements Unit {
     this.storage.setField(this.id, "type", value);
   }
 
-  get vel() {
-    return this.storage.getField(this.id, "vel");
-  }
+  // Note: vel is for particles, not units
+  // get vel() {
+  //   return this.storage.getField(this.id, "vel");
+  // }
 
-  set vel(value) {
-    this.storage.setField(this.id, "vel", value);
-  }
+  // set vel(value) {
+  //   this.storage.setField(this.id, "vel", value);
+  // }
 
   get intendedTarget() {
     return this.storage.getField(this.id, "intendedTarget");

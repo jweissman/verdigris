@@ -245,26 +245,83 @@ export class TickContextImpl implements TickContext {
     return (this.sim as any).unitColdData.get(unitId);
   }
 
+  /**
+   * High-performance query: returns indices instead of proxies
+   * Much faster than findUnitsInRadius for hot paths
+   */
+  findUnitIndicesInRadius(
+    center: Vec2,
+    radius: number
+  ): number[] {
+    const arrays = this.getArrays();
+    const { posX, posY, activeIndices } = arrays;
+    const radiusSq = radius * radius;
+    const result: number[] = [];
+
+    for (const idx of activeIndices) {
+      const dx = posX[idx] - center.x;
+      const dy = posY[idx] - center.y;
+      const distSq = dx * dx + dy * dy;
+      
+      if (distSq <= radiusSq) {
+        result.push(idx);
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * High-performance query: returns indices in rectangle
+   */
+  findUnitIndicesInRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): number[] {
+    const arrays = this.getArrays();
+    const { posX, posY, activeIndices } = arrays;
+    const result: number[] = [];
+    
+    const maxX = x + width;
+    const maxY = y + height;
+    
+    for (const idx of activeIndices) {
+      const px = posX[idx];
+      const py = posY[idx];
+      
+      if (px >= x && px < maxX && py >= y && py < maxY) {
+        result.push(idx);
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * High-performance query: returns indices for team
+   */
+  findUnitIndicesInTeam(team: 'friendly' | 'hostile' | 'neutral'): number[] {
+    const arrays = this.getArrays();
+    const { team: teamArray, activeIndices } = arrays;
+    const result: number[] = [];
+    
+    // Team encoding: neutral=0, friendly=1, hostile=2
+    const teamCode = team === 'friendly' ? 1 : team === 'hostile' ? 2 : 0;
+    
+    for (const idx of activeIndices) {
+      if (teamArray[idx] === teamCode) {
+        result.push(idx);
+      }
+    }
+    
+    return result;
+  }
+
   isAbilityForced(unitId: string, abilityName: string): boolean {
     const key = `${unitId}:${abilityName}`;
     return (this.sim as any).forcedAbilitiesThisTick?.has(key) || false;
-  }
-
-  // High-performance index-based methods
-  findUnitIndicesInRadius(center: Vec2, radius: number): number[] {
-    const arrays = this.getArrays();
-    const indices: number[] = [];
-    const radiusSq = radius * radius;
-
-    for (const idx of arrays.activeIndices) {
-      const dx = arrays.posX[idx] - center.x;
-      const dy = arrays.posY[idx] - center.y;
-      if (dx * dx + dy * dy <= radiusSq) {
-        indices.push(idx);
-      }
-    }
-
-    return indices;
   }
 
   getActiveUnitIndices(): number[] {

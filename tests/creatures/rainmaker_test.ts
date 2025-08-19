@@ -88,7 +88,9 @@ describe("Rainmaker Integration", () => {
       sprite: 'soldier',
       state: 'idle' as const,
       mass: 1,
-      abilities: {},
+      dmg: 5,
+      abilities: [],
+      tags: [],
       intendedMove: { x: 0, y: 0 },
       meta: {}
     };

@@ -1,4 +1,4 @@
-import type { Simulator } from "../simulator";
+import type { Simulator } from "../core/simulator";
 
 export class FieldOverlays {
   private ctx: CanvasRenderingContext2D;

@@ -3,7 +3,7 @@ import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { Abilities } from '../../src/rules/abilities';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 import { ProjectileMotion } from '../../src/rules/projectile_motion';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 

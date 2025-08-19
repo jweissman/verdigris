@@ -3,7 +3,7 @@ import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 import { Abilities } from '../../src/rules/abilities';
 import { EventHandler } from '../../src/rules/event_handler';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 import { addEffectsToUnit } from '../../src/test_helpers/ability_compat';
 
 describe('Toymaker System', () => {

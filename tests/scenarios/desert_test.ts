@@ -4,7 +4,7 @@ import { Simulator } from '../../src/core/simulator';
 import * as fs from 'fs';
 import * as path from 'path';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
 import { Abilities } from '../../src/rules/abilities';

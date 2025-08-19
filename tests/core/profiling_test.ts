@@ -93,14 +93,14 @@ describe.skip('Performance Profiling', () => {
       });
     }
     
-    sim.startProfiling();
+    (sim as any).startProfiling?.();
     
 
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
     
-    const report = sim.getProfilingReport();
+    const report = (sim as any).getProfilingReport?.() || [];
     const movement = report.find(r => r.ruleName === 'UnitMovement');
     const combat = report.find(r => r.ruleName === 'MeleeCombat');
     const knockback = report.find(r => r.ruleName === 'Knockback');

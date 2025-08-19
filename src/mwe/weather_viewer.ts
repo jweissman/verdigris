@@ -1,7 +1,7 @@
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { Freehold } from "../freehold";
 import { Game } from "../core/game";
-import { Simulator } from "../simulator";
+import { Simulator } from "../core/simulator";
 import Isometric from "../views/isometric";
 import Orthographic from "../views/orthographic";
 import View from "../views/view";
@@ -97,7 +97,8 @@ export default class SceneWeatherViewer {
   }
 
   placeTestCreatures() {
-    this.sim.units = [];
+    // Clear all units - weather viewer doesn't need creatures
+    this.sim.reset();
   }
 
   setupKeyboardControls() {
@@ -146,33 +147,34 @@ export default class SceneWeatherViewer {
   applyWeather() {
     const weather = this.weathers[this.currentWeatherIndex];
 
-    this.sim.particles = [];
+    // Particles are cleared automatically when weather changes
+    // this.sim.particleArrays.clear(); // If we need to clear manually
 
     this.sim.lightningActive = false;
 
     switch (weather) {
       case "rain":
         this.sim.queuedCommands = [
-          { type: "weather", args: ["rain", "120", "0.8"] },
+          { type: "weather", params: { type: "rain", intensity: 120, opacity: 0.8 } },
         ];
         break;
       case "winter":
-        this.sim.queuedCommands = [{ type: "weather", args: ["winter"] }];
+        this.sim.queuedCommands = [{ type: "weather", params: { type: "winter" } }];
         break;
       case "storm":
         this.sim.queuedCommands = [
-          { type: "weather", args: ["rain", "120", "1.0"] },
-          { type: "lightning", args: ["16", "12"] },
+          { type: "weather", params: { type: "rain", intensity: 120, opacity: 1.0 } },
+          { type: "lightning", params: { x: 16, y: 12 } },
         ];
         break;
       case "sandstorm":
         this.sim.queuedCommands = [
-          { type: "temperature", args: ["35"] },
-          { type: "weather", args: ["sand", "200", "0.6"] },
+          { type: "temperature", params: { value: 35 } },
+          { type: "weather", params: { type: "sand", intensity: 200, opacity: 0.6 } },
         ];
         break;
       case "clear":
-        this.sim.queuedCommands = [{ type: "weather", args: ["clear"] }];
+        this.sim.queuedCommands = [{ type: "weather", params: { type: "clear" } }];
         break;
     }
 
@@ -195,7 +197,7 @@ export default class SceneWeatherViewer {
 
   updateWeatherInfo() {
     document.getElementById("particle-count").textContent =
-      this.sim.particles.length;
+      String(this.sim.particles.length);
 
     let avgTemp = 20,
       avgHumidity = 0.5;
@@ -227,8 +229,8 @@ export default class SceneWeatherViewer {
       }
     }
 
-    document.getElementById("temperature").textContent = avgTemp;
-    document.getElementById("humidity").textContent = avgHumidity;
+    document.getElementById("temperature").textContent = String(avgTemp);
+    document.getElementById("humidity").textContent = String(avgHumidity);
     document.getElementById("wind").textContent = this.sim.lightningActive
       ? "stormy"
       : "calm";

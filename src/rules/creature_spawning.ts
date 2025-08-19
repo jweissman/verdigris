@@ -1,7 +1,7 @@
 import { Rule } from "./rule";
 import Encyclopaedia from "../dmg/encyclopaedia";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 export interface SpawnRule {
   biome: string;
@@ -21,6 +21,7 @@ export interface SpawnRule {
 
 export class CreatureSpawning extends Rule {
   execute(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const currentBiome = this.detectBiome(context);
     const applicableRules = this.spawnRules.filter(
       (rule) => rule.biome === currentBiome || rule.biome === "any",
@@ -28,10 +29,10 @@ export class CreatureSpawning extends Rule {
 
     for (const rule of applicableRules) {
       if (this.shouldSpawn(context, rule)) {
-        this.spawnCreature(context, rule);
+        const spawnCommands = this.spawnCreature(context, rule);
+        commands.push(...spawnCommands);
       }
     }
-    const commands: QueuedCommand[] = [];
     return commands;
   }
 
@@ -125,7 +126,11 @@ export class CreatureSpawning extends Rule {
     return true;
   }
 
-  private spawnCreature(context: TickContext, rule: SpawnRule): void {
+  private spawnCreature(
+    context: TickContext,
+    rule: SpawnRule,
+  ): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const creatureType =
       rule.creatures[Math.floor(context.getRandom() * rule.creatures.length)];
 
@@ -169,6 +174,7 @@ export class CreatureSpawning extends Rule {
         },
       });
     } catch (e) {}
+    return commands;
   }
 
   private getSpawnPosition(

@@ -1,6 +1,6 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
-import { QueuedCommand } from "./command_handler";
+import { QueuedCommand } from "../core/command_handler";
 
 /**
  * Physics rule - handles projectile movement

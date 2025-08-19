@@ -2,7 +2,7 @@ import { expect } from 'bun:test';
 import { describe, test, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { GrapplingPhysics } from '../../src/rules/grappling_physics';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 
 describe('Grappling Mass Physics', () => {
   let sim: Simulator = new Simulator(40, 20);

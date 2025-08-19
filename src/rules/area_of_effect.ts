@@ -1,6 +1,6 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 export class AreaOfEffect extends Rule {
   private commands: QueuedCommand[] = [];

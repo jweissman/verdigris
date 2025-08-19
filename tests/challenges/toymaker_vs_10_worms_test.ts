@@ -106,9 +106,9 @@ describe('Toymaker Challenge', () => {
       pos: { x: 5, y: 5 },
       hp: 25,
       maxHp: 25,
-      team: 'friendly',
+      team: 'friendly' as const,
       abilities: ['deployBot'],
-      meta: { facing: 'right' }
+      meta: { facing: 'right' as const }
     };
     
     sim.addUnit(toymaker);
@@ -148,7 +148,7 @@ describe('Toymaker Challenge', () => {
       pos: { x: 2, y: 5 },
       hp: 6,
       maxHp: 6,
-      team: 'friendly',
+      team: 'friendly' as const,
       abilities: ['explode'],
       tags: ['construct', 'explosive', 'hunt', 'aggressive'],
       meta: { perdurance: 'sturdiness' }
@@ -161,7 +161,7 @@ describe('Toymaker Challenge', () => {
       pos: { x: 6, y: 5 },
       hp: 10,
       maxHp: 10,
-      team: 'hostile',
+      team: 'hostile' as const,
       abilities: ['jumps'],
       mass: 4
     };

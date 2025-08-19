@@ -131,7 +131,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     
 
     const { Abilities } = require('../../src/rules/abilities');
-    const { CommandHandler } = require('../../src/rules/command_handler');
+    const { CommandHandler } = require('../../src/core/command_handler');
     const { EventHandler } = require('../../src/rules/event_handler');
     
 

@@ -1,7 +1,6 @@
 import { MeleeCombat } from "../rules/melee_combat";
 import { Knockback } from "../rules/knockback";
 import { ProjectileMotion } from "../rules/projectile_motion";
-
 import { UnitMovement } from "../rules/unit_movement";
 import { AreaOfEffect } from "../rules/area_of_effect";
 import { Rule } from "../rules/rule";
@@ -13,13 +12,12 @@ import { Tossing } from "../rules/tossing";
 import { Abilities } from "../rules/abilities";
 import { RangedCombat } from "../rules/ranged_combat";
 import { EventHandler } from "../rules/event_handler";
-import { CommandHandler, QueuedCommand } from "../rules/command_handler";
+import { CommandHandler, QueuedCommand } from "./command_handler";
 import { HugeUnits } from "../rules/huge_units";
 import { SegmentedCreatures } from "../rules/segmented_creatures";
 import { GrapplingPhysics } from "../rules/grappling_physics";
 import { BiomeEffects } from "../rules/biome_effects";
 import { Perdurance } from "../rules/perdurance";
-import Particles from "../rules/particles";
 import { AmbientBehavior } from "../rules/ambient_behavior";
 import { AmbientSpawning } from "../rules/ambient_spawning";
 import { StatusEffects } from "../rules/status_effects";
@@ -358,9 +356,9 @@ class Simulator {
     const coreRules = [new UnitBehavior(), new UnitMovement(), new Cleanup()];
 
     const combatRules = [
-      new MeleeCombat(),     // Handles melee combat directly  
-      new RangedCombat(),    // Handles ranged combat directly
-      new Abilities(),       // Handles all other abilities
+      new MeleeCombat(), // Handles melee combat directly
+      new RangedCombat(), // Handles ranged combat directly
+      new Abilities(), // Handles all other abilities
       new Knockback(),
       new StatusEffects(),
       new Perdurance(),
@@ -576,6 +574,9 @@ class Simulator {
       }
 
       if (this.enableEnvironmentalEffects) {
+        // Update unit temperature effects every tick
+        this.updateUnitTemperatureEffects();
+        
         if (this.ticks % 10 === 0) {
           this.updateScalarFields();
           this.updateWeather();
@@ -825,11 +826,15 @@ class Simulator {
   }
 
   updateScalarFields() {
-    if (this.ticks % 500 !== 0) return;
-
-    this.temperatureField.decayAndDiffuse(0.002, 0.05); // Temperature
-    this.humidityField.decayAndDiffuse(0.005, 0.08); // Humidity
-    this.pressureField.decayAndDiffuse(0.01, 0.12); // Pressure
+    // Update scalar fields with gentler decay to maintain environmental effects
+    // Temperature should persist longer, humidity can decay a bit faster
+    this.temperatureField.diffuse(0.02); // Just diffuse, minimal decay
+    this.temperatureField.decay(0.0005); // Very slow decay towards ambient
+    
+    this.humidityField.diffuse(0.03);
+    this.humidityField.decay(0.001); // Slow evaporation
+    
+    this.pressureField.decayAndDiffuse(0.01, 0.12); // Pressure normalizes faster
   }
 
   applyFieldInteractions() {
@@ -858,21 +863,40 @@ class Simulator {
       }
     }
 
-    // TODO: Use SoA arrays directly or make this a rule
-    if (false) {
-      for (const unit of this.units) {
-        if (unit.meta.phantom) continue;
+  }
 
-        if (unit.state !== "dead") {
-          const pos = unit.pos;
-          const x = pos.x;
-          const y = pos.y;
-          this.temperatureField.addGradient(x, y, 2, 0.5);
-        }
+  updateUnitTemperatureEffects() {
+    // Update temperature and humidity from units
+    for (const unit of this.units) {
+      if (unit.meta.phantom) continue;
+      if (unit.state === "dead") continue;
 
-        if (unit.state === "walk" || unit.state === "attack") {
-          this.humidityField.addGradient(unit.pos.x, unit.pos.y, 1.5, 0.02);
+      const pos = unit.pos;
+      const x = Math.floor(pos.x);
+      const y = Math.floor(pos.y);
+      
+      // Freezebots reduce temperature gradually toward zero
+      if (unit.type === 'freezebot') {
+        const currentTemp = this.temperatureField.get(x, y);
+        // Only cool if above freezing, and cool proportionally
+        if (currentTemp > 0) {
+          this.temperatureField.addGradient(x, y, 4, -0.5); // Gentler cooling gradient
+          // Set center slightly colder
+          this.temperatureField.set(x, y, currentTemp * 0.95); // 5% cooling per tick
         }
+      } 
+      // Constructs generate more heat
+      else if (unit.tags?.includes('construct')) {
+        this.temperatureField.addGradient(x, y, 2, 1.0);
+      }
+      // Living units generate heat
+      else {
+        this.temperatureField.addGradient(x, y, 2, 0.5);
+      }
+
+      // Moving units increase humidity slightly
+      if (unit.state === "walk" || unit.state === "attack") {
+        this.humidityField.addGradient(x, y, 1.5, 0.02);
       }
     }
   }
@@ -1433,7 +1457,7 @@ class Simulator {
         team: ["friendly", "hostile", "neutral"][this.unitArrays.team[i]],
         state: ["idle", "walk", "attack", "dead"][this.unitArrays.state[i]],
         mass: this.unitArrays.mass[i],
-        dmg: this.unitArrays.damage[i],
+        dmg: this.unitArrays.dmg[i],
         sprite:
           this.unitColdData.get(this.unitArrays.unitIds[i])?.sprite ||
           "default",

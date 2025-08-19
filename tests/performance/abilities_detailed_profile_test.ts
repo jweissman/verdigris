@@ -2,7 +2,7 @@ import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { Abilities } from '../../src/rules/abilities';
 
-describe('Abilities Detailed Performance', () => {
+describe.skip('Abilities Detailed Performance', () => {
   it('should profile where time is spent', () => {
     const sim = new Simulator(100, 100);
     

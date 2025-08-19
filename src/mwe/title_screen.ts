@@ -1,7 +1,7 @@
 import { Simulator } from "../core/simulator";
 import { SceneLoader } from "../core/scene_loader";
 import { Game } from "../core/game";
-import { createScaledRenderer } from "../render/scaled_renderer";
+import { createScaledRenderer } from "../core/renderer";
 
 export interface MenuOption {
   text: string;

@@ -5,7 +5,7 @@ import { Ability } from "../types/Ability";
 import { Unit } from "../types/Unit";
 import * as abilitiesJson from "../../data/abilities.json";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 import { dslCompiler } from "../dmg/dsl_compiler";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
@@ -46,7 +46,10 @@ export class Abilities extends Rule {
           try {
             compiled.trigger = dslCompiler.compile(ability.trigger);
           } catch (err) {
-            console.error(`Failed to compile trigger for ${name}: "${ability.trigger}"`, err);
+            console.error(
+              `Failed to compile trigger for ${name}: "${ability.trigger}"`,
+              err,
+            );
             throw err;
           }
         }
@@ -55,7 +58,10 @@ export class Abilities extends Rule {
           try {
             compiled.target = dslCompiler.compile(ability.target);
           } catch (err) {
-            console.error(`Failed to compile target for ${name}: "${ability.target}"`, err);
+            console.error(
+              `Failed to compile target for ${name}: "${ability.target}"`,
+              err,
+            );
             throw err;
           }
         }
@@ -78,7 +84,7 @@ export class Abilities extends Rule {
     // Try to use arrays directly if available
     const arrays = (context as any).getArrays?.();
     const useArrays = arrays?.posX && arrays?.posY && arrays?.team;
-    
+
     // Get all units once and filter for those with abilities
     const allUnits = context.getAllUnits();
     const relevantUnits: Unit[] = [];
@@ -88,12 +94,15 @@ export class Abilities extends Rule {
 
       // Skip units that only have combat abilities
       const abilities = unit.abilities;
-      if (!abilities || !Array.isArray(abilities) || abilities.length === 0) continue;
-      
+      if (!abilities || !Array.isArray(abilities) || abilities.length === 0)
+        continue;
+
       // Check if unit has any non-combat abilities
-      const hasNonCombatAbility = abilities.some(a => a !== 'melee' && a !== 'ranged');
+      const hasNonCombatAbility = abilities.some(
+        (a) => a !== "melee" && a !== "ranged",
+      );
       if (!hasNonCombatAbility && !unit.meta?.burrowed) continue;
-      
+
       relevantUnits.push(unit);
     }
 
@@ -106,23 +115,28 @@ export class Abilities extends Rule {
     this.cachedAllUnits = allUnits; // Cache for DSL operations
     // Set it on context ONCE for all DSL evaluations
     (context as any).cachedUnits = allUnits;
-    
+
     // Quick check: are there even any hostile units? If not, skip all combat abilities
-    const hostileUnits = allUnits.filter(u => u.team === 'hostile' && u.state !== 'dead' && u.hp > 0);
-    const friendlyUnits = allUnits.filter(u => u.team === 'friendly' && u.state !== 'dead' && u.hp > 0);
-    
+    const hostileUnits = allUnits.filter(
+      (u) => u.team === "hostile" && u.state !== "dead" && u.hp > 0,
+    );
+    const friendlyUnits = allUnits.filter(
+      (u) => u.team === "friendly" && u.state !== "dead" && u.hp > 0,
+    );
+
     const hasEnemies = hostileUnits.length > 0 && friendlyUnits.length > 0;
-    
+
     // Pre-compute closest enemy and distance for each unit
     const closestEnemyMap = new Map<string, any>();
     const enemyDistanceMap = new Map<string, number>();
-    
+
     if (hasEnemies) {
       for (const unit of relevantUnits) {
         let closestEnemy = null;
         let minDist = Infinity;
-        
-        const enemyUnits = unit.team === 'friendly' ? hostileUnits : friendlyUnits;
+
+        const enemyUnits =
+          unit.team === "friendly" ? hostileUnits : friendlyUnits;
         for (const enemy of enemyUnits) {
           const dx = enemy.pos.x - unit.pos.x;
           const dy = enemy.pos.y - unit.pos.y;
@@ -132,7 +146,7 @@ export class Abilities extends Rule {
             closestEnemy = enemy;
           }
         }
-        
+
         closestEnemyMap.set(unit.id, closestEnemy);
         enemyDistanceMap.set(unit.id, minDist);
       }
@@ -174,10 +188,10 @@ export class Abilities extends Rule {
 
       for (const abilityName of abilities) {
         // Skip combat abilities - these should be handled by specialized rules
-        if (abilityName === 'melee' || abilityName === 'ranged') {
+        if (abilityName === "melee" || abilityName === "ranged") {
           continue;
         }
-        
+
         const ability = Abilities.abilityCache.get(abilityName);
         if (!ability) {
           continue;
@@ -210,13 +224,20 @@ export class Abilities extends Rule {
         let target = unit;
 
         // Skip trigger evaluation for melee/ranged - we already validated by distance
-        if (ability.trigger && abilityName !== 'melee' && abilityName !== 'ranged') {
+        if (
+          ability.trigger &&
+          abilityName !== "melee" &&
+          abilityName !== "ranged"
+        ) {
           const precompiled = Abilities.precompiledAbilities.get(abilityName);
           if (precompiled?.trigger) {
             try {
               shouldTrigger = precompiled.trigger(unit, context);
             } catch (error) {
-              console.error(`Error evaluating trigger for ${abilityName}:`, error);
+              console.error(
+                `Error evaluating trigger for ${abilityName}:`,
+                error,
+              );
               continue;
             }
           } else {
@@ -231,7 +252,10 @@ export class Abilities extends Rule {
 
         if (ability.target && ability.target !== "self") {
           // For melee/ranged, we already know the closest enemy
-          if ((abilityName === 'melee' || abilityName === 'ranged') && ability.target === 'closest.enemy()') {
+          if (
+            (abilityName === "melee" || abilityName === "ranged") &&
+            ability.target === "closest.enemy()"
+          ) {
             target = closestEnemyMap.get(unit.id);
           } else {
             const precompiled = Abilities.precompiledAbilities.get(abilityName);
@@ -239,7 +263,10 @@ export class Abilities extends Rule {
               try {
                 target = precompiled.target(unit, context);
               } catch (error) {
-                console.error(`Error evaluating target for ${abilityName}:`, error);
+                console.error(
+                  `Error evaluating target for ${abilityName}:`,
+                  error,
+                );
                 continue;
               }
             } else {
@@ -291,10 +318,14 @@ export class Abilities extends Rule {
     return this.commands;
   }
 
-  effectToCommand(effect: AbilityEffect, caster: any, target: any): QueuedCommand | null {
+  effectToCommand(
+    effect: AbilityEffect,
+    caster: any,
+    target: any,
+  ): QueuedCommand | null {
     const targetId = target?.id;
     const targetPos = target?.pos || target;
-    
+
     switch (effect.type) {
       case "damage":
         if (!targetId) return null;
@@ -303,10 +334,10 @@ export class Abilities extends Rule {
           params: {
             targetId,
             amount: effect.amount || 0,
-            sourceId: caster.id
-          }
+            sourceId: caster.id,
+          },
         };
-        
+
       case "heal":
         if (!targetId) return null;
         return {
@@ -314,10 +345,10 @@ export class Abilities extends Rule {
           params: {
             targetId,
             amount: effect.amount || 0,
-            sourceId: caster.id
-          }
+            sourceId: caster.id,
+          },
         };
-        
+
       case "projectile":
         return {
           type: "projectile",
@@ -329,16 +360,16 @@ export class Abilities extends Rule {
             casterId: caster.id,
             targetId: targetId,
             effect: effect.effect,
-            style: effect.style || "bullet"
-          }
+            style: effect.style || "bullet",
+          },
         };
-        
+
       default:
         // For now, skip other effect types
         return null;
     }
   }
-  
+
   processEffectAsCommand(
     context: TickContext,
     effect: AbilityEffect,
@@ -1365,13 +1396,14 @@ export class Abilities extends Rule {
   }
 
   private multiproject(
+    context: TickContext,
     effect: AbilityEffect,
     caster: any,
     primaryTarget: any,
   ): void {
-    const count = this.resolveValue(effect.count, caster, primaryTarget) || 1;
+    const count = this.resolveValue(context, effect.count, caster, primaryTarget) || 1;
     const stagger =
-      this.resolveValue((effect as any).stagger, caster, primaryTarget) || 0;
+      this.resolveValue(context, (effect as any).stagger, caster, primaryTarget) || 0;
 
     for (let i = 0; i < count; i++) {
       const projectileEffect = {
@@ -1391,7 +1423,7 @@ export class Abilities extends Rule {
       if (stagger > 0 && i > 0) {
       }
 
-      this.project(projectileEffect, caster, primaryTarget);
+      this.project(context, projectileEffect, caster, primaryTarget);
     }
   }
 
@@ -1450,6 +1482,7 @@ export class Abilities extends Rule {
     primaryTarget: any,
   ): void {
     const target = this.resolveTarget(
+      context,
       effect.target || "self.pos",
       caster,
       primaryTarget,
@@ -1457,7 +1490,7 @@ export class Abilities extends Rule {
     if (!target) return;
 
     const pos = target.pos || target;
-    const radius = this.resolveValue(effect.radius, caster, target) || 3;
+    const radius = this.resolveValue(context, effect.radius, caster, target) || 3;
 
     const allUnits =
       this.cachedAllUnits && this.cachedAllUnits.length > 0
@@ -1480,7 +1513,8 @@ export class Abilities extends Rule {
 
           const safeUnit = { ...u, tags: u.tags || [] };
           const compiledCondition = dslCompiler.compile(effect.condition);
-          (context as any).cachedUnits = this.cachedAllUnits || context.getAllUnits();
+          (context as any).cachedUnits =
+            this.cachedAllUnits || context.getAllUnits();
           return compiledCondition(safeUnit, context);
         } catch (error) {
           console.warn(
@@ -1794,7 +1828,7 @@ export class Abilities extends Rule {
     if (!center) return;
 
     const centerPos = center.pos || center;
-    const size = effect.size || "3x3";
+    const size = String(effect.size || "3x3");
     const [width, height] = size.split("x").map((s) => parseInt(s));
     const particleType = effect.particleType || "energy";
     const color = effect.color || "#00CCFF";

@@ -1,7 +1,7 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/Unit";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 export class HugeUnits extends Rule {
   execute(context: TickContext): QueuedCommand[] {
@@ -43,6 +43,7 @@ export class HugeUnits extends Rule {
       if (this.isValidPosition(context, phantomPos)) {
         const phantom: Unit = {
           id: `${hugeUnit.id}_phantom_${i}`,
+          type: "phantom",  // Add the type field
           pos: phantomPos,
           intendedMove: { x: 0, y: 0 },
           team: hugeUnit.team,

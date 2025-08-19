@@ -1,7 +1,7 @@
 import { Action } from "../types/Action";
 import { Vec2 } from "../types/Vec2";
 import { Rule } from "./rule";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 import type { TickContext } from "../core/tick_context";
 
 export class EventHandler extends Rule {

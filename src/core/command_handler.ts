@@ -1,7 +1,7 @@
-import { Rule } from "./rule";
-import { Command } from "./command";
-import type { TickContext } from "../core/tick_context";
-import { EventHandler } from "./event_handler";
+import { Rule } from "../rules/rule";
+import { Command } from "../rules/command";
+import type { TickContext } from "./tick_context";
+import { EventHandler } from "../rules/event_handler";
 import { Toss } from "../commands/toss";
 import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
@@ -98,7 +98,7 @@ export class CommandHandler {
       "updateStatusEffects",
       new UpdateStatusEffectsCommand(sim),
     );
-    this.commands.set("markDead", new Kill(sim, this.transform));
+    this.commands.set("markDead", new Kill(sim));
     this.commands.set("halt", new HaltCommand(sim, this.transform));
     this.commands.set("meta", new MetaCommand(sim, this.transform));
     this.commands.set("pull", new PullCommand(sim, this.transform));
@@ -131,7 +131,10 @@ export class CommandHandler {
     this.commands.set("toss", new Toss(sim, this.transform));
     this.commands.set("humidity", new HumidityCommand(sim, this.transform));
     this.commands.set("effects", new EffectsCommand(sim, this.transform));
-    this.commands.set("ability_effects", new AbilityEffectsCommand(sim, this.transform));
+    this.commands.set(
+      "ability_effects",
+      new AbilityEffectsCommand(sim, this.transform),
+    );
   }
 
   private executeOne(

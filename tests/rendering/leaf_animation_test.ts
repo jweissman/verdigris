@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 
 describe('Leaf Animation System', () => {
   it('should create falling leaf particles with weather command', () => {

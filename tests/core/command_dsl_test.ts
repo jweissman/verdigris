@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import { CommandHandler } from '../../src/rules/command_handler';
+import { CommandHandler } from '../../src/core/command_handler';
 import { EventHandler } from '../../src/rules/event_handler';
 import { Tossing } from '../../src/rules/tossing';
 import { LightningStorm } from '../../src/rules/lightning_storm';

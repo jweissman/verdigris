@@ -1,7 +1,8 @@
 import { Rule } from "./rule";
-import { Unit, Vec2 } from "../types/";
+import { Unit } from "../types/Unit";
+import { Vec2 } from "../types/Vec2";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 interface GrappleLine {
   grapplerID: string;
@@ -23,6 +24,7 @@ export class RopeClimbing extends Rule {
   }
 
   execute(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const climbers = context
       .getAllUnits()
       .filter((u) => u.meta.canClimbGrapples && !u.meta.climbingLine);
@@ -31,7 +33,7 @@ export class RopeClimbing extends Rule {
     const grappleLineParticles =
       this.sim.particles?.filter((p) => p.type === "grapple_line") || [];
 
-    if (grappleLineParticles.length === 0) return;
+    if (grappleLineParticles.length === 0) return commands;
 
     const lines = this.reconstructGrappleLines(grappleLineParticles);
 
@@ -39,12 +41,13 @@ export class RopeClimbing extends Rule {
       const nearbyLine = this.findNearbyGrappleLine(climber, lines);
 
       if (nearbyLine) {
-        this.attachToGrappleLine(context, climber, nearbyLine);
+        const attachCommands = this.attachToGrappleLine(context, climber, nearbyLine);
+        commands.push(...attachCommands);
       }
     }
 
-    this.updateClimbers(context);
-    const commands: QueuedCommand[] = [];
+    const updateCommands = this.updateClimbers(context);
+    commands.push(...updateCommands);
     return commands;
   }
 
@@ -124,7 +127,8 @@ export class RopeClimbing extends Rule {
     context: TickContext,
     climber: Unit,
     line: GrappleLine,
-  ): void {
+  ): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     commands.push({
       type: "meta",
       params: {
@@ -138,9 +142,11 @@ export class RopeClimbing extends Rule {
         },
       },
     });
+    return commands;
   }
 
-  private updateClimbers(context: TickContext): void {
+  private updateClimbers(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const climbingUnits = context
       .getAllUnits()
       .filter((u) => u.meta.climbingLine);
@@ -190,5 +196,6 @@ export class RopeClimbing extends Rule {
         });
       }
     }
+    return commands;
   }
 }

@@ -83,9 +83,6 @@ export class UnitProxy implements Unit {
       posture: coldData.posture,
       intendedTarget: coldData.intendedTarget,
       lastAbilityTick: coldData.lastAbilityTick,
-      get isAlive() {
-        return this.state !== "dead" && this.hp > 0;
-      },
     };
   }
 

@@ -1,7 +1,7 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
 import { Abilities } from "./abilities";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 export class Jumping extends Rule {
   private commands: QueuedCommand[] = [];

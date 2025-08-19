@@ -8,24 +8,26 @@ import type { AbilityEffect } from "../types/AbilityEffect";
 export class AbilityEffectsCommand extends Command {
   execute(
     unitId: string | null,
-    params: { effects: AbilityEffect[], casterId: string, target: any }
+    params: { effects: AbilityEffect[]; casterId: string; target: any },
   ): void {
-    const caster = this.sim.units.find(u => u.id === params.casterId);
+    const caster = this.sim.units.find((u) => u.id === params.casterId);
     if (!caster) return;
-    
+
     // Target can be a unit or a position
     const target = params.target;
-    const targetUnit = target?.id ? this.sim.units.find(u => u.id === target.id) : target;
-    
+    const targetUnit = target?.id
+      ? this.sim.units.find((u) => u.id === target.id)
+      : target;
+
     for (const effect of params.effects) {
       this.queueEffect(effect, caster, targetUnit || target);
     }
   }
-  
+
   private queueEffect(effect: AbilityEffect, caster: any, target: any): void {
     const targetId = target?.id;
     const targetPos = target?.pos || target;
-    
+
     switch (effect.type) {
       case "damage":
         if (targetId) {
@@ -34,12 +36,12 @@ export class AbilityEffectsCommand extends Command {
             params: {
               targetId,
               amount: effect.amount || 0,
-              sourceId: caster.id
-            }
+              sourceId: caster.id,
+            },
           });
         }
         break;
-        
+
       case "heal":
         if (targetId) {
           this.sim.queuedCommands.push({
@@ -47,12 +49,12 @@ export class AbilityEffectsCommand extends Command {
             params: {
               targetId,
               amount: effect.amount || 0,
-              sourceId: caster.id
-            }
+              sourceId: caster.id,
+            },
           });
         }
         break;
-        
+
       case "projectile":
         this.sim.queuedCommands.push({
           type: "projectile",
@@ -64,13 +66,14 @@ export class AbilityEffectsCommand extends Command {
             casterId: caster.id,
             targetId: targetId,
             effect: effect.effect,
-            style: effect.style || "bullet"
-          }
+            style: effect.style || "bullet",
+          },
         });
         break;
-        
+
       case "aoe":
-        const center = (effect as any).center === "target" ? targetPos : caster.pos;
+        const center =
+          (effect as any).center === "target" ? targetPos : caster.pos;
         this.sim.queuedCommands.push({
           type: "aoe",
           params: {
@@ -78,11 +81,11 @@ export class AbilityEffectsCommand extends Command {
             radius: effect.radius || 5,
             damage: effect.damage || 0,
             casterId: caster.id,
-            effect: effect.effect
-          }
+            effect: effect.effect,
+          },
         });
         break;
-        
+
       case "lightning":
         if (targetId) {
           this.sim.queuedCommands.push({
@@ -90,21 +93,21 @@ export class AbilityEffectsCommand extends Command {
             params: {
               targetId,
               damage: effect.damage || 10,
-              casterId: caster.id
-            }
+              casterId: caster.id,
+            },
           });
         }
         break;
-        
+
       case "weather":
         this.sim.queuedCommands.push({
           type: "weather",
           params: {
-            weather: effect.weather || "clear"
-          }
+            weather: effect.weather || "clear",
+          },
         });
         break;
-        
+
       case "spawn":
         this.sim.queuedCommands.push({
           type: "spawn",
@@ -112,31 +115,31 @@ export class AbilityEffectsCommand extends Command {
             unitType: effect.unitType || "skeleton",
             pos: targetPos,
             team: caster.team,
-            count: effect.count || 1
-          }
+            count: effect.count || 1,
+          },
         });
         break;
-        
+
       case "teleport":
         this.sim.queuedCommands.push({
           type: "move",
           params: {
             unitId: caster.id,
-            pos: targetPos
-          }
+            pos: targetPos,
+          },
         });
         break;
-        
+
       case "burrow":
         this.sim.queuedCommands.push({
           type: "burrow",
           params: {
             unitId: caster.id,
-            duration: effect.duration || 10
-          }
+            duration: effect.duration || 10,
+          },
         });
         break;
-        
+
       case "charm":
         if (targetId) {
           this.sim.queuedCommands.push({
@@ -144,31 +147,34 @@ export class AbilityEffectsCommand extends Command {
             params: {
               targetId,
               casterId: caster.id,
-              duration: effect.duration || 100
-            }
+              duration: effect.duration || 100,
+            },
           });
         }
         break;
-        
+
       case "knockback":
         if (targetId && targetPos) {
           const dx = targetPos.x - caster.pos.x;
           const dy = targetPos.y - caster.pos.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist > 0) {
-            const force = typeof effect.force === 'number' ? effect.force : (Number(effect.force) || 5);
+            const force =
+              typeof effect.force === "number"
+                ? effect.force
+                : Number(effect.force) || 5;
             this.sim.queuedCommands.push({
               type: "knockback",
               params: {
                 targetId,
                 dx: (dx / dist) * force,
-                dy: (dy / dist) * force
-              }
+                dy: (dy / dist) * force,
+              },
             });
           }
         }
         break;
-        
+
       case "status":
         if (targetId) {
           this.sim.queuedCommands.push({
@@ -176,12 +182,12 @@ export class AbilityEffectsCommand extends Command {
             params: {
               targetId,
               effect: (effect as any).status || "stun",
-              duration: effect.duration || 10
-            }
+              duration: effect.duration || 10,
+            },
           });
         }
         break;
-        
+
       case "storm":
         this.sim.queuedCommands.push({
           type: "storm",
@@ -190,34 +196,34 @@ export class AbilityEffectsCommand extends Command {
             radius: effect.radius || 10,
             damage: effect.damage || 5,
             duration: effect.duration || 10,
-            casterId: caster.id
-          }
+            casterId: caster.id,
+          },
         });
         break;
-        
+
       case "grapple":
         if (targetId) {
           this.sim.queuedCommands.push({
             type: "grapple",
             params: {
               casterId: caster.id,
-              targetId
-            }
+              targetId,
+            },
           });
         }
         break;
-        
+
       case "jump":
         this.sim.queuedCommands.push({
           type: "jump",
           params: {
             unitId: caster.id,
             destination: targetPos,
-            speed: effect.speed || 2
-          }
+            speed: effect.speed || 2,
+          },
         });
         break;
-        
+
       case "toss":
         if (targetId) {
           this.sim.queuedCommands.push({
@@ -225,8 +231,8 @@ export class AbilityEffectsCommand extends Command {
             params: {
               casterId: caster.id,
               targetId,
-              destination: targetPos
-            }
+              destination: targetPos,
+            },
           });
         }
         break;

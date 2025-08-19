@@ -1,6 +1,6 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
-import type { QueuedCommand } from "./command_handler";
+import type { QueuedCommand } from "../core/command_handler";
 
 /**
  * Specialized, optimized rule for ranged combat.
@@ -10,64 +10,69 @@ export class RangedCombat extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
     const currentTick = context.getCurrentTick();
-    
+
     // Use arrays directly - no proxy creation!
     const arrays = context.getArrays();
     if (!arrays) {
       // Fallback if arrays not available
       return this.executeWithProxies(context);
     }
-    
+
     const { posX, posY, team, state, hp, unitIds, activeIndices } = arrays;
-    
+
     // Fast scan for units with ranged ability
     for (const idx of activeIndices) {
       // Skip dead units
       if (state[idx] === 5 || hp[idx] <= 0) continue;
-      
+
       // Get cold data for abilities and cooldown
       const unitId = unitIds[idx];
       const coldData = context.getUnitColdData(unitId);
       if (!coldData) continue;
-      
+
       // Check if unit has ranged ability
       const abilities = coldData.abilities;
-      if (!abilities || !Array.isArray(abilities) || !abilities.includes('ranged')) continue;
-      
+      if (
+        !abilities ||
+        !Array.isArray(abilities) ||
+        !abilities.includes("ranged")
+      )
+        continue;
+
       // Check cooldown (ranged has 6 tick cooldown)
       const lastTick = coldData.lastAbilityTick?.ranged;
       if (lastTick !== undefined && currentTick - lastTick < 6) continue;
-      
+
       // Find closest enemy using arrays
       const unitTeam = team[idx];
       const unitX = posX[idx];
       const unitY = posY[idx];
-      
+
       let closestEnemyIdx = -1;
       let minDistSq = 100; // 10² - max range squared
-      
+
       // Scan all units for enemies within range
       for (const enemyIdx of activeIndices) {
         if (enemyIdx === idx) continue;
         if (state[enemyIdx] === 5 || hp[enemyIdx] <= 0) continue;
         if (team[enemyIdx] === unitTeam) continue; // Same team
-        
+
         const dx = posX[enemyIdx] - unitX;
         const dy = posY[enemyIdx] - unitY;
         const distSq = dx * dx + dy * dy;
-        
+
         // Skip if too close or too far
         if (distSq <= 4 || distSq > 100) continue; // 2² to 10²
-        
+
         if (distSq < minDistSq) {
           minDistSq = distSq;
           closestEnemyIdx = enemyIdx;
         }
       }
-      
+
       // No enemy found
       if (closestEnemyIdx === -1) continue;
-      
+
       // Calculate projectile velocity
       const enemyX = posX[closestEnemyIdx];
       const enemyY = posY[closestEnemyIdx];
@@ -76,7 +81,7 @@ export class RangedCombat extends Rule {
       const norm = Math.sqrt(dx * dx + dy * dy);
       const vx = (dx / norm) * 2; // Speed = 2
       const vy = (dy / norm) * 2;
-      
+
       // Queue projectile command
       commands.push({
         type: "projectile",
@@ -89,11 +94,16 @@ export class RangedCombat extends Rule {
           damage: 4,
           radius: 1.5,
           // UnitArrays encoding: neutral=0, friendly=1, hostile=2
-          team: unitTeam === 1 ? 'friendly' : unitTeam === 2 ? 'hostile' : 'neutral',
+          team:
+            unitTeam === 1
+              ? "friendly"
+              : unitTeam === 2
+                ? "hostile"
+                : "neutral",
         },
         unitId: unitIds[idx],
       });
-      
+
       // Update cooldown
       commands.push({
         type: "meta",
@@ -108,47 +118,47 @@ export class RangedCombat extends Rule {
         },
       });
     }
-    
+
     return commands;
   }
-  
+
   // Fallback implementation using proxies
   private executeWithProxies(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
     const currentTick = context.getCurrentTick();
     const allUnits = context.getAllUnits();
-    
+
     for (const unit of allUnits) {
-      if (unit.state === 'dead' || unit.hp <= 0) continue;
-      if (!unit.abilities?.includes('ranged')) continue;
-      
+      if (unit.state === "dead" || unit.hp <= 0) continue;
+      if (!unit.abilities?.includes("ranged")) continue;
+
       const lastTick = unit.lastAbilityTick?.ranged;
       if (lastTick !== undefined && currentTick - lastTick < 6) continue;
-      
+
       // Find closest enemy
       let closestEnemy = null;
       let minDist = Infinity;
-      
+
       for (const other of allUnits) {
-        if (other.state === 'dead' || other.hp <= 0) continue;
+        if (other.state === "dead" || other.hp <= 0) continue;
         if (other.team === unit.team) continue;
-        
+
         const dx = other.pos.x - unit.pos.x;
         const dy = other.pos.y - unit.pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (dist < minDist) {
           minDist = dist;
           closestEnemy = other;
         }
       }
-      
+
       if (!closestEnemy || minDist <= 2 || minDist > 10) continue;
-      
+
       const dx = closestEnemy.pos.x - unit.pos.x;
       const dy = closestEnemy.pos.y - unit.pos.y;
       const norm = Math.sqrt(dx * dx + dy * dy);
-      
+
       commands.push({
         type: "projectile",
         params: {
@@ -163,7 +173,7 @@ export class RangedCombat extends Rule {
         },
         unitId: unit.id,
       });
-      
+
       commands.push({
         type: "meta",
         params: {
@@ -177,7 +187,7 @@ export class RangedCombat extends Rule {
         },
       });
     }
-    
+
     return commands;
   }
 }
