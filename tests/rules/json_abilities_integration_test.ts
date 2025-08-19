@@ -29,7 +29,7 @@ describe('Abilities Integration', () => {
     const enemy = Encyclopaedia.unit('soldier');
     enemy.id = 'enemy1';
     enemy.pos = { x: 8, y: 4 }; // Distance = 6, should be in range
-    enemy.team = 'enemy';
+    enemy.team = 'hostile';
 
     sim.addUnit(archer);
     sim.addUnit(enemy);
@@ -42,8 +42,8 @@ describe('Abilities Integration', () => {
     sim.step();
 
 
-    console.debug('Archer abilities:', Object.keys(archer.abilities || {}));
-    console.debug('Enemy abilities:', Object.keys(enemy.abilities || {}));
+    console.debug('Archer abilities:', archer.abilities);
+    console.debug('Enemy abilities:', enemy.abilities);
     
 
     console.debug(`Commands queued: ${sim.queuedCommands.length}`);
@@ -69,7 +69,7 @@ describe('Abilities Integration', () => {
     const enemy = Encyclopaedia.unit('soldier');
     enemy.id = 'enemy1';
     enemy.pos = { x: 8, y: 4 }; // Within ranged attack distance
-    enemy.team = 'enemy';
+    enemy.team = 'hostile';
 
 
     const sim = new Simulator();
@@ -82,8 +82,8 @@ describe('Abilities Integration', () => {
     const commandHandler = new CommandHandler(sim);
 
     console.debug('=== Before Abilities step ===');
-    console.debug('Ranger abilities:', Object.keys(ranger.abilities || {}));
-    console.debug('Priest abilities:', Object.keys(priest.abilities || {}));
+    console.debug('Ranger abilities:', ranger.abilities);
+    console.debug('Priest abilities:', priest.abilities);
     console.debug('Projectiles before:', sim.projectiles.length);
 
 

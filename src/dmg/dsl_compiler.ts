@@ -90,12 +90,20 @@ export class DSLCompiler {
       }
     }
     
-    if (js.includes('enemies()')) {
+    // Check for centroid first as it defines allies and enemies
+    const hasCentroid = js.includes('centroid.');
+    
+    if (hasCentroid) {
+      helperCode += this.getCentroidHelper();
+    }
+    
+    // Only add standalone helpers if centroid isn't already defining them
+    if (js.includes('enemies()') && !hasCentroid) {
       helperCode += `
         const enemies = () => (context.cachedUnits || context.getAllUnits()).filter(u => u.team !== unit.team && u.state !== 'dead');`;
     }
     
-    if (js.includes('allies()')) {
+    if (js.includes('allies()') && !hasCentroid) {
       helperCode += `
         const allies = () => (context.cachedUnits || context.getAllUnits()).filter(u => u.team === unit.team && u.id !== unit.id && u.state !== 'dead');`;
     }
@@ -111,10 +119,6 @@ export class DSLCompiler {
           x: centerX + (context.getRandom() - 0.5) * 2 * range,
           y: centerY + (context.getRandom() - 0.5) * 2 * range
         });`;
-    }
-    
-    if (js.includes('centroid.')) {
-      helperCode += this.getCentroidHelper();
     }
     
     // Generate the function with minimal overhead

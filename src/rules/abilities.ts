@@ -25,6 +25,7 @@ export class Abilities extends Rule {
 
   private commands: QueuedCommand[] = [];
   private cachedAllUnits: readonly Unit[] = []; // Cache for current execution
+  private pendingEffects: any[] = []; // Collect effects for batch processing
 
   constructor() {
     super();
@@ -70,9 +71,14 @@ export class Abilities extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
+    const metaCommands: QueuedCommand[] = []; // Collect meta commands separately
 
     const currentTick = context.getCurrentTick();
 
+    // Try to use arrays directly if available
+    const arrays = (context as any).getArrays?.();
+    const useArrays = arrays?.posX && arrays?.posY && arrays?.team;
+    
     // Get all units once and filter for those with abilities
     const allUnits = context.getAllUnits();
     const relevantUnits: Unit[] = [];
@@ -136,7 +142,7 @@ export class Abilities extends Rule {
       ) {
         const ticksBurrowed = currentTick - meta.burrowStartTick;
         if (ticksBurrowed >= meta.burrowDuration) {
-          this.commands.push({
+          metaCommands.push({
             type: "meta",
             params: {
               unitId: unit.id,
@@ -243,12 +249,16 @@ export class Abilities extends Rule {
           }
         }
 
-        // Process effects inline
+        // Don't process effects here - just collect them
+        // Store effect data for batch processing later
+        if (!this.pendingEffects) {
+          this.pendingEffects = [];
+        }
         for (const effect of ability.effects) {
-          this.processEffectAsCommand(context, effect, unit, target);
+          this.pendingEffects.push({ effect, caster: unit, target });
         }
 
-        this.commands.push({
+        metaCommands.push({
           type: "meta",
           params: {
             unitId: unit.id,
@@ -262,6 +272,17 @@ export class Abilities extends Rule {
         });
       }
     } // Close for loop instead of forEach
+
+    // Now process all effects in batch (these get added to this.commands)
+    if (this.pendingEffects && this.pendingEffects.length > 0) {
+      for (const { effect, caster, target } of this.pendingEffects) {
+        this.processEffectAsCommand(context, effect, caster, target);
+      }
+      this.pendingEffects = []; // Clear for next tick
+    }
+
+    // Add meta commands after effect commands
+    this.commands.push(...metaCommands);
 
     return this.commands;
   }
