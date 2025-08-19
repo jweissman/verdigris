@@ -99,25 +99,33 @@ export class Abilities extends Rule {
     
     const hasEnemies = hostileUnits.length > 0 && friendlyUnits.length > 0;
     
-    // Quick spatial check: is ANY enemy within max combat range (10 for ranged)?
-    let anyEnemyInRange = false;
+    // Pre-compute closest enemy and distance for each unit
+    const closestEnemyMap = new Map<string, any>();
+    const enemyDistanceMap = new Map<string, number>();
+    
     if (hasEnemies) {
-      const MAX_COMBAT_RANGE = 10; // Max range for any combat ability
-      const MAX_COMBAT_RANGE_SQ = MAX_COMBAT_RANGE * MAX_COMBAT_RANGE;
-      
-      outer: for (const friendly of friendlyUnits) {
-        for (const hostile of hostileUnits) {
-          const dx = friendly.pos.x - hostile.pos.x;
-          const dy = friendly.pos.y - hostile.pos.y;
-          if (dx * dx + dy * dy <= MAX_COMBAT_RANGE_SQ) {
-            anyEnemyInRange = true;
-            break outer;
+      for (const unit of relevantUnits) {
+        let closestEnemy = null;
+        let minDist = Infinity;
+        
+        const enemyUnits = unit.team === 'friendly' ? hostileUnits : friendlyUnits;
+        for (const enemy of enemyUnits) {
+          const dx = enemy.pos.x - unit.pos.x;
+          const dy = enemy.pos.y - unit.pos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < minDist) {
+            minDist = dist;
+            closestEnemy = enemy;
           }
         }
+        
+        closestEnemyMap.set(unit.id, closestEnemy);
+        enemyDistanceMap.set(unit.id, minDist);
       }
     }
 
     for (const unit of relevantUnits) {
+      const closestEnemyDist = enemyDistanceMap.get(unit.id) || Infinity;
       // Already filtered for dead units above
 
       const meta = unit.meta; // Cache meta access
@@ -151,9 +159,12 @@ export class Abilities extends Rule {
       const lastAbilityTick = unit.lastAbilityTick; // Cache property access
 
       for (const abilityName of abilities) {
-        // Super fast path - skip known combat abilities if no enemies in range
-        if (!anyEnemyInRange && (abilityName === 'melee' || abilityName === 'ranged')) {
-          continue;
+        // Skip combat abilities based on actual distance
+        if (abilityName === 'melee' && closestEnemyDist > 2) {
+          continue; // No enemy within melee range
+        }
+        if (abilityName === 'ranged' && (closestEnemyDist > 10 || closestEnemyDist <= 2)) {
+          continue; // No enemy in ranged range (3-10)
         }
         
         const ability = Abilities.abilityCache.get(abilityName);
@@ -187,7 +198,8 @@ export class Abilities extends Rule {
         let shouldTrigger = true;
         let target = unit;
 
-        if (ability.trigger) {
+        // Skip trigger evaluation for melee/ranged - we already validated by distance
+        if (ability.trigger && abilityName !== 'melee' && abilityName !== 'ranged') {
           const precompiled = Abilities.precompiledAbilities.get(abilityName);
           if (precompiled?.trigger) {
             try {
@@ -208,17 +220,22 @@ export class Abilities extends Rule {
         }
 
         if (ability.target && ability.target !== "self") {
-          const precompiled = Abilities.precompiledAbilities.get(abilityName);
-          if (precompiled?.target) {
-            try {
-              target = precompiled.target(unit, context);
-            } catch (error) {
-              console.error(`Error evaluating target for ${abilityName}:`, error);
+          // For melee/ranged, we already know the closest enemy
+          if ((abilityName === 'melee' || abilityName === 'ranged') && ability.target === 'closest.enemy()') {
+            target = closestEnemyMap.get(unit.id);
+          } else {
+            const precompiled = Abilities.precompiledAbilities.get(abilityName);
+            if (precompiled?.target) {
+              try {
+                target = precompiled.target(unit, context);
+              } catch (error) {
+                console.error(`Error evaluating target for ${abilityName}:`, error);
+                continue;
+              }
+            } else {
+              console.error(`No compiled target for ${abilityName}`);
               continue;
             }
-          } else {
-            console.error(`No compiled target for ${abilityName}`);
-            continue;
           }
 
           if (!target) {

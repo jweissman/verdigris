@@ -32,10 +32,11 @@ export function timeExecution(fn: () => void, iterations: number = 1000): Timing
 export function createTestSimulator(unitCount: number = 50): Simulator {
   const sim = new Simulator(50, 50);
   
+  // Create units in actual combat range - place them in a smaller area
   for (let i = 0; i < unitCount; i++) {
     sim.addUnit({
       id: `unit_${i}`,
-      pos: { x: Math.random() * 50, y: Math.random() * 50 },
+      pos: { x: 20 + Math.random() * 10, y: 20 + Math.random() * 10 }, // Cluster units in 10x10 area
       intendedMove: { x: Math.random() - 0.5, y: Math.random() - 0.5 },
       team: i % 2 === 0 ? 'friendly' : 'hostile',
       hp: 20,
@@ -44,7 +45,9 @@ export function createTestSimulator(unitCount: number = 50): Simulator {
   }
   
 
-  for (let i = 0; i < 100; i++) {
+  // Don't run 100 steps - that kills all the units!
+  // Just run a few to stabilize
+  for (let i = 0; i < 5; i++) {
     sim.step();
   }
   
