@@ -1,126 +1,79 @@
 {
   "worm": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "worm",
     "state": "idle",
     "hp": 10,
     "maxHp": 10,
     "mass": 4,
-    "abilities": ["jumps"]
-  },
-  "farmer": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "farmer",
-    "state": "idle",
-    "hp": 25,
-    "maxHp": 25,
-    "mass": 1,
-    "tags": ["hunt"]
-  },
-  "soldier": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "soldier",
-    "state": "idle",
-    "hp": 30,
-    "maxHp": 30,
-    "mass": 1,
-    "tags": ["hunt"]
-  },
-  "ranger": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "slinger",
-    "state": "idle",
-    "hp": 28,
-    "maxHp": 28,
-    "mass": 1,
-    "abilities": ["ranged"]
-  },
-  "bombardier": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "bombardier",
-    "state": "idle",
-    "hp": 25,
-    "maxHp": 25,
-    "mass": 1,
-    "abilities": ["bombardier"],
-    "tags": ["ranged"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "priest": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "priest",
-    "state": "idle",
-    "hp": 20,
-    "maxHp": 20,
-    "mass": 1,
-    "abilities": ["heal", "radiant"]
-  },
-  "tamer": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "tamer",
-    "state": "idle",
-    "hp": 20,
-    "maxHp": 20,
-    "mass": 1
+    "abilities": [
+      "jumps"
+    ]
   },
   "squirrel": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "squirrel",
     "state": "idle",
     "hp": 5,
     "maxHp": 5,
     "mass": 1,
-    "tags": ["follower", "beast", "forest"],
-    "abilities": ["jumps"]
+    "tags": [
+      "follower",
+      "beast",
+      "forest"
+    ],
+    "abilities": [
+      "jumps"
+    ]
   },
   "megasquirrel": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "megasquirrel",
     "state": "idle",
     "hp": 40,
     "maxHp": 40,
     "mass": 8,
-    "tags": ["mythic", "beast", "forest"],
-    "abilities": ["jumps"],
+    "tags": [
+      "mythic",
+      "beast",
+      "forest"
+    ],
+    "abilities": [
+      "jumps"
+    ],
     "meta": {
       "huge": true,
       "facing": "right"
     }
   },
-  "rainmaker": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "rainmaker",
-    "state": "idle",
-    "hp": 80,
-    "maxHp": 80,
-    "mass": 1,
-    "tags": ["weather", "mythic"],
-    "abilities": ["makeRain"],
-    "meta": {
-      "facing": "right"
-    }
-  },
   "skeleton": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "skeleton",
     "state": "idle",
     "hp": 25,
     "maxHp": 25,
     "mass": 1,
-    "tags": ["undead", "black", "hunt"],
+    "tags": [
+      "undead",
+      "black",
+      "hunt"
+    ],
     "abilities": [],
     "meta": {
       "perdurance": "undead",
@@ -128,14 +81,21 @@
     }
   },
   "skeleton-mage": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "skeleton-mage",
     "state": "idle",
     "hp": 20,
     "maxHp": 20,
     "mass": 0.7,
-    "tags": ["undead", "black", "caster"],
+    "tags": [
+      "undead",
+      "black",
+      "caster"
+    ],
     "abilities": [],
     "meta": {
       "perdurance": "undead",
@@ -143,14 +103,21 @@
     }
   },
   "ghost": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "ghost",
     "state": "idle",
     "hp": 30,
     "maxHp": 30,
     "mass": 0.1,
-    "tags": ["undead", "spectral", "black"],
+    "tags": [
+      "undead",
+      "spectral",
+      "black"
+    ],
     "abilities": [],
     "meta": {
       "perdurance": "spectral",
@@ -158,30 +125,47 @@
     }
   },
   "demon": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "demon",
     "state": "idle",
     "hp": 60,
     "maxHp": 60,
     "mass": 2,
-    "tags": ["fiend", "black", "hunt"],
-    "abilities": ["fireBlast"],
+    "tags": [
+      "fiend",
+      "black",
+      "hunt"
+    ],
+    "abilities": [
+      "fireBlast"
+    ],
     "meta": {
       "perdurance": "fiendish",
       "facing": "right"
     }
   },
   "mimic-worm": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "mimic-worm",
     "state": "idle",
     "hp": 50,
     "maxHp": 50,
     "mass": 1.5,
-    "tags": ["shapeshifter", "black"],
-    "abilities": ["jumps"],
+    "tags": [
+      "shapeshifter",
+      "black"
+    ],
+    "abilities": [
+      "jumps"
+    ],
     "meta": {
       "segmented": true,
       "segmentCount": 3,
@@ -189,15 +173,24 @@
     }
   },
   "big-worm": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "big-worm",
     "state": "idle",
     "hp": 90,
     "maxHp": 90,
     "mass": 2,
-    "tags": ["beast", "black", "hunt"],
-    "abilities": ["breatheFire"],
+    "tags": [
+      "beast",
+      "black",
+      "hunt"
+    ],
+    "abilities": [
+      "breatheFire"
+    ],
     "meta": {
       "huge": true,
       "segmented": true,
@@ -206,15 +199,26 @@
     }
   },
   "desert-megaworm": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "big-worm",
     "state": "idle",
     "hp": 300,
     "maxHp": 300,
     "mass": 4,
-    "tags": ["beast", "desert", "hunt", "segmented", "massive"],
-    "abilities": ["sandBlast"],
+    "tags": [
+      "beast",
+      "desert",
+      "hunt",
+      "segmented",
+      "massive"
+    ],
+    "abilities": [
+      "sandBlast"
+    ],
     "meta": {
       "huge": true,
       "segmented": true,
@@ -225,14 +229,21 @@
     }
   },
   "forest-squirrel": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "squirrel",
     "state": "idle",
     "hp": 25,
     "maxHp": 25,
     "mass": 0.8,
-    "tags": ["forest", "agile", "gatherer"],
+    "tags": [
+      "forest",
+      "agile",
+      "gatherer"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -242,14 +253,22 @@
     }
   },
   "owl": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "owl",
     "state": "idle",
     "hp": 30,
     "maxHp": 30,
     "mass": 1,
-    "tags": ["forest", "flying", "hunter", "nocturnal"],
+    "tags": [
+      "forest",
+      "flying",
+      "hunter",
+      "nocturnal"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -260,14 +279,21 @@
     }
   },
   "bear": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "bear",
     "state": "idle",
     "hp": 80,
     "maxHp": 80,
     "mass": 3,
-    "tags": ["forest", "tank", "territorial"],
+    "tags": [
+      "forest",
+      "tank",
+      "territorial"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -277,14 +303,22 @@
     }
   },
   "bird": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "leaf",
     "state": "idle",
     "hp": 5,
     "maxHp": 5,
     "mass": 0.2,
-    "tags": ["forest", "ambient", "energy", "flying"],
+    "tags": [
+      "forest",
+      "ambient",
+      "energy",
+      "flying"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -294,44 +328,11 @@
       "flightPattern": "circular"
     }
   },
-  "tracker": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "ranger",
-    "state": "idle",
-    "hp": 35,
-    "maxHp": 35,
-    "mass": 1,
-    "tags": ["forest", "hunter", "specialist"],
-    "abilities": [],
-    "meta": {
-      "facing": "right",
-      "tracking": true,
-      "footprintDetection": 5,
-      "trapSetting": true,
-      "netRange": 4
-    }
-  },
-  "grappler": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "grappler",
-    "state": "idle",
-    "hp": 35,
-    "maxHp": 35,
-    "dmg": 8,
-    "mass": 1,
-    "tags": ["desert", "hunter", "specialist", "grappler"],
-    "abilities": ["grapplingHook", "pinTarget"],
-    "meta": {
-      "facing": "right",
-      "desertAdapted": true,
-      "grapplingRange": 8,
-      "maxGrapples": 2
-    }
-  },
   "deer": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "deer",
     "state": "idle",
@@ -339,7 +340,11 @@
     "maxHp": 20,
     "dmg": 2,
     "mass": 1.5,
-    "tags": ["forest", "beast", "peaceful"],
+    "tags": [
+      "forest",
+      "beast",
+      "peaceful"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -349,7 +354,10 @@
     }
   },
   "rabbit": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "rabbit",
     "state": "idle",
@@ -357,7 +365,12 @@
     "maxHp": 8,
     "dmg": 1,
     "mass": 0.3,
-    "tags": ["forest", "beast", "small", "peaceful"],
+    "tags": [
+      "forest",
+      "beast",
+      "small",
+      "peaceful"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -368,7 +381,10 @@
     }
   },
   "fox": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "fox",
     "state": "idle",
@@ -376,7 +392,12 @@
     "maxHp": 15,
     "dmg": 4,
     "mass": 0.8,
-    "tags": ["forest", "beast", "hunter", "clever"],
+    "tags": [
+      "forest",
+      "beast",
+      "hunter",
+      "clever"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -386,7 +407,10 @@
     }
   },
   "wolf": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "wolf",
     "state": "idle",
@@ -394,7 +418,12 @@
     "maxHp": 30,
     "dmg": 8,
     "mass": 2,
-    "tags": ["forest", "beast", "predator", "pack"],
+    "tags": [
+      "forest",
+      "beast",
+      "predator",
+      "pack"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -403,7 +432,10 @@
     }
   },
   "badger": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "badger",
     "state": "idle",
@@ -411,7 +443,12 @@
     "maxHp": 25,
     "dmg": 6,
     "mass": 1.8,
-    "tags": ["forest", "beast", "burrower", "defensive"],
+    "tags": [
+      "forest",
+      "beast",
+      "burrower",
+      "defensive"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -420,32 +457,23 @@
       "territorial": true
     }
   },
-  "naturalist": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "naturalist",
-    "state": "idle",
-    "hp": 30,
-    "maxHp": 30,
-    "dmg": 3,
-    "mass": 1,
-    "tags": ["forest", "support", "beast-tamer"],
-    "abilities": ["tameMegabeast", "calmAnimals"],
-    "meta": {
-      "facing": "right",
-      "forestAdapted": true,
-      "beastAffinity": true
-    }
-  },
   "worm-hunter": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "friendly",
     "sprite": "wormrider",
     "state": "idle",
     "hp": 25,
     "maxHp": 25,
     "mass": 0.8,
-    "tags": ["desert", "hunter", "agile", "assassin"],
+    "tags": [
+      "desert",
+      "hunter",
+      "agile",
+      "assassin"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -455,50 +483,23 @@
       "dashRange": 4
     }
   },
-  "waterbearer": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "waterpriest",
-    "state": "idle",
-    "hp": 30,
-    "maxHp": 30,
-    "mass": 1,
-    "tags": ["desert", "support", "healer", "detector"],
-    "abilities": ["waterBless", "detectSpies"],
-    "meta": {
-      "facing": "right",
-      "desertAdapted": true,
-      "waterReserves": 100,
-      "detectRange": 6
-    }
-  },
-  "skirmisher": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "soldier",
-    "state": "idle",
-    "hp": 22,
-    "maxHp": 22,
-    "mass": 0.9,
-    "tags": ["desert", "melee", "agile", "duelist"],
-    "abilities": ["dualKnifeDance"],
-    "meta": {
-      "facing": "right",
-      "desertAdapted": true,
-      "dualWield": true,
-      "attackSpeed": 1.5,
-      "dodgeChance": 0.25
-    }
-  },
   "sand-ant": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "worm",
     "state": "idle",
     "hp": 20,
     "maxHp": 20,
     "mass": 2,
-    "tags": ["desert", "segmented", "construct", "toy"],
+    "tags": [
+      "desert",
+      "segmented",
+      "construct",
+      "toy"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -508,15 +509,26 @@
     }
   },
   "desert-worm": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "worm",
     "state": "idle",
     "hp": 60,
     "maxHp": 60,
     "mass": 6,
-    "tags": ["desert", "segmented", "beast", "burrower"],
-    "abilities": ["sandBlast", "burrowAmbush"],
+    "tags": [
+      "desert",
+      "segmented",
+      "beast",
+      "burrower"
+    ],
+    "abilities": [
+      "sandBlast",
+      "burrowAmbush"
+    ],
     "meta": {
       "facing": "right",
       "segmented": true,
@@ -526,7 +538,10 @@
     }
   },
   "mesoworm": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "mesoworm-head",
     "state": "idle",
@@ -534,7 +549,11 @@
     "maxHp": 35,
     "mass": 2.5,
     "dmg": 5,
-    "tags": ["forest", "beast", "segmented"],
+    "tags": [
+      "forest",
+      "beast",
+      "segmented"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -545,14 +564,20 @@
     }
   },
   "segmented-worm": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "worm",
     "state": "idle",
     "hp": 40,
     "maxHp": 40,
     "mass": 3,
-    "tags": ["beast", "segmented"],
+    "tags": [
+      "beast",
+      "segmented"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -561,14 +586,22 @@
     }
   },
   "giant-sandworm": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "big-worm",
     "state": "idle",
     "hp": 120,
     "maxHp": 120,
     "mass": 50,
-    "tags": ["desert", "segmented", "titan", "burrower"],
+    "tags": [
+      "desert",
+      "segmented",
+      "titan",
+      "burrower"
+    ],
     "abilities": [],
     "meta": {
       "facing": "right",
@@ -581,116 +614,29 @@
       "height": 32
     }
   },
-  "mechatronist": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "mechatronist",
-    "state": "idle",
-    "hp": 30,
-    "maxHp": 30,
-    "mass": 1,
-    "tags": ["mechanical", "leader", "engineer"],
-    "abilities": ["callAirdrop", "tacticalOverride"],
-    "meta": {
-      "facing": "right",
-      "calledAirdrop": false,
-      "canRideMechatron": true
-    }
-  },
-  "builder": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "builder",
-    "state": "idle",
-    "hp": 20,
-    "maxHp": 20,
-    "mass": 1,
-    "tags": ["mechanical", "support", "builder"],
-    "abilities": ["reinforceConstruct"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "fueler": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "fueler",
-    "state": "idle",
-    "hp": 18,
-    "maxHp": 18,
-    "mass": 1,
-    "tags": ["mechanical", "support", "energy"],
-    "abilities": ["powerSurge"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "mechanic": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "mechanic",
-    "state": "idle",
-    "hp": 22,
-    "maxHp": 22,
-    "mass": 1,
-    "tags": ["mechanical", "support", "repair"],
-    "abilities": ["emergencyRepair"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "engineer": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "engineer",
-    "state": "idle",
-    "hp": 25,
-    "maxHp": 25,
-    "mass": 1,
-    "tags": ["mechanical", "support", "systems"],
-    "abilities": ["shieldGenerator", "systemHack"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "welder": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "welder",
-    "state": "idle",
-    "hp": 24,
-    "maxHp": 24,
-    "mass": 1,
-    "tags": ["mechanical", "support", "welder"],
-    "abilities": ["emergencyRepair", "reinforceConstruct"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "assembler": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "assembler",
-    "state": "idle",
-    "hp": 26,
-    "maxHp": 26,
-    "mass": 1,
-    "tags": ["mechanical", "support", "assembler"],
-    "abilities": ["reinforceConstruct", "powerSurge"],
-    "meta": {
-      "facing": "right"
-    }
-  },
   "mechatron": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "friendly",
     "sprite": "mechatron",
     "state": "idle",
     "hp": 200,
     "maxHp": 200,
     "mass": 5,
-    "tags": ["mechanical", "huge", "artillery", "hunt"],
-    "abilities": ["missileBarrage", "laserSweep", "empPulse", "shieldRecharge"],
+    "tags": [
+      "mechanical",
+      "huge",
+      "artillery",
+      "hunt"
+    ],
+    "abilities": [
+      "missileBarrage",
+      "laserSweep",
+      "empPulse",
+      "shieldRecharge"
+    ],
     "meta": {
       "huge": true,
       "width": 32,
@@ -703,74 +649,95 @@
       "damageReduction": 0.2
     }
   },
-  "toymaker": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "toymaker",
-    "state": "idle",
-    "hp": 25,
-    "maxHp": 25,
-    "mass": 1,
-    "tags": ["mechanical", "craftor"],
-    "abilities": ["deployBot"],
-    "meta": {
-      "facing": "right"
-    }
-  },
   "freezebot": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "friendly",
     "sprite": "freezebot",
     "state": "idle",
     "hp": 8,
     "maxHp": 8,
     "mass": 0.5,
-    "tags": ["construct", "ice", "hunt"],
-    "abilities": ["freezeAura"],
+    "tags": [
+      "construct",
+      "ice",
+      "hunt"
+    ],
+    "abilities": [
+      "freezeAura"
+    ],
     "meta": {
       "perdurance": "sturdiness",
       "facing": "right"
     }
   },
   "clanker": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "friendly",
     "sprite": "clanker",
     "state": "idle",
     "hp": 6,
     "maxHp": 6,
     "mass": 0.8,
-    "tags": ["construct", "explosive", "hunt", "aggressive"],
-    "abilities": ["explode"],
+    "tags": [
+      "construct",
+      "explosive",
+      "hunt",
+      "aggressive"
+    ],
+    "abilities": [
+      "explode"
+    ],
     "meta": {
       "perdurance": "sturdiness",
       "facing": "right"
     }
   },
   "spiker": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "friendly",
     "sprite": "spikebot",
     "state": "idle",
     "hp": 10,
     "maxHp": 10,
     "mass": 0.6,
-    "tags": ["construct", "melee", "hunt"],
-    "abilities": ["whipChain"],
+    "tags": [
+      "construct",
+      "melee",
+      "hunt"
+    ],
+    "abilities": [
+      "whipChain"
+    ],
     "meta": {
       "perdurance": "sturdiness",
       "facing": "right"
     }
   },
   "swarmbot": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "friendly",
     "sprite": "swarmbot",
     "state": "idle",
     "hp": 12,
     "maxHp": 12,
     "mass": 0.3,
-    "tags": ["construct", "swarm", "hunt"],
+    "tags": [
+      "construct",
+      "swarm",
+      "hunt"
+    ],
     "abilities": [],
     "meta": {
       "perdurance": "swarm",
@@ -778,161 +745,122 @@
     }
   },
   "roller": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "friendly",
     "sprite": "jumpbot",
     "state": "idle",
     "hp": 15,
     "maxHp": 15,
     "mass": 1.2,
-    "tags": ["construct", "charger", "hunt"],
-    "abilities": ["chargeAttack"],
+    "tags": [
+      "construct",
+      "charger",
+      "hunt"
+    ],
+    "abilities": [
+      "chargeAttack"
+    ],
     "meta": {
       "perdurance": "sturdiness",
       "facing": "right"
     }
   },
   "penguin": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "penguin",
     "state": "idle",
     "hp": 12,
     "maxHp": 12,
     "mass": 1,
-    "tags": ["ambient", "beast", "winter"],
-    "abilities": ["slideKick"],
+    "tags": [
+      "ambient",
+      "beast",
+      "winter"
+    ],
+    "abilities": [
+      "slideKick"
+    ],
     "meta": {
       "facing": "right"
     }
   },
   "arctic-fox": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "arctic-fox",
     "state": "idle",
     "hp": 15,
     "maxHp": 15,
     "mass": 0.8,
-    "tags": ["ambient", "beast", "winter"],
+    "tags": [
+      "ambient",
+      "beast",
+      "winter"
+    ],
     "meta": {
       "facing": "right"
     }
   },
   "snow-owl": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "snow-owl",
     "state": "idle",
     "hp": 10,
     "maxHp": 10,
     "mass": 0.6,
-    "tags": ["ambient", "beast", "winter", "flying"],
+    "tags": [
+      "ambient",
+      "beast",
+      "winter",
+      "flying"
+    ],
     "meta": {
       "facing": "right"
     }
   },
   "zapper": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "friendly",
     "sprite": "zapper",
     "state": "idle",
     "hp": 15,
     "maxHp": 15,
     "mass": 0.4,
-    "tags": ["construct", "electrical", "hunt"],
-    "abilities": ["zapHighest"],
+    "tags": [
+      "construct",
+      "electrical",
+      "hunt"
+    ],
+    "abilities": [
+      "zapHighest"
+    ],
     "meta": {
       "perdurance": "sturdiness",
       "facing": "right"
     }
   },
-  "druid": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "druid",
-    "state": "idle",
-    "hp": 35,
-    "maxHp": 35,
-    "dmg": 4,
-    "mass": 1,
-    "tags": ["forest", "magic", "nature"],
-    "abilities": ["summonForestCreature", "entangle"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "naturist": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "naturist",
-    "state": "idle",
-    "hp": 28,
-    "maxHp": 28,
-    "dmg": 3,
-    "mass": 1,
-    "tags": ["forest", "support", "nature"],
-    "abilities": ["regenerate"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "wildmage": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "wildmage",
-    "state": "idle",
-    "hp": 25,
-    "maxHp": 25,
-    "dmg": 6,
-    "mass": 1,
-    "tags": ["forest", "magic", "chaos"],
-    "abilities": ["wildBolt"],
-    "meta": {
-      "facing": "right"
-    }
-  },
-  "miner": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "miner",
-    "state": "idle",
-    "hp": 35,
-    "maxHp": 35,
-    "dmg": 5,
-    "mass": 1.2,
-    "tags": ["worker", "burrower", "explorer"],
-    "abilities": ["digTrench"],
-    "meta": {
-      "facing": "right",
-      "canBurrow": true,
-      "miningSpeed": 2,
-      "oreCarryCapacity": 10,
-      "currentOre": 0,
-      "tunnelRange": 5
-    }
-  },
-  "mindmender": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "mindmender",
-    "state": "idle",
-    "hp": 28,
-    "maxHp": 28,
-    "dmg": 2,
-    "mass": 0.9,
-    "tags": ["psychic", "support", "healer"],
-    "abilities": ["psychicHeal"],
-    "meta": {
-      "facing": "right",
-      "psychicRange": 6,
-      "mindShieldDuration": 50,
-      "confuseDuration": 30,
-      "healAmount": 15
-    }
-  },
   "dragon": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "hostile",
     "sprite": "dragon-head",
     "state": "idle",
@@ -940,8 +868,19 @@
     "maxHp": 400,
     "mass": 100,
     "dmg": 25,
-    "tags": ["dragon", "flying", "mythic", "armored", "fire-breathing", "segmented"],
-    "abilities": ["dragonFire", "wingStorm", "terrifyingRoar"],
+    "tags": [
+      "dragon",
+      "flying",
+      "mythic",
+      "armored",
+      "fire-breathing",
+      "segmented"
+    ],
+    "abilities": [
+      "dragonFire",
+      "wingStorm",
+      "terrifyingRoar"
+    ],
     "meta": {
       "facing": "right",
       "flying": true,
@@ -956,27 +895,11 @@
       "z": 5
     }
   },
-  "lancer": {
-    "intendedMove": { "x": 0, "y": 0 },
-    "team": "friendly",
-    "sprite": "lancer",
-    "state": "idle",
-    "hp": 45,
-    "maxHp": 45,
-    "mass": 1.2,
-    "dmg": 12,
-    "tags": ["specialist", "anti-armor", "dragon-hunter"],
-    "abilities": ["harpoonChain", "winchPull", "armorPierce"],
-    "meta": {
-      "facing": "right",
-      "harpoonRange": 12,
-      "chainLength": 15,
-      "armorPiercing": 8,
-      "winchSpeed": 2
-    }
-  },
   "sphinx": {
-    "intendedMove": { "x": 0, "y": 0 },
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
     "team": "neutral",
     "sprite": "priest",
     "state": "idle",
@@ -984,8 +907,17 @@
     "maxHp": 100,
     "mass": 2,
     "dmg": 0,
-    "tags": ["noncombatant", "dialogue", "quest_giver", "ancient", "wise"],
-    "abilities": ["riddle", "teleport"],
+    "tags": [
+      "noncombatant",
+      "dialogue",
+      "quest_giver",
+      "ancient",
+      "wise"
+    ],
+    "abilities": [
+      "riddle",
+      "teleport"
+    ],
     "meta": {
       "dialogueId": "sphinx_riddles",
       "questId": "sphinx_challenge",

@@ -23,6 +23,7 @@ export class DSLCompiler {
       return fn;
     } catch (e) {
       console.error(`Failed to compile '${expression}':`, e);
+      throw new Error("Compilation failed for " + expression);
 
       const fallback = () => false;
       this.cache.set(expression, fallback);
@@ -111,6 +112,30 @@ export class DSLCompiler {
     if (js.includes("allies()") && !hasCentroid) {
       helperCode += `
         const allies = () => (context.cachedUnits || context.getAllUnits()).filter(u => u.team === unit.team && u.id !== unit.id && u.state !== 'dead');`;
+    }
+
+    // Support count.enemies_in_range(range)
+    if (js.includes("count.enemies_in_range")) {
+      const match = js.match(/count\.enemies_in_range\((\d+)\)/);
+      if (match) {
+        const range = match[1];
+        helperCode += `
+        const count = {
+          enemies_in_range: (r) => {
+            const units = context.cachedUnits || context.getAllUnits();
+            const rangeSq = r * r;
+            let count = 0;
+            for (const e of units) {
+              if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
+                const dx = e.pos.x - unit.pos.x;
+                const dy = e.pos.y - unit.pos.y;
+                if (dx * dx + dy * dy <= rangeSq) count++;
+              }
+            }
+            return count;
+          }
+        };`;
+      }
     }
 
     if (js.includes("pick(")) {
