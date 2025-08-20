@@ -79,10 +79,10 @@
   },
   "bombardier": {
     "name": "Bomb Toss",
-    "cooldown": 15,
+    "cooldown": 12,
     "config": {
       "range": 14,
-      "damage": 6,
+      "damage": 10,
       "aoeRadius": 4,
       "duration": 8
     },
@@ -95,7 +95,7 @@
         "pos": "self.pos",
         "vel": "{ x: 0, y: 0 }",
         "radius": 2,
-        "damage": 6,
+        "damage": 10,
         "team": "self.team",
         "projectileType": "bomb",
         "target": "target",

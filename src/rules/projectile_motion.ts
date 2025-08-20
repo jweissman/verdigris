@@ -83,10 +83,14 @@ export class ProjectileMotion extends Rule {
         }
       }
 
+      // Bombs explode when they reach their target OR after lifetime threshold
       if (
         projectile.type === "bomb" &&
-        projectile.lifetime &&
-        projectile.lifetime >= 30
+        ((projectile.target &&
+          projectile.progress !== undefined &&
+          projectile.duration !== undefined &&
+          projectile.progress >= projectile.duration) ||
+         (projectile.lifetime && projectile.lifetime >= 30))
       ) {
         const explosionRadius = projectile.explosionRadius || 3;
         const explosionRadiusSq = explosionRadius * explosionRadius;

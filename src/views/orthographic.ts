@@ -110,7 +110,7 @@ export default class Orthographic extends View {
       const frameX = frameIndex * spriteWidth;
 
       if (renderZ > 0) {
-        realPixelY -= renderZ * 2.4; // Adjust Y position based on z height
+        realPixelY -= renderZ * 8; // Increased multiplier for more visible height in ortho
       }
 
       realPixelY = Math.round(realPixelY); // Ensure pixelY is an integer
@@ -143,6 +143,20 @@ export default class Orthographic extends View {
       const fallbackY = Math.round(renderY * 8);
       this.ctx.fillStyle = this.unitRenderer.getUnitColor(unit);
       this.ctx.fillRect(fallbackX, fallbackY, 8, 8);
+      
+      // Draw debug label for units without sprites
+      this.ctx.save();
+      // White background card
+      this.ctx.fillStyle = "#ffffff";
+      this.ctx.fillRect(fallbackX - 4, fallbackY - 10, 16, 8);
+      // Black text
+      this.ctx.fillStyle = "#000000";
+      this.ctx.font = "6px monospace";
+      this.ctx.textAlign = "center";
+      // Better label: show type or sprite name or first part of ID
+      const label = unit.type || unit.sprite || unit.id?.split('_')[0] || "???";
+      this.ctx.fillText(label.substring(0, 10), fallbackX + 4, fallbackY - 4);
+      this.ctx.restore();
     }
 
     if (typeof unit.hp === "number") {
@@ -157,11 +171,18 @@ export default class Orthographic extends View {
       unit.abilities.includes("jumps") &&
       unit.meta.jumping
     ) {
-      const ability = Abilities.all.jumps;
-
-      const duration = ability.config?.jumpDuration || 10; // Default duration if not specified
+      // Calculate actual jump duration based on distance
+      const jumpTarget = unit.meta.jumpTarget;
+      const jumpOrigin = unit.meta.jumpOrigin;
+      let duration = 10;
+      if (jumpTarget && jumpOrigin) {
+        const dx = jumpTarget.x - jumpOrigin.x;
+        const dy = jumpTarget.y - jumpOrigin.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        duration = Math.min(20, Math.max(5, Math.round(distance)));
+      }
+      
       const progress = unit.meta.jumpProgress || 0;
-
       const progressRatio = progress / duration || 0;
       if (progressRatio > 0 && progressRatio < 1) {
         this.drawBar(
@@ -223,7 +244,7 @@ export default class Orthographic extends View {
     let adjustedPixelY = pixelY;
 
     if (renderZ > 0) {
-      adjustedPixelY -= renderZ * 2.4; // Same scale as units
+      adjustedPixelY -= renderZ * 8; // Same increased scale as units
     }
 
     this.ctx.save();
@@ -329,7 +350,7 @@ export default class Orthographic extends View {
       const x = originX + (targetX - originX) * t;
       const y = originY + (targetY - originY) * t;
       const z = height * Math.sin(Math.PI * t);
-      const arcY = y - z * 2.4; // Same z scaling as units
+      const arcY = y - z * 8; // Same z scaling as units
 
       this.ctx.beginPath();
       this.ctx.arc(x, arcY, 1, 0, 2 * Math.PI);

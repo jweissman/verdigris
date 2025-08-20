@@ -171,7 +171,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     
     expect(foundBomb).toBe(true);
     expect(bomb.type).toBe('bomb');
-    expect(bomb.damage).toBe(6);
+    expect(bomb.damage).toBe(10);
     expect(bomb.target).toBeDefined(); // Bombs have specific targets
     expect(bomb.origin).toBeDefined(); // Bombs track their origin
     expect(bomb.aoeRadius).toBe(3); // Bombs have AoE
