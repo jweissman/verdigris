@@ -127,6 +127,32 @@
       "facing": "right"
     }
   },
+  "mechatronist": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "mechatronist",
+    "state": "idle",
+    "hp": 30,
+    "maxHp": 30,
+    "mass": 1,
+    "tags": [
+      "mechanical",
+      "leader",
+      "engineer"
+    ],
+    "abilities": [
+      "callAirdrop",
+      "tacticalOverride"
+    ],
+    "meta": {
+      "facing": "right",
+      "calledAirdrop": false,
+      "canRideMechatron": true
+    }
+  },
   "skirmisher": {
     "intendedMove": {
       "x": 0,
@@ -303,6 +329,276 @@
     ],
     "meta": {
       "facing": "right"
+    }
+  },
+  "toymaker": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "toymaker",
+    "state": "idle",
+    "hp": 25,
+    "maxHp": 25,
+    "mass": 1,
+    "tags": [
+      "mechanical",
+      "craftor"
+    ],
+    "abilities": [
+      "deployBot"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "druid": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "druid",
+    "state": "idle",
+    "hp": 35,
+    "maxHp": 35,
+    "dmg": 4,
+    "mass": 1,
+    "tags": [
+      "forest",
+      "magic",
+      "nature"
+    ],
+    "abilities": [
+      "summonForestCreature",
+      "entangle"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "engineer": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "engineer",
+    "state": "idle",
+    "hp": 25,
+    "maxHp": 25,
+    "mass": 1,
+    "tags": [
+      "mechanical",
+      "support",
+      "systems"
+    ],
+    "abilities": [
+      "shieldGenerator",
+      "systemHack"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "lancer": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "lancer",
+    "state": "idle",
+    "hp": 45,
+    "maxHp": 45,
+    "mass": 1.2,
+    "dmg": 12,
+    "tags": [
+      "specialist",
+      "anti-armor",
+      "dragon-hunter"
+    ],
+    "abilities": [
+      "harpoonChain",
+      "winchPull",
+      "armorPierce"
+    ],
+    "meta": {
+      "facing": "right",
+      "harpoonRange": 12,
+      "chainLength": 15,
+      "armorPiercing": 8,
+      "winchSpeed": 2
+    }
+  },
+  "tamer": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "tamer",
+    "state": "idle",
+    "hp": 20,
+    "maxHp": 20,
+    "mass": 1
+  },
+  "tracker": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "ranger",
+    "state": "idle",
+    "hp": 35,
+    "maxHp": 35,
+    "mass": 1,
+    "tags": [
+      "forest",
+      "hunter",
+      "specialist"
+    ],
+    "abilities": [],
+    "meta": {
+      "facing": "right",
+      "tracking": true,
+      "footprintDetection": 5,
+      "trapSetting": true,
+      "netRange": 4
+    }
+  },
+  "waterbearer": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "waterpriest",
+    "state": "idle",
+    "hp": 30,
+    "maxHp": 30,
+    "mass": 1,
+    "tags": [
+      "desert",
+      "support",
+      "healer",
+      "detector"
+    ],
+    "abilities": [
+      "waterBless",
+      "detectSpies"
+    ],
+    "meta": {
+      "facing": "right",
+      "desertAdapted": true,
+      "waterReserves": 100,
+      "detectRange": 6
+    }
+  },
+  "welder": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "welder",
+    "state": "idle",
+    "hp": 24,
+    "maxHp": 24,
+    "mass": 1,
+    "tags": [
+      "mechanical",
+      "support",
+      "welder"
+    ],
+    "abilities": [
+      "emergencyRepair",
+      "reinforceConstruct"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "grappler": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "grappler",
+    "state": "idle",
+    "hp": 35,
+    "maxHp": 35,
+    "dmg": 8,
+    "mass": 1,
+    "tags": [
+      "desert",
+      "hunter",
+      "specialist",
+      "grappler"
+    ],
+    "abilities": [
+      "grapplingHook",
+      "pinTarget"
+    ],
+    "meta": {
+      "facing": "right",
+      "desertAdapted": true,
+      "grapplingRange": 8,
+      "maxGrapples": 2
+    }
+  },
+  "assembler": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "assembler",
+    "state": "idle",
+    "hp": 26,
+    "maxHp": 26,
+    "mass": 1,
+    "tags": [
+      "mechanical",
+      "support",
+      "assembler"
+    ],
+    "abilities": [
+      "reinforceConstruct",
+      "powerSurge"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "naturalist": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "naturalist",
+    "state": "idle",
+    "hp": 30,
+    "maxHp": 30,
+    "dmg": 3,
+    "mass": 1,
+    "tags": [
+      "forest",
+      "support",
+      "beast-tamer"
+    ],
+    "abilities": [
+      "tameMegabeast",
+      "calmAnimals"
+    ],
+    "meta": {
+      "facing": "right",
+      "forestAdapted": true,
+      "beastAffinity": true
     }
   }
 }

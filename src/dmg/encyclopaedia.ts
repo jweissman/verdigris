@@ -1,5 +1,6 @@
 import { Unit, UnitState } from "../types/Unit";
 import units from "../../data/units.json";
+import folks from "../../data/folks.json";
 import * as abilitiesJson from "../../data/abilities.json";
 
 export default class Encyclopaedia {
@@ -7,6 +8,7 @@ export default class Encyclopaedia {
 
   static bestiary: { [key: string]: Partial<Unit> } = {
     ...(units as { [key: string]: Partial<Unit> }),
+    ...(folks as { [key: string]: Partial<Unit> }),
   };
 
   static counts: { [seriesName: string]: number } = {};
