@@ -11,7 +11,7 @@
 .....K..........................
 .....K..........................
 ---
-bg desert
+bg desert-panorama
 strip wide
 temperature 35
 weather sand 200 0.6

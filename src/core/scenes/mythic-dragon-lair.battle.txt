@@ -1,0 +1,58 @@
+# Mythic Dragon Lair - Ultimate Boss Encounter
+# Ancient dragon awakens with environmental hazards
+
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+.............D......................
+....................................
+....................................
+....................................
+.ç.α.β.γ.σ..........................
+....................................
+---
+# Legend:
+# D = Dragon (placeholder - would be massive mythic boss)
+# ç = champion (tank)
+# α = acrobat (dodger)
+# β = berserker (DPS)
+# γ = guardian (healer)
+# σ = shadowBlade (assassin)
+
+bg volcanic
+strip wide
+height tall
+temperature 80
+
+# Dragon's minions spawn periodically
+spawn 100 demon 5 2
+spawn 100 demon 30 2
+spawn 200 demon 10 3
+spawn 200 demon 25 3
+spawn 300 skeleton 15 4
+spawn 300 skeleton 20 4
+spawn 300 ghost 12 4
+spawn 300 ghost 23 4
+
+# Environmental dragon attacks
+lightning 150 13 9
+lightning 250 13 9
+lightning 350 13 9
+weather firestorm 100 0.8
+temperature 100
+
+# Dragon breath attack zones
+aoe 180 10 8 5 fire 25
+aoe 280 16 8 5 fire 25
+aoe 380 13 7 6 fire 30
+
+# Lava eruptions
+spawn 400 demon 8 5
+spawn 400 demon 28 5
+weather lava 400 1.0

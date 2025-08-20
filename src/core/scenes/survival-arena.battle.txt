@@ -1,0 +1,70 @@
+# Survival Arena - Endless Combat Challenge
+# How long can your squad survive?
+
+....................................
+....................................
+....................................
+..s..r..p..b..f....................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+---
+# Legend:
+# s = soldier (tank)
+# r = ranger (ranged DPS) 
+# p = priest (healer)
+# b = bombardier (AoE damage)
+# f = farmer (support)
+
+bg dark-city
+strip wide
+height tall
+temperature 20
+
+# Continuous spawning pattern
+# Early waves - basic enemies
+spawn 50 worm 30 2
+spawn 50 worm 32 2
+spawn 50 worm 34 2
+
+spawn 100 worm 30 3
+spawn 100 worm 32 3
+spawn 100 worm 34 3
+spawn 100 squirrel 28 2
+
+spawn 150 big-worm 30 4
+spawn 150 big-worm 34 4
+spawn 150 skeleton 32 3
+
+# Mid waves - mixed threats
+spawn 200 mimic-worm 30 5
+spawn 200 ghost 32 4
+spawn 200 skeleton 34 4
+
+spawn 250 clanker 30 6
+spawn 250 spiker 32 6
+spawn 250 roller 34 6
+
+spawn 300 freezebot 28 7
+spawn 300 zapper 30 7
+spawn 300 swarmbot 32 7
+spawn 300 swarmbot 34 7
+
+# Late waves - bosses
+spawn 400 mechatron 32 8
+spawn 450 giant-sandworm 30 9
+spawn 500 desert-megaworm 32 10
+
+# Environmental escalation
+weather smoke 100 0.2
+weather ashfall 300 0.4
+weather firestorm 500 0.6
+temperature 40

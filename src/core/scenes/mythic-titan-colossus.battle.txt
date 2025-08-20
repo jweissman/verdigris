@@ -1,0 +1,56 @@
+# Mythic Titan Colossus - Shadow of the Colossus Style
+# Climb and defeat a massive segmented titan
+
+....................................
+....................................
+.............TTT....................
+............TTTTT...................
+...........TTTTTTT..................
+..........TTTTTTTTT.................
+.........TTTTTTTTTTT................
+........TTTTTTTTTTTTT...............
+.......TTTTTTTTTTTTTTT..............
+......TTTTTTTTTTTTTTTTT.............
+.....TTTTTTTTTTTTTTTTTTT............
+....TTTTTTTTTTTTTTTTTTTTT...........
+...TTTTTTTTTTTTTTTTTTTTTTT..........
+..α.β.γ.............................
+....................................
+---
+# Legend:
+# T = Titan segments (represented by multiple big-worms forming a colossus)
+# α = acrobat (climber hero)
+# β = berserker (damage dealer)
+# γ = guardian (support)
+
+bg mountain-pass
+strip wide
+height tall
+temperature 5
+
+# Titan is composed of interconnected worm segments
+spawn 0 bigworm 13 3
+spawn 0 bigworm 14 3
+spawn 0 bigworm 15 3
+spawn 0 bigworm 12 4
+spawn 0 bigworm 13 4
+spawn 0 bigworm 14 4
+spawn 0 bigworm 15 4
+spawn 0 bigworm 16 4
+
+# Titan awakens and spawns defenders
+spawn 100 skeleton 10 12
+spawn 100 skeleton 20 12
+spawn 200 ghost 8 10
+spawn 200 ghost 22 10
+
+# Environmental titan attacks (stomps)
+aoe 150 5 13 4 impact 20
+aoe 250 25 13 4 impact 20
+aoe 350 15 13 5 impact 25
+
+# Weather changes as titan weakens
+weather clear 0
+weather fog 200 0.5
+weather storm 400 0.8
+lightning 500 15 5

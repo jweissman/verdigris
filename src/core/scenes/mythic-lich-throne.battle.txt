@@ -1,0 +1,70 @@
+# Mythic Lich Throne - Undead Overlord's Domain
+# Face the undead master and his endless legions
+
+....################################
+....#..............................#
+....#..............................#
+....#..............................#
+....#..........k.k.k.k............#
+....#.........k.k.k.k.k...........#
+....#........k.k.k.k.k.k..........#
+....#.......k.k.k.L.k.k.k.........#
+....#........k.k.k.k.k.k..........#
+....#.........k.k.k.k.k...........#
+....#..........k.k.k.k............#
+....#..............................#
+....#..............................#
+....#..............................#
+....################################
+....................................
+..ç.α.β.γ.p.........................
+....................................
+---
+# Legend:
+# L = Lich King (placeholder for massive necromancer boss)
+# k = skeleton (undead minions)
+# # = throne room walls
+# ç = champion
+# α = acrobat
+# β = berserker
+# γ = guardian
+# p = priest (anti-undead specialist)
+
+bg black-castle
+strip wide
+height tall
+temperature -10
+
+# Lich raises undead waves
+spawn 50 skeleton 10 5
+spawn 50 skeleton 25 5
+spawn 50 skeleton 10 10
+spawn 50 skeleton 25 10
+
+spawn 150 ghost 8 7
+spawn 150 ghost 27 7
+spawn 150 ghost 17 4
+spawn 150 ghost 17 11
+
+# Lich's dark magic
+weather darkness 100 1.0
+temperature -20
+
+# Soul drain attacks
+aoe 200 17 8 8 necrotic 15
+aoe 300 17 8 10 necrotic 20
+aoe 400 17 8 12 necrotic 25
+
+# Raise more powerful undead
+spawn 250 demon 12 8
+spawn 250 demon 22 8
+spawn 350 bigworm 17 6
+spawn 350 bigworm 17 10
+
+# Final phase - lich becomes vulnerable but summons army
+spawn 500 skeleton 5 3
+spawn 500 skeleton 30 3
+spawn 500 skeleton 5 13
+spawn 500 skeleton 30 13
+spawn 500 ghost 17 8
+lightning 550 17 8

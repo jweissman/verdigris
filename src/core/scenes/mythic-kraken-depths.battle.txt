@@ -1,0 +1,71 @@
+# Mythic Kraken Depths - Underwater Leviathan
+# Battle a massive sea monster with tentacles
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~x~~~~x~~~~x~~~~x~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~x~~K~~x~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~x~~~~x~~~~x~~~~x~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..α.β.γ.p...........................
+....................................
+---
+# Legend:
+# K = Kraken core (placeholder for boss)
+# x = Tentacles (mesoworm segments)
+# ~ = Deep water
+# α = acrobat (swimmer)
+# β = berserker
+# γ = guardian
+# p = priest
+
+bg lake
+strip wide
+height tall
+temperature 10
+
+# Spawn kraken tentacles as mesoworms
+spawn 0 mesoworm 9 5
+spawn 0 mesoworm 14 5
+spawn 0 mesoworm 19 5
+spawn 0 mesoworm 24 5
+spawn 0 mesoworm 13 7
+spawn 0 mesoworm 17 7
+spawn 0 mesoworm 9 9
+spawn 0 mesoworm 14 9
+spawn 0 mesoworm 19 9
+spawn 0 mesoworm 24 9
+
+# Water becomes turbulent
+weather rain 50 0.5
+weather storm 150 0.8
+temperature 5
+
+# Kraken ink clouds (darkness)
+aoe 100 15 7 6 blind 10
+aoe 200 15 7 8 blind 15
+aoe 300 15 7 10 blind 20
+
+# Tidal waves
+aoe 250 5 10 30 water 10
+aoe 350 5 10 30 water 15
+aoe 450 5 10 30 water 20
+
+# Spawn aquatic minions
+spawn 180 squirrel 7 12
+spawn 180 squirrel 27 12
+spawn 280 big-worm 10 11
+spawn 280 big-worm 24 11
+
+# Kraken rage - lightning storm
+lightning 400 15 7
+lightning 420 10 6
+lightning 440 20 8
+lightning 460 15 7

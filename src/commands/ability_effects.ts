@@ -214,10 +214,9 @@ export class AbilityEffectsCommand extends Command {
         break;
 
       case "jump":
-        // Get impact config from ability config
-        const jumpAbility = ability?.config;
-        const impactDamage = jumpAbility?.impact?.damage || 5;
-        const impactRadius = jumpAbility?.impact?.radius || 3;
+        // Get impact config from effect
+        const impactDamage = effect.damage || 5;
+        const impactRadius = effect.radius || 3;
         
         this.sim.queuedCommands.push({
           type: "jump",
@@ -225,7 +224,7 @@ export class AbilityEffectsCommand extends Command {
             unitId: caster.id,
             targetX: targetPos.x,
             targetY: targetPos.y,
-            height: jumpAbility?.height || 5,
+            height: effect.height || 5,
             damage: impactDamage,
             radius: impactRadius,
             speed: effect.speed || 2,

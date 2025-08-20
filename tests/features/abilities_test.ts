@@ -8,7 +8,6 @@ describe('Abilities Rule', () => {
   it('should trigger a simple ability after its cooldown', () => {
     const sim = new Simulator();
 
-
     const unit: Unit = {
       id: 'unit1',
       pos: { x: 0, y: 0 },
@@ -26,10 +25,9 @@ describe('Abilities Rule', () => {
       meta: {}
     };
 
-
     const enemy: Unit = {
       id: 'enemy1',
-      pos: { x: 1, y: 0 },
+      pos: { x: 1, y: 0 }, // Within explode trigger range (distance <= 3)
       intendedMove: { x: 1, y: 0 },
       team: 'hostile',
       sprite: 'worm',
@@ -46,12 +44,30 @@ describe('Abilities Rule', () => {
 
     sim.addUnit(unit);
     sim.addUnit(enemy);
+    
+    const initialEnemyHp = enemy.hp;
+    
     sim.step(); // This triggers the explode ability and queues the damage command
     sim.step(); // This processes the damage command
     
-
     const unit1 = sim.units.find(u => u.id === 'unit1');
+    const enemy1 = sim.units.find(u => u.id === 'enemy1');
 
-    expect(unit1 === undefined || unit1.state === 'dead').toBe(true);
+    // Self-destruct should kill the clanker
+    expect(unit1).toBeUndefined();
+    
+    // Enemy should take AoE damage from explosion
+    expect(enemy1).toBeDefined();
+    expect(enemy1!.hp).toBeLessThan(initialEnemyHp);
+    // The actual damage taken depends on explosion mechanics and may vary
+    const damageTaken = initialEnemyHp - enemy1!.hp;
+    expect(damageTaken).toBeGreaterThan(0);
+    expect(damageTaken).toBeLessThanOrEqual(initialEnemyHp);
+    
+    // Verify AoE event was generated
+    const aoeEvents = sim.processedEvents.filter(e => e.kind === 'aoe');
+    expect(aoeEvents.length).toBeGreaterThan(0);
+    expect(['impact', 'explosive']).toContain(aoeEvents[0].meta?.aspect);
+    expect(aoeEvents[0].meta?.radius).toBe(3);
   });
 });

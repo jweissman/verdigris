@@ -15,6 +15,17 @@ import simpleMesowormTest from "./scenes/simple-mesoworm-test.battle.txt";
 import toymakerBalanced from "./scenes/toymaker-balanced-challenge.battle.txt";
 import heroShowcase from "./scenes/hero-showcase.battle.txt";
 import titleBackground from "./scenes/title-background.battle.txt";
+import citySiege from "./scenes/city-siege.battle.txt";
+import swampAmbush from "./scenes/swamp-ambush.battle.txt";
+import hamletDefense from "./scenes/hamlet-defense.battle.txt";
+import ultimateGauntlet from "./scenes/ultimate-gauntlet.battle.txt";
+import survivalArena from "./scenes/survival-arena.battle.txt";
+import tacticalGauntlet from "./scenes/tactical-gauntlet.battle.txt";
+import mythicDragonLair from "./scenes/mythic-dragon-lair.battle.txt";
+import mythicTitanColossus from "./scenes/mythic-titan-colossus.battle.txt";
+import mythicLichThrone from "./scenes/mythic-lich-throne.battle.txt";
+import mythicKrakenDepths from "./scenes/mythic-kraken-depths.battle.txt";
+import dragonEncounter from "./scenes/dragon-encounter.battle.txt";
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { CommandHandler } from "./command_handler";
 
@@ -36,6 +47,17 @@ export class SceneLoader {
     toymakerBalanced,
     heroShowcase,
     titleBackground,
+    citySiege,
+    swampAmbush,
+    hamletDefense,
+    ultimateGauntlet,
+    survivalArena,
+    tacticalGauntlet,
+    mythicDragonLair,
+    mythicTitanColossus,
+    mythicLichThrone,
+    mythicKrakenDepths,
+    dragonEncounter,
   };
   private unitCreationIndex: number = 0;
 
@@ -119,6 +141,7 @@ export class SceneLoader {
     β: "berserker",
     γ: "guardian",
     σ: "shadowBlade",
+    dragon: "dragon",
   };
 
   loadSimpleFormat(sceneText: string): void {

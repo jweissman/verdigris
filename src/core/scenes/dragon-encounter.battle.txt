@@ -1,0 +1,54 @@
+# Dragon Encounter - Epic Boss Battle
+# Face the ancient dragon in its volcanic lair
+
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+....................................
+.............dragon.................
+....................................
+....................................
+....................................
+....................................
+.ç.α.β.γ.p.s.r.b....................
+....................................
+---
+# Legend:
+# dragon = Ancient Dragon (400 HP boss)
+# ç = champion (tank)
+# α = acrobat (dodger)
+# β = berserker (DPS)
+# γ = guardian (support)
+# p = priest (healer)
+# s = soldier (off-tank)
+# r = ranger (ranged DPS)
+# b = bombardier (AoE damage)
+
+bg volcanic
+strip wide
+height tall
+temperature 60
+
+# Dragon minions spawn periodically
+spawn 100 skeleton 5 2
+spawn 100 skeleton 30 2
+spawn 200 demon 8 3
+spawn 200 demon 27 3
+spawn 300 ghost 15 4
+spawn 300 ghost 20 4
+
+# Environmental hazards
+weather ashfall 50 0.6
+lightning 250 15 8
+lightning 350 20 8
+aoe 200 10 7 4 fire 15
+aoe 300 25 7 4 fire 15
+aoe 400 15 6 5 fire 20
+
+# Dragon rage phases
+temperature 80
+weather firestorm 500 0.8

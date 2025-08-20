@@ -1063,5 +1063,110 @@
         }
       }
     ]
+  },
+  "dragonFire": {
+    "name": "Dragon's Breath",
+    "cooldown": 40,
+    "config": {
+      "range": 8,
+      "coneAngle": 1.57,
+      "damage": 30
+    },
+    "target": "closest.enemy()?.pos",
+    "trigger": "distance(closest.enemy()?.pos) <= 8",
+    "effects": [
+      {
+        "type": "cone",
+        "direction": "self.facing",
+        "range": 8,
+        "width": 5,
+        "effects": [
+          {
+            "type": "heat",
+            "amount": 50,
+            "radius": 3
+          },
+          {
+            "type": "particles",
+            "particleType": "fire",
+            "count": 20
+          },
+          {
+            "type": "damage",
+            "aspect": "heat",
+            "amount": 30,
+            "origin": "self.pos"
+          },
+          {
+            "type": "setOnFire"
+          }
+        ]
+      }
+    ]
+  },
+  "wingStorm": {
+    "name": "Wing Storm",
+    "cooldown": 60,
+    "config": {
+      "radius": 10,
+      "knockback": 8
+    },
+    "target": "self.pos",
+    "trigger": "count.enemies_in_range(10) >= 2",
+    "effects": [
+      {
+        "type": "aoe",
+        "target": "self.pos",
+        "aspect": "wind",
+        "radius": 10,
+        "amount": 15,
+        "force": 8,
+        "origin": "self.pos"
+      },
+      {
+        "type": "particles",
+        "particleType": "dust",
+        "pos": "self.pos",
+        "count": 30,
+        "spread": 10
+      }
+    ]
+  },
+  "terrifyingRoar": {
+    "name": "Terrifying Roar",
+    "cooldown": 80,
+    "config": {
+      "radius": 15,
+      "fearDuration": 40
+    },
+    "target": "self.pos",
+    "trigger": "self.hp < self.maxHp * 0.5",
+    "effects": [
+      {
+        "type": "aoe",
+        "target": "self.pos",
+        "aspect": "fear",
+        "radius": 15,
+        "amount": 0,
+        "stunDuration": 40
+      },
+      {
+        "type": "buff",
+        "target": "self",
+        "meta": {
+          "enraged": true,
+          "damageBoost": 1.5,
+          "speedBoost": 1.5,
+          "duration": 60
+        }
+      },
+      {
+        "type": "particles",
+        "particleType": "shockwave",
+        "pos": "self.pos",
+        "color": "#FF0000",
+        "lifetime": 30
+      }
+    ]
   }
 }

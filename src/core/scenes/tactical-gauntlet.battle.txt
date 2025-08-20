@@ -1,0 +1,52 @@
+# Tactical Gauntlet - Terrain & Positioning Challenge
+# Use terrain and positioning to overcome superior numbers
+
+....................................
+.....######..............######.....
+.....#....#..............#....#.....
+.....#.ç..#..............#..w.#.....
+.....#....#..............#.www#.....
+.....###.##..............##.###.....
+........#..................#........
+........#..................#........
+.....###.##..............##.###.....
+.....#.α..#..............#.nnn#.....
+.....#....#..............#..n.#.....
+.....#....#..............#....#.....
+.....######..............######.....
+....................................
+....................................
+---
+# Legend:
+# ç = champion (player hero in left fortress)
+# α = acrobat (player hero in left fortress)
+# w = worm (enemies in right fortress)
+# n = big-worm (heavy enemies in right fortress)
+# # = wall/terrain (represented as spawn locations for visual effect)
+
+bg keep
+strip wide
+height tall
+temperature 18
+
+# Mid-battle reinforcements appear
+spawn 200 skeleton 18 3
+spawn 200 skeleton 18 4
+spawn 200 skeleton 18 10
+spawn 200 skeleton 18 11
+
+spawn 400 ghost 5 6
+spawn 400 ghost 30 6
+spawn 400 ghost 5 8
+spawn 400 ghost 30 8
+
+# Boss wave
+spawn 600 mechatron 18 7
+spawn 600 toymaker 18 2
+spawn 600 toymaker 18 12
+
+# Environmental changes
+weather fog 100 0.3
+weather clear 300
+weather storm 500 0.5
+temperature 10
