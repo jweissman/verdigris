@@ -21,7 +21,7 @@ if (!hero) {
 const heroUnit = {
   ...hero,
   id: 'player',
-  team: 'friendly',
+  team: 'friendly' as const,
   pos: { x: 2, y: 1 }
 };
 
@@ -32,14 +32,14 @@ const soldier = Encyclopaedia.unit('soldier');
 sim.addUnit({
   ...soldier,
   id: 'enemy1',
-  team: 'hostile',
+  team: 'hostile' as const,
   pos: { x: 0, y: 0 }
 });
 
 sim.addUnit({
   ...soldier,
   id: 'enemy2',
-  team: 'hostile',
+  team: 'hostile' as const,
   pos: { x: 4, y: 2 }
 });
 

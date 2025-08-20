@@ -14,7 +14,7 @@ describe.skip('Jumping Responsiveness', () => {
       hp: 50,
       maxHp: 50,
       sprite: 'test',
-      state: 'idle' as const as const,
+      state: 'idle' as const,
       abilities: ['jumps'],
       lastAbilityTick: { jumps: -100 } // Ready to jump
     };

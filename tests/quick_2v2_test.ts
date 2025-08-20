@@ -15,15 +15,15 @@ const priest = Folks.get('priest')!;
 const ranger = Folks.get('ranger')!;
 
 // Place team 1 (left side)
-const f1 = { ...farmer, id: 'farmer1', team: 'friendly', pos: { x: 10, y: 14 } };
-const s1 = { ...soldier, id: 'soldier1', team: 'friendly', pos: { x: 10, y: 16 } };
+const f1 = { ...farmer, id: 'farmer1', team: 'friendly' as const, pos: { x: 10, y: 14 } };
+const s1 = { ...soldier, id: 'soldier1', team: 'friendly' as const, pos: { x: 10, y: 16 } };
 console.log('Adding farmer with team:', f1.team);
 sim.addUnit(f1);
 sim.addUnit(s1);
 
 // Place team 2 (right side, closer)
-const p1 = { ...priest, id: 'priest1', team: 'hostile', pos: { x: 20, y: 14 } };
-const r1 = { ...ranger, id: 'ranger1', team: 'hostile', pos: { x: 20, y: 16 } };
+const p1 = { ...priest, id: 'priest1', team: 'hostile' as const, pos: { x: 20, y: 14 } };
+const r1 = { ...ranger, id: 'ranger1', team: 'hostile' as const, pos: { x: 20, y: 16 } };
 sim.addUnit(p1);
 sim.addUnit(r1);
 

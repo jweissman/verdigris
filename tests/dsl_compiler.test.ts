@@ -16,7 +16,9 @@ describe('DSL Compiler', () => {
     state: 'idle',
     intendedMove: { x: 0, y: 0 },
     sprite: 'test',
-    mass: 1
+    mass: 1,
+    abilities: [],
+    meta: {}
   };
   
   // Mock context
@@ -37,14 +39,36 @@ describe('DSL Compiler', () => {
     getCurrentTick: () => 0,
     getFieldWidth: () => 100,
     getFieldHeight: () => 100,
-    getTerrain: () => ({ type: 'normal' }),
-    addParticle: () => {},
-    addProjectile: () => {},
-    playSound: () => {},
-    getUnitCommands: () => [],
-    clearUnitCommands: () => {},
-    executeCommand: () => {},
-    getMetrics: () => ({ stepTime: 0, unitsProcessed: 0, commandsQueued: 0, projectileCount: 0, particleCount: 0 })
+    getRandom: () => Math.random(),
+    getProjectiles: () => [],
+    getParticles: () => [],
+    getTemperatureAt: () => 20,
+    getSceneBackground: () => 'forest',
+    isWinterActive: () => false,
+    isSandstormActive: () => false,
+    getSandstormIntensity: () => 0,
+    getSandstormDuration: () => 0,
+    getQueuedEvents: () => [],
+    getUnitIndex: () => undefined,
+    getArrays: () => ({
+      posX: [],
+      posY: [],
+      activeIndices: [],
+      team: [],
+      state: [],
+      unitIds: [],
+      hp: [],
+      maxHp: [],
+      mass: [],
+      dmg: []
+    }),
+    getUnitColdData: () => undefined,
+    getUnitColdDataByIndex: () => undefined,
+    isAbilityForced: () => false,
+    findUnitIndicesInRadius: () => [],
+    getActiveUnitIndices: () => [],
+    getUnitIndicesWithAbilities: () => [],
+    getUnitProxyByIndex: () => undefined,
   };
   
   describe('Literals', () => {
