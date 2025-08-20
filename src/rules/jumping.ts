@@ -27,9 +27,9 @@ export class Jumping extends Rule {
       const dx = jumpTarget.x - jumpOrigin.x;
       const dy = jumpTarget.y - jumpOrigin.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      // Duration scales with distance, but with min/max bounds
-      // Roughly 1 tick per tile, min 5, max 20
-      jumpDuration = Math.min(20, Math.max(5, Math.round(distance)));
+      // Duration scales with distance, but faster than before
+      // Roughly 0.7 ticks per tile for snappier jumps, min 3, max 15
+      jumpDuration = Math.min(15, Math.max(3, Math.round(distance * 0.7)));
     }
     
     const newProgress = (unit.meta.jumpProgress || 0) + 1;
@@ -45,7 +45,6 @@ export class Jumping extends Rule {
             radius: unit.meta.jumpRadius,
             amount: unit.meta.jumpDamage,
             force: 3,
-            tick: context.ticks, // Add tick for rendering
           },
         });
       }

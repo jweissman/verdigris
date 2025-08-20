@@ -426,9 +426,35 @@ export default class Orthographic extends View {
     const targetY = Math.round(unit.meta.jumpTarget.y * 8);
 
     this.ctx.save();
+    
+    // Draw target circle with pulsing effect
+    const pulseScale = 1 + Math.sin(this.animationTime / 100) * 0.2;
+    
+    // Outer ring
+    this.ctx.strokeStyle = "#4444ff";
+    this.ctx.lineWidth = 2;
+    this.ctx.globalAlpha = 0.6;
+    this.ctx.beginPath();
+    this.ctx.arc(targetX + 4, targetY + 4, 6 * pulseScale, 0, 2 * Math.PI);
+    this.ctx.stroke();
+    
+    // Inner filled circle
     this.ctx.fillStyle = "#4444ff";
-    this.ctx.globalAlpha = 0.4;
-    this.ctx.fillRect(targetX, targetY, 8, 8);
+    this.ctx.globalAlpha = 0.3;
+    this.ctx.beginPath();
+    this.ctx.arc(targetX + 4, targetY + 4, 4, 0, 2 * Math.PI);
+    this.ctx.fill();
+    
+    // Impact radius preview if unit has jump damage
+    if (unit.meta.jumpRadius && unit.meta.jumpDamage) {
+      this.ctx.strokeStyle = "#ff4444";
+      this.ctx.lineWidth = 1;
+      this.ctx.globalAlpha = 0.2;
+      this.ctx.beginPath();
+      this.ctx.arc(targetX + 4, targetY + 4, unit.meta.jumpRadius * 8, 0, 2 * Math.PI);
+      this.ctx.stroke();
+    }
+    
     this.ctx.restore();
   }
 

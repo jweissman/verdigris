@@ -146,6 +146,13 @@ export class TickContextImpl implements TickContext {
     if (!this.sim.queuedEvents) {
       this.sim.queuedEvents = [];
     }
+    // Ensure tick is added to meta for event rendering
+    if (!event.meta) {
+      event.meta = {};
+    }
+    if (event.meta.tick === undefined) {
+      event.meta.tick = this.sim.ticks;
+    }
     this.sim.queuedEvents.push(event);
   }
 
