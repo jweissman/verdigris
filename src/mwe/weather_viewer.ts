@@ -97,7 +97,6 @@ export default class SceneWeatherViewer {
   }
 
   placeTestCreatures() {
-
     this.sim.reset();
   }
 
@@ -146,9 +145,6 @@ export default class SceneWeatherViewer {
 
   applyWeather() {
     const weather = this.weathers[this.currentWeatherIndex];
-
-
-
 
     this.sim.lightningActive = false;
 

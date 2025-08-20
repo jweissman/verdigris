@@ -62,7 +62,6 @@ export class HealthStore {
     this.unitIdToIndex.delete(unitId);
     this.freeIndices.push(index);
 
-
     this.hp[index] = 0;
     this.maxHp[index] = 0;
     this.dmg[index] = 0;
@@ -92,7 +91,6 @@ export class HealthStore {
     const index = this.unitIdToIndex.get(unitId);
     if (index === undefined) return;
 
-
     this.hp[index] = Math.min(hp, this.maxHp[index]);
   }
 
@@ -109,7 +107,6 @@ export class HealthStore {
   applyDamage(unitId: string, damage: number): number {
     const index = this.unitIdToIndex.get(unitId);
     if (index === undefined) return 0;
-
 
     const effectiveDamage = Math.max(0, damage - this.armor[index]);
     const oldHp = this.hp[index];

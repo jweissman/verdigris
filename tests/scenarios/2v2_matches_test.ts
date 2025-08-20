@@ -38,14 +38,14 @@ describe('2v2 Match System', () => {
     const tournament = new Tournament2v2(['soldier', 'archer', 'warrior']);
     const results = tournament.runAll(1); // Just 1 run per matchup for speed
     
-    // With 3 unit types, we get C(3+1,2) = 6 possible teams
-    // Each team plays against all 6 teams = 36 matchups
+
+
     expect(results.size).toBe(36);
     
     const stats = tournament.getStats();
     expect(stats.size).toBeGreaterThan(0);
     
-    // Each team should have played some games
+
     for (const [team, stat] of stats.entries()) {
       const total = stat.wins + stat.losses + stat.draws;
       expect(total).toBeGreaterThan(0);
@@ -62,7 +62,7 @@ describe('2v2 Match System', () => {
     
     const result = match.run();
     
-    // Should resolve quickly on a small map
+
     expect(result.duration).toBeLessThanOrEqual(50);
   });
   
@@ -76,11 +76,11 @@ describe('2v2 Match System', () => {
     
     const result = match.run();
     
-    // Match should complete
+
     expect(result).toBeDefined();
     expect(result.duration).toBeLessThanOrEqual(200);
     
-    // Should have a result (winner or draw)
+
     expect(['team1', 'team2', 'draw']).toContain(result.winner);
   });
 });

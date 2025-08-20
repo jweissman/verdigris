@@ -2,9 +2,7 @@ import type { TickContext } from "../core/tick_context";
 import { Unit } from "../types/Unit";
 
 export default class DSL {
-  static clearCache() {
-
-  }
+  static clearCache() {}
 
   static noun = (
     unit: Unit,
@@ -24,7 +22,6 @@ export default class DSL {
         const dy = u1.pos.y - u2.pos.y;
         return dx * dx + dy * dy;
       });
-
 
     const isDistanceSort = sort && sort.toString().includes("dist2");
 

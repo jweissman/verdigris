@@ -18,20 +18,18 @@ export class Jumping extends Rule {
   }
 
   private updateJump(context: TickContext, unit: any): void {
-    // Calculate duration based on distance for realistic physics
     const jumpTarget = unit.meta.jumpTarget;
     const jumpOrigin = unit.meta.jumpOrigin;
     let jumpDuration = 10; // Default
-    
+
     if (jumpTarget && jumpOrigin) {
       const dx = jumpTarget.x - jumpOrigin.x;
       const dy = jumpTarget.y - jumpOrigin.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      // Duration scales with distance, but faster than before
-      // Roughly 0.7 ticks per tile for snappier jumps, min 3, max 15
+
       jumpDuration = Math.min(15, Math.max(3, Math.round(distance * 0.7)));
     }
-    
+
     const newProgress = (unit.meta.jumpProgress || 0) + 1;
 
     if (newProgress >= jumpDuration) {
@@ -69,10 +67,10 @@ export class Jumping extends Rule {
       const jumpTarget = unit.meta.jumpTarget;
       if (jumpTarget) {
         const t = newProgress / jumpDuration;
-        // Arc height scales with distance for more realistic jumps
+
         const distance = Math.sqrt(
-          Math.pow(jumpTarget.x - unit.pos.x, 2) + 
-          Math.pow(jumpTarget.y - unit.pos.y, 2)
+          Math.pow(jumpTarget.x - unit.pos.x, 2) +
+            Math.pow(jumpTarget.y - unit.pos.y, 2),
         );
         const arcHeight = Math.min(4, 1 + distance / 10); // Scale height with distance
         const height = 4 * arcHeight * t * (1 - t); // Parabolic arc

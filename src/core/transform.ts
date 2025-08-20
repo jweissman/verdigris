@@ -102,7 +102,6 @@ export class Transform {
       const existingMeta = proxyManager.getMeta(unitId);
       const newMeta = { ...existingMeta };
 
-
       for (const [key, value] of Object.entries(changes.meta)) {
         if (value === undefined) {
           delete newMeta[key];

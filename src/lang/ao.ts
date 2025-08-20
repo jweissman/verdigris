@@ -1,6 +1,5 @@
-import * as ohm from 'ohm-js';
+import * as ohm from "ohm-js";
 
-// Define the Ao grammar for DSL expressions
 const aoGrammar = ohm.grammar(`
   Ao {
     Exp = OrExp
@@ -80,11 +79,11 @@ const aoGrammar = ohm.grammar(`
  */
 export class Ao {
   private context: any;
-  
+
   constructor(context: any = {}) {
     this.context = context;
   }
-  
+
   /**
    * Interpret an Ao expression with the given context
    */
@@ -92,116 +91,140 @@ export class Ao {
     try {
       const match = aoGrammar.match(expression);
       if (match.failed()) {
-        console.error('Parse error:', match.message);
+        console.error("Parse error:", match.message);
         return undefined;
       }
-      
-      // Create semantics with context
+
       const semantics = this.createSemantics(this.context);
       return semantics(match).eval();
     } catch (error) {
-      console.error('Evaluation error:', error);
+      console.error("Evaluation error:", error);
       return undefined;
     }
   }
-  
+
   /**
    * Create semantics with the given context
    */
   private createSemantics(context: any) {
-    return aoGrammar.createSemantics().addOperation('eval', {
-      Exp(e) { return e.eval(); },
-      
+    return aoGrammar.createSemantics().addOperation("eval", {
+      Exp(e) {
+        return e.eval();
+      },
+
       OrExp_or(left, _, right) {
         const l = left.eval();
         return l || right.eval();
       },
-      
+
       AndExp_and(left, _, right) {
         const l = left.eval();
         return l && right.eval();
       },
-      
-      CompExp_eq(left, _, right) { return left.eval() == right.eval(); },
-      CompExp_neq(left, _, right) { return left.eval() != right.eval(); },
-      CompExp_lte(left, _, right) { return left.eval() <= right.eval(); },
-      CompExp_gte(left, _, right) { return left.eval() >= right.eval(); },
-      CompExp_lt(left, _, right) { return left.eval() < right.eval(); },
-      CompExp_gt(left, _, right) { return left.eval() > right.eval(); },
-      
-      AddExp_add(left, _, right) { return left.eval() + right.eval(); },
-      AddExp_sub(left, _, right) { return left.eval() - right.eval(); },
-      
-      MulExp_mul(left, _, right) { return left.eval() * right.eval(); },
-      MulExp_div(left, _, right) { return left.eval() / right.eval(); },
-      MulExp_mod(left, _, right) { return left.eval() % right.eval(); },
-      
-      UnaryExp_not(_, expr) { return !expr.eval(); },
-      UnaryExp_neg(_, expr) { return -expr.eval(); },
-      
+
+      CompExp_eq(left, _, right) {
+        return left.eval() == right.eval();
+      },
+      CompExp_neq(left, _, right) {
+        return left.eval() != right.eval();
+      },
+      CompExp_lte(left, _, right) {
+        return left.eval() <= right.eval();
+      },
+      CompExp_gte(left, _, right) {
+        return left.eval() >= right.eval();
+      },
+      CompExp_lt(left, _, right) {
+        return left.eval() < right.eval();
+      },
+      CompExp_gt(left, _, right) {
+        return left.eval() > right.eval();
+      },
+
+      AddExp_add(left, _, right) {
+        return left.eval() + right.eval();
+      },
+      AddExp_sub(left, _, right) {
+        return left.eval() - right.eval();
+      },
+
+      MulExp_mul(left, _, right) {
+        return left.eval() * right.eval();
+      },
+      MulExp_div(left, _, right) {
+        return left.eval() / right.eval();
+      },
+      MulExp_mod(left, _, right) {
+        return left.eval() % right.eval();
+      },
+
+      UnaryExp_not(_, expr) {
+        return !expr.eval();
+      },
+      UnaryExp_neg(_, expr) {
+        return -expr.eval();
+      },
+
       CallExp_methodCall(obj, _1, methodName, _2, args, _3) {
         const o = obj.eval();
         const method = o[methodName.sourceString];
-        const argVals = args.asIteration().children.map((arg: any) => arg.eval());
-        if (typeof method === 'function') {
+        const argVals = args
+          .asIteration()
+          .children.map((arg: any) => arg.eval());
+        if (typeof method === "function") {
           return method.apply(o, argVals);
         }
         return undefined;
       },
-      
+
       CallExp_optMethodCall(obj, _1, methodName, _2, args, _3) {
         const o = obj.eval();
         if (o == null) return undefined;
         const method = o[methodName.sourceString];
-        const argVals = args.asIteration().children.map((arg: any) => arg.eval());
-        if (typeof method === 'function') {
+        const argVals = args
+          .asIteration()
+          .children.map((arg: any) => arg.eval());
+        if (typeof method === "function") {
           return method.apply(o, argVals);
         }
         return undefined;
       },
-      
+
       CallExp_propAccess(obj, _, prop) {
         const o = obj.eval();
         return o == null ? undefined : o[prop.sourceString];
       },
-      
+
       CallExp_optChain(obj, _, prop) {
         const o = obj.eval();
         return o == null ? undefined : o[prop.sourceString];
       },
-      
+
       CallExp_indexAccess(obj, _1, index, _2) {
         return obj.eval()[index.eval()];
       },
-      
+
       CallExp_funcCall(funcName, _1, args, _2) {
         const name = funcName.sourceString;
-        const argVals = args.asIteration().children.map((arg: any) => arg.eval());
-        
-        // Check if it's a global function
-        if (name === 'Math') {
-          return Math;
-        }
-        
-        // Check context for the function
-        if (context && typeof context[name] === 'function') {
+        const argVals = args
+          .asIteration()
+          .children.map((arg: any) => arg.eval());
+
+        if (context && typeof context[name] === "function") {
           return context[name](...argVals);
         }
-        
-        // Check if it's a constructor
-        if (name === 'Array') {
-          return new Array(...argVals);
-        }
-        
+
         return undefined;
       },
-      
-      PrimaryExp_paren(_1, exp, _2) { return exp.eval(); },
-      
+
+      PrimaryExp_paren(_1, exp, _2) {
+        return exp.eval();
+      },
+
       ArrayLiteral(_1, elems, _2) {
         return elems.asIteration().children.map((e: any) => e.eval());
       },
-      
+
       ObjectLiteral(_1, props, _2) {
         const obj: any = {};
         props.asIteration().children.forEach((prop: any) => {
@@ -210,58 +233,52 @@ export class Ao {
         });
         return obj;
       },
-      
+
       Property(key, _, value) {
-        const k = key.child(0).sourceString.replace(/^["']|["']$/g, '');
+        const k = key.child(0).sourceString.replace(/^["']|["']$/g, "");
         return [k, value.eval()];
       },
-      
+
       ident(_1, _2) {
         const name = this.sourceString;
-        
-        // Check context for variable
+
         if (context && name in context) {
           return context[name];
         }
-        
-        // Check for Math object
-        if (name === 'Math') {
-          return Math;
-        }
-        
+
         return undefined;
       },
-      
-      number_float(_int, _dot, _dec) { 
-        return parseFloat(this.sourceString); 
+
+      number_float(_int, _dot, _dec) {
+        return parseFloat(this.sourceString);
       },
-      
+
       number_int(_) {
         return parseInt(this.sourceString);
       },
-      
-      string(_1, str, _2) { 
-        return str.sourceString; 
+
+      string(_1, str, _2) {
+        return str.sourceString;
       },
-      
-      boolean(b) { 
-        return b.sourceString === 'true'; 
+
+      boolean(b) {
+        return b.sourceString === "true";
       },
-      
-      null(_) { 
-        return null; 
+
+      null(_) {
+        return null;
       },
-      
-      undefined(_) { 
-        return undefined; 
+
+      undefined(_) {
+        return undefined;
       },
-      
-      _terminal() { 
-        return this.sourceString; 
-      }
+
+      _terminal() {
+        return this.sourceString;
+      },
     });
   }
-  
+
   /**
    * Static method for one-off evaluation
    */

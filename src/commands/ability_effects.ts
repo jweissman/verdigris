@@ -13,7 +13,6 @@ export class AbilityEffectsCommand extends Command {
     const caster = this.sim.units.find((u) => u.id === params.casterId);
     if (!caster) return;
 
-
     const target = params.target;
     const targetUnit = target?.id
       ? this.sim.units.find((u) => u.id === target.id)
@@ -214,10 +213,9 @@ export class AbilityEffectsCommand extends Command {
         break;
 
       case "jump":
-        // Get impact config from effect
         const impactDamage = effect.damage || 5;
         const impactRadius = effect.radius || 3;
-        
+
         this.sim.queuedCommands.push({
           type: "jump",
           params: {

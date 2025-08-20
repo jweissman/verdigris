@@ -224,7 +224,6 @@ export class SceneLoader {
     } else {
       if (command === "#") {
       } else {
-        // console.warn(
         throw new Error(
           `Scene loader: Unrecognized command '${command}' - ignoring`,
         );

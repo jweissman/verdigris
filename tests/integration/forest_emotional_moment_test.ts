@@ -25,7 +25,7 @@ describe('Forest Emotional Moment Integration', () => {
     console.debug(`🌲 Forest creatures loaded: ${forestCreatures.length}`);
     
 
-    // expect(sim.background).toBe('forest'); // Property doesn't exist
+
     expect(sim.sceneBackground).toBe('forest');
     
 
@@ -84,12 +84,12 @@ describe('Forest Emotional Moment Integration', () => {
     expect(creatureTypes).toBeGreaterThanOrEqual(3);
     
 
-    // if (sim.weather.temperature) {
-    //   expect(sim.weather.temperature).toBe(18); // Property doesn't exist
-    // }
+
+
+
     expect(sim.weather.current).toBe('leaves');
     
 
-    // expect(sim.stripWidth).toBe('wide'); // Property doesn't exist
+
   });
 });

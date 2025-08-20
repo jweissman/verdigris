@@ -56,7 +56,6 @@ export interface TickContext {
   getUnitColdDataByIndex(index: number): any;
   isAbilityForced(unitId: string, abilityName: string): boolean;
 
-
   findUnitIndicesInRadius(center: Vec2, radius: number): number[];
   getActiveUnitIndices(): number[];
   getUnitIndicesWithAbilities(): number[];
@@ -146,7 +145,7 @@ export class TickContextImpl implements TickContext {
     if (!this.sim.queuedEvents) {
       this.sim.queuedEvents = [];
     }
-    // Ensure tick is added to meta for event rendering
+
     if (!event.meta) {
       event.meta = {};
     }
@@ -310,7 +309,6 @@ export class TickContextImpl implements TickContext {
     const arrays = this.getArrays();
     const { team: teamArray, activeIndices } = arrays;
     const result: number[] = [];
-
 
     const teamCode = team === "friendly" ? 1 : team === "hostile" ? 2 : 0;
 

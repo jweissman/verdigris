@@ -7,7 +7,7 @@ export interface CreatureData {
   type: string;
   sprite: string;
   hp: number;
-  team: 'friendly' | 'hostile' | 'neutral';
+  team: "friendly" | "hostile" | "neutral";
   tags: string[];
   abilities: string[];
   isHuge: boolean;
@@ -230,7 +230,7 @@ export default class CreatureBrowserUI {
       });
 
       let view = new Isometric(ctx, sim, 320, 200, this.sprites, this.bgs);
-      // Can't access protected properties directly, use the view as-is
+
       view.show();
     });
   }

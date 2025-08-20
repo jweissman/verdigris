@@ -21,7 +21,7 @@ describe('Cute Animals System', () => {
   });
   
   it('should make cute animals wander naturally', () => {
-    // Reset RNG for deterministic behavior
+
     Simulator.rng.reset(12345);
     const sim = new Simulator(15, 10);
     

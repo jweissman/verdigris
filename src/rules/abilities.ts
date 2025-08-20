@@ -30,7 +30,6 @@ export class Abilities extends Rule {
   constructor() {
     super();
 
-
     if (Abilities.precompiledAbilities.size === 0) {
       for (const name in Abilities.all) {
         const ability = Abilities.all[name];
@@ -81,10 +80,8 @@ export class Abilities extends Rule {
 
     const currentTick = context.getCurrentTick();
 
-
     const arrays = (context as any).getArrays?.();
     const useArrays = arrays?.posX && arrays?.posY && arrays?.team;
-
 
     const allUnits = context.getAllUnits();
     const relevantUnits: Unit[] = [];
@@ -92,11 +89,9 @@ export class Abilities extends Rule {
     for (const unit of allUnits) {
       if (unit.state === "dead" || unit.hp <= 0) continue;
 
-
       const abilities = unit.abilities;
       if (!abilities || !Array.isArray(abilities) || abilities.length === 0)
         continue;
-
 
       const hasNonCombatAbility = abilities.some(
         (a) => a !== "melee" && a !== "ranged",
@@ -116,7 +111,6 @@ export class Abilities extends Rule {
 
     (context as any).cachedUnits = allUnits;
 
-
     const hostileUnits = allUnits.filter(
       (u) => u.team === "hostile" && u.state !== "dead" && u.hp > 0,
     );
@@ -125,7 +119,6 @@ export class Abilities extends Rule {
     );
 
     const hasEnemies = hostileUnits.length > 0 && friendlyUnits.length > 0;
-
 
     const closestEnemyMap = new Map<string, any>();
     const enemyDistanceMap = new Map<string, number>();
@@ -154,7 +147,6 @@ export class Abilities extends Rule {
 
     for (const unit of relevantUnits) {
       const closestEnemyDist = enemyDistanceMap.get(unit.id) || Infinity;
-
 
       const meta = unit.meta; // Cache meta access
       if (
@@ -187,7 +179,6 @@ export class Abilities extends Rule {
       const lastAbilityTick = unit.lastAbilityTick; // Cache property access
 
       for (const abilityName of abilities) {
-
         if (abilityName === "melee" || abilityName === "ranged") {
           continue;
         }
@@ -196,7 +187,6 @@ export class Abilities extends Rule {
         if (!ability) {
           continue;
         }
-
 
         if (context.isAbilityForced(unit.id, abilityName)) {
           continue;
@@ -222,7 +212,6 @@ export class Abilities extends Rule {
 
         let shouldTrigger = true;
         let target = unit;
-
 
         if (
           ability.trigger &&
@@ -251,7 +240,6 @@ export class Abilities extends Rule {
         }
 
         if (ability.target && ability.target !== "self") {
-
           if (
             (abilityName === "melee" || abilityName === "ranged") &&
             ability.target === "closest.enemy()"
@@ -280,8 +268,6 @@ export class Abilities extends Rule {
           }
         }
 
-
-
         if (!this.pendingEffects) {
           this.pendingEffects = [];
         }
@@ -304,14 +290,12 @@ export class Abilities extends Rule {
       }
     } // Close for loop instead of forEach
 
-
     if (this.pendingEffects && this.pendingEffects.length > 0) {
       for (const { effect, caster, target } of this.pendingEffects) {
         this.processEffectAsCommand(context, effect, caster, target);
       }
       this.pendingEffects = []; // Clear for next tick
     }
-
 
     this.commands.push(...metaCommands);
 
@@ -365,7 +349,6 @@ export class Abilities extends Rule {
         };
 
       default:
-
         return null;
     }
   }
@@ -501,7 +484,6 @@ export class Abilities extends Rule {
 
     if (typeof targetExpression === "string") {
       try {
-
         const compiledFn = dslCompiler.compile(targetExpression);
         return compiledFn(caster, context);
       } catch (error) {
@@ -521,7 +503,6 @@ export class Abilities extends Rule {
   ): any {
     if (typeof value === "string") {
       try {
-
         const compiledFn = dslCompiler.compile(value);
         return compiledFn(caster, context);
       } catch (error) {
@@ -1223,7 +1204,6 @@ export class Abilities extends Rule {
     const teleport = (effect as any).teleport || false;
 
     if (teleport) {
-
       this.commands.push({
         type: "teleport",
         params: {
@@ -1233,7 +1213,6 @@ export class Abilities extends Rule {
         },
       });
     } else {
-
       this.commands.push({
         type: "move",
         params: {
@@ -1537,7 +1516,6 @@ export class Abilities extends Rule {
 
     for (const unit of unitsInArea) {
       if (effect.buff) {
-
         this.commands.push({
           type: "meta",
           params: {

@@ -31,13 +31,11 @@ export class Physics extends Rule {
       p.pos.y += p.vel.y;
 
       if (p.type === "bomb") {
-        // Old gravity system for bombs without targets
         if (!p.target) {
           p.vel.y += 0.2;
         }
         p.lifetime = (p.lifetime || 0) + 1;
-        
-        // New progress system for targeted bombs
+
         if (p.duration !== undefined) {
           p.progress = (p.progress || 0) + 1;
         }

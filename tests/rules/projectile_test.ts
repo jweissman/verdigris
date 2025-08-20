@@ -90,7 +90,7 @@ describe('Projectile simulation', () => {
 
 describe('Projectile Types (Bullet vs Bomb)', () => {
   it('should fire bullet projectiles that travel in straight lines', () => {
-    // Reset static state to ensure test isolation
+
     Encyclopaedia.counts = {};
     Simulator.rng.reset(12345);
     
@@ -130,7 +130,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
 
 
   it('should fire bomb projectiles that arc to targets', () => {
-    // Reset static state to ensure test isolation
+
     Encyclopaedia.counts = {};
     
     const sim = new Simulator(40, 25);
@@ -179,7 +179,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
   });
 
   it('should have bombs explode with AoE when they land', () => {
-    // Reset static state to ensure test isolation
+
     Encyclopaedia.counts = {};
     
     const sim = new Simulator(40, 25);
@@ -212,7 +212,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
   });
 
   it('should have bullets travel until they hit battlefield edge', () => {
-    // Reset static state to ensure test isolation
+
     Encyclopaedia.counts = {};
     Simulator.rng.reset(12345);
     

@@ -30,7 +30,6 @@ export class PhysicsStore {
     this.bounciness = new Float32Array(capacity);
     this.z = new Float32Array(capacity);
 
-
     for (let i = 0; i < capacity; i++) {
       this.mass[i] = 1.0;
       this.friction[i] = 0.9;
@@ -80,7 +79,6 @@ export class PhysicsStore {
     this.unitIdToIndex.delete(unitId);
     this.freeIndices.push(index);
 
-
     this.mass[index] = 1.0;
     this.velocityX[index] = 0;
     this.velocityY[index] = 0;
@@ -97,7 +95,6 @@ export class PhysicsStore {
   applyForce(unitId: string, forceX: number, forceY: number): void {
     const index = this.unitIdToIndex.get(unitId);
     if (index === undefined) return;
-
 
     this.accelerationX[index] += forceX / this.mass[index];
     this.accelerationY[index] += forceY / this.mass[index];
@@ -118,7 +115,6 @@ export class PhysicsStore {
     const index = this.unitIdToIndex.get(unitId);
     if (index === undefined) return;
 
-
     this.velocityX[index] += impulseX / this.mass[index];
     this.velocityY[index] += impulseY / this.mass[index];
   }
@@ -138,14 +134,11 @@ export class PhysicsStore {
     const index = this.unitIdToIndex.get(unitId);
     if (index === undefined) return;
 
-
     this.velocityX[index] += this.accelerationX[index] * deltaTime;
     this.velocityY[index] += this.accelerationY[index] * deltaTime;
 
-
     this.velocityX[index] *= this.friction[index];
     this.velocityY[index] *= this.friction[index];
-
 
     this.accelerationX[index] = 0;
     this.accelerationY[index] = 0;
@@ -229,7 +222,6 @@ export class PhysicsStore {
   applyGravity(gravity: number = 9.8): void {
     for (const index of this.unitIdToIndex.values()) {
       if (this.z[index] > 0) {
-
         this.accelerationY[index] += gravity;
       }
     }
@@ -243,7 +235,6 @@ export class PhysicsStore {
     const index2 = this.unitIdToIndex.get(unitId2);
     if (index1 === undefined || index2 === undefined) return;
 
-
     const m1 = this.mass[index1];
     const m2 = this.mass[index2];
     const v1x = this.velocityX[index1];
@@ -251,13 +242,11 @@ export class PhysicsStore {
     const v2x = this.velocityX[index2];
     const v2y = this.velocityY[index2];
 
-
     const totalMass = m1 + m2;
     const newV1x = ((m1 - m2) * v1x + 2 * m2 * v2x) / totalMass;
     const newV1y = ((m1 - m2) * v1y + 2 * m2 * v2y) / totalMass;
     const newV2x = ((m2 - m1) * v2x + 2 * m1 * v1x) / totalMass;
     const newV2y = ((m2 - m1) * v2y + 2 * m1 * v1y) / totalMass;
-
 
     const bounce1 = this.bounciness[index1];
     const bounce2 = this.bounciness[index2];
@@ -299,7 +288,6 @@ export class PhysicsStore {
     this.unitIdToIndex.clear();
     this.freeIndices = [];
     this.activeCount = 0;
-
 
     for (let i = 0; i < this.capacity; i++) {
       this.mass[i] = 1.0;

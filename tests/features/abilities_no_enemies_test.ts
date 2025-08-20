@@ -12,7 +12,7 @@ describe.skip('Abilities Without Nearby Enemies - NEEDS REWRITE FOR NEW API', ()
     
 
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 20, y: 10 } };
-    // toymaker.abilities.deployBot = { ...Encyclopaedia.abilities.deployBot, maxUses: 5 }; // OLD API
+
     sim.addUnit(toymaker);
     
     
@@ -79,7 +79,7 @@ describe.skip('Abilities Without Nearby Enemies - NEEDS REWRITE FOR NEW API', ()
     expect(empEvent.meta.radius).toBe(8);
     
 
-    // const missileBarrage = mechatron.abilities.missileBarrage; // OLD API
+
     const missileBarrage = null;
     if (missileBarrage?.effect) {
       const initialProjectiles = sim.projectiles.length;
@@ -104,7 +104,7 @@ describe.skip('Abilities Without Nearby Enemies - NEEDS REWRITE FOR NEW API', ()
     
 
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 15, y: 15 } };
-    // toymaker.abilities.deployBot = { ...Encyclopaedia.abilities.deployBot, maxUses: 3 }; // OLD API
+
     sim.addUnit(toymaker);
     
     
@@ -125,7 +125,7 @@ describe.skip('Abilities Without Nearby Enemies - NEEDS REWRITE FOR NEW API', ()
     expect(constructs.length).toBeGreaterThan(0);
     
 
-    // expect(toymaker.abilities.deployBot.maxUses).toBe(3); // OLD API
+
   });
   
   it('should test environmental abilities work without combat context', () => {

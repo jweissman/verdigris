@@ -86,7 +86,6 @@ class Simulator {
   public proxyManager: UnitProxyManager;
 
   get units(): readonly Unit[] {
-
     return this.proxyManager.getAllProxies();
   }
 
@@ -298,7 +297,6 @@ class Simulator {
 
     switch (type) {
       case "bg":
-        // Background command - queue as scene metadata
         params.type = "bg";
         params.value = parts[1];
         type = "sceneMetadata";
@@ -389,7 +387,6 @@ class Simulator {
   }
 
   addUnit(unit: Partial<Unit>): Unit {
-
     let baseUnit = unit;
     if ((unit as any).type) {
       const unitData = Encyclopaedia.unit((unit as any).type);
@@ -413,8 +410,6 @@ class Simulator {
       abilities: baseUnit.abilities || [],
       meta: baseUnit.meta || {},
     } as Unit;
-
-
 
     const index = this.unitArrays.addUnit(u);
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
@@ -580,7 +575,6 @@ class Simulator {
       }
 
       if (this.enableEnvironmentalEffects) {
-
         this.updateUnitTemperatureEffects();
 
         if (this.ticks % 10 === 0) {
@@ -832,8 +826,6 @@ class Simulator {
   }
 
   updateScalarFields() {
-
-
     this.temperatureField.diffuse(0.02); // Just diffuse, minimal decay
     this.temperatureField.decay(0.0005); // Very slow decay towards ambient
 
@@ -871,7 +863,6 @@ class Simulator {
   }
 
   updateUnitTemperatureEffects() {
-
     for (const unit of this.units) {
       if (unit.meta.phantom) continue;
       if (unit.state === "dead") continue;
@@ -879,7 +870,6 @@ class Simulator {
       const pos = unit.pos;
       const x = Math.floor(pos.x);
       const y = Math.floor(pos.y);
-
 
       if (unit.type === "freezebot") {
         const currentTemp = this.temperatureField.get(x, y);
@@ -889,16 +879,11 @@ class Simulator {
 
           this.temperatureField.set(x, y, currentTemp * 0.95); // 5% cooling per tick
         }
-      }
-
-      else if (unit.tags?.includes("construct")) {
+      } else if (unit.tags?.includes("construct")) {
         this.temperatureField.addGradient(x, y, 2, 1.0);
-      }
-
-      else {
+      } else {
         this.temperatureField.addGradient(x, y, 2, 0.5);
       }
-
 
       if (unit.state === "walk" || unit.state === "attack") {
         this.humidityField.addGradient(x, y, 1.5, 0.02);
@@ -1688,7 +1673,6 @@ class Simulator {
               const mag = Math.sqrt(dx * dx + dy * dy) || 1;
               const speed = 1; // Could be parameterized
               const vel = { x: (dx / mag) * speed, y: (dy / mag) * speed };
-
 
               const offset = 0.5;
               const projX = unit.pos.x + (dx / mag) * offset;

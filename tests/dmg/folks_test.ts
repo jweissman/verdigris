@@ -45,10 +45,10 @@ describe('Folks Module', () => {
   it('should load core folk archetypes', () => {
     const folks = Folks.all;
     
-    // Check that we have folks
+
     expect(folks.size).toBeGreaterThan(0);
     
-    // Core folk archetypes should exist
+
     expect(folks.has('farmer')).toBe(true);
     expect(folks.has('soldier')).toBe(true);
     expect(folks.has('priest')).toBe(true);
@@ -59,7 +59,7 @@ describe('Folks Module', () => {
   it('should NOT include hostile units', () => {
     const folks = Folks.all;
     
-    // Should not include hostile creatures
+
     expect(folks.has('worm')).toBe(false);
     expect(folks.has('big-worm')).toBe(false);
     expect(folks.has('desert-megaworm')).toBe(false);
@@ -69,7 +69,7 @@ describe('Folks Module', () => {
   it('should NOT include mechanical constructs', () => {
     const folks = Folks.all;
     
-    // These are constructs deployed by toymaker, not folks
+
     expect(folks.has('freezebot')).toBe(false);
     expect(folks.has('clanker')).toBe(false);
     expect(folks.has('spiker')).toBe(false);
@@ -81,7 +81,7 @@ describe('Folks Module', () => {
     const folks = Folks.all;
     
     for (const [, unit] of folks.entries()) {
-      // All folks should have required fields
+
       expect(unit.hp).toBeGreaterThan(0);
       expect(unit.maxHp).toBeGreaterThan(0);
       expect(unit.mass).toBeGreaterThan(0);
@@ -89,7 +89,7 @@ describe('Folks Module', () => {
       expect(unit.sprite).toBeDefined();
       expect(unit.state).toBe('idle');
       
-      // Tags are optional but if present should be array
+
       if (unit.tags) {
         expect(Array.isArray(unit.tags)).toBe(true);
       }
@@ -129,11 +129,11 @@ describe('Folks Module', () => {
     const folks = Folks.all;
     
     for (const [, unit] of folks.entries()) {
-      // Folk should have reasonable HP (not too high like bosses)
+
       expect(unit.hp).toBeGreaterThan(0);
       expect(unit.hp).toBeLessThanOrEqual(100); // Rainmaker has 80 HP
       
-      // Should have mass
+
       expect(unit.mass).toBeGreaterThan(0);
       expect(unit.mass).toBeLessThanOrEqual(2); // Folk are human-sized
     }

@@ -5,7 +5,7 @@ import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('Grid Worm AI', () => {
   it('worms move on a grid and wander randomly', () => {
-    // Reset static state to ensure test isolation
+
     Encyclopaedia.counts = {};
     Simulator.rng.reset(12345);
     

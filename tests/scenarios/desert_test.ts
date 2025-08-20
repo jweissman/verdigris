@@ -53,7 +53,7 @@ describe('Desert', () => {
 
   it('Desert environment loaded', () => {
     const { sim } = setupDesertScene();
-    // expect(sim.background).toBe('desert'); // background property doesn't exist
+
     expect(sim.temperature).toBe(35);
   });
 
@@ -76,7 +76,7 @@ describe('Desert', () => {
     );
 
 
-    // Segments are stored in meta, not directly on unit
+
 
     expect(segmentedUnits.length).toBeGreaterThan(0);
   });
@@ -98,7 +98,7 @@ describe('Desert', () => {
       sim.projectiles = [];
 
 
-      // Cannot call grapplingHook.effect as abilities is a string array
+
 
 
       sim.step();
@@ -235,7 +235,7 @@ describe('Desert', () => {
     loader.loadFromText(sceneContent);
 
 
-    // expect(sim.background).toBe('desert'); // background property doesn't exist
+
     expect(sim.temperature).toBe(35);
 
 

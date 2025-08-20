@@ -58,7 +58,6 @@ export class PositionStore {
     this.unitIdToIndex.delete(unitId);
     this.freeIndices.push(index);
 
-
     this.posX[index] = 0;
     this.posY[index] = 0;
     this.intendedMoveX[index] = 0;

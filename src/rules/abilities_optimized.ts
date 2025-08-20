@@ -26,7 +26,6 @@ export class AbilitiesOptimized extends Rule {
   constructor() {
     super();
 
-
     if (AbilitiesOptimized.precompiledAbilities.size === 0) {
       for (const name in abilitiesJson) {
         const ability = (abilitiesJson as any)[name];
@@ -59,7 +58,6 @@ export class AbilitiesOptimized extends Rule {
     this.commands = [];
     const currentTick = context.getCurrentTick();
 
-
     const arrays = context.getArrays();
     if (!arrays) {
       return []; // No arrays available, skip
@@ -67,9 +65,7 @@ export class AbilitiesOptimized extends Rule {
 
     const { posX, posY, team, state, hp, unitIds, activeIndices } = arrays;
 
-
     for (const idx of activeIndices) {
-
       if (state[idx] === 5 || hp[idx] <= 0) continue; // 5 = dead state
 
       const unitId = unitIds[idx];
@@ -79,15 +75,12 @@ export class AbilitiesOptimized extends Rule {
       const abilities = coldData.abilities;
       if (!abilities || abilities.length === 0) continue;
 
-
       const hasNonCombatAbility = abilities.some(
         (a: string) => a !== "melee" && a !== "ranged",
       );
       if (!hasNonCombatAbility && !coldData.meta?.burrowed) continue;
 
-
       for (const abilityName of abilities) {
-
         if (abilityName === "melee" || abilityName === "ranged") continue;
 
         const precompiled =
@@ -95,7 +88,6 @@ export class AbilitiesOptimized extends Rule {
         if (!precompiled) continue;
 
         const ability = precompiled.ability;
-
 
         const lastTick = coldData.lastAbilityTick?.[abilityName];
         if (
@@ -105,17 +97,14 @@ export class AbilitiesOptimized extends Rule {
           continue;
         }
 
-
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
           const currentUses = coldData.meta?.[usesKey] || 0;
           if (currentUses >= ability.maxUses) continue;
         }
 
-
         if (precompiled.trigger) {
           try {
-
             const unitData = {
               id: unitId,
               pos: { x: posX[idx], y: posY[idx] },
@@ -137,7 +126,6 @@ export class AbilitiesOptimized extends Rule {
           }
         }
 
-
         let targetIdx = idx; // Default to self
         if (ability.target && ability.target !== "self") {
           if (ability.target === "closest.enemy()") {
@@ -146,9 +134,7 @@ export class AbilitiesOptimized extends Rule {
           }
         }
 
-
         this.queueAbilityEffects(ability, idx, targetIdx, arrays, unitId);
-
 
         this.commands.push({
           type: "meta",
@@ -205,7 +191,6 @@ export class AbilitiesOptimized extends Rule {
     const { posX, posY, unitIds } = arrays;
 
     for (const effect of ability.effects) {
-
       switch (effect.type) {
         case "damage":
           if (targetIdx !== -1) {
@@ -251,7 +236,6 @@ export class AbilitiesOptimized extends Rule {
             });
           }
           break;
-
 
         default:
           this.commands.push({

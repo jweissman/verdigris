@@ -180,24 +180,6 @@ export class UnitProxy implements Unit {
     this.storage.setField(this.id, "dmg", value);
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   get lastAbilityTick() {
     return this.storage.getField(this.id, "lastAbilityTick");
   }
@@ -213,15 +195,6 @@ export class UnitProxy implements Unit {
   set type(value) {
     this.storage.setField(this.id, "type", value);
   }
-
-
-
-
-
-
-
-
-
 
   get intendedTarget() {
     return this.storage.getField(this.id, "intendedTarget");

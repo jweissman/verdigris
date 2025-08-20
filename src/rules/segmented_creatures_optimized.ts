@@ -14,7 +14,6 @@ export class SegmentedCreaturesOptimized extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
 
-
     const arrays = context.getArrays();
     if (!arrays) {
       return []; // No arrays available, skip
@@ -22,18 +21,15 @@ export class SegmentedCreaturesOptimized extends Rule {
 
     const { posX, posY, state, hp, unitIds, activeIndices } = arrays;
 
-
     const segmentedHeadIds: string[] = [];
     const segmentsByParent = new Map<string, number[]>();
 
     for (const idx of activeIndices) {
-
       if (state[idx] === 5 || hp[idx] <= 0) continue;
 
       const unitId = unitIds[idx];
       const coldData = context.getUnitColdData(unitId);
       if (!coldData || !coldData.meta) continue;
-
 
       if (coldData.meta.segment && coldData.meta.parentId) {
         if (!segmentsByParent.has(coldData.meta.parentId)) {
@@ -42,12 +38,10 @@ export class SegmentedCreaturesOptimized extends Rule {
         segmentsByParent.get(coldData.meta.parentId)!.push(idx);
       }
 
-
       if (coldData.meta.segmented && !segmentsByParent.has(unitId)) {
         segmentedHeadIds.push(unitId);
       }
     }
-
 
     for (const headId of segmentedHeadIds) {
       const headIdx = this.findUnitIndex(headId, unitIds, activeIndices);
@@ -66,15 +60,11 @@ export class SegmentedCreaturesOptimized extends Rule {
       );
     }
 
-
     this.updateSegmentPositions(context, segmentsByParent, arrays, commands);
-
 
     this.handleSegmentDamage(context, segmentsByParent, arrays, commands);
 
-
     this.handleSegmentGrappling(context, segmentsByParent, arrays, commands);
-
 
     this.cleanupOrphanedSegments(context, segmentsByParent, arrays, commands);
 
@@ -148,7 +138,6 @@ export class SegmentedCreaturesOptimized extends Rule {
       const parentIdx = this.findUnitIndex(parentId, unitIds, segmentIndices);
       if (parentIdx === -1) continue;
 
-
       const parentPos = { x: posX[parentIdx], y: posY[parentIdx] };
 
       if (!this.pathHistory.has(parentId)) {
@@ -158,12 +147,10 @@ export class SegmentedCreaturesOptimized extends Rule {
       const history = this.pathHistory.get(parentId)!;
       history.unshift(parentPos);
 
-
       const maxHistory = (segmentIndices.length + 1) * 2;
       if (history.length > maxHistory) {
         history.pop();
       }
-
 
       const sortedSegments = [...segmentIndices].sort((a, b) => {
         const aData = context.getUnitColdData(unitIds[a]);
@@ -179,7 +166,6 @@ export class SegmentedCreaturesOptimized extends Rule {
 
         if (historyIndex < history.length) {
           const targetPos = history[historyIndex];
-
 
           if (state[segIdx] !== 5) {
             commands.push({
@@ -211,14 +197,12 @@ export class SegmentedCreaturesOptimized extends Rule {
       const parentColdData = context.getUnitColdData(parentId);
       if (!parentColdData?.meta?.segmentShareDamage) continue;
 
-
       for (const segIdx of segmentIndices) {
         const segColdData = context.getUnitColdData(unitIds[segIdx]);
         if (!segColdData) continue;
 
         const maxHp = segColdData.maxHp || 10;
         if (hp[segIdx] < maxHp) {
-
           const damage = maxHp - hp[segIdx];
           commands.push({
             type: "damage",
@@ -228,7 +212,6 @@ export class SegmentedCreaturesOptimized extends Rule {
               sourceId: "segment_damage",
             },
           });
-
 
           commands.push({
             type: "heal",
@@ -257,7 +240,6 @@ export class SegmentedCreaturesOptimized extends Rule {
           continue;
         }
 
-
         if (segColdData.meta.grappleTarget) {
           commands.push({
             type: "pull",
@@ -280,7 +262,6 @@ export class SegmentedCreaturesOptimized extends Rule {
   ): void {
     const { state, hp, unitIds, activeIndices } = arrays;
 
-
     const deadParentIds = new Set<string>();
 
     for (const [parentId, _] of segmentsByParent) {
@@ -289,7 +270,6 @@ export class SegmentedCreaturesOptimized extends Rule {
         deadParentIds.add(parentId);
       }
     }
-
 
     for (const parentId of deadParentIds) {
       const segmentIndices = segmentsByParent.get(parentId);
@@ -305,7 +285,6 @@ export class SegmentedCreaturesOptimized extends Rule {
           });
         }
       }
-
 
       this.pathHistory.delete(parentId);
     }

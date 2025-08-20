@@ -53,18 +53,18 @@ describe('Abilities Rule', () => {
     const unit1 = sim.units.find(u => u.id === 'unit1');
     const enemy1 = sim.units.find(u => u.id === 'enemy1');
 
-    // Self-destruct should kill the clanker
+
     expect(unit1).toBeUndefined();
     
-    // Enemy should take AoE damage from explosion
+
     expect(enemy1).toBeDefined();
     expect(enemy1!.hp).toBeLessThan(initialEnemyHp);
-    // The actual damage taken depends on explosion mechanics and may vary
+
     const damageTaken = initialEnemyHp - enemy1!.hp;
     expect(damageTaken).toBeGreaterThan(0);
     expect(damageTaken).toBeLessThanOrEqual(initialEnemyHp);
     
-    // Verify AoE event was generated
+
     const aoeEvents = sim.processedEvents.filter(e => e.kind === 'aoe');
     expect(aoeEvents.length).toBeGreaterThan(0);
     expect(['impact', 'explosive']).toContain(aoeEvents[0].meta?.aspect);

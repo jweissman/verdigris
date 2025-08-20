@@ -18,7 +18,6 @@ export class ProjectileMotion extends Rule {
       const radiusSq = (projectile.radius || 1) * (projectile.radius || 1);
 
       if (projectile.type === "grapple") {
-
         for (const idx of arrays.activeIndices) {
           if (arrays.hp[idx] <= 0) continue;
 
@@ -47,7 +46,6 @@ export class ProjectileMotion extends Rule {
           }
         }
       } else {
-
         const projectileTeam =
           projectile.team === "friendly"
             ? 0
@@ -83,14 +81,13 @@ export class ProjectileMotion extends Rule {
         }
       }
 
-      // Bombs explode when they reach their target OR after lifetime threshold
       if (
         projectile.type === "bomb" &&
         ((projectile.target &&
           projectile.progress !== undefined &&
           projectile.duration !== undefined &&
           projectile.progress >= projectile.duration) ||
-         (projectile.lifetime && projectile.lifetime >= 30))
+          (projectile.lifetime && projectile.lifetime >= 30))
       ) {
         const explosionRadius = projectile.explosionRadius || 3;
         const explosionRadiusSq = explosionRadius * explosionRadius;

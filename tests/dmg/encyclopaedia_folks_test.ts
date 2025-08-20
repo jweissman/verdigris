@@ -23,19 +23,19 @@ describe('Encyclopaedia with Folks', () => {
   });
 
   it('should still have hostile units from units.json', () => {
-    // Check that hostile units are still in bestiary
+
     expect(Encyclopaedia.bestiary['worm']).toBeDefined();
     expect(Encyclopaedia.bestiary['demon']).toBeDefined();
   });
 
   it('should still have mechanical constructs from units.json', () => {
-    // Check that constructs are still available
+
     expect(Encyclopaedia.bestiary['freezebot']).toBeDefined();
     expect(Encyclopaedia.bestiary['clanker']).toBeDefined();
   });
 
   it('should not have duplicates', () => {
-    // Get all keys and check for uniqueness
+
     const allKeys = Object.keys(Encyclopaedia.bestiary);
     const uniqueKeys = new Set(allKeys);
     

@@ -1,5 +1,5 @@
-import { Unit } from '../types/Unit';
-import folksData from '../../data/folks.json';
+import { Unit } from "../types/Unit";
+import folksData from "../../data/folks.json";
 
 /**
  * Folks module - loads folk units from folks.json
@@ -13,16 +13,16 @@ export class Folks {
   static get all(): Map<string, Unit> {
     if (!this.folksCache) {
       this.folksCache = new Map();
-      
+
       for (const [folkName, folkData] of Object.entries(folksData)) {
         this.folksCache.set(folkName, {
           id: folkName,
           pos: { x: 0, y: 0 },
-          ...(folkData as any)
+          ...(folkData as any),
         });
       }
     }
-    
+
     return this.folksCache;
   }
 

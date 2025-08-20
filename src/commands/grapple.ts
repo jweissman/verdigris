@@ -57,9 +57,6 @@ export class Grapple extends Command {
 
     const maxRange = 8; // Default range for grappling hook
     if (distance > maxRange) {
-
-
-
       return;
     }
 

@@ -6,7 +6,7 @@ import type { TickContext } from '../src/core/tick_context';
 describe('DSL Compiler', () => {
   const compiler = new DSLCompiler();
   
-  // Mock unit
+
   const mockUnit: Unit = {
     id: 'test-unit',
     pos: { x: 10, y: 10 },
@@ -21,7 +21,7 @@ describe('DSL Compiler', () => {
     meta: {}
   };
   
-  // Mock context
+
   const mockContext: TickContext = {
     getAllUnits: () => [
       mockUnit,
@@ -162,7 +162,7 @@ describe('DSL Compiler', () => {
     
     it('should count enemies in range', () => {
       const fn = compiler.compile('count.enemies_in_range(10)');
-      expect(fn(mockUnit, mockContext)).toBe(1); // enemy1 is 5 units away
+      expect(fn(mockUnit, mockContext)).toBe(1);
     });
   });
   
@@ -211,7 +211,7 @@ describe('DSL Compiler', () => {
     });
     
     it('should handle pick with array literal', () => {
-      // Mock getRandom to return 0 for predictable test
+
       const testContext = { ...mockContext, getRandom: () => 0 };
       const fn = compiler.compile('pick(["first", "second", "third"])');
       expect(fn(mockUnit, testContext)).toBe('first');

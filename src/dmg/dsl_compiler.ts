@@ -1,6 +1,6 @@
 import type { Unit } from "../types/Unit";
 import type { TickContext } from "../core/tick_context";
-import { Ao } from '../lang/ao';
+import { Ao } from "../lang/ao";
 
 /**
  * DSL Compiler - Uses Ao grammar for expression evaluation
@@ -16,19 +16,16 @@ export class DSLCompiler {
     }
 
     const fn = (unit: Unit, tickContext: TickContext) => {
-      // Build context object with all the DSL functions and variables
       const context = this.buildContext(unit, tickContext);
-      
-      // Evaluate expression using Ao
+
       return Ao.eval(expression, context);
     };
-    
+
     this.cache.set(expression, fn);
     return fn;
   }
 
   private buildContext(unit: Unit, tickContext: TickContext): any {
-    // Lazy-load units only when needed
     let unitsCache: readonly Unit[] | null = null;
     const getUnits = () => {
       if (!unitsCache) {
@@ -36,28 +33,22 @@ export class DSLCompiler {
       }
       return unitsCache;
     };
-    
-    // Create a context that includes array prototype methods
+
     return {
-      // Unit references
       self: unit,
       unit: unit,
       target: unit, // Default, should be overridden
-      
-      // Unit properties (for direct access)
+
       hp: unit.hp,
       maxHp: unit.maxHp,
       pos: unit.pos,
       team: unit.team,
       state: unit.state,
-      
-      // Math object
+
       Math: Math,
-      
-      // Array constructor with methods
+
       Array: Array,
-      
-      // Distance function
+
       distance: (target: any) => {
         if (!target) return Infinity;
         const pos = target.pos || target;
@@ -65,13 +56,13 @@ export class DSLCompiler {
         const dy = pos.y - unit.pos.y;
         return Math.sqrt(dx * dx + dy * dy);
       },
-      
-      // Closest object
+
       closest: {
         enemy: () => {
-          let closest = null, minDist = Infinity;
+          let closest = null,
+            minDist = Infinity;
           for (const e of getUnits()) {
-            if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
+            if (e.team !== unit.team && e.state !== "dead" && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
               const distSq = dx * dx + dy * dy;
@@ -84,9 +75,15 @@ export class DSLCompiler {
           return closest;
         },
         ally: () => {
-          let closest = null, minDist = Infinity;
+          let closest = null,
+            minDist = Infinity;
           for (const a of getUnits()) {
-            if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0) {
+            if (
+              a.team === unit.team &&
+              a.id !== unit.id &&
+              a.state !== "dead" &&
+              a.hp > 0
+            ) {
               const dx = a.pos.x - unit.pos.x;
               const dy = a.pos.y - unit.pos.y;
               const distSq = dx * dx + dy * dy;
@@ -97,45 +94,55 @@ export class DSLCompiler {
             }
           }
           return closest;
-        }
+        },
       },
-      
-      // Count object
+
       count: {
         enemies_in_range: (range: number) => {
           const rangeSq = range * range;
           let count = 0;
           for (const e of getUnits()) {
-            if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
+            if (e.team !== unit.team && e.state !== "dead" && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
               if (dx * dx + dy * dy <= rangeSq) count++;
             }
           }
           return count;
-        }
+        },
       },
-      
-      // Weakest object
+
       weakest: {
         ally: () => {
-          let weakest = null, minHp = Infinity;
+          let weakest = null,
+            minHp = Infinity;
           for (const a of getUnits()) {
-            if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0 && a.hp < minHp) {
+            if (
+              a.team === unit.team &&
+              a.id !== unit.id &&
+              a.state !== "dead" &&
+              a.hp > 0 &&
+              a.hp < minHp
+            ) {
               minHp = a.hp;
               weakest = a;
             }
           }
           return weakest;
-        }
+        },
       },
-      
-      // Healthiest object
+
       healthiest: {
         enemy: () => {
-          let healthiest = null, maxHp = 0;
+          let healthiest = null,
+            maxHp = 0;
           for (const e of getUnits()) {
-            if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0 && e.hp > maxHp) {
+            if (
+              e.team !== unit.team &&
+              e.state !== "dead" &&
+              e.hp > 0 &&
+              e.hp > maxHp
+            ) {
               maxHp = e.hp;
               healthiest = e;
             }
@@ -143,10 +150,11 @@ export class DSLCompiler {
           return healthiest;
         },
         enemy_in_range: (range: number) => {
-          let healthiest = null, maxHp = 0;
+          let healthiest = null,
+            maxHp = 0;
           const rangeSq = range * range;
           for (const e of getUnits()) {
-            if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
+            if (e.team !== unit.team && e.state !== "dead" && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
               if (dx * dx + dy * dy <= rangeSq && e.hp > maxHp) {
@@ -156,47 +164,63 @@ export class DSLCompiler {
             }
           }
           return healthiest;
-        }
+        },
       },
-      
-      // Centroid object
+
       centroid: {
         wounded_allies: () => {
-          const wounded = getUnits().filter((u: Unit) => 
-            u.team === unit.team && u.id !== unit.id && 
-            u.state !== 'dead' && u.hp < u.maxHp
+          const wounded = getUnits().filter(
+            (u: Unit) =>
+              u.team === unit.team &&
+              u.id !== unit.id &&
+              u.state !== "dead" &&
+              u.hp < u.maxHp,
           );
           if (wounded.length === 0) return null;
-          const x = wounded.reduce((sum: number, u: Unit) => sum + u.pos.x, 0) / wounded.length;
-          const y = wounded.reduce((sum: number, u: Unit) => sum + u.pos.y, 0) / wounded.length;
+          const x =
+            wounded.reduce((sum: number, u: Unit) => sum + u.pos.x, 0) /
+            wounded.length;
+          const y =
+            wounded.reduce((sum: number, u: Unit) => sum + u.pos.y, 0) /
+            wounded.length;
           return { x: Math.round(x), y: Math.round(y) };
         },
         allies: () => {
-          const allies = getUnits().filter((u: Unit) => 
-            u.team === unit.team && u.id !== unit.id && u.state !== 'dead'
+          const allies = getUnits().filter(
+            (u: Unit) =>
+              u.team === unit.team && u.id !== unit.id && u.state !== "dead",
           );
           if (allies.length === 0) return null;
-          const x = allies.reduce((sum: number, u: Unit) => sum + u.pos.x, 0) / allies.length;
-          const y = allies.reduce((sum: number, u: Unit) => sum + u.pos.y, 0) / allies.length;
+          const x =
+            allies.reduce((sum: number, u: Unit) => sum + u.pos.x, 0) /
+            allies.length;
+          const y =
+            allies.reduce((sum: number, u: Unit) => sum + u.pos.y, 0) /
+            allies.length;
           return { x: Math.round(x), y: Math.round(y) };
         },
         enemies: () => {
-          const enemies = getUnits().filter((u: Unit) => u.team !== unit.team && u.state !== 'dead');
+          const enemies = getUnits().filter(
+            (u: Unit) => u.team !== unit.team && u.state !== "dead",
+          );
           if (enemies.length === 0) return null;
-          const x = enemies.reduce((sum: number, u: Unit) => sum + u.pos.x, 0) / enemies.length;
-          const y = enemies.reduce((sum: number, u: Unit) => sum + u.pos.y, 0) / enemies.length;
+          const x =
+            enemies.reduce((sum: number, u: Unit) => sum + u.pos.x, 0) /
+            enemies.length;
+          const y =
+            enemies.reduce((sum: number, u: Unit) => sum + u.pos.y, 0) /
+            enemies.length;
           return { x: Math.round(x), y: Math.round(y) };
-        }
+        },
       },
-      
-      // Pick function
-      pick: (array: any[]) => array[Math.floor(tickContext.getRandom() * array.length)],
-      
-      // Random position function
+
+      pick: (array: any[]) =>
+        array[Math.floor(tickContext.getRandom() * array.length)],
+
       randomPos: (centerX: number, centerY: number, range: number) => ({
         x: centerX + (tickContext.getRandom() - 0.5) * 2 * range,
-        y: centerY + (tickContext.getRandom() - 0.5) * 2 * range
-      })
+        y: centerY + (tickContext.getRandom() - 0.5) * 2 * range,
+      }),
     };
   }
 

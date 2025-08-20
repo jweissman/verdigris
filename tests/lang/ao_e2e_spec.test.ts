@@ -117,10 +117,10 @@ describe('Ao Language E2E Specification', () => {
           shouldNotCall: () => { throw new Error('Should not be called'); }
         };
         
-        // AND short-circuits on false
+
         expect(Ao.eval('false && shouldNotCall()', context)).toBe(false);
         
-        // OR short-circuits on true
+
         expect(Ao.eval('true || shouldNotCall()', context)).toBe(true);
       });
     });
@@ -250,7 +250,7 @@ describe('Ao Language E2E Specification', () => {
         ]
       };
       
-      // Count friendly units with hp > 60
+
       const expr = 'units.filter(u => u.team == "friendly" && u.hp > 60).length';
       expect(Ao.eval(expr, context)).toBe(2);
     });
@@ -307,13 +307,13 @@ describe('Ao Language E2E Specification', () => {
         }
       };
       
-      // Check if health is below 50%
+
       expect(Ao.eval('self.hp < self.maxHp * 0.5', context)).toBe(true);
       
-      // Check if enemy is within range
+
       expect(Ao.eval('distance(closest.enemy()) <= 5', context)).toBe(true);
       
-      // Complex trigger condition
+
       const trigger = 'self.hp < 50 && closest.enemy() && distance(closest.enemy()) < 10';
       expect(Ao.eval(trigger, context)).toBe(true);
     });
@@ -328,12 +328,12 @@ describe('Ao Language E2E Specification', () => {
         ]
       };
       
-      // Find weakest enemy
+
       const weakestEnemy = 'units.filter(u => u.team == "hostile").sort((a, b) => a.hp - b.hp)[0]';
       const result = Ao.eval(weakestEnemy, context);
       expect(result?.id).toBe('u3');
       
-      // Count enemies
+
       expect(Ao.eval('units.filter(u => u.team == "hostile").length', context)).toBe(2);
     });
 
@@ -344,11 +344,11 @@ describe('Ao Language E2E Specification', () => {
         Math: Math
       };
       
-      // Calculate distance
+
       const distExpr = 'Math.sqrt(Math.pow(target.pos.x - self.pos.x, 2) + Math.pow(target.pos.y - self.pos.y, 2))';
       expect(Ao.eval(distExpr, context)).toBe(5);
       
-      // Check if in range
+
       expect(Ao.eval('Math.abs(target.pos.x - self.pos.x) <= 5', context)).toBe(true);
     });
   });
@@ -363,7 +363,7 @@ describe('Ao Language E2E Specification', () => {
       }
       const elapsed = performance.now() - start;
       
-      // Should be very fast due to internal caching
+
       expect(elapsed).toBeLessThan(100);
     });
 
@@ -380,7 +380,7 @@ describe('Ao Language E2E Specification', () => {
 
   describe('10. Integration with DSL Compiler', () => {
     test('DSL expressions are valid Ao', () => {
-      // All DSL expressions should be valid Ao syntax
+
       const dslExpressions = [
         'self.hp < 50',
         'closest.enemy()?.hp > 0',
@@ -399,7 +399,7 @@ describe('Ao Language E2E Specification', () => {
       };
       
       for (const expr of dslExpressions) {
-        // Should not throw or return undefined for valid expressions
+
         const result = Ao.eval(expr, context);
         expect(result).not.toBe(undefined);
       }

@@ -13,7 +13,6 @@ export class Knockback extends Rule {
 
     const arrays = context.getArrays();
 
-
     for (const i of arrays.activeIndices) {
       if (arrays.state[i] === 3 || arrays.mass[i] === 0) continue; // Skip dead or massless
 
@@ -21,7 +20,6 @@ export class Knockback extends Rule {
       const y1 = arrays.posY[i];
       const team1 = arrays.team[i];
       const mass1 = arrays.mass[i];
-
 
       for (const j of arrays.activeIndices) {
         if (i === j || arrays.state[j] === 3 || arrays.mass[j] === 0) continue;
@@ -36,7 +34,6 @@ export class Knockback extends Rule {
           const massDiff = mass1 - mass2;
 
           if (massDiff > 0) {
-
             const coldData = context.getUnitColdDataByIndex(j);
             if (coldData?.meta?.phantom) continue;
 

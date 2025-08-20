@@ -72,7 +72,7 @@ describe('Construct Hunting Behavior', () => {
     const initialDistance1 = Math.sqrt(Math.pow(8 - 10, 2) + Math.pow(5 - 6, 2));
     const initialDistance2 = Math.sqrt(Math.pow(12 - 10, 2) + Math.pow(7 - 6, 2));
     
-    // Run simulation for several steps
+
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
@@ -80,19 +80,19 @@ describe('Construct Hunting Behavior', () => {
     const bot = sim.units.find(u => u.id === 'freezebot');
     expect(bot).toBeDefined();
     
-    // Check that the freezebot has moved toward enemies
+
     const finalDistance1 = Math.sqrt(Math.pow(enemy1.pos.x - bot!.pos.x, 2) + Math.pow(enemy1.pos.y - bot!.pos.y, 2));
     const finalDistance2 = Math.sqrt(Math.pow(enemy2.pos.x - bot!.pos.x, 2) + Math.pow(enemy2.pos.y - bot!.pos.y, 2));
     
-    // Bot should have moved closer to at least one enemy
+
     const movedCloserToEnemy1 = finalDistance1 < initialDistance1;
     const movedCloserToEnemy2 = finalDistance2 < initialDistance2;
     expect(movedCloserToEnemy1 || movedCloserToEnemy2).toBe(true);
     
-    // Check that freezebot has appropriate hunt-related properties
+
     expect(bot!.tags).toContain('hunt');
     
-    // If posture is set, verify it's appropriate
+
     if (bot!.posture) {
       expect(['hunt', 'aggressive', 'berserk']).toContain(bot!.posture);
     }

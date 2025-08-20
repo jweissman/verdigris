@@ -23,8 +23,6 @@ export class MetaCommand extends Command {
     const updates: any = {};
 
     if (params.meta) {
-
-
       updates.meta = params.meta;
     }
 

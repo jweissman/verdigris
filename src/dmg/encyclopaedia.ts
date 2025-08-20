@@ -47,7 +47,6 @@ export default class Encyclopaedia {
       u.meta = {};
     }
 
-
     if (u.abilities && u.abilities.length > 0) {
       const compiledTriggers: { [expression: string]: Function } = {};
 
@@ -55,8 +54,6 @@ export default class Encyclopaedia {
         const ability = this.abilities[abilityName];
         if (ability?.trigger) {
           try {
-
-
             const triggerFn = new Function(
               "self",
               "context",
@@ -89,9 +86,7 @@ export default class Encyclopaedia {
               return ${ability.trigger};`,
             );
             compiledTriggers[ability.trigger] = triggerFn;
-          } catch (e) {
-
-          }
+          } catch (e) {}
         }
       }
 

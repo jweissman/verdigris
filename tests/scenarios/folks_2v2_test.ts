@@ -24,10 +24,10 @@ describe('Folks 2v2 Matches', () => {
   });
 
   it('should handle single-ability folks', () => {
-    // Test with folks that have single abilities
+
     const match = new Match2v2({
-      team1: ['ranger', 'wildmage'], // ranged, wildBolt
-      team2: ['bombardier', 'naturist'], // bombardier, regenerate
+      team1: ['ranger', 'wildmage'],
+      team2: ['bombardier', 'naturist'],
       maxSteps: 100
     });
     
@@ -36,7 +36,7 @@ describe('Folks 2v2 Matches', () => {
   });
 
   it('should handle multi-ability folks', () => {
-    // Priest has heal and radiant
+
     const match = new Match2v2({
       team1: ['priest', 'soldier'],
       team2: ['farmer', 'ranger'],
@@ -50,7 +50,7 @@ describe('Folks 2v2 Matches', () => {
   it('should verify all folks can be used in matches', () => {
     const folkNames = Folks.names;
     
-    // Just verify we can create matches with each folk type
+
     for (const folkName of folkNames) {
       const match = new Match2v2({
         team1: [folkName, 'soldier'],
@@ -72,8 +72,8 @@ describe('Folks 2v2 Matches', () => {
     
     const result = match.run();
     
-    // Rangers should win against melee-only soldiers
-    // But we're not asserting outcome, just that it runs
+
+
     expect(result.duration).toBeGreaterThan(0);
   });
 
@@ -86,7 +86,7 @@ describe('Folks 2v2 Matches', () => {
     
     const result = match.run();
     
-    // Support vs support might timeout
+
     expect(result).toBeDefined();
     if (result.duration === 100) {
       expect(result.winner).toBe('draw');

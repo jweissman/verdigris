@@ -143,18 +143,17 @@ export default class Orthographic extends View {
       const fallbackY = Math.round(renderY * 8);
       this.ctx.fillStyle = this.unitRenderer.getUnitColor(unit);
       this.ctx.fillRect(fallbackX, fallbackY, 8, 8);
-      
-      // Draw debug label for units without sprites
+
       this.ctx.save();
-      // White background card
+
       this.ctx.fillStyle = "#ffffff";
       this.ctx.fillRect(fallbackX - 4, fallbackY - 10, 16, 8);
-      // Black text
+
       this.ctx.fillStyle = "#000000";
       this.ctx.font = "6px monospace";
       this.ctx.textAlign = "center";
-      // Better label: show type or sprite name or first part of ID
-      const label = unit.type || unit.sprite || unit.id?.split('_')[0] || "???";
+
+      const label = unit.type || unit.sprite || unit.id?.split("_")[0] || "???";
       this.ctx.fillText(label.substring(0, 10), fallbackX + 4, fallbackY - 4);
       this.ctx.restore();
     }
@@ -171,7 +170,6 @@ export default class Orthographic extends View {
       unit.abilities.includes("jumps") &&
       unit.meta.jumping
     ) {
-      // Calculate actual jump duration based on distance
       const jumpTarget = unit.meta.jumpTarget;
       const jumpOrigin = unit.meta.jumpOrigin;
       let duration = 10;
@@ -181,7 +179,7 @@ export default class Orthographic extends View {
         const distance = Math.sqrt(dx * dx + dy * dy);
         duration = Math.min(20, Math.max(5, Math.round(distance)));
       }
-      
+
       const progress = unit.meta.jumpProgress || 0;
       const progressRatio = progress / duration || 0;
       if (progressRatio > 0 && progressRatio < 1) {
@@ -426,35 +424,37 @@ export default class Orthographic extends View {
     const targetY = Math.round(unit.meta.jumpTarget.y * 8);
 
     this.ctx.save();
-    
-    // Draw target circle with pulsing effect
+
     const pulseScale = 1 + Math.sin(this.animationTime / 100) * 0.2;
-    
-    // Outer ring
+
     this.ctx.strokeStyle = "#4444ff";
     this.ctx.lineWidth = 2;
     this.ctx.globalAlpha = 0.6;
     this.ctx.beginPath();
     this.ctx.arc(targetX + 4, targetY + 4, 6 * pulseScale, 0, 2 * Math.PI);
     this.ctx.stroke();
-    
-    // Inner filled circle
+
     this.ctx.fillStyle = "#4444ff";
     this.ctx.globalAlpha = 0.3;
     this.ctx.beginPath();
     this.ctx.arc(targetX + 4, targetY + 4, 4, 0, 2 * Math.PI);
     this.ctx.fill();
-    
-    // Impact radius preview if unit has jump damage
+
     if (unit.meta.jumpRadius && unit.meta.jumpDamage) {
       this.ctx.strokeStyle = "#ff4444";
       this.ctx.lineWidth = 1;
       this.ctx.globalAlpha = 0.2;
       this.ctx.beginPath();
-      this.ctx.arc(targetX + 4, targetY + 4, unit.meta.jumpRadius * 8, 0, 2 * Math.PI);
+      this.ctx.arc(
+        targetX + 4,
+        targetY + 4,
+        unit.meta.jumpRadius * 8,
+        0,
+        2 * Math.PI,
+      );
       this.ctx.stroke();
     }
-    
+
     this.ctx.restore();
   }
 

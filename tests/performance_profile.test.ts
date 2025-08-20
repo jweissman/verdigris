@@ -4,7 +4,7 @@ import { SceneLoader } from '../src/core/scene_loader';
 
 test.skip('profile squirrel scenario bottlenecks', () => {
   const sim = new Simulator(32, 32);
-  // sim.enableProfiling = false; // Property doesn't exist
+
   const loader = new SceneLoader(sim);
   
   console.debug('\n🔍 PROFILING SQUIRREL SCENARIO');
@@ -32,7 +32,7 @@ test.skip('profile squirrel scenario bottlenecks', () => {
   console.debug(`Average: ${avgStepTime.toFixed(2)}ms per step`);
   
 
-  // const report = sim.getProfilingReport(); // Method doesn't exist
+
   const report = null;
   if (report && report.length > 0) {
     console.debug('\n📊 RULE BREAKDOWN (last 10 steps):');

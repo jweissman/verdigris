@@ -176,8 +176,6 @@ export class UnitProxyManager implements DataQuery {
   private metadataStore: Map<string, any>;
   private idToIndex: Map<string, number> = new Map();
 
-
-
   public useLightweightProxies: boolean = true;
 
   constructor(arrays: UnitArrays, metadataStore: Map<string, any>) {

@@ -45,13 +45,13 @@ describe('Tactical Behavior Improvements', () => {
     const finalClanker = sim.units.find(u => u.id === clanker.id);
     const finalFreezebot = sim.units.find(u => u.id === freezebot.id);
     
-    // Clanker might self-destruct, so check if it exists
+
     if (finalClanker) {
       const clankerMoved = Math.abs(finalClanker.pos.x - initialClankerPos.x) + Math.abs(finalClanker.pos.y - initialClankerPos.y);
       expect(clankerMoved).toBeGreaterThan(0);
     }
     
-    // Freezebot should still be alive
+
     expect(finalFreezebot).toBeDefined();
     if (finalFreezebot) {
       const freezebotMoved = Math.abs(finalFreezebot.pos.x - initialFreezebotPos.x) + Math.abs(finalFreezebot.pos.y - initialFreezebotPos.y);
@@ -102,10 +102,10 @@ describe('Tactical Behavior Improvements', () => {
     
 
     const finalToymaker = sim.units.find(u => u.id === toymaker.id);
-    // abilityUsageCount doesn't exist on Unit type
-    // if (finalToymaker && finalToymaker.abilityUsageCount) {
-    //   expect(finalToymaker.abilityUsageCount.deployBot).toBe(5);
-    // }
+
+
+
+
     
   });
   

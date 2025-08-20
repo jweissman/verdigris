@@ -53,14 +53,12 @@ export class AICommand extends Command {
     const proxyManager = this.sim.getProxyManager();
     const moves = proxyManager.batchProcessAI(postures);
 
-
     const nonZeroMoves = new Map<string, { dx: number; dy: number }>();
     for (const [unitId, move] of moves) {
       if (move.dx !== 0 || move.dy !== 0) {
         nonZeroMoves.set(unitId, move);
       }
     }
-
 
     if (nonZeroMoves.size > 0) {
       this.sim.queuedCommands.push({
