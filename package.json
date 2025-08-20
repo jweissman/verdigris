@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "ohm-js": "^17.2.1",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
@@ -9,5 +10,4 @@
   "scripts": {
     "format": "prettier --write \"src/**/*.{ts,tsx}\""
   }
-
 }
