@@ -1,0 +1,308 @@
+{
+  "farmer": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "farmer",
+    "state": "idle",
+    "hp": 25,
+    "maxHp": 25,
+    "mass": 1,
+    "tags": [
+      "hunt"
+    ]
+  },
+  "soldier": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "soldier",
+    "state": "idle",
+    "hp": 30,
+    "maxHp": 30,
+    "mass": 1,
+    "tags": [
+      "hunt"
+    ]
+  },
+  "priest": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "priest",
+    "state": "idle",
+    "hp": 20,
+    "maxHp": 20,
+    "mass": 1,
+    "abilities": [
+      "heal",
+      "radiant"
+    ]
+  },
+  "ranger": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "slinger",
+    "state": "idle",
+    "hp": 28,
+    "maxHp": 28,
+    "mass": 1,
+    "abilities": [
+      "ranged"
+    ]
+  },
+  "bombardier": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "bombardier",
+    "state": "idle",
+    "hp": 25,
+    "maxHp": 25,
+    "mass": 1,
+    "abilities": [
+      "bombardier"
+    ],
+    "tags": [
+      "ranged"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "builder": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "builder",
+    "state": "idle",
+    "hp": 20,
+    "maxHp": 20,
+    "mass": 1,
+    "tags": [
+      "mechanical",
+      "support",
+      "builder"
+    ],
+    "abilities": [
+      "reinforceConstruct"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "mechanic": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "mechanic",
+    "state": "idle",
+    "hp": 22,
+    "maxHp": 22,
+    "mass": 1,
+    "tags": [
+      "mechanical",
+      "support",
+      "repair"
+    ],
+    "abilities": [
+      "emergencyRepair"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "skirmisher": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "soldier",
+    "state": "idle",
+    "hp": 22,
+    "maxHp": 22,
+    "mass": 0.9,
+    "tags": [
+      "desert",
+      "melee",
+      "agile",
+      "duelist"
+    ],
+    "abilities": [
+      "dualKnifeDance"
+    ],
+    "meta": {
+      "facing": "right",
+      "desertAdapted": true,
+      "dualWield": true,
+      "attackSpeed": 1.5,
+      "dodgeChance": 0.25
+    }
+  },
+  "rainmaker": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "rainmaker",
+    "state": "idle",
+    "hp": 80,
+    "maxHp": 80,
+    "mass": 1,
+    "tags": [
+      "weather",
+      "mythic"
+    ],
+    "abilities": [
+      "makeRain"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "naturist": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "naturist",
+    "state": "idle",
+    "hp": 28,
+    "maxHp": 28,
+    "dmg": 3,
+    "mass": 1,
+    "tags": [
+      "forest",
+      "support",
+      "nature"
+    ],
+    "abilities": [
+      "regenerate"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "wildmage": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "wildmage",
+    "state": "idle",
+    "hp": 25,
+    "maxHp": 25,
+    "dmg": 6,
+    "mass": 1,
+    "tags": [
+      "forest",
+      "magic",
+      "chaos"
+    ],
+    "abilities": [
+      "wildBolt"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "miner": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "miner",
+    "state": "idle",
+    "hp": 35,
+    "maxHp": 35,
+    "dmg": 5,
+    "mass": 1.2,
+    "tags": [
+      "worker",
+      "burrower",
+      "explorer"
+    ],
+    "abilities": [
+      "digTrench"
+    ],
+    "meta": {
+      "facing": "right",
+      "canBurrow": true,
+      "miningSpeed": 2,
+      "oreCarryCapacity": 10,
+      "currentOre": 0,
+      "tunnelRange": 5
+    }
+  },
+  "mindmender": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "mindmender",
+    "state": "idle",
+    "hp": 28,
+    "maxHp": 28,
+    "dmg": 2,
+    "mass": 0.9,
+    "tags": [
+      "psychic",
+      "support",
+      "healer"
+    ],
+    "abilities": [
+      "psychicHeal"
+    ],
+    "meta": {
+      "facing": "right",
+      "psychicRange": 6,
+      "mindShieldDuration": 50,
+      "confuseDuration": 30,
+      "healAmount": 15
+    }
+  },
+  "fueler": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "fueler",
+    "state": "idle",
+    "hp": 18,
+    "maxHp": 18,
+    "mass": 1,
+    "tags": [
+      "mechanical",
+      "support",
+      "energy"
+    ],
+    "abilities": [
+      "powerSurge"
+    ],
+    "meta": {
+      "facing": "right"
+    }
+  }
+}
