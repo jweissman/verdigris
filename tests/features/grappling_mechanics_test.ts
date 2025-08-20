@@ -19,7 +19,7 @@ describe('Grappling Mechanics - Core Physics', () => {
       pos: { x: 5, y: 5 },
       lastAbilityTick: {} // Clear cooldown
     };
-    sim.addUnit(grappler);
+    sim.addUnit(grappler as any);
     
 
     const enemy = sim.addUnit({
@@ -58,7 +58,7 @@ describe('Grappling Mechanics - Core Physics', () => {
       pos: { x: 8, y: 5 },
       team: 'hostile' as const
     };
-    sim.addUnit(grappler);
+    sim.addUnit(grappler as any);
     sim.addUnit(target);
     sim.step(); // Abilities queues the grapple command
     sim.step(); // CommandHandler processes the grapple command
@@ -92,7 +92,7 @@ describe('Grappling Mechanics - Core Physics', () => {
         segmentCount: 2
       }
     };
-    sim.addUnit(grappler);
+    sim.addUnit(grappler as any);
     sim.addUnit(worm);
     sim.step();
     const segment1 = sim.units.find(u => 
@@ -131,7 +131,7 @@ describe('Grappling Mechanics - Core Physics', () => {
       lastAbilityTick: {}
     };
     
-    sim.addUnit(grappler);
+    sim.addUnit(grappler as any);
     
 
     for (let i = 0; i < 5; i++) {
@@ -147,7 +147,7 @@ describe('Grappling Mechanics - Core Physics', () => {
 
     for (let i = 0; i < 10; i++) {
 
-      grappler.lastAbilityTick.grapplingHook = -100;
+      (grappler.lastAbilityTick as any).grapplingHook = -100;
       sim.step();
     }
     

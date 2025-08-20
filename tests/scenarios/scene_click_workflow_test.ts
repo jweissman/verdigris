@@ -6,7 +6,7 @@ describe('Scene Browser Click Workflow', () => {
   it('should handle canvas click events and convert to grid coordinates', () => {
 
     const clickHandlers: ((event: any) => void)[] = [];
-    const mockCanvas = {
+    const mockCanvas: any = {
       width: 320,
       height: 200,
       addEventListener: (event: string, handler: any) => {
@@ -83,7 +83,7 @@ describe('Scene Browser Click Workflow', () => {
 
   it('should integrate scene loading with click-to-lightning functionality', () => {
     const clickHandlers: ((event: any) => void)[] = [];
-    const mockCanvas = {
+    const mockCanvas: any = {
       width: 320,
       height: 200,
       addEventListener: (event: string, handler: any) => {

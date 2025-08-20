@@ -18,7 +18,7 @@ describe('Abilities', () => {
 
 
     
-    abilities = new Abilities(sim);
+    abilities = new Abilities();
     commandHandler = new CommandHandler(sim);
   });
 
@@ -46,7 +46,7 @@ describe('Abilities', () => {
     };
 
     sim.addUnit(archer);
-    sim.addUnit(enemy);
+    sim.addUnit(enemy as any);
 
 
     sim.step();
@@ -113,14 +113,14 @@ describe('Abilities', () => {
     const enemy = {
       id: 'enemy1',
       pos: { x: 6, y: 2 },
-      team: 'enemy',
+      team: 'hostile' as const,
       state: 'idle' as const,
       hp: 100,
       maxHp: 100
     };
 
     sim.addUnit(archer);
-    sim.addUnit(enemy);
+    sim.addUnit(enemy as any);
     sim.ticks = 3; // Only 3 ticks passed, but cooldown is 6
 
 
@@ -142,13 +142,13 @@ describe('Abilities', () => {
     const enemy = {
       id: 'enemy1',
       pos: { x: 6, y: 2 },
-      team: 'enemy',
+      team: 'hostile' as const,
       state: 'idle' as const,
       hp: 100,
       maxHp: 100
     };
 
-    sim.addUnit(enemy);
+    sim.addUnit(enemy as any);
 
 
     const ctx = sim.getTickContext();

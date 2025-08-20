@@ -193,7 +193,7 @@ describe('Projectile Types (Bullet vs Bomb)', () => {
     sceneLoader.loadFromText(explosionTest);
     
     const worm = sim.units.find(u => u.sprite === 'worm');
-    const bombardier = sim.units.find(u => u.sprite === 'priest' && u.abilities.bombardier);
+    const bombardier = sim.units.find(u => u.sprite === 'priest' && u.abilities?.includes('bombardier'));
     const initialWormHp = worm?.hp;
     
     let sawExplosion = false;

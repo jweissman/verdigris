@@ -20,6 +20,18 @@ const getAllUnitTypes = (): string[] => {
   });
 };
 
+// Get folk isotypes - creatures with exactly one ability
+const getFolkIsotypes = (): string[] => {
+  const bestiary = Encyclopaedia.bestiary;
+  return Object.keys(bestiary).filter(name => {
+    const unit = bestiary[name];
+    // Must have exactly one ability to be a folk isotype
+    return unit && unit.hp && unit.hp > 0 && 
+           unit.abilities && Array.isArray(unit.abilities) && 
+           unit.abilities.length === 1;
+  });
+};
+
 // Run tournament with specified units
 const runTournament = (unitTypes: string[], runsPerMatchup: number = 1) => {
   console.log(`=== 2v2 Tournament ===`);
@@ -136,11 +148,15 @@ if (args.includes('--all')) {
   
 } else {
   // Default: folk isotypes (single-ability creatures)
-  unitTypes = [
-    'worm', 'ranger', 'bombardier', 'squirrel',
-    'demon', 'skirmisher', 'toymaker', 'freezebot',
-    'spiker', 'roller', 'zapper', 'miner'
-  ];
+  unitTypes = getFolkIsotypes();
+  console.log(`Using ${unitTypes.length} folk isotypes (single-ability creatures)`);
+  
+  // Calculate combinations
+  const numTeams = (unitTypes.length * (unitTypes.length + 1)) / 2;
+  const numMatchups = numTeams * numTeams;
+  console.log(`Total matchups: ${numMatchups}`);
+  console.log('Estimated time: ' + (numMatchups * 0.2 / 60).toFixed(1) + ' minutes');
+  console.log('');
 }
 
 // Check runs parameter

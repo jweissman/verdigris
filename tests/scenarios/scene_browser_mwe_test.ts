@@ -5,7 +5,7 @@ import { SceneLoader } from '../../src/core/scene_loader';
 describe('Scene Browser MWE - Test-Driven', () => {
   it('should create game instance with proper canvas and renderer setup', () => {
 
-    const mockCanvas = { 
+    const mockCanvas: any = { 
       width: 320, 
       height: 200,
       getContext: () => ({
@@ -29,7 +29,7 @@ describe('Scene Browser MWE - Test-Driven', () => {
   });
 
   it('should load scene with creatures for testing anchor points and shadows', () => {
-    const mockCanvas = { 
+    const mockCanvas: any = { 
       width: 320, 
       height: 200,
       getContext: () => ({
@@ -77,14 +77,15 @@ w.d.g.........
     ];
     
     testCanvasSizes.forEach(canvasSize => {
-      const game = new Game({ 
+      const mockCanvas: any = {
         width: canvasSize.width, 
         height: canvasSize.height,
         getContext: () => ({
           clearRect: () => {},
           canvas: canvasSize
         } as any)
-      });
+      };
+      const game = new Game(mockCanvas);
       
 
       const centerClickX = canvasSize.width / 2;

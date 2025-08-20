@@ -35,7 +35,7 @@ describe('Abilities Integration', () => {
     sim.addUnit(enemy);
 
 
-    const jsonAbilities = new Abilities(sim);
+    const jsonAbilities = new Abilities();
     const commandHandler = new CommandHandler(sim);
 
 
@@ -78,7 +78,7 @@ describe('Abilities Integration', () => {
     sim.addUnit(ranger);
     sim.addUnit(priest);
     sim.addUnit(enemy);
-    const jsonAbilities = new Abilities(sim);
+    const jsonAbilities = new Abilities();
     const commandHandler = new CommandHandler(sim);
 
     console.debug('=== Before Abilities step ===');
