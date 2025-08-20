@@ -562,7 +562,7 @@ class Simulator {
 
     this.commandProcessor.execute(context);
 
-    if (false && this.pairwiseBatcher) {
+    if (this.pairwiseBatcher) {
       this.pairwiseBatcher.process(this.units as Unit[], this);
 
       this.targetCache = this.pairwiseBatcher.targetCache;

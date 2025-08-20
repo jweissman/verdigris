@@ -1016,21 +1016,6 @@
       }
     ]
   },
-  "explode": {
-    "name": "Self-Destruct",
-    "cooldown": 0,
-    "trigger": "distance(closest.enemy()?.pos) <= 1",
-    "range": 1,
-    "effects": [
-      {
-        "type": "explode",
-        "meta": {
-          "radius": 2,
-          "damage": 12
-        }
-      }
-    ]
-  },
   "riddle": {
     "name": "Sphinx's Riddle",
     "cooldown": 100,
