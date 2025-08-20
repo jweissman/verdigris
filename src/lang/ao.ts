@@ -32,11 +32,12 @@ const aoGrammar = ohm.grammar(`
              | "-" CallExp  -- neg
              | CallExp
     
-    CallExp = CallExp "." ident "(" ListOf<Exp, ","> ")"  -- methodCall
-            | CallExp "." ident                            -- propAccess
-            | CallExp "?." ident                           -- optChain
-            | CallExp "[" Exp "]"                          -- indexAccess
-            | ident "(" ListOf<Exp, ","> ")"               -- funcCall
+    CallExp = CallExp "." ident "(" ListOf<Exp, ","> ")"   -- methodCall
+            | CallExp "?." ident "(" ListOf<Exp, ","> ")"  -- optMethodCall
+            | CallExp "." ident                             -- propAccess
+            | CallExp "?." ident                            -- optChain
+            | CallExp "[" Exp "]"                           -- indexAccess
+            | ident "(" ListOf<Exp, ","> ")"                -- funcCall
             | PrimaryExp
     
     PrimaryExp = "(" Exp ")"        -- paren
@@ -140,6 +141,17 @@ export class Ao {
       
       CallExp_methodCall(obj, _1, methodName, _2, args, _3) {
         const o = obj.eval();
+        const method = o[methodName.sourceString];
+        const argVals = args.asIteration().children.map((arg: any) => arg.eval());
+        if (typeof method === 'function') {
+          return method.apply(o, argVals);
+        }
+        return undefined;
+      },
+      
+      CallExp_optMethodCall(obj, _1, methodName, _2, args, _3) {
+        const o = obj.eval();
+        if (o == null) return undefined;
         const method = o[methodName.sourceString];
         const argVals = args.asIteration().children.map((arg: any) => arg.eval());
         if (typeof method === 'function') {

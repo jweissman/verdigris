@@ -229,4 +229,4 @@ export class Ao {
 }
 
 // Export for convenience
-iexport const ao = Ao.getInstance();
+export const ao = Ao.getInstance();

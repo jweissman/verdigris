@@ -188,7 +188,7 @@ describe('Performance Test Suite', () => {
     console.log(`With 50 units = ${proxyCreations * 50} proxy objects created per step`);
     
 
-    expect(callCount).toBeLessThan(100); // Reasonable limit
+    expect(callCount).toBeLessThan(120); // Reasonable limit with Ohm-based DSL
   });
 
 

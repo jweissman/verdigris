@@ -28,19 +28,34 @@ export class DSLCompiler {
   }
 
   private buildContext(unit: Unit, tickContext: TickContext): any {
-    const units = tickContext.getAllUnits();
+    // Lazy-load units only when needed
+    let unitsCache: readonly Unit[] | null = null;
+    const getUnits = () => {
+      if (!unitsCache) {
+        unitsCache = tickContext.getAllUnits();
+      }
+      return unitsCache;
+    };
     
+    // Create a context that includes array prototype methods
     return {
       // Unit references
       self: unit,
       unit: unit,
       target: unit, // Default, should be overridden
       
+      // Unit properties (for direct access)
+      hp: unit.hp,
+      maxHp: unit.maxHp,
+      pos: unit.pos,
+      team: unit.team,
+      state: unit.state,
+      
       // Math object
       Math: Math,
       
-      // Unit properties
-      ...unit,
+      // Array constructor with methods
+      Array: Array,
       
       // Distance function
       distance: (target: any) => {
@@ -55,7 +70,7 @@ export class DSLCompiler {
       closest: {
         enemy: () => {
           let closest = null, minDist = Infinity;
-          for (const e of units) {
+          for (const e of getUnits()) {
             if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
@@ -70,7 +85,7 @@ export class DSLCompiler {
         },
         ally: () => {
           let closest = null, minDist = Infinity;
-          for (const a of units) {
+          for (const a of getUnits()) {
             if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0) {
               const dx = a.pos.x - unit.pos.x;
               const dy = a.pos.y - unit.pos.y;
@@ -90,7 +105,7 @@ export class DSLCompiler {
         enemies_in_range: (range: number) => {
           const rangeSq = range * range;
           let count = 0;
-          for (const e of units) {
+          for (const e of getUnits()) {
             if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
@@ -105,7 +120,7 @@ export class DSLCompiler {
       weakest: {
         ally: () => {
           let weakest = null, minHp = Infinity;
-          for (const a of units) {
+          for (const a of getUnits()) {
             if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0 && a.hp < minHp) {
               minHp = a.hp;
               weakest = a;
@@ -119,7 +134,7 @@ export class DSLCompiler {
       healthiest: {
         enemy: () => {
           let healthiest = null, maxHp = 0;
-          for (const e of units) {
+          for (const e of getUnits()) {
             if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0 && e.hp > maxHp) {
               maxHp = e.hp;
               healthiest = e;
@@ -130,7 +145,7 @@ export class DSLCompiler {
         enemy_in_range: (range: number) => {
           let healthiest = null, maxHp = 0;
           const rangeSq = range * range;
-          for (const e of units) {
+          for (const e of getUnits()) {
             if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
@@ -147,7 +162,7 @@ export class DSLCompiler {
       // Centroid object
       centroid: {
         wounded_allies: () => {
-          const wounded = units.filter((u: Unit) => 
+          const wounded = getUnits().filter((u: Unit) => 
             u.team === unit.team && u.id !== unit.id && 
             u.state !== 'dead' && u.hp < u.maxHp
           );
@@ -157,7 +172,7 @@ export class DSLCompiler {
           return { x: Math.round(x), y: Math.round(y) };
         },
         allies: () => {
-          const allies = units.filter((u: Unit) => 
+          const allies = getUnits().filter((u: Unit) => 
             u.team === unit.team && u.id !== unit.id && u.state !== 'dead'
           );
           if (allies.length === 0) return null;
@@ -166,7 +181,7 @@ export class DSLCompiler {
           return { x: Math.round(x), y: Math.round(y) };
         },
         enemies: () => {
-          const enemies = units.filter((u: Unit) => u.team !== unit.team && u.state !== 'dead');
+          const enemies = getUnits().filter((u: Unit) => u.team !== unit.team && u.state !== 'dead');
           if (enemies.length === 0) return null;
           const x = enemies.reduce((sum: number, u: Unit) => sum + u.pos.x, 0) / enemies.length;
           const y = enemies.reduce((sum: number, u: Unit) => sum + u.pos.y, 0) / enemies.length;
