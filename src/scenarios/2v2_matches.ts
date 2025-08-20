@@ -30,7 +30,7 @@ export class Match2v2 {
   
   constructor(setup: MatchSetup) {
     this.setup = setup;
-    this.sim = new Simulator(setup.mapSize || 20, setup.mapSize || 20);
+    this.sim = new Simulator(setup.mapSize || 15, setup.mapSize || 15);
   }
   
   /**
@@ -38,10 +38,10 @@ export class Match2v2 {
    */
   run(): MatchResult {
     // Deploy team 1 on the left
-    const team1Units = this.deployTeam(this.setup.team1, 'friendly', 2);
+    const team1Units = this.deployTeam(this.setup.team1, 'friendly', 1);
     
     // Deploy team 2 on the right  
-    const team2Units = this.deployTeam(this.setup.team2, 'hostile', this.sim.width - 3);
+    const team2Units = this.deployTeam(this.setup.team2, 'hostile', this.sim.width - 2);
     
     const maxSteps = this.setup.maxSteps || 500;
     let step = 0;
@@ -127,8 +127,8 @@ export class Match2v2 {
         ...unitData,
         id: `${team}_${unitType}_${i}`,
         pos: { 
-          x: x + (team === 'friendly' ? 0 : Math.random() * 2), 
-          y: 8 + i * 4 
+          x: x, 
+          y: 5 + i * 3 
         },
         team: team
       };
