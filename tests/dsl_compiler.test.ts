@@ -149,10 +149,10 @@ describe('DSL Compiler', () => {
       expect(result).toEqual({ x: 15, y: 10 });
     });
     
-    it('should return null for missing optional chain', () => {
+    it('should return undefined for missing optional chain', () => {
       const emptyContext = { ...mockContext, getAllUnits: () => [mockUnit] };
       const fn = compiler.compile('closest.enemy()?.pos');
-      expect(fn(mockUnit, emptyContext)).toBe(null);
+      expect(fn(mockUnit, emptyContext)).toBe(undefined);
     });
   });
   
