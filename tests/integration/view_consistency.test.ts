@@ -54,11 +54,15 @@ test('centralized renderer gives consistent animation frames', () => {
 
   const unit = {
     id: 'test-unit',
+    type: 'soldier',
     sprite: 'soldier',
     hp: 50,
     maxHp: 100,
     state: 'idle' as const,
     pos: { x: 5, y: 5 },
+    intendedMove: { x: 0, y: 0 },
+    team: 'friendly' as const,
+    mass: 1,
     meta: {}
   };
   

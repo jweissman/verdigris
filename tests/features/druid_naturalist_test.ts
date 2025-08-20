@@ -164,7 +164,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('bear'),
         id: 'bear1',
         pos: { x: naturalist.pos.x + 1, y: naturalist.pos.y }, // Very close
-        team: 'hostile' as const as const,
+        team: 'hostile' as const,
         intendedMove: { x: -1, y: 0 }, // Moving toward naturalist
         tags: ['animal', 'beast', 'forest'] // Ensure proper tags
       };
@@ -173,7 +173,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('owl'),
         id: 'owl1',
         pos: { x: naturalist.pos.x, y: naturalist.pos.y + 1 }, // Adjacent
-        team: 'hostile' as const as const,
+        team: 'hostile' as const,
         intendedMove: { x: 0, y: -1 },
         tags: ['animal', 'beast', 'flying', 'forest']
       };
@@ -266,7 +266,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('giant-sandworm'),
         id: 'worm1',
         pos: { x: naturalist.pos.x + 2, y: naturalist.pos.y }, // Within taming range
-        team: 'hostile' as const as const
+        team: 'hostile' as const
       };
 
       if (!giantWorm.tags) giantWorm.tags = [];
@@ -279,7 +279,7 @@ describe('Druid and Naturalist Forest Abilities', () => {
         ...Encyclopaedia.unit('skeleton'),
         id: 'skeleton1',
         pos: { x: druid.pos.x + 3, y: druid.pos.y }, // Near druid but not too close
-        team: 'hostile' as const as const
+        team: 'hostile' as const
       };
       
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { Match2v2, Tournament2v2 } from '../../src/scenarios/2v2_matches';
 
+// NOTE: This doesn't really make sense (these creatures don't all really exist; the goal is a _combinatorial_ test of all 30+ creatures, ie 30c4 or 50k+ matches..)
 describe('2v2 Match System', () => {
   it('should run a simple 2v2 match', () => {
     const match = new Match2v2({

@@ -153,7 +153,7 @@ export class RangedCombat extends Rule {
         }
       }
 
-      if (!closestEnemy || minDist <= 2 || minDist > 10) continue;
+      if (!closestEnemy || minDist <= 2 || minDist > 8) continue;
 
       const dx = closestEnemy.pos.x - unit.pos.x;
       const dy = closestEnemy.pos.y - unit.pos.y;

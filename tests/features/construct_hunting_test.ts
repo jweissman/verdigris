@@ -32,7 +32,7 @@ describe('Construct Hunting Behavior', () => {
     
 
     const mockSim = { ticks: 10 };
-    const huntResult = UnitOperations.huntAggressively(clanker, enemies, mockSim);
+    const huntResult = UnitOperations.huntAggressively(clanker, enemies as any, mockSim);
     
 
     const expectedCenterX = (15 + 17 + 20) / 3; // ~17.33

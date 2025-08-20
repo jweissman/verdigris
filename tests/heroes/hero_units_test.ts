@@ -130,7 +130,7 @@ describe('Hero Units', () => {
       pos: { x: 5, y: 5 },
       hp: 120,
       maxHp: 120,
-      team: 'friendly',
+      team: 'friendly' as const,
       abilities: ['groundPound', 'heroicLeap', 'battleCry'],
       meta: { heroType: 'warrior', armor: 5, leadership: 3 },
       mass: 15,
@@ -148,7 +148,7 @@ describe('Hero Units', () => {
         pos: { x: 12 + (i % 4) * 2, y: 3 + Math.floor(i / 4) * 4 },
         hp: 10,
         maxHp: 10,
-        team: 'hostile',
+        team: 'hostile' as const,
         abilities: ['jumps'],
         mass: 4
       };

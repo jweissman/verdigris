@@ -28,8 +28,8 @@ describe('Abilities', () => {
     const archer = {
       id: 'archer1',
       pos: { x: 2, y: 2 },
-      team: 'friendly',
-      state: 'idle',
+      team: 'friendly' as const,
+      state: 'idle' as const,
       hp: 100,
       maxHp: 100,
       abilities: ['ranged'],
@@ -39,8 +39,8 @@ describe('Abilities', () => {
     const enemy = {
       id: 'enemy1', 
       pos: { x: 7, y: 2 }, // Distance = 5, within range 10 but > 2
-      team: 'hostile',
-      state: 'idle',
+      team: 'hostile' as const,
+      state: 'idle' as const,
       hp: 100,
       maxHp: 100
     };
@@ -66,8 +66,8 @@ describe('Abilities', () => {
     const healer = {
       id: 'healer1',
       pos: { x: 2, y: 2 },
-      team: 'friendly',
-      state: 'idle',
+      team: 'friendly' as const,
+      state: 'idle' as const,
       hp: 100,
       maxHp: 100,
       abilities: ['simpleHeal'],
@@ -77,8 +77,8 @@ describe('Abilities', () => {
     const wounded = {
       id: 'wounded1',
       pos: { x: 3, y: 2 },
-      team: 'friendly',
-      state: 'idle', 
+      team: 'friendly' as const,
+      state: 'idle' as const, 
       hp: 50,
       maxHp: 100
     };
@@ -102,8 +102,8 @@ describe('Abilities', () => {
     const archer = {
       id: 'archer1',
       pos: { x: 2, y: 2 },
-      team: 'friendly', 
-      state: 'idle',
+      team: 'friendly' as const, 
+      state: 'idle' as const,
       hp: 100,
       maxHp: 100,
       abilities: ['simpleAttack'],
@@ -114,7 +114,7 @@ describe('Abilities', () => {
       id: 'enemy1',
       pos: { x: 6, y: 2 },
       team: 'enemy',
-      state: 'idle',
+      state: 'idle' as const,
       hp: 100,
       maxHp: 100
     };
@@ -143,7 +143,7 @@ describe('Abilities', () => {
       id: 'enemy1',
       pos: { x: 6, y: 2 },
       team: 'enemy',
-      state: 'idle',
+      state: 'idle' as const,
       hp: 100,
       maxHp: 100
     };

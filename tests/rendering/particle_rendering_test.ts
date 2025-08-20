@@ -126,6 +126,7 @@ describe('Granular Cell-Based Particle Rendering', () => {
 
     const leafCell = { x: 12, y: 8 };
     const leafParticle = {
+      id: 'leaf1',
       pos: { x: leafCell.x * 8, y: leafCell.y * 8 },
       vel: { x: 0.2, y: 0.8 }, // Gentle diagonal fall
       radius: 2,

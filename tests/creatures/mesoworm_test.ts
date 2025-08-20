@@ -48,7 +48,7 @@ describe('Mesoworm - Medium Segmented Creature', () => {
   
   it('should move with snake-like following behavior', () => {
     const sim = new Simulator(32, 24);
-    const segmentedRule = new SegmentedCreatures(sim);
+    const segmentedRule = new SegmentedCreatures();
     
     const mesoworm = {
       ...Encyclopaedia.unit('mesoworm'),
@@ -174,7 +174,7 @@ describe('Mesoworm - Medium Segmented Creature', () => {
   
   it('should take damage across segments', () => {
     const sim = new Simulator(32, 24);
-    const segmentedRule = new SegmentedCreatures(sim);
+    const segmentedRule = new SegmentedCreatures();
     
     const mesoworm = {
       ...Encyclopaedia.unit('mesoworm'),

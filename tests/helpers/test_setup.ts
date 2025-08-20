@@ -10,7 +10,7 @@ export function resetTestState() {
   Encyclopaedia.counts = {};
   
 
-  Simulator.seed(12345);
+  Simulator.rng.reset(12345);
 }
 
 /**

@@ -159,7 +159,7 @@ export class Tournament2v2 {
   /**
    * Run all possible matchups
    */
-  runAll(runsPerMatchup: number = 1): Map<string, MatchResult[]> {
+  runAll(runsPerMatchup: number = 1, onProgress?: (current: number, total: number) => void): Map<string, MatchResult[]> {
     // Generate all possible 2-unit teams
     const teams: [string, string][] = [];
     for (let i = 0; i < this.unitTypes.length; i++) {
@@ -167,6 +167,9 @@ export class Tournament2v2 {
         teams.push([this.unitTypes[i], this.unitTypes[j]]);
       }
     }
+    
+    const totalMatchups = teams.length * teams.length * runsPerMatchup;
+    let currentMatch = 0;
     
     // Run each team against each other team
     for (const team1 of teams) {
@@ -177,6 +180,11 @@ export class Tournament2v2 {
         for (let run = 0; run < runsPerMatchup; run++) {
           const match = new Match2v2({ team1, team2 });
           results.push(match.run());
+          currentMatch++;
+          
+          if (onProgress && currentMatch % 100 === 0) {
+            onProgress(currentMatch, totalMatchups);
+          }
         }
         
         this.results.set(matchKey, results);

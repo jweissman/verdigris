@@ -3,7 +3,7 @@ import { Simulator } from '../src/core/simulator';
 
 test('delta tracking system works', () => {
   const sim = new Simulator(10, 10);
-  sim.enableProfiling = true; // Enable debug tracking
+  // sim.enableProfiling = true; // Enable debug tracking - property doesn't exist
   
 
   const unit = sim.addUnit({

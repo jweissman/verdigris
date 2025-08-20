@@ -94,7 +94,7 @@ describe('Mechatronist Deployment System', () => {
     const hasAirdrop = sim.rulebook.some(r => r instanceof AirdropPhysics);
     if (!hasAirdrop) {
 
-      sim.rulebook.splice(1, 0, new AirdropPhysics(sim));
+      sim.rulebook.splice(1, 0, new AirdropPhysics());
     }
     
     
