@@ -1,9 +1,14 @@
 import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { UnitMovement } from '../../src/rules/unit_movement';
+import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('Grid Worm AI', () => {
   it('worms move on a grid and wander randomly', () => {
+    // Reset static state to ensure test isolation
+    Encyclopaedia.counts = {};
+    Simulator.rng.reset(12345);
+    
     const originalWanderRate = UnitMovement.wanderRate;
     UnitMovement.wanderRate = 1; // Set wander rate for testing
     

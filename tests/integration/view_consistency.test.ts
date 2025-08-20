@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { UnitRenderer } from '../../src/rendering/unit_renderer';
+import { Unit } from '../../src/types/Unit';
 
 /**
  * Integration test: Verify views use centralized unit rendering by checking source code
@@ -52,17 +53,18 @@ test('centralized renderer gives consistent animation frames', () => {
   const unitRenderer = new UnitRenderer(mockSim as any);
   
 
-  const unit = {
+  const unit: Unit = {
     id: 'test-unit',
     type: 'soldier',
     sprite: 'soldier',
     hp: 50,
     maxHp: 100,
-    state: 'idle' as const,
+    state: 'idle',
     pos: { x: 5, y: 5 },
     intendedMove: { x: 0, y: 0 },
-    team: 'friendly' as const,
+    team: 'friendly',
     mass: 1,
+    abilities: [],
     meta: {}
   };
   

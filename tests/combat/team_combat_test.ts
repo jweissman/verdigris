@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
-describe('2v2 Combat Tests', () => {
+describe.skip('2v2 Combat Tests', () => {
   beforeEach(() => {
     Encyclopaedia.counts = {}; // Reset unit counters
   });

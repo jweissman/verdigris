@@ -46,7 +46,7 @@ export class Projectile extends Command {
         projectile.target = targetPos;
         projectile.origin = startPos;
         projectile.progress = 0;
-        projectile.duration = 6; // Shorter duration for bombs
+        projectile.duration = 6; // Shorter duration for bombs (reverting)
         projectile.z = initialZ !== undefined ? initialZ : 0; // Use provided z or default to 0
         projectile.aoeRadius = 3; // Default AoE radius for bombs
       } else {

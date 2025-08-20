@@ -38,7 +38,22 @@ const runTournament = (unitTypes: string[], runsPerMatchup: number = 1) => {
   const startTime = Date.now();
   
   const tournament = new Tournament2v2(unitTypes);
-  const results = tournament.runAll(runsPerMatchup);
+  
+  // Progress callback
+  let lastReportTime = Date.now();
+  const onProgress = (current: number, total: number) => {
+    const now = Date.now();
+    if (now - lastReportTime > 1000) { // Report every second
+      const percent = ((current / total) * 100).toFixed(1);
+      const timeElapsed = (now - startTime) / 1000;
+      const timePerMatch = timeElapsed / current;
+      const timeRemaining = ((total - current) * timePerMatch);
+      console.log(`Progress: ${current}/${total} (${percent}%) - Est. ${timeRemaining.toFixed(0)}s remaining`);
+      lastReportTime = now;
+    }
+  };
+  
+  const results = tournament.runAll(runsPerMatchup, onProgress);
   
   const endTime = Date.now();
   const duration = (endTime - startTime) / 1000;

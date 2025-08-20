@@ -16,7 +16,7 @@ describe('Leaf Animation System', () => {
     
 
     const leafParticles = sim.particles.filter(p => 
-      p.type === 'leaf' || p.type === 'leaves'
+      p.type === 'leaf'
     );
     
     expect(leafParticles.length).toBeGreaterThan(0);
@@ -34,13 +34,15 @@ describe('Leaf Animation System', () => {
     const sim = new Simulator();
     
 
-    const leaf = {
+    const leaf: any = {
       id: 'leaf-1',
       type: 'leaf',
       pos: { x: 10, y: 5 },
       vel: { x: 0.1, y: 0.2 }, // Gentle drift
       z: 10, // Start high
       lifetime: 100,
+      radius: 1,
+      color: '#228822',
       meta: {
         swayAmplitude: 0.5,
         swayFrequency: 0.1,
@@ -88,7 +90,7 @@ describe('Leaf Animation System', () => {
     
 
     const leafParticles = sim.particles.filter(p => 
-      p.type === 'leaf' || p.type === 'leaves'
+      p.type === 'leaf'
     );
     
 

@@ -50,7 +50,7 @@ describe('Forest Scene - Cozy Atmosphere', () => {
     loader.loadFromText(sceneContent);
     
 
-    const leafParticles = sim.particles.filter(p => p.type === 'leaf' || p.type === 'leaves');
+    const leafParticles = sim.particles.filter(p => p.type === 'leaf');
     
 
     expect(leafParticles.length).toBeGreaterThan(0);

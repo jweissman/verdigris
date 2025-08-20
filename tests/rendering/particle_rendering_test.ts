@@ -67,7 +67,7 @@ describe('Granular Cell-Based Particle Rendering', () => {
     
 
     const context = sim.getTickContext();
-    const biomeEffects = new BiomeEffects(sim);
+    const biomeEffects = new BiomeEffects();
     biomeEffects.execute(context);
     
 

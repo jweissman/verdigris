@@ -89,7 +89,7 @@ export class CreatureBrowser {
         }
         // @ts-ignore
       })
-      .filter((c): c is CreatureData => c !== null);
+      .filter((c) => c !== null) as CreatureData[];
   }
 
   getAll(): CreatureData[] {
