@@ -48,16 +48,6 @@ weather rain 50 0.5
 weather storm 150 0.8
 temperature 5
 
-# Kraken ink clouds (darkness)
-aoe 100 15 7 6 blind 10
-aoe 200 15 7 8 blind 15
-aoe 300 15 7 10 blind 20
-
-# Tidal waves
-aoe 250 5 10 30 water 10
-aoe 350 5 10 30 water 15
-aoe 450 5 10 30 water 20
-
 # Spawn aquatic minions
 spawn 180 squirrel 7 12
 spawn 180 squirrel 27 12

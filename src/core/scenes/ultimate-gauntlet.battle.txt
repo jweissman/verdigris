@@ -63,7 +63,7 @@ spawn 900 bigworm 10 7
 spawn 900 bigworm 25 7
 
 # Environmental hazards
-weather ashfall 100 0.4
+weather sand 100 0.4
 lightning 400 15 8
 lightning 600 20 8
 temperature 50

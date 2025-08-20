@@ -47,13 +47,8 @@ spawn 150 ghost 17 4
 spawn 150 ghost 17 11
 
 # Lich's dark magic
-weather darkness 100 1.0
+weather sand 100 1.0
 temperature -20
-
-# Soul drain attacks
-aoe 200 17 8 8 necrotic 15
-aoe 300 17 8 10 necrotic 20
-aoe 400 17 8 12 necrotic 25
 
 # Raise more powerful undead
 spawn 250 demon 12 8

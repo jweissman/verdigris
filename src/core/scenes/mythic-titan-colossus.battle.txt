@@ -44,13 +44,8 @@ spawn 100 skeleton 20 12
 spawn 200 ghost 8 10
 spawn 200 ghost 22 10
 
-# Environmental titan attacks (stomps)
-aoe 150 5 13 4 impact 20
-aoe 250 25 13 4 impact 20
-aoe 350 15 13 5 impact 25
-
 # Weather changes as titan weakens
 weather clear 0
-weather fog 200 0.5
+weather rain 200 0.5
 weather storm 400 0.8
 lightning 500 15 5

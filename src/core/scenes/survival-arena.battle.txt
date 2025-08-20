@@ -64,7 +64,7 @@ spawn 450 giant-sandworm 30 9
 spawn 500 desert-megaworm 32 10
 
 # Environmental escalation
-weather smoke 100 0.2
-weather ashfall 300 0.4
-weather firestorm 500 0.6
+weather sand 100 0.2
+weather sand 300 0.4
+weather sandstorm 500 0.6
 temperature 40

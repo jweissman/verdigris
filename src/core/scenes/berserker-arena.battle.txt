@@ -14,7 +14,7 @@
 ..........s.........................
 ....................................
 ---
-bg colosseum
+bg desert
 weather clear
 temperature 30
 # Berserker Arena: Solo berserker vs waves of soldiers

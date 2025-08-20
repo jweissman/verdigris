@@ -32,5 +32,4 @@ bg swamp
 strip wide
 height tall
 temperature 25
-weather fog 150 0.7
-humidity 90
+weather rain 150 0.7

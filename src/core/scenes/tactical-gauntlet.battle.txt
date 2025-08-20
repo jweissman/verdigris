@@ -46,7 +46,7 @@ spawn 600 toymaker 18 2
 spawn 600 toymaker 18 12
 
 # Environmental changes
-weather fog 100 0.3
+weather rain 100 0.3
 weather clear 300
 weather storm 500 0.5
 temperature 10

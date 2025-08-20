@@ -44,15 +44,10 @@ spawn 300 ghost 23 4
 lightning 150 13 9
 lightning 250 13 9
 lightning 350 13 9
-weather firestorm 100 0.8
+weather sandstorm 100 0.8
 temperature 100
-
-# Dragon breath attack zones
-aoe 180 10 8 5 fire 25
-aoe 280 16 8 5 fire 25
-aoe 380 13 7 6 fire 30
 
 # Lava eruptions
 spawn 400 demon 8 5
 spawn 400 demon 28 5
-weather lava 400 1.0
+weather sand 400 1.0

@@ -18,7 +18,7 @@ bg volcanic
 strip wide  
 height tall
 temperature 60
-weather ashfall 200 0.8
+weather sand 200 0.8
 # Volcanic Depths: Berserker vs demon army in lava-filled cavern
 # d = demon (fire-resistant, aggressive)
 # Extreme heat amplifies berserker rage but drains health

@@ -42,13 +42,10 @@ spawn 300 ghost 15 4
 spawn 300 ghost 20 4
 
 # Environmental hazards
-weather ashfall 50 0.6
+weather sand 50 0.6
 lightning 250 15 8
 lightning 350 20 8
-aoe 200 10 7 4 fire 15
-aoe 300 25 7 4 fire 15
-aoe 400 15 6 5 fire 20
 
 # Dragon rage phases
 temperature 80
-weather firestorm 500 0.8
+weather sandstorm 500 0.8

@@ -14,7 +14,7 @@ wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 ....................................
 ---
-bg fortress
+bg castle
 strip wide
 weather storm 100 0.8
 # Siege Defense: Protect the toymaker inside walls (A = wall blocks, h = archer helpers)

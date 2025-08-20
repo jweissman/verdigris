@@ -10,11 +10,11 @@ describe.skip('Jumping Responsiveness', () => {
     const jumper = {
       id: 'jumper',
       pos: { x: 5, y: 5 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 50,
       maxHp: 50,
       sprite: 'test',
-      state: 'idle',
+      state: 'idle' as const as const,
       abilities: ['jumps'],
       lastAbilityTick: { jumps: -100 } // Ready to jump
     };
@@ -23,11 +23,11 @@ describe.skip('Jumping Responsiveness', () => {
     const enemy = {
       id: 'enemy',
       pos: { x: 8, y: 5 }, // 3 tiles away
-      team: 'hostile',
+      team: 'hostile' as const,
       hp: 30,
       maxHp: 30,
       sprite: 'enemy',
-      state: 'idle'
+      state: 'idle' as const
     };
     
     sim.addUnit(jumper);
@@ -78,11 +78,11 @@ describe.skip('Jumping Responsiveness', () => {
     const shortJumper = {
       id: 'short-jumper',
       pos: { x: 5, y: 5 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 50,
       maxHp: 50,
       sprite: 'test',
-      state: 'idle'
+      state: 'idle' as const
     };
     
     sim.addUnit(shortJumper);
@@ -113,11 +113,11 @@ describe.skip('Jumping Responsiveness', () => {
     const longJumper = {
       id: 'long-jumper',
       pos: { x: 5, y: 10 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 50,
       maxHp: 50,
       sprite: 'test',
-      state: 'idle'
+      state: 'idle' as const
     };
     
     sim.addUnit(longJumper);
@@ -156,21 +156,21 @@ describe.skip('Jumping Responsiveness', () => {
     const jumper = {
       id: 'impact-jumper',
       pos: { x: 5, y: 5 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 50,
       maxHp: 50,
       sprite: 'test',
-      state: 'idle'
+      state: 'idle' as const
     };
     
     const target = {
       id: 'target',
       pos: { x: 10, y: 5 },
-      team: 'hostile',
+      team: 'hostile' as const,
       hp: 30,
       maxHp: 30,
       sprite: 'enemy',
-      state: 'idle'
+      state: 'idle' as const
     };
     
     sim.addUnit(jumper);

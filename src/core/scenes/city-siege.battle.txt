@@ -33,4 +33,4 @@ bg big-city
 strip wide
 height tall
 temperature 20
-weather smoke 100 0.3
+weather sand 100 0.3
