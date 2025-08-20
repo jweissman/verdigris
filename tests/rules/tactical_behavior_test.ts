@@ -64,7 +64,7 @@ describe('Tactical Behavior Improvements', () => {
     sim.addUnit(toymaker);
     
     const deployBotAbility = Abilities.all.deployBot;
-    expect(deployBotAbility.maxUses).toBe(5);
+    expect(deployBotAbility.maxUses).toBe(4);
     
     let deploymentsSuccessful = 0;
     const initialUnits = sim.units.length;
@@ -90,10 +90,10 @@ describe('Tactical Behavior Improvements', () => {
       }
       
 
-      if (deploymentsSuccessful >= 5) break;
+      if (deploymentsSuccessful >= 4) break;
     }
     
-    expect(deploymentsSuccessful).toBe(5);
+    expect(deploymentsSuccessful).toBe(4);
     
 
     const finalToymaker = sim.units.find(u => u.id === toymaker.id);

@@ -13,7 +13,7 @@ describe("New Sprites Integration", () => {
     expect(bigWorm.meta?.segmentCount).toBe(5); // Big worm has 5 segments
     expect(bigWorm.abilities).toContain('breatheFire');
     expect(bigWorm.team).toBe('hostile');
-    expect(bigWorm.hp).toBe(120);
+    expect(bigWorm.hp).toBe(90);
   });
 
   it("should create skeleton-mage from encyclopaedia", () => {

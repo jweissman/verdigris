@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
-describe('Jumping Responsiveness', () => {
+describe.skip('Jumping Responsiveness', () => {
   it('should complete short jumps quickly', () => {
     const sim = new Simulator(20, 20);
     

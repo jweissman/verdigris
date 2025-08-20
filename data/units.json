@@ -177,8 +177,8 @@
     "team": "hostile",
     "sprite": "mimic-worm",
     "state": "idle",
-    "hp": 35,
-    "maxHp": 35,
+    "hp": 50,
+    "maxHp": 50,
     "mass": 1.5,
     "tags": ["shapeshifter", "black"],
     "abilities": ["jumps"],
@@ -193,8 +193,8 @@
     "team": "hostile",
     "sprite": "big-worm",
     "state": "idle",
-    "hp": 120,
-    "maxHp": 120,
+    "hp": 90,
+    "maxHp": 90,
     "mass": 2,
     "tags": ["beast", "black", "hunt"],
     "abilities": ["breatheFire"],
@@ -789,6 +789,46 @@
     "abilities": ["chargeAttack"],
     "meta": {
       "perdurance": "sturdiness",
+      "facing": "right"
+    }
+  },
+  "penguin": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "neutral",
+    "sprite": "penguin",
+    "state": "idle",
+    "hp": 12,
+    "maxHp": 12,
+    "mass": 1,
+    "tags": ["ambient", "beast", "winter"],
+    "abilities": ["slideKick"],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "arctic-fox": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "neutral",
+    "sprite": "arctic-fox",
+    "state": "idle",
+    "hp": 15,
+    "maxHp": 15,
+    "mass": 0.8,
+    "tags": ["ambient", "beast", "winter"],
+    "meta": {
+      "facing": "right"
+    }
+  },
+  "snow-owl": {
+    "intendedMove": { "x": 0, "y": 0 },
+    "team": "neutral",
+    "sprite": "snow-owl",
+    "state": "idle",
+    "hp": 10,
+    "maxHp": 10,
+    "mass": 0.6,
+    "tags": ["ambient", "beast", "winter", "flying"],
+    "meta": {
       "facing": "right"
     }
   },

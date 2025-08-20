@@ -50,7 +50,7 @@ describe('Construct Hunting Behavior', () => {
     expect(toymaker.abilities).toContain('deployBot');
     const deployAbility = Abilities.all.deployBot;
     
-    expect(deployAbility.maxUses).toBe(5);
+    expect(deployAbility.maxUses).toBe(4);
     
 
     const clanker = Encyclopaedia.unit('clanker');

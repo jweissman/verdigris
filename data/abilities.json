@@ -259,8 +259,8 @@
   },
   "deployBot": {
     "name": "Deploy Bot",
-    "cooldown": 50,
-    "maxUses": 5,
+    "cooldown": 80,
+    "maxUses": 4,
     "config": {
       "range": 12,
       "constructTypes": [
