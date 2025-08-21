@@ -88,21 +88,49 @@ export class MeleeCombat extends Rule {
           this.engagements.set(attackerId, targetId);
           this.engagements.set(targetId, attackerId);
 
-          this.registerHit(
-            attackerId,
-            targetId,
-            arrays.dmg[idxA] || 1,
-            context,
-            commands,
-          );
+          // Add attack cooldown to prevent simultaneous deaths
+          const currentTick = context.getCurrentTick();
+          const attackerLastAttack = this.lastAttacks.get(attackerId) || -100;
+          const targetLastAttack = this.lastAttacks.get(targetId) || -100;
+          const attackCooldown = 5; // Reduced cooldown for faster combat
+          
+          const attackerCanAttack = currentTick - attackerLastAttack >= attackCooldown;
+          const targetCanAttack = currentTick - targetLastAttack >= attackCooldown;
 
-          this.registerHit(
-            targetId,
-            attackerId,
-            arrays.dmg[idxB] || 1,
-            context,
-            commands,
-          );
+          if (attackerCanAttack) {
+            this.registerHit(
+              attackerId,
+              targetId,
+              arrays.dmg[idxA] || 1,
+              context,
+              commands,
+            );
+          }
+
+          if (targetCanAttack && attackerCanAttack) {
+            // Only counter-attack if both can attack - use unit index for deterministic asymmetry
+            // Lower index attacks first (since they were deployed first)
+            if (idxA < idxB) {
+              // Attacker has priority, target doesn't counter this tick
+            } else {
+              // Target has priority, they counter-attack
+              this.registerHit(
+                targetId,
+                attackerId,
+                arrays.dmg[idxB] || 1,
+                context,
+                commands,
+              );
+            }
+          } else if (targetCanAttack && !attackerCanAttack) {
+            this.registerHit(
+              targetId,
+              attackerId,
+              arrays.dmg[idxB] || 1,
+              context,
+              commands,
+            );
+          }
 
           break; // Each unit only engages one target
         }

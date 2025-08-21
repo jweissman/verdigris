@@ -45,8 +45,21 @@ export class Match2v2 {
       this.sim.width - 2,
     );
 
+    // Debug initial setup for soldier matchup
+    const isDebugMatch = this.setup.team1[0] === 'soldier' && this.setup.team1[1] === 'soldier' 
+                        && this.setup.team2[0] === 'soldier' && this.setup.team2[1] === 'soldier';
+    
+    if (isDebugMatch) {
+      const initialUnits = this.sim.units;
+      console.log(`[DEBUG] Initial setup - Total units: ${initialUnits.length}`);
+      initialUnits.forEach(u => {
+        console.log(`  ${u.id}: team=${u.team}, pos=(${u.pos.x},${u.pos.y}), hp=${u.hp}, dmg=${u.dmg}, tags=${u.tags?.join(',')}`);
+      });
+    }
+
     const maxSteps = this.setup.maxSteps || 500;
     let step = 0;
+    let lastDebugStep = -1;
 
     while (step < maxSteps) {
       this.sim.step();
@@ -54,6 +67,17 @@ export class Match2v2 {
 
       const team1Alive = this.getAliveUnits("friendly");
       const team2Alive = this.getAliveUnits("hostile");
+      
+      // Debug first few steps and when units die
+      if (isDebugMatch && (step <= 3 || step >= 13 || team1Alive.length + team2Alive.length < 4)) {
+        if (step !== lastDebugStep) {
+          console.log(`[Step ${step}] Friendly: ${team1Alive.length} alive, Hostile: ${team2Alive.length} alive`);
+          this.sim.units.forEach(u => {
+            console.log(`    ${u.id}: pos=(${u.pos.x.toFixed(1)},${u.pos.y.toFixed(1)}), hp=${u.hp}, state=${u.state}, team=${u.team}`);
+          });
+          lastDebugStep = step;
+        }
+      }
 
       if (team1Alive.length === 0 && team2Alive.length === 0) {
         const result = {
@@ -144,7 +168,13 @@ export class Match2v2 {
           x: x,
           y: 5 + i * 3,
         },
+        // CRITICAL: team must be set AFTER spread to override default
         team: team,
+        // Ensure we have required combat fields
+        hp: unitData.hp || 10,
+        maxHp: unitData.maxHp || unitData.hp || 10,
+        state: unitData.state || "idle",
+        intendedMove: unitData.intendedMove || { x: 0, y: 0 }
       };
 
       this.sim.addUnit(unit);
@@ -229,15 +259,15 @@ export class Tournament2v2 {
    * Run a single match using the shared simulator
    */
   private runMatch(team1: [string, string], team2: [string, string]): MatchResult {
-    // Reset simulator for new match
-    this.sharedSim.reset();
+    // Use Match2v2 class instead of duplicating logic
+    const match = new Match2v2({
+      team1: team1,
+      team2: team2,
+      mapSize: this.sharedSim.width,
+      maxSteps: 500
+    });
     
-    // Deploy teams
-    const team1Units = this.deployTeam(team1, "friendly", 1);
-    const team2Units = this.deployTeam(team2, "hostile", this.sharedSim.width - 2);
-    
-    const maxSteps = 500;
-    let step = 0;
+    return match.run();
     
     while (step < maxSteps) {
       this.sharedSim.step();
@@ -322,7 +352,12 @@ export class Tournament2v2 {
           x: x,
           y: 5 + i * 3,
         },
+        // CRITICAL: team must be set AFTER spread to override default
         team: team,
+        hp: unitData.hp || 10,
+        maxHp: unitData.maxHp || unitData.hp || 10,
+        state: unitData.state || "idle",
+        intendedMove: unitData.intendedMove || { x: 0, y: 0 }
       };
       
       this.sharedSim.addUnit(unit);

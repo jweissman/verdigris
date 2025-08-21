@@ -32,7 +32,19 @@ export class Jumping extends Rule {
 
     const newProgress = (unit.meta.jumpProgress || 0) + 1;
 
-    if (newProgress >= jumpDuration) {
+    if (newProgress > jumpDuration) {
+      // Land exactly at target
+      if (jumpTarget) {
+        this.commands.push({
+          type: "move",
+          params: {
+            unitId: unit.id,
+            x: jumpTarget.x,
+            y: jumpTarget.y,
+          },
+        });
+      }
+      
       if (unit.meta.jumpDamage && unit.meta.jumpRadius) {
         context.queueEvent({
           kind: "aoe",
@@ -65,20 +77,21 @@ export class Jumping extends Rule {
       });
     } else {
       const jumpTarget = unit.meta.jumpTarget;
+      const jumpOrigin = unit.meta.jumpOrigin || unit.pos;
       if (jumpTarget) {
         const t = newProgress / jumpDuration;
 
         const distance = Math.sqrt(
-          Math.pow(jumpTarget.x - unit.pos.x, 2) +
-            Math.pow(jumpTarget.y - unit.pos.y, 2),
+          Math.pow(jumpTarget.x - jumpOrigin.x, 2) +
+            Math.pow(jumpTarget.y - jumpOrigin.y, 2),
         );
         const arcHeight = Math.min(4, 1 + distance / 10); // Scale height with distance
         const height = 4 * arcHeight * t * (1 - t); // Parabolic arc
 
         const newX =
-          unit.pos.x + (jumpTarget.x - unit.pos.x) * (1 / jumpDuration);
+          jumpOrigin.x + (jumpTarget.x - jumpOrigin.x) * t;
         const newY =
-          unit.pos.y + (jumpTarget.y - unit.pos.y) * (1 / jumpDuration);
+          jumpOrigin.y + (jumpTarget.y - jumpOrigin.y) * t;
 
         this.commands.push({
           type: "move",

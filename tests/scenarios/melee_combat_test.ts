@@ -43,27 +43,33 @@ describe('Melee Combat Mechanics', () => {
     
     console.log('Initial HP - Soldier1:', soldier1.hp, 'Soldier2:', soldier2.hp);
     
-    // Run one step
-    sim.step();
+    // Run a few steps to allow both units to attack (with cooldown)
+    for (let i = 0; i < 6; i++) {
+      sim.step();
+    }
     
     const s1 = sim.units.find(u => u.id === 'soldier1');
     const s2 = sim.units.find(u => u.id === 'soldier2');
     
-    console.log('After step 1 - Soldier1 HP:', s1?.hp, 'Soldier2 HP:', s2?.hp);
+    console.log('After 6 steps - Soldier1 HP:', s1?.hp, 'Soldier2 HP:', s2?.hp);
     
-    // Units should have damaged each other
+    // Both units should have damaged each other by now
     expect(s1?.hp).toBeLessThan(30);
     expect(s2?.hp).toBeLessThan(30);
     
-    // Run more steps to see combat progress
-    for (let i = 0; i < 10; i++) {
+    // Run more steps to see combat progress (with cooldown, combat is slower)
+    for (let i = 0; i < 30; i++) {
       sim.step();
       const s1 = sim.units.find(u => u.id === 'soldier1');
       const s2 = sim.units.find(u => u.id === 'soldier2');
-      console.log(`Step ${i+2} - S1 HP: ${s1?.hp || 'dead'}, S2 HP: ${s2?.hp || 'dead'}`);
+      
+      // Only log every 5th step to reduce output
+      if (i % 5 === 0) {
+        console.log(`Step ${i+7} - S1 HP: ${s1?.hp || 'dead'}, S2 HP: ${s2?.hp || 'dead'}`);
+      }
       
       if (!s1 || s1.hp <= 0 || !s2 || s2.hp <= 0) {
-        console.log('Combat ended!');
+        console.log(`Combat ended at step ${i+7}!`);
         break;
       }
     }
