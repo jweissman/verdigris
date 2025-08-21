@@ -41,29 +41,7 @@ export class Abilities extends Rule {
           ability: Ability;
         } = { ability };
 
-        if (ability.trigger) {
-          try {
-            compiled.trigger = dslCompiler.compile(ability.trigger);
-          } catch (err) {
-            console.error(
-              `Failed to compile trigger for ${name}: "${ability.trigger}"`,
-              err,
-            );
-            throw err;
-          }
-        }
-
-        if (ability.target) {
-          try {
-            compiled.target = dslCompiler.compile(ability.target);
-          } catch (err) {
-            console.error(
-              `Failed to compile target for ${name}: "${ability.target}"`,
-              err,
-            );
-            throw err;
-          }
-        }
+        // Don't compile yet - will compile with cached units during execution
 
         Abilities.precompiledAbilities.set(name, compiled);
       }
@@ -73,6 +51,35 @@ export class Abilities extends Rule {
   ability = (name: string): Ability | undefined => {
     return Abilities.abilityCache.get(name);
   };
+  
+  private recompileAbilitiesWithCache(cachedUnits: readonly Unit[]): void {
+    // Clear compiled functions to force recompilation with new cached units
+    for (const compiled of Abilities.precompiledAbilities.values()) {
+      compiled.trigger = undefined;
+      compiled.target = undefined;
+    }
+    
+    // Compile abilities with cached units for this tick
+    for (const [name, compiled] of Abilities.precompiledAbilities.entries()) {
+      const ability = compiled.ability;
+      
+      if (ability.trigger) {
+        try {
+          compiled.trigger = dslCompiler.compileWithCachedUnits(ability.trigger, cachedUnits);
+        } catch (err) {
+          console.error(`Failed to compile trigger for ${name}:`, err);
+        }
+      }
+      
+      if (ability.target) {
+        try {
+          compiled.target = dslCompiler.compileWithCachedUnits(ability.target, cachedUnits);
+        } catch (err) {
+          console.error(`Failed to compile target for ${name}:`, err);
+        }
+      }
+    }
+  }
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
@@ -84,6 +91,10 @@ export class Abilities extends Rule {
     const useArrays = arrays?.posX && arrays?.posY && arrays?.team;
 
     const allUnits = context.getAllUnits();
+    
+    // Recompile abilities with cached units for this tick
+    this.recompileAbilitiesWithCache(allUnits);
+    
     const relevantUnits: Unit[] = [];
 
     for (const unit of allUnits) {
