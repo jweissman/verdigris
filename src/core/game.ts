@@ -80,6 +80,8 @@ import engineer from "../assets/sprites/engineer.png";
 import welder from "../assets/sprites/welder.png";
 // @ts-ignore
 import assembler from "../assets/sprites/assembler.png";
+// @ts-ignore
+import champion from "../assets/sprites/champion.png";
 
 // @ts-ignore
 import lakeBg from "../assets/bg/lake.png";
@@ -97,6 +99,14 @@ import toyforgeBg from "../assets/bg/toyforge.png";
 import desertBg from "../assets/bg/desert.png";
 // @ts-ignore
 import forestBg from "../assets/bg/forest.png";
+// @ts-ignore
+import rooftopBg from "../assets/bg/rooftop.png";
+// @ts-ignore
+import cityscapeBg from "../assets/bg/cityscape.png";
+// @ts-ignore
+import castleBg from "../assets/bg/castle.png";
+// @ts-ignore
+import towerGateBg from "../assets/bg/tower-gate.png";
 // @ts-ignore
 import cellEffects from "../assets/cell-effects.png";
 
@@ -221,6 +231,7 @@ class Game {
     { name: "engineer", src: engineer },
     { name: "welder", src: welder },
     { name: "assembler", src: assembler },
+    { name: "champion", src: champion },
     { name: "cell-effects", src: cellEffects },
   ];
 
@@ -233,6 +244,10 @@ class Game {
     { name: "toyforge", src: toyforgeBg },
     { name: "desert", src: desertBg },
     { name: "forest", src: forestBg },
+    { name: "rooftop", src: rooftopBg },
+    { name: "cityscape", src: cityscapeBg },
+    { name: "castle", src: castleBg },
+    { name: "tower-gate", src: towerGateBg },
   ];
 
   static loadBackgrounds(): Map<string, HTMLImageElement> {

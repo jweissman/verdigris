@@ -4,10 +4,9 @@
     <script src="./hero.ts" type="module"></script>
   </head>
   <body>
-    <canvas id="battlefield" width="320" height="200"></canvas>
+    <canvas id="battlefield" width="320" height="200" style="image-rendering: pixelated; width: 640px; height: 400px;"></canvas>
   </body>
-  <script type="module">
-    import { HeroGame } from './hero.ts';
-    HeroGame.boot();
+  <script>
+    // HeroGame.boot() is called automatically when hero.ts loads
   </script>
 </html>

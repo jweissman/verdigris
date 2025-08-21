@@ -1,5 +1,6 @@
 import { Unit } from "../types/Unit";
 import { Simulator } from "../core/simulator";
+import { SpriteScale, getSpriteDimensions, getUnitScale } from "../types/SpriteScale";
 
 export interface RenderContext {
   ctx: CanvasRenderingContext2D;
@@ -73,16 +74,19 @@ export class UnitRenderer {
    * Get sprite dimensions for a unit
    */
   getSpriteDimensions(unit: Unit): { width: number; height: number } {
-    const isHuge = unit.meta.huge;
-
-    if (isHuge) {
+    // Use new scale system
+    const scale = getUnitScale(unit);
+    const dimensions = getSpriteDimensions(scale);
+    
+    // Allow override with explicit width/height in meta
+    if (unit.meta?.width && unit.meta?.height) {
       return {
-        width: unit.meta.width || 64,
-        height: unit.meta.height || 32,
+        width: unit.meta.width,
+        height: unit.meta.height
       };
     }
-
-    return { width: 16, height: 16 };
+    
+    return dimensions;
   }
 
   /**

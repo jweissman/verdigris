@@ -5,38 +5,54 @@ import Encyclopaedia from "../dmg/encyclopaedia";
 export class HeroGame extends Game {
   private heroId: string = "hero_player";
   private heroType: string = "champion";
+  private currentBackground: number = 0;
+  private backgrounds: string[] = ["rooftop", "cityscape", "mountain", "forest", "desert", "castle", "tower-gate"];
   input: Input = new Input(this.sim, this.renderer);
   
   bootstrap() {
     super.bootstrap();
-    // Load rooftop scene if available
+    // Load rooftop background scene
+    this.loadRooftopScene();
     this.spawnHero();
   }
   
+  private loadRooftopScene() {
+    // Queue scene metadata command to set background
+    this.sim.queuedCommands.push({
+      type: "sceneMetadata",
+      params: {
+        background: "rooftop",
+        music: "exploration"
+      }
+    });
+    console.log('Rooftop scene loaded');
+  }
+  
   private spawnHero() {
-    const heroData = Encyclopaedia.unit(this.heroType);
+    // Create a champion unit directly since it's not in the bestiary
     const hero = {
-      ...heroData,
       id: this.heroId,
+      type: "champion",
       pos: { x: 10, y: 10 },
       intendedMove: { x: 0, y: 0 },
       team: "friendly" as const,
       state: "idle" as const,
-      hp: heroData.hp || 120,
-      maxHp: heroData.maxHp || 120,
-      mass: heroData.mass || 10,
-      sprite: heroData.sprite || "champion",
-      abilities: heroData.abilities || [],
-      dmg: heroData.dmg || 10,
+      sprite: "champion", // Use the 48x48 champion.png sprite
+      hp: 100,
+      maxHp: 100,
+      dmg: 15,
+      mass: 10,
+      abilities: [],
+      tags: ["hero", "controlled", "champion"], // Tags trigger hero scale
       meta: {
-        ...heroData.meta,
         controlled: true,
-        facing: "right" as const
+        facing: "right" as const,
+        scale: "hero" as const // Explicitly set hero scale for 48x48
       }
     };
     
     this.sim.addUnit(hero);
-    console.log(`Hero spawned: ${this.heroType} at (10, 10)`);
+    console.log(`Champion hero spawned at (10, 10) - WASD: move, Space: jump, B: cycle background`);
   }
   
   getInputHandler(): (e: { key: string }) => void {
@@ -69,6 +85,9 @@ export class HeroGame extends Game {
         case 'r':
           this.resetScene();
           break;
+        case 'b':
+          this.cycleBackground();
+          break;
         default:
           super.getInputHandler()(e);
       }
@@ -82,22 +101,23 @@ export class HeroGame extends Game {
     const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, hero.pos.x + dx));
     const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, hero.pos.y + dy));
     
+    // Use proper move command structure
     this.sim.queuedCommands.push({
       type: "move",
+      unitId: this.heroId,
       params: {
-        unitId: this.heroId,
         x: newX,
         y: newY
       }
     });
     
+    // Update facing direction
     if (dx !== 0) {
       this.sim.queuedCommands.push({
         type: "meta",
+        unitId: this.heroId,
         params: {
-          unitId: this.heroId,
           meta: {
-            ...hero.meta,
             facing: dx > 0 ? "right" : "left"
           }
         }
@@ -106,8 +126,16 @@ export class HeroGame extends Game {
   }
   
   private jumpHero() {
+    console.log('Jump pressed!');
     const hero = this.sim.units.find(u => u.id === this.heroId);
-    if (!hero || hero.meta?.jumping) return;
+    if (!hero) {
+      console.log('No hero found!');
+      return;
+    }
+    if (hero.meta?.jumping) {
+      console.log('Already jumping');
+      return;
+    }
     
     const jumpDistance = 3;
     const facingRight = hero.meta?.facing === "right";
@@ -115,15 +143,17 @@ export class HeroGame extends Game {
       Math.min(this.sim.fieldWidth - 1, hero.pos.x + jumpDistance) :
       Math.max(0, hero.pos.x - jumpDistance);
     
-    // Use the proper jump command
+    console.log(`Queueing jump from (${hero.pos.x}, ${hero.pos.y}) to (${targetX}, ${hero.pos.y})`);
+    
+    // Fix: unitId should NOT be in params for jump command
     this.sim.queuedCommands.push({
       type: "jump",
+      unitId: this.heroId,
       params: {
-        unitId: this.heroId,
         targetX: targetX,
         targetY: hero.pos.y,
         height: 4,
-        damage: 0, // No damage for basic jump
+        damage: 0,
         radius: 0
       }
     });
@@ -145,7 +175,22 @@ export class HeroGame extends Game {
   
   private resetScene() {
     this.sim.reset();
+    this.loadRooftopScene(); // Reload background
     this.spawnHero();
+  }
+  
+  private cycleBackground() {
+    this.currentBackground = (this.currentBackground + 1) % this.backgrounds.length;
+    const newBg = this.backgrounds[this.currentBackground];
+    
+    this.sim.queuedCommands.push({
+      type: "sceneMetadata",
+      params: {
+        background: newBg
+      }
+    });
+    
+    console.log(`Background changed to: ${newBg}`);
   }
 
   static boot(canvasId: string | HTMLCanvasElement = "battlefield") {
@@ -193,4 +238,11 @@ export class HeroGame extends Game {
 if (typeof window !== "undefined") {
   // @ts-ignore
   window.HeroGame = HeroGame;
+  
+  // Auto-boot when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => HeroGame.boot());
+  } else {
+    HeroGame.boot();
+  }
 }

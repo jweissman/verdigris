@@ -213,7 +213,7 @@ export class Tournament2v2 {
    */
   runAll(
     runsPerMatchup: number = 1,
-    onProgress?: (current: number, total: number) => void,
+    onProgress?: (current: number, total: number, stats?: { ticks?: number, simTimeMs?: number }) => void,
   ): Map<string, MatchResult[]> {
     const teams: [string, string][] = [];
     for (let i = 0; i < this.unitTypes.length; i++) {
@@ -243,7 +243,8 @@ export class Tournament2v2 {
                                    currentMatch < 1000 ? 10 :
                                    currentMatch < 10000 ? 100 : 1000;
             if (currentMatch % reportFrequency === 0) {
-              onProgress(currentMatch, totalMatchups);
+              // Pass performance stats if available
+              onProgress(currentMatch, totalMatchups, result.stats);
             }
           }
         }
@@ -258,7 +259,7 @@ export class Tournament2v2 {
   /**
    * Run a single match using the shared simulator
    */
-  private runMatch(team1: [string, string], team2: [string, string]): MatchResult {
+  private runMatch(team1: [string, string], team2: [string, string]): MatchResult & { stats?: { ticks: number, simTimeMs: number } } {
     // Use Match2v2 class instead of duplicating logic
     const match = new Match2v2({
       team1: team1,
@@ -267,8 +268,23 @@ export class Tournament2v2 {
       maxSteps: 500
     });
     
-    return match.run();
+    const startTime = performance.now ? performance.now() : Date.now();
+    const result = match.run();
+    const endTime = performance.now ? performance.now() : Date.now();
     
+    // Add performance stats
+    const resultWithStats = {
+      ...result,
+      stats: {
+        ticks: result.duration,
+        simTimeMs: endTime - startTime
+      }
+    };
+    
+    return resultWithStats;
+  }
+  
+  /* DEPRECATED - old code before using Match2v2
     while (step < maxSteps) {
       this.sharedSim.step();
       step++;
