@@ -52,7 +52,15 @@ export class Abilities extends Rule {
     return Abilities.abilityCache.get(name);
   };
   
-  private recompileAbilitiesWithCache(cachedUnits: readonly Unit[]): void {
+  private compiledForTick = -1;
+  
+  private recompileAbilitiesWithCache(cachedUnits: readonly Unit[], currentTick: number): void {
+    // Only recompile once per tick
+    if (this.compiledForTick === currentTick) {
+      return;
+    }
+    this.compiledForTick = currentTick;
+    
     // Clear compiled functions to force recompilation with new cached units
     for (const compiled of Abilities.precompiledAbilities.values()) {
       compiled.trigger = undefined;
@@ -93,7 +101,7 @@ export class Abilities extends Rule {
     const allUnits = context.getAllUnits();
     
     // Recompile abilities with cached units for this tick
-    this.recompileAbilitiesWithCache(allUnits);
+    this.recompileAbilitiesWithCache(allUnits, currentTick);
     
     const relevantUnits: Unit[] = [];
 

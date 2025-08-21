@@ -56,41 +56,48 @@ export class Match2v2 {
       const team2Alive = this.getAliveUnits("hostile");
 
       if (team1Alive.length === 0 && team2Alive.length === 0) {
-        return {
-          winner: "draw",
+        const result = {
+          winner: "draw" as const,
           survivors: [],
           duration: step,
           team1Units: team1Units,
           team2Units: team2Units,
         };
+        this.cleanup();
+        return result;
       }
 
       if (team1Alive.length === 0) {
-        return {
-          winner: "team2",
+        const result = {
+          winner: "team2" as const,
           survivors: team2Alive.map((u) => u.id),
           duration: step,
           team1Units: team1Units,
           team2Units: team2Units,
         };
+        this.cleanup();
+        return result;
       }
 
       if (team2Alive.length === 0) {
-        return {
-          winner: "team1",
+        const result = {
+          winner: "team1" as const,
           survivors: team1Alive.map((u) => u.id),
           duration: step,
           team1Units: team1Units,
           team2Units: team2Units,
         };
+        this.cleanup();
+        return result;
       }
     }
 
     const team1Alive = this.getAliveUnits("friendly");
     const team2Alive = this.getAliveUnits("hostile");
 
+    let result: MatchResult;
     if (team1Alive.length > team2Alive.length) {
-      return {
+      result = {
         winner: "team1",
         survivors: team1Alive.map((u) => u.id),
         duration: step,
@@ -98,7 +105,7 @@ export class Match2v2 {
         team2Units: team2Units,
       };
     } else if (team2Alive.length > team1Alive.length) {
-      return {
+      result = {
         winner: "team2",
         survivors: team2Alive.map((u) => u.id),
         duration: step,
@@ -106,7 +113,7 @@ export class Match2v2 {
         team2Units: team2Units,
       };
     } else {
-      return {
+      result = {
         winner: "draw",
         survivors: [...team1Alive, ...team2Alive].map((u) => u.id),
         duration: step,
@@ -114,6 +121,9 @@ export class Match2v2 {
         team2Units: team2Units,
       };
     }
+    
+    this.cleanup();
+    return result;
   }
 
   private deployTeam(
@@ -147,6 +157,11 @@ export class Match2v2 {
   private getAliveUnits(team: "friendly" | "hostile"): Unit[] {
     return this.sim.units.filter((u) => u.team === team && u.hp > 0);
   }
+  
+  private cleanup(): void {
+    // Reset the simulator to free up unit array slots
+    this.sim.reset();
+  }
 }
 
 /**
@@ -155,9 +170,12 @@ export class Match2v2 {
 export class Tournament2v2 {
   private unitTypes: string[];
   private results: Map<string, MatchResult[]> = new Map();
+  private sharedSim: Simulator;
 
   constructor(unitTypes: string[]) {
     this.unitTypes = unitTypes;
+    // Create a shared simulator for all matches
+    this.sharedSim = new Simulator(15, 15);
   }
 
   /**
@@ -183,8 +201,9 @@ export class Tournament2v2 {
         const results: MatchResult[] = [];
 
         for (let run = 0; run < runsPerMatchup; run++) {
-          const match = new Match2v2({ team1, team2 });
-          results.push(match.run());
+          // Run match using shared simulator
+          const result = this.runMatch(team1, team2);
+          results.push(result);
           currentMatch++;
 
           // Report progress more frequently for large tournaments
@@ -206,6 +225,117 @@ export class Tournament2v2 {
     return this.results;
   }
 
+  /**
+   * Run a single match using the shared simulator
+   */
+  private runMatch(team1: [string, string], team2: [string, string]): MatchResult {
+    // Reset simulator for new match
+    this.sharedSim.reset();
+    
+    // Deploy teams
+    const team1Units = this.deployTeam(team1, "friendly", 1);
+    const team2Units = this.deployTeam(team2, "hostile", this.sharedSim.width - 2);
+    
+    const maxSteps = 500;
+    let step = 0;
+    
+    while (step < maxSteps) {
+      this.sharedSim.step();
+      step++;
+      
+      const team1Alive = this.getAliveUnits("friendly");
+      const team2Alive = this.getAliveUnits("hostile");
+      
+      if (team1Alive.length === 0 && team2Alive.length === 0) {
+        return {
+          winner: "draw",
+          survivors: [],
+          duration: step,
+          team1Units: team1Units,
+          team2Units: team2Units,
+        };
+      }
+      
+      if (team1Alive.length === 0) {
+        return {
+          winner: "team2",
+          survivors: team2Alive.map((u) => u.id),
+          duration: step,
+          team1Units: team1Units,
+          team2Units: team2Units,
+        };
+      }
+      
+      if (team2Alive.length === 0) {
+        return {
+          winner: "team1",
+          survivors: team1Alive.map((u) => u.id),
+          duration: step,
+          team1Units: team1Units,
+          team2Units: team2Units,
+        };
+      }
+    }
+    
+    // Timeout - winner is team with more survivors
+    const team1Alive = this.getAliveUnits("friendly");
+    const team2Alive = this.getAliveUnits("hostile");
+    
+    if (team1Alive.length > team2Alive.length) {
+      return {
+        winner: "team1",
+        survivors: team1Alive.map((u) => u.id),
+        duration: step,
+        team1Units: team1Units,
+        team2Units: team2Units,
+      };
+    } else if (team2Alive.length > team1Alive.length) {
+      return {
+        winner: "team2",
+        survivors: team2Alive.map((u) => u.id),
+        duration: step,
+        team1Units: team1Units,
+        team2Units: team2Units,
+      };
+    } else {
+      return {
+        winner: "draw",
+        survivors: [...team1Alive, ...team2Alive].map((u) => u.id),
+        duration: step,
+        team1Units: team1Units,
+        team2Units: team2Units,
+      };
+    }
+  }
+  
+  private deployTeam(unitTypes: [string, string], team: "friendly" | "hostile", x: number): string[] {
+    const unitIds: string[] = [];
+    
+    for (let i = 0; i < unitTypes.length; i++) {
+      const unitType = unitTypes[i];
+      const unitData = Encyclopaedia.unit(unitType);
+      
+      const unit = {
+        ...unitData,
+        id: `${team}_${unitType}_${i}`,
+        pos: {
+          x: x,
+          y: 5 + i * 3,
+        },
+        team: team,
+      };
+      
+      this.sharedSim.addUnit(unit);
+      unitIds.push(unit.id);
+    }
+    
+    return unitIds;
+  }
+  
+  private getAliveUnits(team: "friendly" | "hostile"): Unit[] {
+    return this.sharedSim.units.filter((u) => u.team === team && u.hp > 0);
+  }
+  
   /**
    * Get win rate statistics
    */
