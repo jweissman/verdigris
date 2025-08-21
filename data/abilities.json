@@ -933,6 +933,7 @@
   "summonForestCreature": {
     "name": "Summon Forest Creature",
     "cooldown": 60,
+    "maxUses": 3,
     "config": {
       "creatures": [
         "squirrel",
