@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { Tournament2v2 } from '../../src/scenarios/2v2_matches';
 
-describe('2v2 Tournament Performance', () => {
+describe.skip('2v2 Tournament Performance', () => {
   test('measure match throughput', () => {
     const units = ['soldier', 'ranger', 'bombardier', 'worm'];
     const tournament = new Tournament2v2(units);

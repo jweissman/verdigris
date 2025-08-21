@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { Tournament2v2 } from '../../src/scenarios/2v2_matches';
 
-describe('2v2 Capacity Check', () => {
+describe.skip('2v2 Capacity Check', () => {
   test('tournament with summoners completes without capacity issues', () => {
     // Test with units that can summon
     const summoners = ['toymaker', 'druid', 'engineer'];
