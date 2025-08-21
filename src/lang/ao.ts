@@ -235,7 +235,16 @@ export class Ao {
       },
 
       Property(key, _, value) {
-        const k = key.child(0).sourceString.replace(/^["']|["']$/g, "");
+        // Handle both ident and string keys
+        const keyNode = key.child(0);
+        let k;
+        if (keyNode.ctorName === 'string') {
+          // Remove quotes from string keys
+          k = keyNode.children[1].sourceString;
+        } else {
+          // Use ident as-is
+          k = keyNode.sourceString;
+        }
         return [k, value.eval()];
       },
 

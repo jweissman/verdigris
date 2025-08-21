@@ -39,7 +39,6 @@ describe('DSL Compiler', () => {
     getCurrentTick: () => 0,
     getFieldWidth: () => 100,
     getFieldHeight: () => 100,
-    getRandom: () => Math.random(),
     getProjectiles: () => [],
     getParticles: () => [],
     getTemperatureAt: () => 20,

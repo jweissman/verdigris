@@ -1,0 +1,83 @@
+#!/usr/bin/env bun
+/**
+ * Ao REPL - Minimal expression evaluator
+ * 
+ * Ao compiles expressions like "u.hp > 4" into JavaScript functions
+ */
+
+import * as readline from 'readline';
+import { Ao } from '../src/lang/ao';
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  prompt: 'ao> '
+});
+
+console.log('Ao REPL - Type expressions to evaluate, "exit" to quit\n');
+console.log('Examples:');
+console.log('  5 + 3');
+console.log('  u.hp > 50  (with context: {u: {hp: 100}})');
+console.log('  x * 2 + y  (with context: {x: 3, y: 4})');
+console.log();
+
+// Simple test context
+let context = {
+  u: { hp: 100, team: 'friendly' },
+  x: 10,
+  y: 20,
+  Math: Math
+};
+
+rl.prompt();
+
+rl.on('line', (line) => {
+  const trimmed = line.trim();
+  
+  if (trimmed === 'exit' || trimmed === 'quit') {
+    rl.close();
+    return;
+  }
+  
+  if (trimmed === 'context') {
+    console.log('Current context:', JSON.stringify(context, null, 2));
+    rl.prompt();
+    return;
+  }
+  
+  if (trimmed.startsWith('let ')) {
+    // Simple assignment: let x = 42
+    const match = trimmed.match(/^let\s+(\w+)\s*=\s*(.+)$/);
+    if (match) {
+      const [, name, expr] = match;
+      try {
+        const value = Ao.eval(expr, context);
+        context[name] = value;
+        console.log(`${name} = ${JSON.stringify(value)}`);
+      } catch (e: any) {
+        console.log('Error:', e.message);
+      }
+    }
+    rl.prompt();
+    return;
+  }
+  
+  if (!trimmed) {
+    rl.prompt();
+    return;
+  }
+  
+  try {
+    const result = Ao.eval(trimmed, context);
+    console.log('→', result);
+  } catch (error: any) {
+    console.log('Error:', error.message);
+  }
+  
+  rl.prompt();
+});
+
+rl.on('close', () => {
+  console.log('\nGoodbye!');
+  process.exit(0);
+});
