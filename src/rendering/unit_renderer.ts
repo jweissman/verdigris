@@ -61,6 +61,21 @@ export class UnitRenderer {
    * Get the current animation frame for a unit
    */
   getAnimationFrame(unit: Unit, animationTime: number): number {
+    // Special handling for hero units with extended animations
+    if (unit.tags?.includes("hero") || unit.meta?.scale === "hero") {
+      if (unit.state === "dead") {
+        return 12; // Last frame for death
+      } else if (unit.state === "attack") {
+        // Cycle through attack frames 5-12
+        const attackFrame = Math.floor((animationTime / 100) % 8);
+        return 5 + attackFrame;
+      } else {
+        // Idle animation: cycle through frames 0-4
+        return Math.floor((animationTime / 200) % 5);
+      }
+    }
+    
+    // Standard 4-frame units
     if (unit.state === "dead") {
       return 3; // Frame 4 (index 3) for death
     } else if (unit.state === "attack") {

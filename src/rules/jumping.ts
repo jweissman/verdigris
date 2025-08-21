@@ -5,6 +5,11 @@ import type { QueuedCommand } from "../core/command_handler";
 
 export class Jumping extends Rule {
   private commands: QueuedCommand[] = [];
+  
+  // Physics constants for better feel
+  private readonly GRAVITY = 0.5;          // Gravity strength
+  private readonly JUMP_VELOCITY = -8;     // Initial upward velocity
+  private readonly TERMINAL_VELOCITY = 10; // Max fall speed
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
@@ -19,20 +24,39 @@ export class Jumping extends Rule {
 
   private updateJump(context: TickContext, unit: any): void {
     const jumpTarget = unit.meta.jumpTarget;
-    const jumpOrigin = unit.meta.jumpOrigin;
-    let jumpDuration = 10; // Default
-
+    const jumpOrigin = unit.meta.jumpOrigin || unit.pos;
+    
+    // Use velocity-based physics
+    let velocity = unit.meta.jumpVelocity || this.JUMP_VELOCITY;
+    const progress = (unit.meta.jumpProgress || 0) + 1;
+    
+    // Apply gravity to velocity
+    velocity = Math.min(velocity + this.GRAVITY, this.TERMINAL_VELOCITY);
+    
+    // Calculate horizontal position based on progress
+    const maxDuration = 20; // Max jump duration
+    const t = Math.min(1, progress / maxDuration);
+    let newX = jumpOrigin.x;
+    let newY = jumpOrigin.y;
+    
     if (jumpTarget && jumpOrigin) {
       const dx = jumpTarget.x - jumpOrigin.x;
       const dy = jumpTarget.y - jumpOrigin.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      jumpDuration = Math.min(15, Math.max(3, Math.round(distance * 0.7)));
+      
+      // Horizontal movement (ease-out curve for better feel)
+      const easeT = 1 - Math.pow(1 - t, 2); // Ease-out quadratic
+      newX = jumpOrigin.x + dx * easeT;
+      newY = jumpOrigin.y + dy * easeT;
     }
+    
+    // Calculate height using physics simulation
+    const initialVelocity = this.JUMP_VELOCITY;
+    const time = progress * 0.1; // Convert to time units
+    const rawZ = -(initialVelocity * time + 0.5 * this.GRAVITY * time * time);
+    const z = Math.max(0, rawZ);
 
-    const newProgress = (unit.meta.jumpProgress || 0) + 1;
-
-    if (newProgress > jumpDuration) {
+    // Check if we should land (when raw Z would go below ground)
+    if (rawZ <= 0 && progress > 1) {
       // Land exactly at target
       if (jumpTarget) {
         this.commands.push({
@@ -76,45 +100,28 @@ export class Jumping extends Rule {
         },
       });
     } else {
-      const jumpTarget = unit.meta.jumpTarget;
-      const jumpOrigin = unit.meta.jumpOrigin || unit.pos;
-      if (jumpTarget) {
-        const t = newProgress / jumpDuration;
+      // Continue jump - update position and metadata
+      this.commands.push({
+        type: "move",
+        params: {
+          unitId: unit.id,
+          x: newX,
+          y: newY,
+        },
+      });
 
-        const distance = Math.sqrt(
-          Math.pow(jumpTarget.x - jumpOrigin.x, 2) +
-            Math.pow(jumpTarget.y - jumpOrigin.y, 2),
-        );
-        const arcHeight = Math.min(4, 1 + distance / 10); // Scale height with distance
-        const height = 4 * arcHeight * t * (1 - t); // Parabolic arc
-
-        const newX =
-          jumpOrigin.x + (jumpTarget.x - jumpOrigin.x) * t;
-        const newY =
-          jumpOrigin.y + (jumpTarget.y - jumpOrigin.y) * t;
-
-        this.commands.push({
-          type: "move",
-          params: {
-            unitId: unit.id,
-            x: newX,
-            y: newY,
+      this.commands.push({
+        type: "meta",
+        params: {
+          unitId: unit.id,
+          meta: {
+            ...unit.meta,
+            jumpProgress: progress,
+            jumpVelocity: velocity,
+            z: z,
           },
-        });
-
-        this.commands.push({
-          type: "meta",
-          params: {
-            unitId: unit.id,
-            meta: {
-              ...unit.meta,
-              jumpProgress: newProgress,
-              jumpHeight: height,
-              z: height, // Also set z for compatibility with tests
-            },
-          },
-        });
-      }
+        },
+      });
     }
   }
 }

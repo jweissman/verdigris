@@ -115,7 +115,7 @@ import Renderer, { createScaledRenderer } from "./renderer";
 class Game {
   public sim: Simulator;
   private lastSimTime: number = 0;
-  private simTickRate: number = 8; // Simulation runs at 8fps for strategic gameplay
+  protected simTickRate: number = 8; // Simulation runs at 8fps for strategic gameplay
 
   renderer: Renderer;
   private _handleResize: () => void;
@@ -281,8 +281,10 @@ class Game {
     let master = Game.spriteList;
     master.forEach(({ name, src }) => {
       const img = new Image();
+      // Set the sprite immediately so it's available even if not loaded
+      sprites.set(name, img);
       img.onload = () => {
-        sprites.set(name, img);
+        console.debug(`Loaded sprite: ${name}`);
       };
       img.onerror = () => {
         console.error(`Failed to load sprite: ${src}`);

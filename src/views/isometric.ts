@@ -3,9 +3,11 @@ import { Projectile } from "../types/Projectile";
 import { Unit } from "../types/Unit";
 import View from "./view";
 import { ParticleRenderer } from "../rendering/particle_renderer";
+import { UnitRenderer } from "../rendering/unit_renderer";
 
 export default class Isometric extends View {
   private particleRenderer: ParticleRenderer;
+  private unitRenderer: UnitRenderer;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -17,6 +19,7 @@ export default class Isometric extends View {
   ) {
     super(ctx, sim, width, height, sprites, backgrounds);
     this.particleRenderer = new ParticleRenderer(sprites);
+    this.unitRenderer = new UnitRenderer(sim);
   }
 
   show() {
@@ -173,14 +176,10 @@ export default class Isometric extends View {
       renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
     }
 
-    const isHuge = unit.meta.huge;
-    let spriteWidth = 16;
-    let spriteHeight = 16;
-
-    if (isHuge) {
-      spriteWidth = unit.meta.width || 64;
-      spriteHeight = unit.meta.height || 32;
-    }
+    // Use proper sprite dimensions based on unit scale
+    const dimensions = this.unitRenderer.getSpriteDimensions(unit);
+    const spriteWidth = dimensions.width;
+    const spriteHeight = dimensions.height;
 
     const { x: screenX, y: screenY } = this.toIsometric(renderX, renderY);
 

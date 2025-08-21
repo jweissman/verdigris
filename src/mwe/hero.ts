@@ -9,22 +9,29 @@ export class HeroGame extends Game {
   private backgrounds: string[] = ["rooftop", "cityscape", "mountain", "forest", "desert", "castle", "tower-gate"];
   input: Input = new Input(this.sim, this.renderer);
   
+  // Movement state
+  private keysHeld: Set<string> = new Set();
+  private jumpBufferTime: number = 0;
+  
+  // Override tick rate for more responsive controls
+  protected simTickRate: number = 60; // 60fps for maximum responsiveness
+  
   bootstrap() {
     super.bootstrap();
+    // Use isometric view to show backgrounds
+    this.renderer.setViewMode("iso");
     // Load rooftop background scene
     this.loadRooftopScene();
-    this.spawnHero();
+    // Wait a bit for sprites to load
+    setTimeout(() => {
+      this.spawnHero();
+      console.log('Hero spawned with rooftop background');
+    }, 100);
   }
   
   private loadRooftopScene() {
-    // Queue scene metadata command to set background
-    this.sim.queuedCommands.push({
-      type: "sceneMetadata",
-      params: {
-        background: "rooftop",
-        music: "exploration"
-      }
-    });
+    // Set background directly since sceneMetadata command doesn't exist yet
+    this.sim.sceneBackground = "rooftop";
     console.log('Rooftop scene loaded');
   }
   
@@ -52,7 +59,44 @@ export class HeroGame extends Game {
     };
     
     this.sim.addUnit(hero);
-    console.log(`Champion hero spawned at (10, 10) - WASD: move, Space: jump, B: cycle background`);
+    
+    // Spawn some enemies to fight
+    this.spawnEnemies();
+    
+    console.log(`Champion hero spawned at (10, 10)`);
+    console.log(`Controls: WASD: move, Space: jump, E: strike, B: cycle background, R: reset`);
+  }
+  
+  private spawnEnemies() {
+    // Spawn a few worms as enemies
+    const enemies = [
+      { x: 20, y: 10, sprite: "worm" },
+      { x: 25, y: 8, sprite: "worm" },
+      { x: 30, y: 12, sprite: "worm" }
+    ];
+    
+    enemies.forEach((enemy, i) => {
+      this.sim.addUnit({
+        id: `enemy_${i}`,
+        type: "worm",
+        pos: { x: enemy.x, y: enemy.y },
+        intendedMove: { x: 0, y: 0 },
+        team: "hostile" as const,
+        state: "idle" as const,
+        sprite: enemy.sprite,
+        hp: 20,
+        maxHp: 20,
+        dmg: 5,
+        mass: 5,
+        abilities: [],
+        tags: ["enemy"],
+        meta: {
+          facing: "left" as const
+        }
+      });
+    });
+    
+    console.log(`Spawned ${enemies.length} enemies`);
   }
   
   getInputHandler(): (e: { key: string }) => void {
@@ -80,6 +124,9 @@ export class HeroGame extends Game {
           this.useAbility('groundPound');
           break;
         case 'e':
+          this.strikeHero();
+          break;
+        case 'f':
           this.useAbility('heroicLeap');
           break;
         case 'r':
@@ -126,35 +173,33 @@ export class HeroGame extends Game {
   }
   
   private jumpHero() {
-    console.log('Jump pressed!');
     const hero = this.sim.units.find(u => u.id === this.heroId);
-    if (!hero) {
-      console.log('No hero found!');
-      return;
-    }
-    if (hero.meta?.jumping) {
-      console.log('Already jumping');
-      return;
-    }
+    if (!hero) return;
+    if (hero.meta?.jumping) return;
     
-    const jumpDistance = 3;
-    const facingRight = hero.meta?.facing === "right";
-    const targetX = facingRight ? 
-      Math.min(this.sim.fieldWidth - 1, hero.pos.x + jumpDistance) :
-      Math.max(0, hero.pos.x - jumpDistance);
-    
-    console.log(`Queueing jump from (${hero.pos.x}, ${hero.pos.y}) to (${targetX}, ${hero.pos.y})`);
-    
-    // Fix: unitId should NOT be in params for jump command
+    // Simple jump in facing direction
     this.sim.queuedCommands.push({
       type: "jump",
       unitId: this.heroId,
       params: {
-        targetX: targetX,
-        targetY: hero.pos.y,
-        height: 4,
-        damage: 0,
-        radius: 0
+        distance: 3,  // Jump 3 tiles forward - tighter control
+        height: 5    // Good arc but fast
+      }
+    });
+  }
+  
+  private strikeHero() {
+    const hero = this.sim.units.find(u => u.id === this.heroId);
+    if (!hero) return;
+    
+    // Strike command handles animation state
+    this.sim.queuedCommands.push({
+      type: "strike",
+      unitId: this.heroId,
+      params: {
+        direction: hero.meta?.facing || "right",
+        range: 1.5,  // Slightly longer than standard melee
+        damage: hero.dmg || 15
       }
     });
   }
@@ -176,19 +221,15 @@ export class HeroGame extends Game {
   private resetScene() {
     this.sim.reset();
     this.loadRooftopScene(); // Reload background
-    this.spawnHero();
+    this.spawnHero(); // This also spawns enemies
   }
   
   private cycleBackground() {
     this.currentBackground = (this.currentBackground + 1) % this.backgrounds.length;
     const newBg = this.backgrounds[this.currentBackground];
     
-    this.sim.queuedCommands.push({
-      type: "sceneMetadata",
-      params: {
-        background: newBg
-      }
-    });
+    // Set background directly
+    this.sim.sceneBackground = newBg;
     
     console.log(`Background changed to: ${newBg}`);
   }

@@ -95,13 +95,15 @@ export default class Orthographic extends View {
     const gridCenterX = Math.round(renderX * cellWidth + cellWidth / 2);
     const gridCenterY = Math.round(renderY * cellHeight + cellHeight / 2);
 
-    const pixelX = isHuge ? gridCenterX - 16 : gridCenterX - 8; // Huge units need more offset
-    const pixelY = isHuge ? gridCenterY - 32 : gridCenterY - 8; // Huge units are much taller
+    // Calculate offset based on actual sprite dimensions
+    const pixelX = gridCenterX - spriteWidth / 2;
+    const pixelY = gridCenterY - spriteHeight + cellHeight / 2; // Align bottom of sprite with grid
 
     let realPixelY = pixelY; // Default to pixelY unless adjusted for z height
 
     const sprite = this.sprites.get(unit.sprite);
-    if (sprite) {
+    
+    if (sprite && sprite.complete) {
       const frameIndex = this.unitRenderer.getAnimationFrame(
         unit,
         this.animationTime,
@@ -139,6 +141,7 @@ export default class Orthographic extends View {
 
       this.ctx.restore();
     } else {
+      // Fallback rendering when sprite not loaded
       const fallbackX = Math.round(renderX * 8);
       const fallbackY = Math.round(renderY * 8);
       this.ctx.fillStyle = this.unitRenderer.getUnitColor(unit);

@@ -16,6 +16,7 @@ import { Heal } from "../commands/heal";
 import { AoE } from "../commands/aoe";
 import { Projectile } from "../commands/projectile";
 import { JumpCommand } from "../commands/jump";
+import { StrikeCommand } from "../commands/strike";
 import { CleanupCommand } from "../commands/cleanup";
 import { RemoveCommand } from "../commands/remove";
 import { MoveCommand } from "../commands/move";
@@ -86,6 +87,8 @@ export class CommandHandler {
     this.commands.set("aoe", new AoE(sim, this.transform));
     this.commands.set("projectile", new Projectile(sim, this.transform));
     this.commands.set("jump", new JumpCommand(sim, this.transform));
+    this.commands.set("strike", new StrikeCommand(sim, this.transform));
+    this.commands.set("attack", new StrikeCommand(sim, this.transform)); // Alias
 
     this.commands.set("cleanup", new CleanupCommand(sim));
     this.commands.set("remove", new RemoveCommand(sim));

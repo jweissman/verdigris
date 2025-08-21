@@ -45,17 +45,8 @@ export class Match2v2 {
       this.sim.width - 2,
     );
 
-    // Debug initial setup for soldier matchup
-    const isDebugMatch = this.setup.team1[0] === 'soldier' && this.setup.team1[1] === 'soldier' 
-                        && this.setup.team2[0] === 'soldier' && this.setup.team2[1] === 'soldier';
-    
-    if (isDebugMatch) {
-      const initialUnits = this.sim.units;
-      console.log(`[DEBUG] Initial setup - Total units: ${initialUnits.length}`);
-      initialUnits.forEach(u => {
-        console.log(`  ${u.id}: team=${u.team}, pos=(${u.pos.x},${u.pos.y}), hp=${u.hp}, dmg=${u.dmg}, tags=${u.tags?.join(',')}`);
-      });
-    }
+    // Debug initial setup for soldier matchup (disabled for CLI)
+    const isDebugMatch = false; // Disabled for production
 
     const maxSteps = this.setup.maxSteps || 500;
     let step = 0;
@@ -68,16 +59,6 @@ export class Match2v2 {
       const team1Alive = this.getAliveUnits("friendly");
       const team2Alive = this.getAliveUnits("hostile");
       
-      // Debug first few steps and when units die
-      if (isDebugMatch && (step <= 3 || step >= 13 || team1Alive.length + team2Alive.length < 4)) {
-        if (step !== lastDebugStep) {
-          console.log(`[Step ${step}] Friendly: ${team1Alive.length} alive, Hostile: ${team2Alive.length} alive`);
-          this.sim.units.forEach(u => {
-            console.log(`    ${u.id}: pos=(${u.pos.x.toFixed(1)},${u.pos.y.toFixed(1)}), hp=${u.hp}, state=${u.state}, team=${u.team}`);
-          });
-          lastDebugStep = step;
-        }
-      }
 
       if (team1Alive.length === 0 && team2Alive.length === 0) {
         const result = {
@@ -224,6 +205,7 @@ export class Tournament2v2 {
 
     const totalMatchups = teams.length * teams.length * runsPerMatchup;
     let currentMatch = 0;
+    let lastRankingReport = 0;
 
     for (const team1 of teams) {
       for (const team2 of teams) {
@@ -250,6 +232,14 @@ export class Tournament2v2 {
         }
 
         this.results.set(matchKey, results);
+      }
+      
+      // Print intermediate rankings every 10% or 5000 matches
+      const percentComplete = (currentMatch / totalMatchups) * 100;
+      if (percentComplete - lastRankingReport >= 10 || currentMatch - lastRankingReport * totalMatchups / 100 >= 5000) {
+        console.log(`\n=== Intermediate Rankings at ${percentComplete.toFixed(1)}% ===`);
+        this.printRankings();
+        lastRankingReport = Math.floor(percentComplete / 10) * 10;
       }
     }
 
@@ -282,109 +272,6 @@ export class Tournament2v2 {
     };
     
     return resultWithStats;
-  }
-  
-  /* DEPRECATED - old code before using Match2v2
-    while (step < maxSteps) {
-      this.sharedSim.step();
-      step++;
-      
-      const team1Alive = this.getAliveUnits("friendly");
-      const team2Alive = this.getAliveUnits("hostile");
-      
-      if (team1Alive.length === 0 && team2Alive.length === 0) {
-        return {
-          winner: "draw",
-          survivors: [],
-          duration: step,
-          team1Units: team1Units,
-          team2Units: team2Units,
-        };
-      }
-      
-      if (team1Alive.length === 0) {
-        return {
-          winner: "team2",
-          survivors: team2Alive.map((u) => u.id),
-          duration: step,
-          team1Units: team1Units,
-          team2Units: team2Units,
-        };
-      }
-      
-      if (team2Alive.length === 0) {
-        return {
-          winner: "team1",
-          survivors: team1Alive.map((u) => u.id),
-          duration: step,
-          team1Units: team1Units,
-          team2Units: team2Units,
-        };
-      }
-    }
-    
-    // Timeout - winner is team with more survivors
-    const team1Alive = this.getAliveUnits("friendly");
-    const team2Alive = this.getAliveUnits("hostile");
-    
-    if (team1Alive.length > team2Alive.length) {
-      return {
-        winner: "team1",
-        survivors: team1Alive.map((u) => u.id),
-        duration: step,
-        team1Units: team1Units,
-        team2Units: team2Units,
-      };
-    } else if (team2Alive.length > team1Alive.length) {
-      return {
-        winner: "team2",
-        survivors: team2Alive.map((u) => u.id),
-        duration: step,
-        team1Units: team1Units,
-        team2Units: team2Units,
-      };
-    } else {
-      return {
-        winner: "draw",
-        survivors: [...team1Alive, ...team2Alive].map((u) => u.id),
-        duration: step,
-        team1Units: team1Units,
-        team2Units: team2Units,
-      };
-    }
-  }
-  
-  private deployTeam(unitTypes: [string, string], team: "friendly" | "hostile", x: number): string[] {
-    const unitIds: string[] = [];
-    
-    for (let i = 0; i < unitTypes.length; i++) {
-      const unitType = unitTypes[i];
-      const unitData = Encyclopaedia.unit(unitType);
-      
-      const unit = {
-        ...unitData,
-        id: `${team}_${unitType}_${i}`,
-        pos: {
-          x: x,
-          y: 5 + i * 3,
-        },
-        // CRITICAL: team must be set AFTER spread to override default
-        team: team,
-        hp: unitData.hp || 10,
-        maxHp: unitData.maxHp || unitData.hp || 10,
-        state: unitData.state || "idle",
-        intendedMove: unitData.intendedMove || { x: 0, y: 0 }
-      };
-      
-      this.sharedSim.addUnit(unit);
-      unitIds.push(unit.id);
-    }
-    
-    return unitIds;
-  }
-  
-  private getAliveUnits(team: "friendly" | "hostile"): Unit[] {
-    return this.sharedSim.units.filter((u) => u.team === team && u.hp > 0);
   }
   
   /**
@@ -425,6 +312,36 @@ export class Tournament2v2 {
     }
 
     return stats;
+  }
+
+  /**
+   * Print current rankings (can be partial)
+   */
+  printRankings(): void {
+    const stats = this.getStats();
+    
+    if (stats.size === 0) return;
+
+    const sortedTeams = Array.from(stats.entries()).sort((a, b) => {
+      const aTotal = a[1].wins + a[1].losses + a[1].draws;
+      const bTotal = b[1].wins + b[1].losses + b[1].draws;
+      const aWinRate = aTotal > 0 ? a[1].wins / aTotal : 0;
+      const bWinRate = bTotal > 0 ? b[1].wins / bTotal : 0;
+      return bWinRate - aWinRate;
+    });
+
+    // Only show top 10 for intermediate reports
+    const teamsToShow = Math.min(10, sortedTeams.length);
+    for (let i = 0; i < teamsToShow; i++) {
+      const [team, stat] = sortedTeams[i];
+      const total = stat.wins + stat.losses + stat.draws;
+      if (total > 0) {
+        const winRate = ((stat.wins / total) * 100).toFixed(1);
+        console.log(
+          `  #${i+1} ${team}: ${winRate}% (${stat.wins}W/${stat.losses}L/${stat.draws}D)`,
+        );
+      }
+    }
   }
 
   /**
