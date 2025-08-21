@@ -187,8 +187,15 @@ export class Tournament2v2 {
           results.push(match.run());
           currentMatch++;
 
-          if (onProgress && currentMatch % 100 === 0) {
-            onProgress(currentMatch, totalMatchups);
+          // Report progress more frequently for large tournaments
+          if (onProgress) {
+            // Report every match for first 100, then less frequently
+            const reportFrequency = currentMatch < 100 ? 1 : 
+                                   currentMatch < 1000 ? 10 :
+                                   currentMatch < 10000 ? 100 : 1000;
+            if (currentMatch % reportFrequency === 0) {
+              onProgress(currentMatch, totalMatchups);
+            }
           }
         }
 
