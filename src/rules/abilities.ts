@@ -223,7 +223,8 @@ export class Abilities extends Rule {
 
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
-          const currentUses = meta[usesKey] || 0; // Use cached meta
+          // Check current uses - the meta will be updated later in this tick
+          const currentUses = meta[usesKey] || 0;
           if (currentUses >= ability.maxUses) {
             continue; // Ability exhausted
           }
@@ -294,16 +295,26 @@ export class Abilities extends Rule {
           this.pendingEffects.push({ effect, caster: unit, target });
         }
 
+        // Build the meta update
+        const metaUpdate: any = {
+          lastAbilityTick: {
+            ...lastAbilityTick, // Use cached value
+            [abilityName]: currentTick,
+          },
+        };
+        
+        // Increment uses counter if ability has maxUses
+        if (ability.maxUses) {
+          const usesKey = `${abilityName}Uses`;
+          const currentUses = meta[usesKey] || 0;
+          metaUpdate[usesKey] = currentUses + 1;
+        }
+        
         metaCommands.push({
           type: "meta",
           params: {
             unitId: unit.id,
-            meta: {
-              lastAbilityTick: {
-                ...lastAbilityTick, // Use cached value
-                [abilityName]: currentTick,
-              },
-            },
+            meta: metaUpdate,
           },
         });
       }

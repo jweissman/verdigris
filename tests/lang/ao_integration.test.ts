@@ -15,7 +15,7 @@ describe('Ao Language Integration Tests', () => {
       ...priest,
       id: 'priest1',
       pos: { x: 10, y: 10 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 100,
       maxHp: 100
     });
@@ -24,7 +24,7 @@ describe('Ao Language Integration Tests', () => {
     sim.addUnit({
       id: 'ally1',
       pos: { x: 12, y: 10 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 20,
       maxHp: 100,
       sprite: 'soldier',
@@ -36,7 +36,7 @@ describe('Ao Language Integration Tests', () => {
     sim.addUnit({
       id: 'enemy1',
       pos: { x: 15, y: 10 },
-      team: 'hostile',
+      team: 'hostile' as const,
       hp: 80,
       maxHp: 80,
       sprite: 'soldier',
@@ -63,7 +63,7 @@ describe('Ao Language Integration Tests', () => {
     const unitWithComplexTrigger = {
       id: 'complex1',
       pos: { x: 10, y: 10 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 25, // Low health
       maxHp: 100,
       sprite: 'test',
@@ -81,7 +81,7 @@ describe('Ao Language Integration Tests', () => {
     sim.addUnit({
       id: 'enemy1',
       pos: { x: 12, y: 10 },
-      team: 'hostile',
+      team: 'hostile' as const,
       hp: 50,
       maxHp: 50,
       sprite: 'enemy',
@@ -91,7 +91,7 @@ describe('Ao Language Integration Tests', () => {
     sim.addUnit({
       id: 'enemy2',
       pos: { x: 10, y: 12 },
-      team: 'hostile',
+      team: 'hostile' as const,
       hp: 50,
       maxHp: 50,
       sprite: 'enemy',
@@ -122,7 +122,7 @@ describe('Ao Language Integration Tests', () => {
     const unitWithOptionalChaining = {
       id: 'optional1',
       pos: { x: 10, y: 10 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 100,
       maxHp: 100,
       sprite: 'test',
@@ -147,7 +147,7 @@ describe('Ao Language Integration Tests', () => {
     sim.addUnit({
       id: 'enemy1',
       pos: { x: 15, y: 10 },
-      team: 'hostile',
+      team: 'hostile' as const,
       hp: 60,
       maxHp: 60,
       sprite: 'enemy',
@@ -169,7 +169,7 @@ describe('Ao Language Integration Tests', () => {
     const ranger = {
       id: 'ranger1',
       pos: { x: 10, y: 10 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 100,
       maxHp: 100,
       sprite: 'ranger',
@@ -187,7 +187,7 @@ describe('Ao Language Integration Tests', () => {
     const closeEnemy = {
       id: 'close',
       pos: { x: 13, y: 10 },
-      team: 'hostile',
+      team: 'hostile' as const,
       hp: 50,
       maxHp: 50,
       sprite: 'enemy',
@@ -210,7 +210,7 @@ describe('Ao Language Integration Tests', () => {
     const goodEnemy = {
       id: 'good',
       pos: { x: 18, y: 10 },
-      team: 'hostile',
+      team: 'hostile' as const,
       hp: 50,
       maxHp: 50,
       sprite: 'enemy',
@@ -234,7 +234,7 @@ describe('Ao Language Integration Tests', () => {
     const unitWithAbilities = {
       id: 'multi1',
       pos: { x: 10, y: 10 },
-      team: 'friendly',
+      team: 'friendly' as const,
       hp: 100,
       maxHp: 100,
       sprite: 'test',

@@ -9,6 +9,7 @@
     "state": "idle",
     "hp": 25,
     "maxHp": 25,
+    "dmg": 3,
     "mass": 1,
     "tags": [
       "hunt"
@@ -24,6 +25,7 @@
     "state": "idle",
     "hp": 30,
     "maxHp": 30,
+    "dmg": 5,
     "mass": 1,
     "tags": [
       "hunt"
@@ -39,6 +41,7 @@
     "state": "idle",
     "hp": 20,
     "maxHp": 20,
+    "dmg": 2,
     "mass": 1,
     "abilities": [
       "heal",
@@ -55,6 +58,7 @@
     "state": "idle",
     "hp": 28,
     "maxHp": 28,
+    "dmg": 4,
     "mass": 1,
     "abilities": [
       "ranged"
@@ -70,6 +74,7 @@
     "state": "idle",
     "hp": 25,
     "maxHp": 25,
+    "dmg": 3,
     "mass": 1,
     "abilities": [
       "bombardier"
