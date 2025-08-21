@@ -21,7 +21,7 @@ export class UnitArrays {
 
   capacity: number;
 
-  constructor(capacity: number = 1000) {
+  constructor(capacity: number = 10000) {
     this.capacity = capacity;
 
     this.posX = new Float32Array(capacity);
@@ -56,7 +56,16 @@ export class UnitArrays {
     }
 
     if (index === -1) {
-      console.warn("UnitArrays: Capacity exceeded");
+      console.error(`UnitArrays: Capacity exceeded! Already have ${this.activeCount} units`);
+      // Log what units we have to debug
+      const unitCounts: Record<string, number> = {};
+      for (let i = 0; i < this.capacity; i++) {
+        if (this.active[i] === 1 && this.unitIds[i]) {
+          const type = this.unitIds[i].split('_')[0];
+          unitCounts[type] = (unitCounts[type] || 0) + 1;
+        }
+      }
+      console.error('Unit types:', unitCounts);
       return -1;
     }
 

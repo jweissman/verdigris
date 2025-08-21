@@ -354,6 +354,9 @@ class Simulator {
     this.projectiles = [];
     this.processedEvents = [];
     this.queuedCommands = [];
+    
+    // Reset tick counter
+    this.ticks = 0;
 
     this.commandProcessor = new CommandHandler(this, this.transform);
 
@@ -412,6 +415,13 @@ class Simulator {
     } as Unit;
 
     const index = this.unitArrays.addUnit(u);
+    
+    // Check if unit was successfully added
+    if (index === -1) {
+      // Capacity exceeded - return null instead of throwing
+      return null;
+    }
+    
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
     this.proxyManager.rebuildIndex(); // Ensure proxy index is updated
 
@@ -436,6 +446,12 @@ class Simulator {
   create(unit: Unit) {
     const newUnit = { ...unit, id: unit.id || `unit_${Date.now()}` };
     const index = this.unitArrays.addUnit(newUnit);
+    
+    // Check if unit was successfully added
+    if (index === -1) {
+      // Capacity exceeded - return null instead of throwing
+      return null;
+    }
 
     this.unitColdData.set(newUnit.id, {
       sprite: newUnit.sprite || "default",
