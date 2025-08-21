@@ -24,6 +24,20 @@ export class DSLCompiler {
     this.cache.set(expression, fn);
     return fn;
   }
+  
+  compileWithCachedUnits(expression: string, cachedUnits?: readonly Unit[]): CompiledExpression {
+    // Special version that accepts pre-cached units to avoid repeated getAllUnits calls
+    const fn = (unit: Unit, tickContext: TickContext) => {
+      const context = this.buildContextWithCache(unit, tickContext, cachedUnits);
+      return Ao.eval(expression, context);
+    };
+    return fn;
+  }
+
+  private buildContextWithCache(unit: Unit, tickContext: TickContext, cachedUnits?: readonly Unit[]): any {
+    const getUnits = () => cachedUnits || tickContext.getAllUnits();
+    return this.createContextObject(unit, tickContext, getUnits);
+  }
 
   private buildContext(unit: Unit, tickContext: TickContext): any {
     let unitsCache: readonly Unit[] | null = null;
@@ -33,7 +47,10 @@ export class DSLCompiler {
       }
       return unitsCache;
     };
-
+    return this.createContextObject(unit, tickContext, getUnits);
+  }
+  
+  private createContextObject(unit: Unit, tickContext: TickContext, getUnits: () => readonly Unit[]): any {
     return {
       self: unit,
       unit: unit,
