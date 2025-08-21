@@ -60,7 +60,12 @@ const runTournament = (unitTypes: string[], runsPerMatchup: number = 1) => {
       const timeElapsed = (now - startTime) / 1000;
       const timePerMatch = timeElapsed / current;
       const timeRemaining = ((total - current) * timePerMatch);
-      console.log(`Progress: ${current}/${total} (${percent}%) - Est. ${timeRemaining.toFixed(0)}s remaining`);
+      const matchesPerSecond = current / timeElapsed;
+      
+      console.log(`Progress: ${current}/${total} (${percent}%)` +
+                  ` - Elapsed: ${timeElapsed.toFixed(0)}s` +
+                  ` - Remaining: ${timeRemaining.toFixed(0)}s` +
+                  ` - Speed: ${matchesPerSecond.toFixed(1)} matches/sec`);
       lastReportTime = now;
     }
   };
