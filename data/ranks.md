@@ -1,3 +1,51 @@
+# Tourney 8-22-25
+
+=== Tournament Results ===
+Time elapsed: 21736.9s
+
+Team Rankings:
+  #1 farmer+priest: 95.7% win rate (671W/27L/3D) avg 232 steps
+  #2 farmer+mindmender: 94.6% win rate (663W/35L/3D) avg 293 steps
+  #3 farmer+grappler: 93.1% win rate (616W/46L/0D) avg 292 steps
+  #4 farmer+farmer: 92.7% win rate (650W/51L/0D) avg 209 steps
+  #5 farmer+druid: 91.0% win rate (638W/62L/1D) avg 293 steps
+  #6 farmer+mechanic: 90.9% win rate (637W/61L/3D) avg 288 steps
+  #7 farmer+soldier: 90.6% win rate (635W/49L/17D) avg 214 steps
+  #8 farmer+lancer: 90.4% win rate (634W/64L/3D) avg 290 steps
+  #9 farmer+skirmisher: 90.4% win rate (634W/64L/3D) avg 289 steps
+  #10 farmer+welder: 90.2% win rate (597W/62L/3D) avg 301 steps
+  #11 farmer+engineer: 90.2% win rate (632W/68L/1D) avg 288 steps
+  #12 farmer+naturalist: 90.0% win rate (631W/68L/2D) avg 289 steps
+  #13 farmer+wildmage: 90.0% win rate (631W/68L/2D) avg 289 steps
+  #14 farmer+naturist: 90.0% win rate (631W/68L/2D) avg 289 steps
+  #15 farmer+ranger: 90.0% win rate (631W/70L/0D) avg 285 steps
+  #16 farmer+fueler: 89.7% win rate (629W/71L/1D) avg 287 steps
+  #17 farmer+tamer: 89.7% win rate (629W/71L/1D) avg 287 steps
+  #18 farmer+tracker: 89.7% win rate (629W/71L/1D) avg 287 steps
+  #19 farmer+builder: 89.7% win rate (629W/71L/1D) avg 287 steps
+  #20 farmer+assembler: 89.7% win rate (625W/71L/1D) avg 288 steps
+
+Top Synergies:
+  farmer+ranger: +41.2% synergy bonus
+  farmer+priest: +40.0% synergy bonus
+  priest+soldier: +39.6% synergy bonus
+  farmer+mindmender: +39.6% synergy bonus
+  farmer+grappler: +38.2% synergy bonus
+  engineer+farmer: +38.1% synergy bonus
+  farmer+naturalist: +37.9% synergy bonus
+  farmer+naturist: +37.7% synergy bonus
+  builder+farmer: +37.7% synergy bonus
+  farmer+tracker: +37.7% synergy bonus
+
+Worst Anti-Synergies:
+  druid+mechatronist: -10.2% synergy penalty
+  druid+toymaker: -10.9% synergy penalty
+  soldier+toymaker: -12.1% synergy penalty
+  farmer+toymaker: -15.5% synergy penalty
+  farmer+mechatronist: -18.7% synergy penalty
+
+# Older results
+
 === 2v2 Tournament Results ===
 
 Team Rankings:
