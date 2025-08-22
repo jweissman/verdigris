@@ -10,6 +10,14 @@ export interface BodyPart {
   zIndex: number;    // Draw order
 }
 
+export interface AnchorPoint {
+  name: 'hand_l' | 'hand_r' | 'shoulder_l' | 'shoulder_r' | 'hip_l' | 'hip_r' | 'foot_l' | 'foot_r' | 'crown' | 'chest';
+  position: Vec2;    // World position of anchor
+  rotation: number;  // World rotation of anchor
+  partName: BodyPart['name']; // Which body part this anchor follows
+  localOffset: Vec2; // Offset from the body part's position
+}
+
 export interface RigAnimation {
   name: string;
   frames: BodyPartFrame[];
@@ -22,16 +30,34 @@ export interface BodyPartFrame {
   parts: Partial<Record<BodyPart['name'], Partial<BodyPart>>>;
 }
 
+export type WeaponType = 'sword' | 'spear' | 'axe' | 'bow' | 'shield' | 'staff' | 'none';
+
+export interface WeaponConfig {
+  type: WeaponType;
+  sprite: string;
+  offset: Vec2;      // Offset from hand anchor
+  rotation: number;  // Additional rotation
+  scale: number;
+  twoHanded?: boolean;
+}
+
 export class HeroRig {
   private parts: Map<BodyPart['name'], BodyPart>;
+  private anchors: Map<AnchorPoint['name'], AnchorPoint>;
   private animations: Map<string, RigAnimation>;
   private currentAnimation?: string;
   private animationTime: number = 0;
+  private currentWeapon: WeaponType = 'sword';
+  private weaponConfigs: Map<WeaponType, WeaponConfig>;
   
   constructor() {
     this.parts = new Map();
+    this.anchors = new Map();
     this.animations = new Map();
+    this.weaponConfigs = new Map();
     this.setupDefaultPose();
+    this.setupAnchors();
+    this.setupWeapons();
     this.setupAnimations();
   }
   
@@ -106,6 +132,153 @@ export class HeroRig {
       frame: 0,
       zIndex: 6
     });
+  }
+  
+  private setupAnchors() {
+    // Define anchor points relative to body parts
+    this.anchors.set('hand_l', {
+      name: 'hand_l',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'larm',
+      localOffset: { x: -4, y: 4 } // End of left arm
+    });
+    
+    this.anchors.set('hand_r', {
+      name: 'hand_r',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'rarm',
+      localOffset: { x: 4, y: 4 } // End of right arm
+    });
+    
+    this.anchors.set('shoulder_l', {
+      name: 'shoulder_l',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'torso',
+      localOffset: { x: -6, y: -2 }
+    });
+    
+    this.anchors.set('shoulder_r', {
+      name: 'shoulder_r',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'torso',
+      localOffset: { x: 6, y: -2 }
+    });
+    
+    this.anchors.set('hip_l', {
+      name: 'hip_l',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'torso',
+      localOffset: { x: -3, y: 6 }
+    });
+    
+    this.anchors.set('hip_r', {
+      name: 'hip_r',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'torso',
+      localOffset: { x: 3, y: 6 }
+    });
+    
+    this.anchors.set('foot_l', {
+      name: 'foot_l',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'lleg',
+      localOffset: { x: 0, y: 6 }
+    });
+    
+    this.anchors.set('foot_r', {
+      name: 'foot_r',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'rleg',
+      localOffset: { x: 0, y: 6 }
+    });
+    
+    this.anchors.set('crown', {
+      name: 'crown',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'head',
+      localOffset: { x: 0, y: -6 } // Top of head
+    });
+    
+    this.anchors.set('chest', {
+      name: 'chest',
+      position: { x: 0, y: 0 },
+      rotation: 0,
+      partName: 'torso',
+      localOffset: { x: 0, y: 0 } // Center of torso
+    });
+  }
+  
+  private setupWeapons() {
+    // Define weapon configurations
+    this.weaponConfigs.set('sword', {
+      type: 'sword',
+      sprite: 'hero-sword',
+      offset: { x: 4, y: 0 },
+      rotation: Math.PI / 4,
+      scale: 1
+    });
+    
+    this.weaponConfigs.set('spear', {
+      type: 'spear',
+      sprite: 'hero-spear',
+      offset: { x: 6, y: -2 },
+      rotation: Math.PI / 6,
+      scale: 1.2
+    });
+    
+    this.weaponConfigs.set('axe', {
+      type: 'axe',
+      sprite: 'hero-axe',
+      offset: { x: 3, y: 1 },
+      rotation: Math.PI / 3,
+      scale: 1
+    });
+    
+    this.weaponConfigs.set('bow', {
+      type: 'bow',
+      sprite: 'hero-bow',
+      offset: { x: 0, y: 0 },
+      rotation: 0,
+      scale: 1,
+      twoHanded: true
+    });
+    
+    this.weaponConfigs.set('shield', {
+      type: 'shield',
+      sprite: 'hero-shield',
+      offset: { x: -2, y: 0 },
+      rotation: 0,
+      scale: 1
+    });
+    
+    this.weaponConfigs.set('staff', {
+      type: 'staff',
+      sprite: 'hero-staff',
+      offset: { x: 2, y: -4 },
+      rotation: Math.PI / 8,
+      scale: 1.3,
+      twoHanded: true
+    });
+    
+    this.weaponConfigs.set('none', {
+      type: 'none',
+      sprite: '',
+      offset: { x: 0, y: 0 },
+      rotation: 0,
+      scale: 0
+    });
+    
+    // Apply default weapon
+    this.updateWeaponPart();
   }
   
   private setupAnimations() {
@@ -192,19 +365,66 @@ export class HeroRig {
       this.animationTime = this.animationTime % anim.duration;
     }
     
-    // Find current frame
-    let currentFrame: BodyPartFrame | undefined;
-    let nextFrame: BodyPartFrame | undefined;
-    
-    for (let i = 0; i < anim.frames.length; i++) {
-      if (anim.frames[i].tick <= this.animationTime) {
-        currentFrame = anim.frames[i];
-        nextFrame = anim.frames[i + 1] || (anim.loop ? anim.frames[0] : undefined);
+    // For breathing, use smooth sine interpolation
+    if (this.currentAnimation === 'breathing') {
+      this.applyBreathingInterpolation();
+    } else {
+      // Find current frame for other animations
+      let currentFrame: BodyPartFrame | undefined;
+      
+      for (let i = 0; i < anim.frames.length; i++) {
+        if (anim.frames[i].tick <= this.animationTime) {
+          currentFrame = anim.frames[i];
+        }
+      }
+      
+      if (currentFrame) {
+        this.applyFrame(currentFrame);
       }
     }
     
-    if (currentFrame) {
-      this.applyFrame(currentFrame);
+    // Update anchor positions based on body parts
+    this.updateAnchors();
+    
+    // Update weapon position to follow hand anchor
+    this.updateWeaponPart();
+  }
+  
+  private applyBreathingInterpolation() {
+    // Smooth breathing using cosine wave
+    const phase = (this.animationTime % 60) / 60; // 60 tick cycle
+    const breathAmount = (1 - Math.cos(phase * Math.PI * 2)) / 2; // 0 to 1
+    
+    // Debug
+    if (this.animationTime === 30) {
+      console.log('Debug at tick 30:', { phase, breathAmount, animationTime: this.animationTime });
+    }
+    
+    // Interpolate chest/torso
+    const torso = this.parts.get('torso');
+    if (torso) {
+      torso.offset.y = Math.round(-breathAmount * 3); // Rise by 3 pixels, rounded for clear change
+      torso.frame = Math.floor(breathAmount * 3) % 3; // Cycle through 3 frames
+    }
+    
+    // Interpolate head
+    const head = this.parts.get('head');
+    if (head) {
+      head.offset.y = Math.round(-8 - breathAmount * 2); // Rise with breathing
+      head.rotation = Math.sin(phase * Math.PI * 2) * 0.02; // Subtle tilt
+      head.frame = Math.floor(breathAmount * 3) % 3;
+    }
+    
+    // Arms move slightly with breathing
+    const larm = this.parts.get('larm');
+    const rarm = this.parts.get('rarm');
+    if (larm) {
+      larm.rotation = breathAmount * 0.05;
+      larm.frame = Math.floor(breathAmount * 3) % 3;
+    }
+    if (rarm) {
+      rarm.rotation = -breathAmount * 0.05;
+      rarm.frame = Math.floor(breathAmount * 3) % 3;
     }
   }
   
@@ -223,5 +443,75 @@ export class HeroRig {
   
   getPartByName(name: BodyPart['name']): BodyPart | undefined {
     return this.parts.get(name);
+  }
+  
+  getAnimationTime(): number {
+    return this.animationTime;
+  }
+  
+  private updateAnchors() {
+    // Update each anchor's world position based on its parent part
+    for (const [name, anchor] of this.anchors) {
+      const part = this.parts.get(anchor.partName);
+      if (part) {
+        // Calculate world position: part offset + local anchor offset
+        anchor.position = {
+          x: part.offset.x + anchor.localOffset.x,
+          y: part.offset.y + anchor.localOffset.y
+        };
+        anchor.rotation = part.rotation;
+      }
+    }
+  }
+  
+  getAnchor(name: AnchorPoint['name']): AnchorPoint | undefined {
+    return this.anchors.get(name);
+  }
+  
+  getAnchors(): AnchorPoint[] {
+    return Array.from(this.anchors.values());
+  }
+  
+  private updateWeaponPart() {
+    const config = this.weaponConfigs.get(this.currentWeapon);
+    if (!config) return;
+    
+    // Get hand anchor position
+    const handAnchor = this.anchors.get('hand_r');
+    if (!handAnchor) return;
+    
+    // Update sword part to match current weapon
+    const swordPart = this.parts.get('sword');
+    if (swordPart) {
+      if (config.type === 'none') {
+        // Hide weapon
+        swordPart.sprite = '';
+        swordPart.scale = 0;
+      } else {
+        // Position weapon at hand anchor
+        swordPart.sprite = config.sprite;
+        swordPart.offset = {
+          x: handAnchor.position.x + config.offset.x,
+          y: handAnchor.position.y + config.offset.y
+        };
+        swordPart.rotation = handAnchor.rotation + config.rotation;
+        swordPart.scale = config.scale;
+      }
+    }
+  }
+  
+  switchWeapon(weapon: WeaponType) {
+    if (this.weaponConfigs.has(weapon)) {
+      this.currentWeapon = weapon;
+      this.updateWeaponPart();
+    }
+  }
+  
+  getCurrentWeapon(): WeaponType {
+    return this.currentWeapon;
+  }
+  
+  getAvailableWeapons(): WeaponType[] {
+    return Array.from(this.weaponConfigs.keys());
   }
 }

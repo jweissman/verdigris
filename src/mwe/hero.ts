@@ -1,6 +1,7 @@
 import { Game } from "../core/game";
 import Input from "../core/input";
 import Encyclopaedia from "../dmg/encyclopaedia";
+import { HeroAnimation } from "../rules/hero_animation";
 
 export class HeroGame extends Game {
   private heroId: string = "hero_player";
@@ -11,7 +12,7 @@ export class HeroGame extends Game {
   
   // Movement state
   private keysHeld: Map<string, boolean> = new Map();
-  private moveSpeed: number = 0.2; // Faster movement
+  private moveSpeed: number = 0.15; // Gradual movement speed
   private lastMoveTime: number = 0;
   
   // Override tick rate for more responsive controls
@@ -54,7 +55,16 @@ export class HeroGame extends Game {
   private loadRooftopScene() {
     // Set background directly since sceneMetadata command doesn't exist yet
     this.sim.sceneBackground = "rooftop";
-    console.log('Rooftop scene loaded');
+    
+    // Add hero animation rule if not present
+    const hasHeroAnimation = this.sim.rulebook.some(
+      rule => rule.constructor.name === 'HeroAnimation'
+    );
+    if (!hasHeroAnimation) {
+      this.sim.rulebook.push(new HeroAnimation());
+    }
+    
+    console.log('Rooftop scene loaded with hero animation');
   }
   
   private spawnHero() {
@@ -76,7 +86,9 @@ export class HeroGame extends Game {
       meta: {
         controlled: true,
         facing: "right" as const,
-        scale: "hero" as const // Explicitly set hero scale for 48x48
+        scale: "hero" as const, // Explicitly set hero scale for 48x48
+        useRig: true, // Use modular body parts instead of single sprite
+        onRooftop: true // For wind effect
       }
     };
     
@@ -172,12 +184,8 @@ export class HeroGame extends Game {
   update() {
     super.update();
     
-    // Process continuous movement
-    const now = performance.now();
-    if (now - this.lastMoveTime > 1000 / 30) { // 30fps for movement
-      this.processContinuousMovement();
-      this.lastMoveTime = now;
-    }
+    // Process continuous movement every frame
+    this.processContinuousMovement();
   }
   
   private processContinuousMovement() {
@@ -198,16 +206,13 @@ export class HeroGame extends Game {
     const hero = this.sim.units.find(u => u.id === this.heroId);
     if (!hero || hero.meta?.jumping) return;
     
-    const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, hero.pos.x + dx));
-    const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, hero.pos.y + dy));
-    
-    // Use proper move command structure
+    // Use dx/dy for gradual movement, not x/y for teleporting
     this.sim.queuedCommands.push({
       type: "move",
       unitId: this.heroId,
       params: {
-        x: newX,
-        y: newY
+        dx: dx,
+        dy: dy
       }
     });
     

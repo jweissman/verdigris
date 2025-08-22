@@ -67,12 +67,61 @@ export default class Orthographic extends View {
     }
   }
 
+  private showRiggedUnit(unit: Unit) {
+    const renderPos = this.unitRenderer.getRenderPosition(
+      unit,
+      this.unitInterpolations,
+    );
+    
+    // Render each body part
+    const parts = unit.meta.rig;
+    if (!parts || !Array.isArray(parts)) return;
+    
+    for (const part of parts) {
+      const sprite = this.sprites.get(part.sprite);
+      if (!sprite || !sprite.complete) continue;
+      
+      // Calculate position for this part
+      const pixelX = Math.round(renderPos.x * 8 + part.offset.x);
+      const pixelY = Math.round(renderPos.y * 8 + part.offset.y - renderPos.z * 8);
+      
+      // Calculate frame position (3 frames at 16x16)
+      const frameX = part.frame * 16;
+      
+      this.ctx.save();
+      
+      // Apply rotation if needed
+      if (part.rotation) {
+        this.ctx.translate(pixelX + 8, pixelY + 8);
+        this.ctx.rotate(part.rotation);
+        this.ctx.translate(-8, -8);
+      } else {
+        this.ctx.translate(pixelX, pixelY);
+      }
+      
+      // Draw the sprite frame
+      this.ctx.drawImage(
+        sprite,
+        frameX, 0, 16, 16, // Source: 16x16 frame
+        0, 0, 16, 16 // Dest: 16x16 at translated position
+      );
+      
+      this.ctx.restore();
+    }
+  }
+  
   private showUnit(unit: Unit) {
     if (!this.unitRenderer.shouldRenderUnit(unit)) {
       return;
     }
 
     if (this.unitRenderer.shouldBlinkFromDamage(unit, this.animationTime)) {
+      return;
+    }
+    
+    // Check if unit has a rig (modular body parts)
+    if (unit.meta?.rig) {
+      this.showRiggedUnit(unit);
       return;
     }
 

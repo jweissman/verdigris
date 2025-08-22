@@ -144,7 +144,17 @@ export default class Isometric extends View {
   }
 
   private grid() {
-    return;
+    this.ctx.save();
+    this.ctx.fillStyle = 'rgba(100, 100, 100, 0.3)';
+    
+    for (let y = 0; y < this.sim.fieldHeight; y++) {
+      for (let x = 0; x < this.sim.fieldWidth; x++) {
+        const isoPos = this.toIsometric(x, y);
+        this.ctx.fillRect(isoPos.x - 1, isoPos.y - 1, 2, 2);
+      }
+    }
+    
+    this.ctx.restore();
   }
 
   private showUnit(unit: Unit) {
