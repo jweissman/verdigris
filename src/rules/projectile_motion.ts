@@ -12,14 +12,24 @@ export class ProjectileMotion extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
     const projectiles = context.getProjectiles();
+    
+    // Early exit if no projectiles
+    if (projectiles.length === 0) return this.commands;
+    
     const arrays = context.getArrays();
 
     for (const projectile of projectiles) {
       const radiusSq = (projectile.radius || 1) * (projectile.radius || 1);
 
       if (projectile.type === "grapple") {
+        const radius = projectile.radius || 1;
         for (const idx of arrays.activeIndices) {
           if (arrays.hp[idx] <= 0) continue;
+
+          // Quick Manhattan distance check first
+          const absDx = Math.abs(arrays.posX[idx] - projectile.pos.x);
+          const absDy = Math.abs(arrays.posY[idx] - projectile.pos.y);
+          if (absDx > radius || absDy > radius) continue;
 
           const dx = arrays.posX[idx] - projectile.pos.x;
           const dy = arrays.posY[idx] - projectile.pos.y;
@@ -56,6 +66,12 @@ export class ProjectileMotion extends Rule {
         for (const idx of arrays.activeIndices) {
           if (arrays.team[idx] === projectileTeam || arrays.hp[idx] <= 0)
             continue;
+
+          // Quick Manhattan distance check first (cheaper than Euclidean)
+          const absDx = Math.abs(arrays.posX[idx] - projectile.pos.x);
+          const absDy = Math.abs(arrays.posY[idx] - projectile.pos.y);
+          const radius = projectile.radius || 1;
+          if (absDx > radius || absDy > radius) continue;
 
           const dx = arrays.posX[idx] - projectile.pos.x;
           const dy = arrays.posY[idx] - projectile.pos.y;

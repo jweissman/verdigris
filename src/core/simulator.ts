@@ -1765,6 +1765,9 @@ class Simulator {
     const primaryTarget = target || unit;
 
     (abilitiesRule as any).commands = [];
+    
+    // Ensure cached units are populated for domainBuff effects
+    (abilitiesRule as any).cachedAllUnits = context.getAllUnits();
 
     for (const effect of jsonAbility.effects) {
       (abilitiesRule as Abilities).processEffectAsCommand(

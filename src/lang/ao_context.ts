@@ -165,30 +165,38 @@ export class StandardHelpers {
     return {
       closest: {
         enemy: () => {
-          let closest = null, minDist = Infinity;
-          for (const e of getUnits()) {
+          let closest = null, minDistSq = Infinity;
+          const units = getUnits();
+          for (let i = 0; i < units.length; i++) {
+            const e = units[i];
             if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
               const distSq = dx * dx + dy * dy;
-              if (distSq < minDist) {
-                minDist = distSq;
+              if (distSq < minDistSq) {
+                minDistSq = distSq;
                 closest = e;
+                // Early termination if very close
+                if (distSq < 4) break; // Stop if distance < 2
               }
             }
           }
           return closest;
         },
         ally: () => {
-          let closest = null, minDist = Infinity;
-          for (const a of getUnits()) {
+          let closest = null, minDistSq = Infinity;
+          const units = getUnits();
+          for (let i = 0; i < units.length; i++) {
+            const a = units[i];
             if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0) {
               const dx = a.pos.x - unit.pos.x;
               const dy = a.pos.y - unit.pos.y;
               const distSq = dx * dx + dy * dy;
-              if (distSq < minDist) {
-                minDist = distSq;
+              if (distSq < minDistSq) {
+                minDistSq = distSq;
                 closest = a;
+                // Early termination if very close
+                if (distSq < 4) break;
               }
             }
           }
@@ -248,11 +256,17 @@ export class StandardHelpers {
         enemies_in_range: (range: number) => {
           const rangeSq = range * range;
           let count = 0;
-          for (const e of getUnits()) {
+          const units = getUnits();
+          for (let i = 0; i < units.length; i++) {
+            const e = units[i];
             if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
-              const dx = e.pos.x - unit.pos.x;
-              const dy = e.pos.y - unit.pos.y;
-              if (dx * dx + dy * dy <= rangeSq) count++;
+              // Quick Manhattan distance check first (cheaper)
+              const absDx = Math.abs(e.pos.x - unit.pos.x);
+              const absDy = Math.abs(e.pos.y - unit.pos.y);
+              if (absDx <= range && absDy <= range) {
+                const distSq = absDx * absDx + absDy * absDy;
+                if (distSq <= rangeSq) count++;
+              }
             }
           }
           return count;

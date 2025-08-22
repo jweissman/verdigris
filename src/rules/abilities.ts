@@ -517,7 +517,7 @@ export class Abilities extends Rule {
 
     if (typeof targetExpression === "string") {
       try {
-        const compiledFn = dslCompiler.compile(targetExpression);
+        const compiledFn = dslCompiler.compileWithCachedUnits(targetExpression, this.cachedAllUnits);
         return compiledFn(caster, context);
       } catch (error) {
         console.warn(`Failed to resolve target '${targetExpression}':`, error);
@@ -536,7 +536,7 @@ export class Abilities extends Rule {
   ): any {
     if (typeof value === "string") {
       try {
-        const compiledFn = dslCompiler.compile(value);
+        const compiledFn = dslCompiler.compileWithCachedUnits(value, this.cachedAllUnits);
         return compiledFn(caster, context);
       } catch (error) {
         console.warn(`Failed to resolve DSL value '${value}':`, error);
@@ -577,7 +577,7 @@ export class Abilities extends Rule {
             : value.$conditional.else;
         }
 
-        const compiledCondition = dslCompiler.compile(condition);
+        const compiledCondition = dslCompiler.compileWithCachedUnits(condition, this.cachedAllUnits);
         const conditionResult = compiledCondition(caster, context);
         return conditionResult
           ? value.$conditional.then
@@ -1528,11 +1528,8 @@ export class Abilities extends Rule {
     const radius =
       this.resolveValue(context, effect.radius, caster, target) || 3;
 
-    // Use cached units, but fallback if they're unexpectedly empty (should investigate why)
-    if (this.cachedAllUnits.length === 0) {
-      console.warn('cachedAllUnits is empty in domainBuff, falling back to getAllUnits - this should be investigated');
-    }
-    const allUnitsForSearch = this.cachedAllUnits.length > 0 ? this.cachedAllUnits : context.getAllUnits();
+    // Always use cached units - they should be populated by execute()
+    const allUnitsForSearch = this.cachedAllUnits;
     const unitsInArea = allUnitsForSearch.filter((u) => {
       const dist = Math.sqrt(
         Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
@@ -1541,6 +1538,13 @@ export class Abilities extends Rule {
 
       if (effect.condition && typeof effect.condition === "string") {
         try {
+          // Quick check for common conditions
+          if (effect.condition === "target.tags.includes('mechanical')") {
+            return u.tags?.includes("mechanical");
+          }
+          if (effect.condition === "target.tags.includes('construct')") {
+            return u.tags?.includes("construct");
+          }
           if (effect.condition.includes("mechanical")) {
             return u.tags?.includes("mechanical");
           }
@@ -1549,7 +1553,7 @@ export class Abilities extends Rule {
           }
 
           const safeUnit = { ...u, tags: u.tags || [] };
-          const compiledCondition = dslCompiler.compile(effect.condition);
+          const compiledCondition = dslCompiler.compileWithCachedUnits(effect.condition, this.cachedAllUnits);
           // cachedUnits already set above
           return compiledCondition(safeUnit, context);
         } catch (error) {

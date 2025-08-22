@@ -41,9 +41,9 @@ export class RangedCombat extends Rule {
       const unitY = posY[idx];
 
       let closestEnemyIdx = -1;
-      let minDistSq = 36; // 6² - reduced max range for better performance
+      let minDistSq = 36; // 6² - original max range
 
-      // Optimized enemy search with early termination
+      // Optimized enemy search with early termination  
       for (const enemyIdx of activeIndices) {
         if (enemyIdx === idx) continue;
         if (state[enemyIdx] === 5 || hp[enemyIdx] <= 0) continue;
@@ -58,7 +58,7 @@ export class RangedCombat extends Rule {
         const dy = posY[enemyIdx] - unitY;
         const distSq = dx * dx + dy * dy;
 
-        if (distSq <= 4 || distSq > 36) continue; // 2² to 6² (reduced range)
+        if (distSq <= 4 || distSq > 36) continue; // 2² to 6² range
 
         if (distSq < minDistSq) {
           minDistSq = distSq;
