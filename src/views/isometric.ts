@@ -173,6 +173,7 @@ export default class Isometric extends View {
     if (recentDamage && Math.floor(this.animationTime / 100) % 2 === 0) {
       return;
     }
+    
 
     let renderX = unit.pos.x;
     let renderY = unit.pos.y;
@@ -257,22 +258,28 @@ export default class Isometric extends View {
         this.ctx.translate(-screenX * 2, 0);
       }
 
-      this.ctx.drawImage(
-        sprite,
-        frameX,
-        0,
-        spriteWidth,
-        spriteHeight,
-        pixelX,
-        realPixelY,
-        spriteWidth,
-        spriteHeight,
-      );
-
       this.ctx.restore();
+      
+      // Use centralized unit renderer
+      this.unitRenderer.renderUnit(
+        this.ctx,
+        unit,
+        this.sprites,
+        screenX,
+        screenY - renderZ * 8,
+        {
+          flipHorizontal: shouldFlip
+        }
+      );
     } else {
-      this.ctx.fillStyle = unit.sprite === "worm" ? "green" : "blue";
-      this.ctx.fillRect(pixelX, realPixelY, 8, 8);
+      // Use centralized fallback rendering
+      this.unitRenderer.renderUnit(
+        this.ctx,
+        unit,
+        this.sprites,
+        screenX,
+        realPixelY + 4
+      );
     }
 
     if (typeof unit.hp === "number" && unit.hp < unit.maxHp) {

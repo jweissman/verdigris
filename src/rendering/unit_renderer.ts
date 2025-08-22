@@ -195,6 +195,108 @@ export class UnitRenderer {
   }
 
   /**
+   * Main unit rendering method
+   */
+  renderUnit(
+    ctx: CanvasRenderingContext2D,
+    unit: Unit,
+    sprites: Map<string, HTMLImageElement>,
+    screenX: number,
+    screenY: number,
+    options?: {
+      scale?: number;
+      showShadow?: boolean;
+      flipHorizontal?: boolean;
+    }
+  ) {
+    // Handle rigged units (modular body parts)
+    if (unit.meta?.rig) {
+      this.renderRiggedUnit(ctx, unit, sprites, screenX, screenY, options);
+      return;
+    }
+    
+    // Normal sprite rendering
+    const sprite = sprites.get(unit.sprite || unit.type);
+    if (!sprite || !sprite.complete) {
+      // Fallback to colored square
+      ctx.fillStyle = this.getUnitColor(unit);
+      ctx.fillRect(screenX - 8, screenY - 8, 16, 16);
+      return;
+    }
+    
+    const dimensions = this.getSpriteDimensions(unit);
+    const frameWidth = dimensions.width;
+    const frameCount = Math.floor(sprite.width / frameWidth);
+    const frame = Math.floor(Date.now() / 200) % frameCount;
+    
+    ctx.save();
+    
+    if (options?.flipHorizontal) {
+      ctx.scale(-1, 1);
+      ctx.translate(-screenX * 2 - frameWidth, 0);
+    }
+    
+    ctx.drawImage(
+      sprite,
+      frame * frameWidth, 0, frameWidth, dimensions.height,
+      screenX - frameWidth / 2, screenY - dimensions.height / 2,
+      frameWidth, dimensions.height
+    );
+    
+    ctx.restore();
+  }
+  
+  /**
+   * Render unit with modular body parts
+   */
+  private renderRiggedUnit(
+    ctx: CanvasRenderingContext2D,
+    unit: Unit,
+    sprites: Map<string, HTMLImageElement>,
+    centerX: number,
+    centerY: number,
+    options?: any
+  ) {
+    const parts = unit.meta.rig;
+    if (!parts || !Array.isArray(parts)) return;
+    
+    for (const part of parts) {
+      const sprite = sprites.get(part.sprite);
+      if (!sprite || !sprite.complete) {
+        console.warn(`Missing sprite for ${part.name}: ${part.sprite}`);
+        continue;
+      }
+      
+      // Calculate position for this part
+      const pixelX = centerX + part.offset.x;
+      const pixelY = centerY + part.offset.y;
+      
+      // Calculate frame position (3 frames at 16x16)
+      const frameX = part.frame * 16;
+      
+      ctx.save();
+      
+      // Apply rotation if needed
+      if (part.rotation) {
+        ctx.translate(pixelX, pixelY);
+        ctx.rotate(part.rotation);
+        ctx.translate(-8, -8);
+      } else {
+        ctx.translate(pixelX - 8, pixelY - 8);
+      }
+      
+      // Draw the sprite frame
+      ctx.drawImage(
+        sprite,
+        frameX, 0, 16, 16, // Source: 16x16 frame
+        0, 0, 16, 16 // Dest: 16x16
+      );
+      
+      ctx.restore();
+    }
+  }
+  
+  /**
    * Get unit color for fallback rendering
    */
   getUnitColor(unit: Unit): string {

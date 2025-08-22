@@ -21,6 +21,7 @@ import { StrikeCommand } from "../commands/strike";
 import { CleanupCommand } from "../commands/cleanup";
 import { RemoveCommand } from "../commands/remove";
 import { MoveCommand } from "../commands/move";
+import { HeroCommand } from "../commands/hero_command";
 import { KnockbackCommand } from "../commands/knockback";
 
 import {
@@ -96,6 +97,7 @@ export class CommandHandler {
     this.commands.set("remove", new RemoveCommand(sim));
     this.commands.set("move", new MoveCommand(sim));
     this.commands.set("moves", new MovesCommand(sim));
+    this.commands.set("hero", new HeroCommand(sim));
     this.commands.set("knockback", new KnockbackCommand(sim));
 
     this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim));

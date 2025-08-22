@@ -1,4 +1,22 @@
 {
+  "hero": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "hero",
+    "state": "idle",
+    "hp": 100,
+    "maxHp": 100,
+    "dmg": 15,
+    "mass": 10,
+    "tags": ["hero"],
+    "meta": {
+      "scale": "hero",
+      "useRig": true
+    }
+  },
   "worm": {
     "intendedMove": {
       "x": 0,

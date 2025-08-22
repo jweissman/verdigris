@@ -83,6 +83,22 @@ import assembler from "../assets/sprites/assembler.png";
 // @ts-ignore
 import champion from "../assets/sprites/champion.png";
 
+// Hero body parts (16x16, 3 frames each)
+// @ts-ignore
+import heroHead from "../assets/sprites/hero-head.png";
+// @ts-ignore
+import heroTorso from "../assets/sprites/hero-torso.png";
+// @ts-ignore
+import heroLarm from "../assets/sprites/hero-larm.png";
+// @ts-ignore
+import heroRarm from "../assets/sprites/hero-rarm.png";
+// @ts-ignore
+import heroLleg from "../assets/sprites/hero-lleg.png";
+// @ts-ignore
+import heroRleg from "../assets/sprites/hero-rleg.png";
+// @ts-ignore
+import heroSword from "../assets/sprites/hero-sword.png";
+
 // @ts-ignore
 import lakeBg from "../assets/bg/lake.png";
 // @ts-ignore
@@ -233,6 +249,14 @@ class Game {
     { name: "assembler", src: assembler },
     { name: "champion", src: champion },
     { name: "cell-effects", src: cellEffects },
+    // Hero body parts
+    { name: "hero-head", src: heroHead },
+    { name: "hero-torso", src: heroTorso },
+    { name: "hero-larm", src: heroLarm },
+    { name: "hero-rarm", src: heroRarm },
+    { name: "hero-lleg", src: heroLleg },
+    { name: "hero-rleg", src: heroRleg },
+    { name: "hero-sword", src: heroSword },
   ];
 
   static backgroundList = [

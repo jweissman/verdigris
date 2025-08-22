@@ -79,7 +79,17 @@ export default class Orthographic extends View {
     
     for (const part of parts) {
       const sprite = this.sprites.get(part.sprite);
-      if (!sprite || !sprite.complete) continue;
+      if (!sprite || !sprite.complete) {
+        console.warn(`Missing sprite for part ${part.name}: ${part.sprite}`, sprite);
+        // Draw blue square as fallback
+        this.ctx.fillStyle = 'blue';
+        this.ctx.fillRect(
+          renderPos.x * 8 + part.offset.x,
+          renderPos.y * 8 + part.offset.y - renderPos.z * 8,
+          16, 16
+        );
+        continue;
+      }
       
       // Calculate position for this part
       const pixelX = Math.round(renderPos.x * 8 + part.offset.x);

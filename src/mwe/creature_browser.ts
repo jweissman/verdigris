@@ -24,6 +24,7 @@ export class CreatureBrowser {
 
   private loadCreatures(): void {
     const creatureTypes = [
+      "hero",
       "farmer",
       "soldier",
       "worm",
