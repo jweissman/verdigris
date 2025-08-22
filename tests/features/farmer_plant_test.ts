@@ -45,8 +45,8 @@ describe('Farmer Plant Ability', () => {
       });
       
       // Verify bush properties
-      expect(bush.hp).toBe(15);
-      expect(bush.mass).toBe(5);
+      expect(bush.hp).toBe(1);
+      expect(bush.mass).toBe(1);
       expect(bush.team).toBe(farmer.team);
       expect(bush.tags).toContain('obstacle');
     }

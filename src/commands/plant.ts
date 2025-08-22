@@ -35,10 +35,10 @@ export class PlantCommand extends Command {
       team: unit.team,
       state: 'idle' as const,
       sprite: 'bush',
-      hp: 15,
-      maxHp: 15,
+      hp: 1,
+      maxHp: 1,
       dmg: 0,
-      mass: 5, // Bushes are heavy and block movement
+      mass: 1, // Minimal obstacle
       abilities: [],
       tags: ['terrain', 'plant', 'obstacle'],
       meta: {

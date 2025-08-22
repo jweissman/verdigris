@@ -1,7 +1,7 @@
 {
   "plant": {
     "name": "Plant Bush",
-    "cooldown": 20,
+    "cooldown": 60,
     "effects": [
       {
         "type": "plant",
