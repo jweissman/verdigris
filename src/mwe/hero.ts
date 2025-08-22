@@ -31,8 +31,6 @@ export class HeroGame extends Game {
     // Wait a bit for sprites to load
     setTimeout(() => {
       this.spawnHero();
-      console.log('Hero spawned with rooftop background');
-      console.log('Controls: Arrow keys/WASD: move, Space: jump, Click: attack, B: cycle background');
     }, 100);
   }
   
