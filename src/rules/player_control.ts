@@ -7,15 +7,13 @@ export class PlayerControl extends Rule {
   
   constructor() {
     super();
-    
-    if (typeof document !== 'undefined') {
-      document.addEventListener('keydown', (e) => {
-        this.keysHeld.add(e.key.toLowerCase());
-      });
-      
-      document.addEventListener('keyup', (e) => {
-        this.keysHeld.delete(e.key.toLowerCase());
-      });
+  }
+  
+  setKeyState(key: string, pressed: boolean) {
+    if (pressed) {
+      this.keysHeld.add(key.toLowerCase());
+    } else {
+      this.keysHeld.delete(key.toLowerCase());
     }
   }
   
@@ -26,22 +24,27 @@ export class PlayerControl extends Rule {
     // Find player-controlled units
     for (const unit of allUnits) {
       if (unit.meta?.controlled || unit.tags?.includes('hero')) {
-        // Calculate movement from held keys
-        let dx = 0;
-        let dy = 0;
-        
-        // Faster movement speed
-        if (this.keysHeld.has('w') || this.keysHeld.has('arrowup')) dy = -1;
-        if (this.keysHeld.has('s') || this.keysHeld.has('arrowdown')) dy = 1;
-        if (this.keysHeld.has('a') || this.keysHeld.has('arrowleft')) dx = -1;
-        if (this.keysHeld.has('d') || this.keysHeld.has('arrowright')) dx = 1;
-        
-        if (dx !== 0 || dy !== 0) {
-          commands.push({
-            type: 'move',
-            unitId: unit.id,
-            params: { dx, dy }
-          });
+        // Only move if unit is not already moving
+        if (unit.intendedMove.x === 0 && unit.intendedMove.y === 0) {
+          // Calculate movement from held keys
+          let action = '';
+          
+          if (this.keysHeld.has('w') || this.keysHeld.has('arrowup')) {
+            action = 'up';
+          } else if (this.keysHeld.has('s') || this.keysHeld.has('arrowdown')) {
+            action = 'down';
+          } else if (this.keysHeld.has('a') || this.keysHeld.has('arrowleft')) {
+            action = 'left';
+          } else if (this.keysHeld.has('d') || this.keysHeld.has('arrowright')) {
+            action = 'right';
+          }
+          
+          if (action) {
+            commands.push({
+              type: 'hero',
+              params: { action }
+            });
+          }
         }
         
         // Handle jump

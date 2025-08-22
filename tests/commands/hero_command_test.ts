@@ -55,7 +55,7 @@ describe('Hero Command', () => {
     
     const leftHero = sim.units.find(u => u.id === 'move_hero');
     console.log('After hero left:', leftHero?.pos, 'intendedMove:', leftHero?.intendedMove);
-    // First step sets intendedMove
+    // First step sets intendedMove  
     expect(leftHero?.intendedMove.x).toBe(-1);
     
     sim.step(); // Second step applies movement

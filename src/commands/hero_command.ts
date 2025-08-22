@@ -52,7 +52,7 @@ export class HeroCommand extends Command {
           break;
           
         case 'left':
-          // Simple left movement
+          // Normal horizontal movement
           this.sim.queuedCommands.push({
             type: 'move',
             unitId: hero.id,
@@ -61,7 +61,7 @@ export class HeroCommand extends Command {
           break;
           
         case 'right':
-          // Simple right movement
+          // Normal horizontal movement
           this.sim.queuedCommands.push({
             type: 'move',
             unitId: hero.id,
@@ -70,18 +70,20 @@ export class HeroCommand extends Command {
           break;
           
         case 'up':
+          // Move 2 cells vertically to compensate for hex offset
           this.sim.queuedCommands.push({
             type: 'move',
             unitId: hero.id,
-            params: { dx: 0, dy: -1 }
+            params: { dx: 0, dy: -2 }
           });
           break;
           
         case 'down':
+          // Move 2 cells vertically to compensate for hex offset
           this.sim.queuedCommands.push({
             type: 'move',
             unitId: hero.id,
-            params: { dx: 0, dy: 1 }
+            params: { dx: 0, dy: 2 }
           });
           break;
           

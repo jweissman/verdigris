@@ -3,12 +3,15 @@ import { HeroAnimation } from "../rules/hero_animation";
 import { PlayerControl } from "../rules/player_control";
 
 export class HeroGame extends Game {
+  private playerControl: PlayerControl;
+  
   bootstrap() {
     super.bootstrap();
     this.renderer.setViewMode("iso");
     
     // Add player control rule
-    this.sim.rulebook.push(new PlayerControl());
+    this.playerControl = new PlayerControl();
+    this.sim.rulebook.push(this.playerControl);
     this.sim.rulebook.push(new HeroAnimation());
     
     // Set background
@@ -54,12 +57,7 @@ export class HeroGame extends Game {
         : (document.getElementById(canvasId) as HTMLCanvasElement);
     if (canvas) {
       let addInputListener = (cb: (e: { key: string; type?: string }) => void) => {
-        document.addEventListener("keydown", (e) => {
-          cb({ key: e.key, type: 'keydown' });
-        });
-        document.addEventListener("keyup", (e) => {
-          cb({ key: e.key, type: 'keyup' });
-        });
+        // Don't add listeners here - handle input directly
       };
 
       game = new HeroGame(canvas, {
@@ -78,6 +76,19 @@ export class HeroGame extends Game {
       }
 
       game.bootstrap();
+      
+      // Set up input handling
+      document.addEventListener("keydown", (e) => {
+        if (game && game.playerControl) {
+          game.playerControl.setKeyState(e.key, true);
+        }
+      });
+      
+      document.addEventListener("keyup", (e) => {
+        if (game && game.playerControl) {
+          game.playerControl.setKeyState(e.key, false);
+        }
+      });
     } else {
       console.error(`Canvas element ${canvasId} not found!`);
     }
