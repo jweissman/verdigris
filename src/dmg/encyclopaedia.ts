@@ -20,12 +20,13 @@ export default class Encyclopaedia {
   }
 
   static unit(beast: string): Unit {
-    let u = {
+    let u: any = {
       id: beast + this.id(beast),
       type: beast,
       pos: { x: 0, y: 0 }, // Default position, will be overridden when placing
       intendedMove: { x: 0, y: 0 },
       state: "idle" as UnitState,
+      team: "neutral" as const, // Default team
       // Don't override team from bestiary data
       ...this.bestiary[beast],
       hp: this.bestiary[beast]?.hp || 10, // Default HP if not specified

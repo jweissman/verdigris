@@ -10,8 +10,9 @@ export class HeroGame extends Game {
   input: Input = new Input(this.sim, this.renderer);
   
   // Movement state
-  private keysHeld: Set<string> = new Set();
-  private jumpBufferTime: number = 0;
+  private keysHeld: Map<string, boolean> = new Map();
+  private moveSpeed: number = 0.2; // Faster movement
+  private lastMoveTime: number = 0;
   
   // Override tick rate for more responsive controls
   protected simTickRate: number = 60; // 60fps for maximum responsiveness
@@ -22,11 +23,32 @@ export class HeroGame extends Game {
     this.renderer.setViewMode("iso");
     // Load rooftop background scene
     this.loadRooftopScene();
+    
+    // Setup click handler for attacks
+    this.setupClickHandler();
+    
     // Wait a bit for sprites to load
     setTimeout(() => {
       this.spawnHero();
       console.log('Hero spawned with rooftop background');
+      console.log('Controls: Arrow keys/WASD: move, Space: jump, Click: attack, B: cycle background');
     }, 100);
+  }
+  
+  private setupClickHandler() {
+    if (this.canvas) {
+      this.canvas.addEventListener('click', (e) => {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Convert screen coords to world coords
+        const worldPos = this.renderer.screenToWorld(x, y);
+        if (worldPos) {
+          this.attackToward(worldPos.x, worldPos.y);
+        }
+      });
+    }
   }
   
   private loadRooftopScene() {
@@ -99,46 +121,77 @@ export class HeroGame extends Game {
     console.log(`Spawned ${enemies.length} enemies`);
   }
   
-  getInputHandler(): (e: { key: string }) => void {
+  getInputHandler(): (e: { key: string; type?: string }) => void {
     return (e) => {
       const hero = this.sim.units.find(u => u.id === this.heroId);
       if (!hero) return;
       
-      switch(e.key.toLowerCase()) {
-        case 'w':
-          this.moveHero(0, -1);
-          break;
-        case 'a':
-          this.moveHero(-1, 0);
-          break;
-        case 's':
-          this.moveHero(0, 1);
-          break;
-        case 'd':
-          this.moveHero(1, 0);
-          break;
-        case ' ':
-          this.jumpHero();
-          break;
-        case 'q':
-          this.useAbility('groundPound');
-          break;
-        case 'e':
-          this.strikeHero();
-          break;
-        case 'f':
-          this.useAbility('heroicLeap');
-          break;
-        case 'r':
-          this.resetScene();
-          break;
-        case 'b':
-          this.cycleBackground();
-          break;
-        default:
-          super.getInputHandler()(e);
+      const key = e.key.toLowerCase();
+      const isKeyDown = e.type === 'keydown';
+      const isKeyUp = e.type === 'keyup';
+      
+      // Handle key state for continuous movement
+      if (isKeyDown) {
+        this.keysHeld.set(key, true);
+      } else if (isKeyUp) {
+        this.keysHeld.delete(key);
+      }
+      
+      // Handle single-press actions
+      if (isKeyDown) {
+        switch(key) {
+          case ' ':
+            this.jumpHero();
+            break;
+          case 'e':
+            this.strikeHero();
+            break;
+          case 'r':
+            this.resetScene();
+            break;
+          case 'b':
+            this.cycleBackground();
+            break;
+          case 'arrowup':
+            this.keysHeld.set('w', true);
+            break;
+          case 'arrowdown':
+            this.keysHeld.set('s', true);
+            break;
+          case 'arrowleft':
+            this.keysHeld.set('a', true);
+            break;
+          case 'arrowright':
+            this.keysHeld.set('d', true);
+            break;
+        }
       }
     };
+  }
+  
+  update() {
+    super.update();
+    
+    // Process continuous movement
+    const now = performance.now();
+    if (now - this.lastMoveTime > 1000 / 30) { // 30fps for movement
+      this.processContinuousMovement();
+      this.lastMoveTime = now;
+    }
+  }
+  
+  private processContinuousMovement() {
+    let dx = 0;
+    let dy = 0;
+    
+    if (this.keysHeld.get('w') || this.keysHeld.get('arrowup')) dy = -1;
+    if (this.keysHeld.get('s') || this.keysHeld.get('arrowdown')) dy = 1;
+    if (this.keysHeld.get('a') || this.keysHeld.get('arrowleft')) dx = -1;
+    if (this.keysHeld.get('d') || this.keysHeld.get('arrowright')) dx = 1;
+    
+    if (dx !== 0 || dy !== 0) {
+      this.moveHero(dx * this.moveSpeed, dy * this.moveSpeed);
+    }
   }
   
   private moveHero(dx: number, dy: number) {
@@ -233,6 +286,31 @@ export class HeroGame extends Game {
     
     console.log(`Background changed to: ${newBg}`);
   }
+  
+  private attackToward(worldX: number, worldY: number) {
+    const hero = this.sim.units.find(u => u.id === this.heroId);
+    if (!hero) return;
+    
+    // Calculate direction to target
+    const dx = worldX - hero.pos.x;
+    const dy = worldY - hero.pos.y;
+    
+    // Update facing based on attack direction
+    if (Math.abs(dx) > 0.1) {
+      this.sim.queuedCommands.push({
+        type: "meta",
+        unitId: this.heroId,
+        params: {
+          meta: {
+            facing: dx > 0 ? "right" : "left"
+          }
+        }
+      });
+    }
+    
+    // Perform strike
+    this.strikeHero();
+  }
 
   static boot(canvasId: string | HTMLCanvasElement = "battlefield") {
     let game: HeroGame | null = null;
@@ -241,9 +319,12 @@ export class HeroGame extends Game {
         ? canvasId
         : (document.getElementById(canvasId) as HTMLCanvasElement);
     if (canvas) {
-      let addInputListener = (cb: (e: { key: string }) => void) => {
+      let addInputListener = (cb: (e: { key: string; type?: string }) => void) => {
         document.addEventListener("keydown", (e) => {
-          cb({ key: e.key });
+          cb({ key: e.key, type: 'keydown' });
+        });
+        document.addEventListener("keyup", (e) => {
+          cb({ key: e.key, type: 'keyup' });
         });
       };
 

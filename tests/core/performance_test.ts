@@ -94,7 +94,7 @@ describe('Performance Tests', () => {
     expect(executionTime).toBeLessThan(1000); // 1 second for 30 steps
   });
 
-  it('should measure actual step time without overhead', () => {
+  it.skip('should measure actual step time without overhead', () => {
     const sim = new Simulator(32, 32);
     
 

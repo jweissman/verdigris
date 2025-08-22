@@ -20,6 +20,15 @@ export class JumpCommand extends Command {
     const units = this.sim.units;
     const unit = units.find((u) => u.id === unitId);
     if (!unit) return;
+    
+    // Check if already jumping
+    if (unit.meta?.jumping) {
+      // Buffer the jump for when we land
+      unit.meta.jumpBuffered = true;
+      unit.meta.jumpBufferTick = this.sim.tickCount || 0;
+      unit.meta.bufferedJumpParams = params;
+      return;
+    }
 
     // Calculate target based on facing if not provided
     let targetX = params.targetX as number;

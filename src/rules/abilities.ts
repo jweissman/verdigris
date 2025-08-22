@@ -99,6 +99,7 @@ export class Abilities extends Rule {
     const useArrays = arrays?.posX && arrays?.posY && arrays?.team;
 
     const allUnits = context.getAllUnits();
+    this.cachedAllUnits = allUnits; // Cache immediately for all subsequent operations
     
     // Recompile abilities with cached units for this tick
     this.recompileAbilitiesWithCache(allUnits, currentTick);
@@ -126,8 +127,7 @@ export class Abilities extends Rule {
       return this.commands;
     }
 
-    this.cachedAllUnits = allUnits; // Cache for DSL operations
-
+    // Already cached above
     (context as any).cachedUnits = allUnits;
 
     const hostileUnits = allUnits.filter(
@@ -488,6 +488,9 @@ export class Abilities extends Rule {
         break;
       case "move":
         this.move(context, effect, caster, primaryTarget);
+        break;
+      case "plant":
+        this.plant(context, effect, caster, primaryTarget);
         break;
       default:
         console.warn(`Abilities: Unknown effect type ${effect.type}`);
@@ -1103,6 +1106,25 @@ export class Abilities extends Rule {
     }
   }
 
+  private plant(
+    context: TickContext,
+    effect: AbilityEffect,
+    caster: any,
+    primaryTarget: any,
+  ): void {
+    const offsetX = effect.offsetX || 1;
+    const offsetY = effect.offsetY || 0;
+    
+    context.queueCommand({
+      type: "plant",
+      unitId: caster.id,
+      params: {
+        offsetX: offsetX,
+        offsetY: offsetY
+      }
+    });
+  }
+
   private summon(
     context: TickContext,
     effect: AbilityEffect,
@@ -1385,9 +1407,7 @@ export class Abilities extends Rule {
 
     if (effect.effects) {
       for (const nestedEffect of effect.effects) {
-        const unitsInCone = (
-          this.cachedAllUnits || context.getAllUnits()
-        ).filter((u) => {
+        const unitsInCone = this.cachedAllUnits.filter((u) => {
           if (u.id === caster.id || u.team === caster.team) return false;
 
           const dist = Math.sqrt(
@@ -1508,11 +1528,12 @@ export class Abilities extends Rule {
     const radius =
       this.resolveValue(context, effect.radius, caster, target) || 3;
 
-    const allUnits =
-      this.cachedAllUnits && this.cachedAllUnits.length > 0
-        ? this.cachedAllUnits
-        : context.getAllUnits();
-    const unitsInArea = allUnits.filter((u) => {
+    // Use cached units, but fallback if they're unexpectedly empty (should investigate why)
+    if (this.cachedAllUnits.length === 0) {
+      console.warn('cachedAllUnits is empty in domainBuff, falling back to getAllUnits - this should be investigated');
+    }
+    const allUnitsForSearch = this.cachedAllUnits.length > 0 ? this.cachedAllUnits : context.getAllUnits();
+    const unitsInArea = allUnitsForSearch.filter((u) => {
       const dist = Math.sqrt(
         Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
       );
@@ -1529,8 +1550,7 @@ export class Abilities extends Rule {
 
           const safeUnit = { ...u, tags: u.tags || [] };
           const compiledCondition = dslCompiler.compile(effect.condition);
-          (context as any).cachedUnits =
-            this.cachedAllUnits || context.getAllUnits();
+          // cachedUnits already set above
           return compiledCondition(safeUnit, context);
         } catch (error) {
           console.warn(
@@ -1634,14 +1654,12 @@ export class Abilities extends Rule {
     const pos = target.pos || target;
     const radius = effect.radius || 6;
 
-    const unitsInArea = (this.cachedAllUnits || context.getAllUnits()).filter(
-      (u) => {
-        const dist = Math.sqrt(
-          Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
-        );
-        return dist <= (typeof radius === "number" ? radius : Number(radius));
-      },
-    );
+    const unitsInArea = this.cachedAllUnits.filter((u) => {
+      const dist = Math.sqrt(
+        Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
+      );
+      return dist <= (typeof radius === "number" ? radius : Number(radius));
+    });
 
     for (const unit of unitsInArea) {
       if (unit.meta.hidden || unit.meta.invisible) {
@@ -1775,19 +1793,17 @@ export class Abilities extends Rule {
       "squirrel",
       "bird",
     ];
-    const unitsInArea = (this.cachedAllUnits || context.getAllUnits()).filter(
-      (u) => {
-        const dist = Math.sqrt(
-          Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
-        );
-        return (
-          dist <= radius &&
-          (u.tags?.includes("animal") ||
-            u.tags?.includes("beast") ||
-            beastSprites.includes(u.sprite))
-        );
-      },
-    );
+    const unitsInArea = this.cachedAllUnits.filter((u) => {
+      const dist = Math.sqrt(
+        Math.pow(u.pos.x - pos.x, 2) + Math.pow(u.pos.y - pos.y, 2),
+      );
+      return (
+        dist <= radius &&
+        (u.tags?.includes("animal") ||
+          u.tags?.includes("beast") ||
+          beastSprites.includes(u.sprite))
+      );
+    });
 
     for (const unit of unitsInArea) {
       this.commands.push({

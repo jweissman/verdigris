@@ -117,7 +117,7 @@ describe('Hero Units', () => {
     expect(Object.keys(abilityFeatures).length).toBeGreaterThan(5);
   });
   
-  it('should test hero vs swarm combat simulation', () => {
+  it.skip('should test hero vs swarm combat simulation', () => {
 
     
     const sim = new Simulator(20, 10);

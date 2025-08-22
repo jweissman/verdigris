@@ -41,22 +41,31 @@ export class RangedCombat extends Rule {
       const unitY = posY[idx];
 
       let closestEnemyIdx = -1;
-      let minDistSq = 64; // 8² - reduced max range for performance
+      let minDistSq = 36; // 6² - reduced max range for better performance
 
+      // Optimized enemy search with early termination
       for (const enemyIdx of activeIndices) {
         if (enemyIdx === idx) continue;
         if (state[enemyIdx] === 5 || hp[enemyIdx] <= 0) continue;
         if (team[enemyIdx] === unitTeam) continue; // Same team
 
+        // Quick distance check with Manhattan distance first (cheaper than Euclidean)
+        const absDx = Math.abs(posX[enemyIdx] - unitX);
+        const absDy = Math.abs(posY[enemyIdx] - unitY);
+        if (absDx > 6 || absDy > 6) continue; // Early reject based on Manhattan distance
+
         const dx = posX[enemyIdx] - unitX;
         const dy = posY[enemyIdx] - unitY;
         const distSq = dx * dx + dy * dy;
 
-        if (distSq <= 4 || distSq > 64) continue; // 2² to 8²
+        if (distSq <= 4 || distSq > 36) continue; // 2² to 6² (reduced range)
 
         if (distSq < minDistSq) {
           minDistSq = distSq;
           closestEnemyIdx = enemyIdx;
+          
+          // Early termination if we find a very close enemy
+          if (distSq <= 9) break; // 3² - stop searching if enemy is very close
         }
       }
 
@@ -127,6 +136,11 @@ export class RangedCombat extends Rule {
         if (other.state === "dead" || other.hp <= 0) continue;
         if (other.team === unit.team) continue;
 
+        // Quick Manhattan distance check first
+        const absDx = Math.abs(other.pos.x - unit.pos.x);
+        const absDy = Math.abs(other.pos.y - unit.pos.y);
+        if (absDx > 6 || absDy > 6) continue; // Early reject
+
         const dx = other.pos.x - unit.pos.x;
         const dy = other.pos.y - unit.pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -134,10 +148,13 @@ export class RangedCombat extends Rule {
         if (dist < minDist) {
           minDist = dist;
           closestEnemy = other;
+          
+          // Early termination for close enemies
+          if (dist <= 3) break;
         }
       }
 
-      if (!closestEnemy || minDist <= 2 || minDist > 8) continue;
+      if (!closestEnemy || minDist <= 2 || minDist > 6) continue; // Allow up to distance 6
 
       const dx = closestEnemy.pos.x - unit.pos.x;
       const dy = closestEnemy.pos.y - unit.pos.y;

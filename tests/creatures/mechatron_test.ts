@@ -362,9 +362,12 @@ describe('Mechatron', () => {
     sim.forceAbility(mechatronist.id, 'tacticalOverride', mechatronist.pos);
     sim.step(); // Process the commands
       
+    // Get updated units from simulator
+    const updatedConstruct1 = sim.units.find(u => u.id === construct1.id)!;
+    const updatedConstruct2 = sim.units.find(u => u.id === construct2.id)!;
 
-    expect(construct1.meta.tacticalBoost).toBe(true);
-    expect(construct2.meta.tacticalBoost).toBe(true);
+    expect(updatedConstruct1.meta.tacticalBoost).toBe(true);
+    expect(updatedConstruct2.meta.tacticalBoost).toBe(true);
       
 
     const commandParticles = sim.particles.filter(p => p.color === '#00FFFF');

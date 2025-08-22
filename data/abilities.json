@@ -1,4 +1,15 @@
 {
+  "plant": {
+    "name": "Plant Bush",
+    "cooldown": 20,
+    "effects": [
+      {
+        "type": "plant",
+        "offsetX": 1,
+        "offsetY": 0
+      }
+    ]
+  },
   "squirrel": {
     "name": "Summon Squirrel",
     "cooldown": 10,

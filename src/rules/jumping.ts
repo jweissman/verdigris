@@ -10,6 +10,10 @@ export class Jumping extends Rule {
   private readonly GRAVITY = 0.5;          // Gravity strength
   private readonly JUMP_VELOCITY = -8;     // Initial upward velocity
   private readonly TERMINAL_VELOCITY = 10; // Max fall speed
+  
+  // Game feel constants
+  private readonly COYOTE_TIME = 3;        // Ticks after leaving ground where jump still works
+  private readonly JUMP_BUFFER_TIME = 5;   // Ticks to buffer jump input before landing
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
@@ -17,6 +21,25 @@ export class Jumping extends Rule {
     for (const unit of units) {
       if (unit.meta?.jumping) {
         this.updateJump(context, unit);
+      }
+      
+      // Handle coyote time
+      if (unit.meta?.wasGrounded && !unit.meta?.jumping) {
+        unit.meta.coyoteTimeLeft = this.COYOTE_TIME;
+        unit.meta.wasGrounded = false;
+      }
+      
+      // Decrement coyote time
+      if (unit.meta?.coyoteTimeLeft > 0) {
+        unit.meta.coyoteTimeLeft--;
+      }
+      
+      // Handle jump buffer
+      if (unit.meta?.jumpBuffered) {
+        const timeSinceBuffer = context.getCurrentTick() - (unit.meta.jumpBufferTick || 0);
+        if (timeSinceBuffer > this.JUMP_BUFFER_TIME) {
+          unit.meta.jumpBuffered = false;
+        }
       }
     }
     return this.commands;
@@ -59,6 +82,20 @@ export class Jumping extends Rule {
             y: jumpTarget.y,
           },
         });
+      }
+      
+      // Check for buffered jump
+      if (unit.meta.jumpBuffered) {
+        const timeSinceBuffer = context.getCurrentTick() - (unit.meta.jumpBufferTick || 0);
+        if (timeSinceBuffer <= this.JUMP_BUFFER_TIME) {
+          // Execute buffered jump immediately upon landing
+          this.commands.push({
+            type: "jump",
+            unitId: unit.id,
+            params: unit.meta.bufferedJumpParams || {}
+          });
+        }
+        unit.meta.jumpBuffered = false;
       }
       
       if (unit.meta.jumpDamage && unit.meta.jumpRadius) {
