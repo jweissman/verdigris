@@ -1,0 +1,151 @@
+#!/usr/bin/env ruby
+
+# Furnace - Parallel tournament runner for Verdigris
+# Consolidates tournament functionality into a single interface
+
+require 'optparse'
+require 'json'
+require 'parallel'
+
+class Furnace
+  def initialize
+    @options = {
+      units: nil,
+      processes: 8,
+      runs_per_matchup: 3,
+      mode: :tournament,
+      output: :console
+    }
+  end
+
+  def run(args)
+    parse_options(args)
+    
+    case @options[:mode]
+    when :tournament
+      run_tournament
+    when :match
+      run_single_match
+    when :weight_class
+      identify_weight_classes
+    when :estimate
+      estimate_time
+    else
+      puts "Unknown mode: #{@options[:mode]}"
+      exit 1
+    end
+  end
+
+  private
+
+  def parse_options(args)
+    OptionParser.new do |opts|
+      opts.banner = "Usage: bin/furnace [options]"
+      
+      opts.on("-m", "--mode MODE", [:tournament, :match, :weight_class, :estimate],
+              "Mode: tournament, match, weight_class, estimate (default: tournament)") do |m|
+        @options[:mode] = m
+      end
+      
+      opts.on("-u", "--units UNITS", "Comma-separated list of units") do |u|
+        @options[:units] = u.split(',')
+      end
+      
+      opts.on("-p", "--processes N", Integer, "Number of parallel processes (default: 8)") do |p|
+        @options[:processes] = p
+      end
+      
+      opts.on("-r", "--runs N", Integer, "Runs per matchup (default: 3)") do |r|
+        @options[:runs_per_matchup] = r
+      end
+      
+      opts.on("-o", "--output FORMAT", [:console, :json, :csv],
+              "Output format: console, json, csv (default: console)") do |o|
+        @options[:output] = o
+      end
+      
+      opts.on("-h", "--help", "Show this help message") do
+        puts opts
+        exit
+      end
+    end.parse!(args)
+  end
+
+  def run_tournament
+    require_relative '../scripts/parallel_tournament'
+    
+    units = @options[:units] || get_all_folks_units
+    tournament = ParallelTournament.new(
+      units,
+      processes: @options[:processes],
+      runs_per_matchup: @options[:runs_per_matchup]
+    )
+    
+    tournament.run
+  end
+
+  def run_single_match
+    unless @options[:units] && @options[:units].length >= 2
+      puts "Error: Need at least 2 units for a match"
+      exit 1
+    end
+    
+    team1 = @options[:units][0..1]
+    team2 = @options[:units][2..3] || team1
+    
+    result = run_match(team1, team2)
+    
+    case @options[:output]
+    when :json
+      puts result.to_json
+    else
+      puts "#{team1.join('+')} vs #{team2.join('+')}: #{result[:winner]}"
+      puts "Duration: #{result[:duration]} ticks"
+      puts "Survivors: #{result[:survivors].join(', ')}" if result[:survivors]
+    end
+  end
+
+  def identify_weight_classes
+    require_relative '../scripts/identify_weight_classes'
+    
+    units = @options[:units] || get_all_folks_units.sample(20)
+    identifier = WeightClassIdentifier.new(units)
+    classes = identifier.identify
+    
+    case @options[:output]
+    when :json
+      puts classes.to_json
+    else
+      classes.each do |tier, units|
+        puts "#{tier} Tier: #{units.join(', ')}"
+      end
+    end
+  end
+
+  def estimate_time
+    require_relative '../scripts/estimate_tournament_time'
+    estimate_full_tournament
+  end
+
+  def get_all_folks_units
+    # Get unit list from TypeScript
+    output = `bun -e "import { Folks } from './src/dmg/folks'; console.log(JSON.stringify(Folks.names))" 2>/dev/null`
+    JSON.parse(output.strip)
+  rescue
+    # Fallback to a default set
+    ['soldier', 'farmer', 'priest', 'ranger', 'knight', 'mage', 'rogue', 'paladin']
+  end
+
+  def run_match(team1, team2)
+    cmd = "bun scripts/run_single_match.ts #{team1.join(',')} #{team2.join(',')}"
+    output = `#{cmd} 2>/dev/null`
+    JSON.parse(output.strip)
+  rescue => e
+    { error: e.message, winner: 'error' }
+  end
+end
+
+# Run if executed directly
+if __FILE__ == $0
+  Furnace.new.run(ARGV)
+end

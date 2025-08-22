@@ -199,11 +199,13 @@ rescue LoadError
   exit 1
 end
 
-# Run tournament
-tournament = ParallelTournament.new(
-  options[:units], 
-  processes: options[:processes],
-  runs_per_matchup: options[:runs]
-)
+if __FILE__ == $0
+  # Run tournament
+  tournament = ParallelTournament.new(
+    options[:units], 
+    processes: options[:processes],
+    runs_per_matchup: options[:runs]
+  )
 
-tournament.run
+  tournament.run
+end

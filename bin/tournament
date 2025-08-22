@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+# Tournament runner - wraps parallel tournament functionality
+require_relative '../scripts/parallel_tournament'
+
+# Parse simple arguments
+units = ARGV[0]&.split(',') || nil
+processes = ENV['PROCESSES']&.to_i || 8  
+runs = ENV['RUNS']&.to_i || 3
+
+if units.nil?
+  # Get all units from TypeScript
+  output = `bun -e "import { Folks } from './src/dmg/folks'; console.log(JSON.stringify(Folks.names))" 2>/dev/null`
+  units = JSON.parse(output.strip) rescue []
+  
+  if units.empty?
+    puts "Error: Could not load units from Folks"
+    exit 1
+  end
+end
+
+tournament = ParallelTournament.new(units, processes: processes, runs_per_matchup: runs)
+tournament.run

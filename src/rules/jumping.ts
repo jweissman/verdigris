@@ -25,17 +25,12 @@ export class Jumping extends Rule {
   private updateJump(context: TickContext, unit: any): void {
     const jumpTarget = unit.meta.jumpTarget;
     const jumpOrigin = unit.meta.jumpOrigin || unit.pos;
-    
-    // Use velocity-based physics
-    let velocity = unit.meta.jumpVelocity || this.JUMP_VELOCITY;
     const progress = (unit.meta.jumpProgress || 0) + 1;
     
-    // Apply gravity to velocity
-    velocity = Math.min(velocity + this.GRAVITY, this.TERMINAL_VELOCITY);
+    // Simple parabolic arc with good feel
+    const jumpDuration = 15; // Total jump duration in ticks
+    const t = progress / jumpDuration;
     
-    // Calculate horizontal position based on progress
-    const maxDuration = 20; // Max jump duration
-    const t = Math.min(1, progress / maxDuration);
     let newX = jumpOrigin.x;
     let newY = jumpOrigin.y;
     
@@ -43,20 +38,17 @@ export class Jumping extends Rule {
       const dx = jumpTarget.x - jumpOrigin.x;
       const dy = jumpTarget.y - jumpOrigin.y;
       
-      // Horizontal movement (ease-out curve for better feel)
-      const easeT = 1 - Math.pow(1 - t, 2); // Ease-out quadratic
-      newX = jumpOrigin.x + dx * easeT;
-      newY = jumpOrigin.y + dy * easeT;
+      // Smooth horizontal movement
+      newX = jumpOrigin.x + dx * t;
+      newY = jumpOrigin.y + dy * t;
     }
     
-    // Calculate height using physics simulation
-    const initialVelocity = this.JUMP_VELOCITY;
-    const time = progress * 0.1; // Convert to time units
-    const rawZ = -(initialVelocity * time + 0.5 * this.GRAVITY * time * time);
-    const z = Math.max(0, rawZ);
+    // Parabolic height with good arc
+    const peakHeight = 5;
+    const z = Math.max(0, 4 * peakHeight * t * (1 - t));
 
-    // Check if we should land (when raw Z would go below ground)
-    if (rawZ <= 0 && progress > 1) {
+    // Check if we should land
+    if (progress >= jumpDuration) {
       // Land exactly at target
       if (jumpTarget) {
         this.commands.push({
@@ -117,7 +109,6 @@ export class Jumping extends Rule {
           meta: {
             ...unit.meta,
             jumpProgress: progress,
-            jumpVelocity: velocity,
             z: z,
           },
         },
