@@ -218,84 +218,24 @@ export default class Isometric extends View {
       realPixelY -= renderZ * 8;
     }
 
-    const sprite = this.sprites.get(unit.sprite);
-    if (sprite && !unit.meta?.rig) { // Don't render sprite if unit has rig
-      let frameIndex = 0;
-
-      const recentAttack = this.sim.processedEvents.find(
-        (event: any) =>
-          event.kind === "damage" &&
-          event.source === unit.id &&
-          event.meta.tick &&
-          this.sim.ticks - event.meta.tick < 1, // Only show attack frame for 1 tick
-      );
-
-      if (unit.state === "dead") {
-        frameIndex = 3; // Frame 3 for dead/stunned
-      } else if (recentAttack || unit.state === "attack") {
-        frameIndex = 3; // Frame 3 is the attack frame
-      } else if (unit.state === "walk") {
-        frameIndex = 1 + Math.floor((this.animationTime / 400) % 2); // Frames 1-2 for walking
-      } else {
-        frameIndex = 0; // Frame 0 for idle
+    // Always use centralized unit renderer for consistency
+    const facing = unit.meta?.facing || "right";
+    const shouldFlip = facing === "left";
+    
+    // Draw shadow
+    this.unitRenderer.drawShadow(this.ctx, unit, screenX, screenY);
+    
+    // Use centralized unit renderer
+    this.unitRenderer.renderUnit(
+      this.ctx,
+      unit,
+      this.sprites,
+      screenX,
+      realPixelY, // Already includes Z offset
+      {
+        flipHorizontal: shouldFlip
       }
-
-      const expectedSpriteWidth = spriteWidth * 4; // 4 frames expected
-      const actualSpriteWidth = sprite.width;
-      const frameX =
-        actualSpriteWidth >= expectedSpriteWidth ? frameIndex * spriteWidth : 0;
-
-      realPixelY = Math.round(realPixelY);
-
-      this.ctx.save();
-      this.ctx.fillStyle = "#00000005";
-      this.ctx.beginPath();
-      const shadowWidth = spriteWidth * 0.8;
-      const shadowHeight = shadowWidth / 2;
-      this.ctx.ellipse(
-        screenX,
-        screenY,
-        shadowWidth,
-        shadowHeight,
-        0,
-        0,
-        2 * Math.PI,
-      );
-      this.ctx.fill();
-      this.ctx.restore();
-
-      this.ctx.save();
-      const facing = unit.meta.facing || "right";
-      const shouldFlip = facing === "left";
-
-      if (shouldFlip) {
-        this.ctx.scale(-1, 1);
-        this.ctx.translate(-screenX * 2, 0);
-      }
-
-      this.ctx.restore();
-      
-      // Use centralized unit renderer
-      this.unitRenderer.renderUnit(
-        this.ctx,
-        unit,
-        this.sprites,
-        screenX,
-        screenY - renderZ * 8, // This should already have Z offset from realPixelY calculation
-        {
-          flipHorizontal: shouldFlip
-        }
-      );
-    } else {
-      // Use centralized fallback rendering (includes rigged units)
-      this.unitRenderer.renderUnit(
-        this.ctx,
-        unit,
-        this.sprites,
-        screenX,
-        realPixelY + 4  // realPixelY now includes Z offset for all units
-      );
-    }
+    );
 
     if (typeof unit.hp === "number" && unit.hp < unit.maxHp) {
       const maxHp = unit.maxHp || 100;

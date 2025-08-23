@@ -140,32 +140,28 @@ export default class CinematicView extends View {
       this.ctx.fill();
       this.ctx.restore();
 
-      const frameIndex = this.unitRenderer.getAnimationFrame(
-        unit,
-        this.animationTime,
-      );
-
-      const frameX = frameIndex * baseWidth;
-      const pixelX = cinematicX - pixelWidth / 2;
-      const pixelY = Math.round(finalY - pixelHeight / 2);
-
+      // Use centralized renderer with scaling
+      const pixelX = cinematicX;
+      const pixelY = Math.round(finalY);
+      
       this.ctx.save();
-      const shouldFlip = !this.unitRenderer.shouldFlipSprite(unit);
-
-      if (!shouldFlip) {
-        this.ctx.scale(-1, 1);
-        this.ctx.translate(-pixelX * 2 - baseWidth, 0);
-      }
-      this.ctx.drawImage(
-        sprite,
-        frameX,
-        0,
-        baseWidth,
-        baseHeight,
+      // Apply cinematic scaling
+      const scaleX = pixelWidth / baseWidth;
+      const scaleY = pixelHeight / baseHeight;
+      this.ctx.translate(pixelX, pixelY);
+      this.ctx.scale(scaleX, scaleY);
+      this.ctx.translate(-pixelX, -pixelY);
+      
+      // Use centralized unit renderer
+      this.unitRenderer.renderUnit(
+        this.ctx,
+        unit,
+        this.sprites,
         pixelX,
         pixelY,
-        pixelWidth,
-        pixelHeight,
+        {
+          flipHorizontal: !this.unitRenderer.shouldFlipSprite(unit)
+        }
       );
       this.ctx.restore();
     } else {

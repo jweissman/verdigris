@@ -8,8 +8,8 @@ export class HeroGame extends Game {
   
   constructor(canvas: HTMLCanvasElement, opts?: any) {
     super(canvas, opts);
-    // High tick rate for smooth, responsive movement
-    this.simTickRate = 60; // 60fps for smooth simulation
+    // Balanced tick rate for smooth yet controlled movement
+    this.simTickRate = 30; // 30fps for balanced simulation
   }
   
   bootstrap() {

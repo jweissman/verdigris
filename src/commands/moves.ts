@@ -10,12 +10,23 @@ export class MovesCommand extends Command {
     if (!moves || moves.size === 0) return;
 
     const transform = this.sim.getTransform();
+    const currentTick = this.sim.ticks;
 
     const updates: Array<{ id: string; changes: any }> = [];
 
     for (const [id, move] of moves) {
       const unit = this.sim.units.find((u: any) => u.id === id);
       if (!unit) continue;
+
+      // Movement rate limiting - units can only move every N ticks
+      // Heroes and some units can move every tick
+      const movementRate = unit.meta?.movementRate || (unit.tags?.includes('hero') ? 1 : 2);
+      const lastMoveTick = unit.meta?.lastMoveTick || 0;
+      
+      // Skip movement if still in cooldown
+      if (currentTick - lastMoveTick < movementRate) {
+        continue;
+      }
 
       let effectiveDx = move.dx;
       let effectiveDy = move.dy;
@@ -40,7 +51,7 @@ export class MovesCommand extends Command {
         id,
         changes: {
           intendedMove: { x: effectiveDx, y: effectiveDy },
-          meta: { ...unit.meta, facing },
+          meta: { ...unit.meta, facing, lastMoveTick: currentTick },
         },
       });
     }

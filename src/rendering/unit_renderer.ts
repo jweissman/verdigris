@@ -66,12 +66,11 @@ export class UnitRenderer {
       if (unit.state === "dead") {
         return 12; // Last frame for death
       } else if (unit.state === "attack") {
-        // Cycle through attack frames 5-12
-        const attackFrame = Math.floor((animationTime / 100) % 8);
-        return 5 + attackFrame;
+        return 6; // Single attack frame (no cycling)
+      } else if (unit.state === "walk" || (unit.intendedMove && (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0))) {
+        return 1; // Walking frame
       } else {
-        // Idle animation: cycle through frames 0-4
-        return Math.floor((animationTime / 200) % 5);
+        return 0; // Idle frame (no cycling for now to prevent jitter)
       }
     }
     
@@ -80,8 +79,10 @@ export class UnitRenderer {
       return 3; // Frame 4 (index 3) for death
     } else if (unit.state === "attack") {
       return 2; // Frame 3 (index 2) for attack
+    } else if (unit.state === "walk" || (unit.intendedMove && (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0))) {
+      return 1; // Walking frame
     } else {
-      return Math.floor((animationTime / 400) % 2);
+      return 0; // Idle frame (no cycling)
     }
   }
 
@@ -228,7 +229,8 @@ export class UnitRenderer {
     const dimensions = this.getSpriteDimensions(unit);
     const frameWidth = dimensions.width;
     const frameCount = Math.floor(sprite.width / frameWidth);
-    const frame = Math.floor(Date.now() / 200) % frameCount;
+    // Use centralized frame calculation
+    const frame = this.getAnimationFrame(unit, Date.now());
     
     ctx.save();
     

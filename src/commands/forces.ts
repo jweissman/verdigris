@@ -42,38 +42,6 @@ export class ForcesCommand extends Command {
     this.resolveCollisionsSoA(arrays);
   }
 
-  private updateProjectiles(): void {
-    if (!this.sim.projectiles) return;
-
-    const toRemove: number[] = [];
-
-    for (let i = 0; i < this.sim.projectiles.length; i++) {
-      const p = this.sim.projectiles[i];
-
-      p.pos.x += p.vel.x;
-      p.pos.y += p.vel.y;
-
-      if (p.type === "bomb") {
-        p.vel.y += 0.2;
-        p.lifetime = (p.lifetime || 0) + 1;
-      }
-
-      const context = this.sim.getTickContext();
-      if (
-        p.pos.x < 0 ||
-        p.pos.x >= context.getFieldWidth() ||
-        p.pos.y < 0 ||
-        p.pos.y >= context.getFieldHeight()
-      ) {
-        toRemove.push(i);
-      }
-    }
-
-    for (let i = toRemove.length - 1; i >= 0; i--) {
-      this.sim.projectiles.splice(toRemove[i], 1);
-    }
-  }
-
   private resolveCollisionsSoA(arrays: any): void {
     const grid = new Map<number, number>();
     const context = this.sim.getTickContext();

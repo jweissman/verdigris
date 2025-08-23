@@ -1,6 +1,5 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
-import type { Unit } from "../types/Unit";
 import type { QueuedCommand } from "../core/command_handler";
 
 export class Knockback extends Rule {
@@ -8,6 +7,8 @@ export class Knockback extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
+    
+    // Check for knockbacks
     const knockbackRange = 1.1;
     const knockbackRangeSq = knockbackRange * knockbackRange;
 
@@ -55,32 +56,5 @@ export class Knockback extends Rule {
     }
 
     return this.commands;
-  }
-
-  private processKnockback(context: TickContext, a: Unit, b: Unit): void {
-    if (a.team === b.team) return;
-
-    if (b.meta?.phantom) return;
-
-    const massDiff = (a.mass || 1) - (b.mass || 1);
-    if (massDiff <= 0) return;
-
-    const dx = b.pos.x - a.pos.x;
-    const dy = b.pos.y - a.pos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist > 0) {
-      const pushX = (dx / dist) * 0.5;
-      const pushY = (dy / dist) * 0.5;
-
-      this.commands.push({
-        type: "move",
-        params: {
-          unitId: b.id,
-          dx: pushX,
-          dy: pushY,
-        },
-      });
-    }
   }
 }

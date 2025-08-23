@@ -60,8 +60,9 @@ export default class View {
         prevPos.x !== unit.pos.x ||
         prevPos.y !== unit.pos.y
       ) {
-        // Don't create new interpolations while jumping - let the existing one complete
-        if (!unit.meta?.jumping || !this.unitInterpolations.has(unit.id)) {
+        // Don't create new interpolations while jumping or tossing - let the existing one complete
+        const isAirborne = unit.meta?.jumping || unit.meta?.tossing;
+        if (!isAirborne || !this.unitInterpolations.has(unit.id)) {
           this.unitInterpolations.set(unit.id, {
             startX: prevPos.x,
             startY: prevPos.y,
@@ -70,7 +71,7 @@ export default class View {
             targetY: unit.pos.y,
             targetZ: currentZ,
             progress: 0,
-            duration: unit.meta?.jumping ? 200 : 100, // Longer smooth arc for jumping
+            duration: isAirborne ? 200 : 66, // Smooth arc for airborne units, normal for walking
           });
         }
       }
