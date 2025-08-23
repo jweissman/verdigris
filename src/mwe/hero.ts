@@ -9,7 +9,7 @@ export class HeroGame extends Game {
   constructor(canvas: HTMLCanvasElement, opts?: any) {
     super(canvas, opts);
     // Speed up tick rate for more responsive hero movement
-    this.simTickRate = 16; // 16fps instead of 8fps
+    this.simTickRate = 20; // 20fps for smooth but not too fast gameplay
   }
   
   bootstrap() {
@@ -38,7 +38,9 @@ export class HeroGame extends Game {
       meta: {
         controlled: true,
         useRig: true,
-        onRooftop: true
+        onRooftop: true,
+        weapon: "sword", // Default weapon
+        facing: "right"
       }
     });
     

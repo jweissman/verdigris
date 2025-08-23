@@ -297,6 +297,30 @@
       "silentFlight": true
     }
   },
+  "penguin": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "neutral",
+    "sprite": "penguin",
+    "state": "idle",
+    "hp": 15,
+    "maxHp": 15,
+    "dmg": 2,
+    "mass": 1,
+    "tags": [
+      "arctic",
+      "bird",
+      "cute"
+    ],
+    "abilities": [],
+    "meta": {
+      "facing": "right",
+      "sliding": false,
+      "waddle": true
+    }
+  },
   "bear": {
     "intendedMove": {
       "x": 0,

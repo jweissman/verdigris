@@ -125,8 +125,9 @@ describe('Jumping mechanics', () => {
       hp: 10
     });
     sim.step();
+    // Check both params.unitId and unitId directly
     const moveCommands = sim.queuedCommands.filter(c => 
-      c.type === 'move' && c.params?.unitId === 'hunter'
+      c.type === 'move' && (c.params?.unitId === 'hunter' || c.unitId === 'hunter')
     );
     expect(moveCommands.length).toBe(0);
   });
@@ -192,8 +193,10 @@ describe('Jumping mechanics', () => {
       hp: 10
     });
     sim.step();
+    // Check both params.unitId and unitId directly
     const behaviorCommands = sim.queuedCommands.filter(c => 
-      (c.type === 'pose' || c.type === 'target') && c.params?.unitId === 'jumper'
+      (c.type === 'pose' || c.type === 'target') && 
+      (c.params?.unitId === 'jumper' || c.unitId === 'jumper')
     );
     expect(behaviorCommands.length).toBe(0);
   });

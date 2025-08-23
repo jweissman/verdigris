@@ -60,16 +60,19 @@ export default class View {
         prevPos.x !== unit.pos.x ||
         prevPos.y !== unit.pos.y
       ) {
-        this.unitInterpolations.set(unit.id, {
-          startX: prevPos.x,
-          startY: prevPos.y,
-          startZ: prevPos.z,
-          targetX: unit.pos.x,
-          targetY: unit.pos.y,
-          targetZ: currentZ,
-          progress: 0,
-          duration: unit.meta?.jumping ? 65 : 200, // Smooth interpolation
-        });
+        // Don't create new interpolations while jumping - let the existing one complete
+        if (!unit.meta?.jumping || !this.unitInterpolations.has(unit.id)) {
+          this.unitInterpolations.set(unit.id, {
+            startX: prevPos.x,
+            startY: prevPos.y,
+            startZ: prevPos.z,
+            targetX: unit.pos.x,
+            targetY: unit.pos.y,
+            targetZ: currentZ,
+            progress: 0,
+            duration: unit.meta?.jumping ? 200 : 100, // Longer smooth arc for jumping
+          });
+        }
       }
       
       // Always update previous position

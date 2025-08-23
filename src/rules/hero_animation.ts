@@ -81,12 +81,16 @@ export class HeroAnimation extends Rule {
     // Determine desired animation
     let desiredAnimation: string;
     
-    if (unit.state === 'attack') {
-      desiredAnimation = 'attack'; // Not implemented yet
+    // Check for recent strike
+    const recentStrike = unit.meta?.lastStrike && 
+      ((rig.getAnimationTime() / 16) - unit.meta.lastStrike) < 12;
+    
+    if (unit.state === 'attack' || recentStrike) {
+      desiredAnimation = 'attack';
     } else if (unit.meta?.jumping) {
       desiredAnimation = 'jump'; // Not implemented yet
     } else if (unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0) {
-      desiredAnimation = 'walk'; // Not implemented yet
+      desiredAnimation = 'walk';
     } else {
       // Idle animations
       if (unit.meta?.onRooftop) {
@@ -99,8 +103,9 @@ export class HeroAnimation extends Rule {
     // Only play if animation changed
     const currentAnim = this.currentAnimations.get(unit.id);
     if (currentAnim !== desiredAnimation) {
-      // For now, only play animations that exist
-      if (desiredAnimation === 'breathing' || desiredAnimation === 'wind' || desiredAnimation === 'walk') {
+      // Play animations that exist
+      if (desiredAnimation === 'breathing' || desiredAnimation === 'wind' || 
+          desiredAnimation === 'walk' || desiredAnimation === 'attack') {
         rig.play(desiredAnimation);
         this.currentAnimations.set(unit.id, desiredAnimation);
       }

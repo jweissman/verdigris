@@ -6,7 +6,8 @@ export class PlayerControl extends Rule {
   private keysHeld: Set<string> = new Set();
   private moveCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
   private jumpCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
-  private readonly MOVE_COOLDOWN = 4; // Ticks between movement commands
+  private commandBuffer: Map<string, QueuedCommand[]> = new Map(); // unitId -> buffered commands
+  private readonly MOVE_COOLDOWN = 2; // Balanced movement speed
   private readonly JUMP_COOLDOWN = 10; // Ticks between jump commands
   
   constructor() {
@@ -45,28 +46,64 @@ export class PlayerControl extends Rule {
         const cooldown = this.moveCooldowns.get(unit.id) || 0;
         
         if (cooldown <= 0) {
-          // Calculate movement from held keys
-          let action = '';
+          // Calculate movement from held keys - support diagonal movement
+          let dx = 0;
+          let dy = 0;
           
           if (this.keysHeld.has('w') || this.keysHeld.has('arrowup')) {
-            action = 'up';
-          } else if (this.keysHeld.has('s') || this.keysHeld.has('arrowdown')) {
-            action = 'down';
-          } else if (this.keysHeld.has('a') || this.keysHeld.has('arrowleft')) {
-            action = 'left';
-          } else if (this.keysHeld.has('d') || this.keysHeld.has('arrowright')) {
-            action = 'right';
+            dy = -1;
+          }
+          if (this.keysHeld.has('s') || this.keysHeld.has('arrowdown')) {
+            dy = 1;
+          }
+          if (this.keysHeld.has('a') || this.keysHeld.has('arrowleft')) {
+            dx = -1;
+          }
+          if (this.keysHeld.has('d') || this.keysHeld.has('arrowright')) {
+            dx = 1;
           }
           
+          // Map diagonal movement to action
+          let action = '';
+          if (dx === -1 && dy === 0) action = 'left';
+          else if (dx === 1 && dy === 0) action = 'right';
+          else if (dx === 0 && dy === -1) action = 'up';
+          else if (dx === 0 && dy === 1) action = 'down';
+          else if (dx === -1 && dy === -1) action = 'up-left';
+          else if (dx === 1 && dy === -1) action = 'up-right';
+          else if (dx === -1 && dy === 1) action = 'down-left';
+          else if (dx === 1 && dy === 1) action = 'down-right';
+          
           if (action) {
-            console.log(`[PlayerControl] Sending hero ${action} command, unit at ${JSON.stringify(unit.pos)}`);
-            commands.push({
-              type: 'hero',
-              params: { action }
-            });
-            
-            // Set cooldown
-            this.moveCooldowns.set(unit.id, this.MOVE_COOLDOWN);
+            // Buffer the command if we're already moving
+            const bufferedCommands = this.commandBuffer.get(unit.id) || [];
+            if (bufferedCommands.length < 2) { // Keep a small buffer
+              const command = {
+                type: 'hero' as const,
+                params: { action }
+              };
+              
+              // Send immediately if no buffered commands
+              if (bufferedCommands.length === 0) {
+                console.log(`[PlayerControl] Sending hero ${action} command, unit at ${JSON.stringify(unit.pos)}`);
+                commands.push(command);
+                this.moveCooldowns.set(unit.id, this.MOVE_COOLDOWN);
+              } else {
+                // Add to buffer
+                bufferedCommands.push(command);
+                this.commandBuffer.set(unit.id, bufferedCommands);
+              }
+            }
+          }
+        } else {
+          // Process buffered commands when cooldown expires
+          const bufferedCommands = this.commandBuffer.get(unit.id) || [];
+          if (cooldown === 1 && bufferedCommands.length > 0) {
+            const nextCommand = bufferedCommands.shift();
+            if (nextCommand) {
+              commands.push(nextCommand);
+              this.commandBuffer.set(unit.id, bufferedCommands);
+            }
           }
         }
         

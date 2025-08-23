@@ -89,6 +89,39 @@ export class HeroCommand extends Command {
           });
           break;
           
+        case 'up-left':
+          // Diagonal movement
+          this.sim.queuedCommands.push({
+            type: 'move',
+            unitId: hero.id,
+            params: { dx: -1, dy: -2 }
+          });
+          break;
+          
+        case 'up-right':
+          this.sim.queuedCommands.push({
+            type: 'move',
+            unitId: hero.id,
+            params: { dx: 1, dy: -2 }
+          });
+          break;
+          
+        case 'down-left':
+          this.sim.queuedCommands.push({
+            type: 'move',
+            unitId: hero.id,
+            params: { dx: -1, dy: 2 }
+          });
+          break;
+          
+        case 'down-right':
+          this.sim.queuedCommands.push({
+            type: 'move',
+            unitId: hero.id,
+            params: { dx: 1, dy: 2 }
+          });
+          break;
+          
         case 'knight-left':
           // Knight move: 2 vertical, 1 horizontal for hex grid
           this.sim.queuedCommands.push({

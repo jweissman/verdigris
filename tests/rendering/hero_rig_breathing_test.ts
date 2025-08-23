@@ -38,8 +38,8 @@ describe('Hero Rig Breathing', () => {
     const positions: number[] = [];
     let totalTicks = 0;
     
-    // Record positions at key points in the cycle
-    const checkpoints = [0, 15, 30, 45, 60];
+    // Record positions at key points in the 8-tick cycle
+    const checkpoints = [0, 2, 4, 6, 8];
     
     for (const checkpoint of checkpoints) {
       // Advance to checkpoint
@@ -52,13 +52,18 @@ describe('Hero Rig Breathing', () => {
       positions.push(torso?.offset.y || 0);
     }
     
-    // console.log('Positions at 0, 15, 30, 45, 60:', positions);
+    // console.log('Positions at 0, 2, 4, 6, 8:', positions);
     
-    // Should see rise and fall (Math.round(-1.5) = -1 in JS)
-    expect(positions[0]).toBe(0); // Start at 0
-    expect(positions[1]).toBe(-1); // Quarter way at 15 (round(-1.5) = -1)
-    expect(positions[2]).toBe(-3); // Peak at 30  
-    expect(positions[3]).toBe(-2); // Three quarters at 45
-    expect(positions[4]).toBe(0); // Back to start at 60
+    // Breathing uses cosine wave: -8 * (1 - cos(phase * 2π)) / 2
+    // At phase 0: -8 * (1 - 1) / 2 = 0
+    // At phase 0.25: -8 * (1 - 0) / 2 = -4
+    // At phase 0.5: -8 * (1 - (-1)) / 2 = -8
+    // At phase 0.75: -8 * (1 - 0) / 2 = -4
+    // At phase 1: -8 * (1 - 1) / 2 = 0
+    expect(positions[0]).toBeCloseTo(0, 10); // Start at 0
+    expect(positions[1]).toBeCloseTo(-4, 10); // Quarter way at tick 2
+    expect(positions[2]).toBeCloseTo(-8, 10); // Peak at tick 4
+    expect(positions[3]).toBeCloseTo(-4, 10); // Three quarters at tick 6
+    expect(positions[4]).toBeCloseTo(0, 10); // Back to start at tick 8
   });
 });

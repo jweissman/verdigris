@@ -27,16 +27,16 @@ describe('Hero Rig', () => {
     const head = rig.getPartByName('head');
     const initialY = head?.offset.y;
     
-    // Advance animation
-    rig.update(20); // Move to frame 1
+    // Advance animation - breathing uses interpolation now
+    rig.update(2); // Quarter way through 8-tick cycle
     const midY = rig.getPartByName('head')?.offset.y;
     
-    rig.update(20); // Move to frame 2
+    rig.update(2); // Halfway through - peak inhale
     const finalY = rig.getPartByName('head')?.offset.y;
     
-    // Head should move up during breathing
+    // Head should move up during breathing (more negative Y)
     expect(midY).toBeLessThan(initialY!);
-    expect(finalY).toBeLessThan(initialY!);
+    expect(finalY).toBeLessThan(midY!);
   });
   
   test('wind animation affects head', () => {
@@ -57,17 +57,14 @@ describe('Hero Rig', () => {
     const rig = new HeroRig();
     rig.play('breathing');
     
-    // Run full cycle
-    rig.update(60); // Complete duration
+    // Run full cycle (8 ticks for breathing)
+    rig.update(8); // Complete duration
     
     const torso = rig.getPartByName('torso');
-    const firstFrame = torso?.frame;
+    const positionAfterCycle = torso?.offset.y;
     
-    // Should loop back to beginning
-    rig.update(1);
-    const loopedFrame = rig.getPartByName('torso')?.frame;
-    
-    expect(loopedFrame).toBe(0); // Back to first frame
+    // Should be back at starting position
+    expect(positionAfterCycle).toBeCloseTo(0, 10);
   });
   
   test('sword follows right arm', () => {

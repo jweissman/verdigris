@@ -15,10 +15,10 @@ describe('Hero Jump Z Debug', () => {
     
     // console.log('=== Z-AXIS DEBUG ===');
     // console.log('Before jump:', { 
-      pos: hero.pos, 
-      metaZ: hero.meta?.z, 
-      jumping: hero.meta?.jumping 
-    });
+    //   pos: hero.pos, 
+    //   metaZ: hero.meta?.z, 
+    //   jumping: hero.meta?.jumping 
+    // });
     
     // Queue jump
     sim.queuedCommands.push({
@@ -33,11 +33,11 @@ describe('Hero Jump Z Debug', () => {
       const h = sim.units.find(u => u.id === 'z_debug_hero');
       
       // console.log(`Step ${step}:`, {
-        pos: { x: h?.pos.x.toFixed(2), y: h?.pos.y },
-        metaZ: h?.meta?.z?.toFixed(2),
-        jumping: h?.meta?.jumping,
-        progress: h?.meta?.jumpProgress
-      });
+      //   pos: { x: h?.pos.x.toFixed(2), y: h?.pos.y },
+      //   metaZ: h?.meta?.z?.toFixed(2),
+      //   jumping: h?.meta?.jumping,
+      //   progress: h?.meta?.jumpProgress
+      // });
       
       // Break when jump completes
       if (!h?.meta?.jumping && step > 5) {

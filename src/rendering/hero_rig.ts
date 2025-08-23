@@ -396,6 +396,45 @@ export class HeroRig {
         }
       ]
     });
+    
+    // Attack animation - sword swing
+    this.animations.set('attack', {
+      name: 'attack',
+      loop: false,
+      duration: 12, // Quick attack
+      frames: [
+        {
+          tick: 0,
+          parts: {
+            // Wind up - pull sword back
+            torso: { offset: { x: -1, y: 0 }, rotation: -0.1, frame: 1 },
+            rarm: { offset: { x: 6, y: -2 }, rotation: -0.4, frame: 1 }, // Pull back
+            larm: { offset: { x: -6, y: 0 }, rotation: 0.2, frame: 1 }, // Balance
+            head: { offset: { x: -1, y: -8 }, rotation: -0.05, frame: 1 }
+          }
+        },
+        {
+          tick: 4,
+          parts: {
+            // Mid swing - sword across body
+            torso: { offset: { x: 0, y: 0 }, rotation: 0, frame: 2 },
+            rarm: { offset: { x: 10, y: 0 }, rotation: 0.2, frame: 2 }, // Swing through
+            larm: { offset: { x: -8, y: -1 }, rotation: 0.1, frame: 2 },
+            head: { offset: { x: 0, y: -8 }, rotation: 0, frame: 2 }
+          }
+        },
+        {
+          tick: 8,
+          parts: {
+            // Follow through - sword extended
+            torso: { offset: { x: 1, y: 0 }, rotation: 0.1, frame: 2 },
+            rarm: { offset: { x: 12, y: 2 }, rotation: 0.5, frame: 2 }, // Full extension
+            larm: { offset: { x: -7, y: 1 }, rotation: -0.1, frame: 2 },
+            head: { offset: { x: 1, y: -8 }, rotation: 0.05, frame: 2 }
+          }
+        }
+      ]
+    });
   }
   
   play(animationName: string) {
