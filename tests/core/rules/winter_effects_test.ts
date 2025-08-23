@@ -60,7 +60,7 @@ describe('Winter Effects System (BiomeEffects)', () => {
 
   it('should freeze units in sub-zero temperatures', () => {
     const sim = new Simulator();
-    const CommandHandler = require('../../src/core/command_handler').CommandHandler;
+    const CommandHandler = require('../../../src/core/command_handler').CommandHandler;
 
     
 
@@ -188,7 +188,7 @@ describe('Winter Effects System (BiomeEffects)', () => {
 
   it('should prevent frozen units from moving', () => {
     const sim = new Simulator();
-    const CommandHandler = require('../../src/core/command_handler').CommandHandler;
+    const CommandHandler = require('../../../src/core/command_handler').CommandHandler;
 
     
 
