@@ -282,37 +282,58 @@ export class HeroRig {
   }
   
   private setupAnimations() {
-    // Breathing idle animation - 3 frames cycling
+    // Breathing idle animation - actual breathing motion with torso movement
     this.animations.set('breathing', {
       name: 'breathing',
       loop: true,
-      duration: 60,
+      duration: 8, // Quick breathing cycle
       frames: [
         {
           tick: 0,
           parts: {
-            head: { offset: { x: 0, y: -8 }, frame: 0 },
+            // Inhale start - torso rises
             torso: { offset: { x: 0, y: 0 }, frame: 0 },
-            larm: { rotation: 0.05, frame: 0 },
-            rarm: { rotation: -0.05, frame: 0 }
+            head: { offset: { x: 0, y: -8 }, frame: 0 },
+            larm: { offset: { x: -8, y: 0 }, rotation: 0.05, frame: 0 },
+            rarm: { offset: { x: 8, y: 0 }, rotation: -0.05, frame: 0 },
+            lleg: { offset: { x: -2, y: 8 }, frame: 0 },
+            rleg: { offset: { x: 2, y: 8 }, frame: 0 }
           }
         },
         {
-          tick: 20,
+          tick: 2,
           parts: {
-            head: { offset: { x: 0, y: -8.5 }, rotation: 0.02, frame: 1 },
-            torso: { offset: { x: 0, y: -0.5 }, frame: 1 },
-            larm: { rotation: 0.08, frame: 1 },
-            rarm: { rotation: -0.08, frame: 1 }
+            // Peak inhale - torso up and slightly back
+            torso: { offset: { x: -0.5, y: -2 }, frame: 1 }, // Up and back
+            head: { offset: { x: -0.5, y: -10 }, rotation: -0.05, frame: 1 }, // Follow torso
+            larm: { offset: { x: -8.5, y: -2 }, rotation: 0.1, frame: 1 }, // Arms rise
+            rarm: { offset: { x: 8.5, y: -2 }, rotation: -0.1, frame: 1 },
+            lleg: { offset: { x: -2, y: 8 }, frame: 1 },
+            rleg: { offset: { x: 2, y: 8 }, frame: 1 }
           }
         },
         {
-          tick: 40,
+          tick: 4,
           parts: {
-            head: { offset: { x: 0, y: -9 }, rotation: -0.02, frame: 2 },
-            torso: { offset: { x: 0, y: -1 }, frame: 2 },
-            larm: { rotation: 0.05, frame: 2 },
-            rarm: { rotation: -0.05, frame: 2 }
+            // Hold - slight sway
+            torso: { offset: { x: 0.5, y: -1.5 }, frame: 2 }, // Sway right
+            head: { offset: { x: 0.5, y: -9.5 }, rotation: 0.02, frame: 2 },
+            larm: { offset: { x: -7.5, y: -1.5 }, rotation: 0.08, frame: 2 },
+            rarm: { offset: { x: 8.5, y: -1.5 }, rotation: -0.08, frame: 2 },
+            lleg: { offset: { x: -2, y: 8 }, frame: 2 },
+            rleg: { offset: { x: 2, y: 8 }, frame: 2 }
+          }
+        },
+        {
+          tick: 6,
+          parts: {
+            // Exhale - torso drops and forward
+            torso: { offset: { x: 0, y: 0.5 }, frame: 0 }, // Down slightly
+            head: { offset: { x: 0, y: -7.5 }, rotation: 0.03, frame: 0 }, // Drop with torso
+            larm: { offset: { x: -8, y: 0.5 }, rotation: 0.02, frame: 0 }, // Arms relax
+            rarm: { offset: { x: 8, y: 0.5 }, rotation: -0.02, frame: 0 },
+            lleg: { offset: { x: -2, y: 8 }, frame: 0 },
+            rleg: { offset: { x: 2, y: 8 }, frame: 0 }
           }
         }
       ]
@@ -422,40 +443,53 @@ export class HeroRig {
   }
   
   private applyBreathingInterpolation() {
-    // Smooth breathing using cosine wave
-    const phase = (this.animationTime % 60) / 60; // 60 tick cycle
+    // Fast breathing cycle - 8 ticks total
+    const anim = this.animations.get('breathing');
+    const duration = anim?.duration || 8;
+    const phase = (this.animationTime % duration) / duration;
     const breathAmount = (1 - Math.cos(phase * Math.PI * 2)) / 2; // 0 to 1
     
-    // Debug
-    if (this.animationTime === 30) {
-      console.log('Debug at tick 30:', { phase, breathAmount, animationTime: this.animationTime });
-    }
-    
-    // Interpolate chest/torso
+    // Much more visible movement
     const torso = this.parts.get('torso');
     if (torso) {
-      torso.offset.y = Math.round(-breathAmount * 3); // Rise by 3 pixels, rounded for clear change
-      torso.frame = Math.floor(breathAmount * 3) % 3; // Cycle through 3 frames
+      torso.offset.y = -breathAmount * 8; // MUCH bigger movement - up to 8 pixels
+      torso.offset.x = Math.sin(phase * Math.PI * 4) * 2; // Side sway
+      torso.frame = Math.floor(phase * 3) % 3; // Cycle frames
     }
     
-    // Interpolate head
+    // Head follows torso with delay
     const head = this.parts.get('head');
     if (head) {
-      head.offset.y = Math.round(-8 - breathAmount * 2); // Rise with breathing
-      head.rotation = Math.sin(phase * Math.PI * 2) * 0.02; // Subtle tilt
-      head.frame = Math.floor(breathAmount * 3) % 3;
+      head.offset.y = -8 - breathAmount * 6; // Big movement
+      head.offset.x = Math.sin(phase * Math.PI * 4 + 0.5) * 1.5; // Delayed sway
+      head.rotation = Math.sin(phase * Math.PI * 2) * 0.1; // More tilt
+      head.frame = Math.floor(phase * 3) % 3;
     }
     
-    // Arms move slightly with breathing
+    // Arms swing with breathing
     const larm = this.parts.get('larm');
     const rarm = this.parts.get('rarm');
     if (larm) {
-      larm.rotation = breathAmount * 0.05;
-      larm.frame = Math.floor(breathAmount * 3) % 3;
+      larm.offset.y = -breathAmount * 4; // Arms rise
+      larm.rotation = breathAmount * 0.2; // More rotation
+      larm.frame = Math.floor(phase * 3) % 3;
     }
     if (rarm) {
-      rarm.rotation = -breathAmount * 0.05;
-      rarm.frame = Math.floor(breathAmount * 3) % 3;
+      rarm.offset.y = -breathAmount * 4; // Arms rise  
+      rarm.rotation = -breathAmount * 0.2; // More rotation
+      rarm.frame = Math.floor(phase * 3) % 3;
+    }
+    
+    // Legs shift weight slightly
+    const lleg = this.parts.get('lleg');
+    const rleg = this.parts.get('rleg');
+    if (lleg) {
+      lleg.offset.x = -2 + Math.sin(phase * Math.PI * 2) * 0.5;
+      lleg.frame = Math.floor(phase * 3) % 3;
+    }
+    if (rleg) {
+      rleg.offset.x = 2 - Math.sin(phase * Math.PI * 2) * 0.5;
+      rleg.frame = Math.floor(phase * 3) % 3;
     }
   }
   

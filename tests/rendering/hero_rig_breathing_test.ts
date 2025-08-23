@@ -13,8 +13,8 @@ describe('Hero Rig Breathing', () => {
     
     // console.log('Start:', { y: initialY, frame: initialFrame });
     
-    // Advance 30 ticks (half breathing cycle)
-    for (let i = 0; i < 30; i++) {
+    // Advance 4 ticks (half of 8-tick breathing cycle)
+    for (let i = 0; i < 4; i++) {
       rig.update(1);
     }
     
@@ -23,12 +23,12 @@ describe('Hero Rig Breathing', () => {
     const finalY = torsoFinal?.offset.y || 0;
     const finalFrame = torsoFinal?.frame || 0;
     
-    // console.log('After 30 ticks:', { y: finalY, frame: finalFrame });
+    // console.log('After 4 ticks:', { y: finalY, frame: finalFrame });
     
-    // At tick 30, phase = 0.5, breathAmount = 1 (peak inhale)
-    // torso.offset.y should be -3 (rounded)
-    expect(finalY).toBe(-3);
-    expect(finalFrame).toBe(0); // floor(1 * 3) % 3 = 0
+    // At tick 4 (half cycle), breathAmount = 1 (peak inhale)
+    // torso.offset.y = -8 * 1 = -8
+    expect(finalY).toBe(-8);
+    expect(finalFrame).toBe(1); // floor(0.5 * 3) = 1
   });
   
   test('breathing animation completes full cycle', () => {

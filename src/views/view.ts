@@ -60,27 +60,15 @@ export default class View {
         prevPos.x !== unit.pos.x ||
         prevPos.y !== unit.pos.y
       ) {
-        // For hero units with intended moves, start interpolation from intended position
-        // This gives more responsive feel
-        let targetX = unit.pos.x;
-        let targetY = unit.pos.y;
-        
-        if (unit.tags?.includes('hero') && unit.intendedMove) {
-          // Add small prediction based on intended move for responsiveness
-          const predictionAmount = 0.1;
-          targetX += unit.intendedMove.x * predictionAmount;
-          targetY += unit.intendedMove.y * predictionAmount;
-        }
-        
         this.unitInterpolations.set(unit.id, {
           startX: prevPos.x,
           startY: prevPos.y,
           startZ: prevPos.z,
-          targetX: targetX,
-          targetY: targetY,
+          targetX: unit.pos.x,
+          targetY: unit.pos.y,
           targetZ: currentZ,
           progress: 0,
-          duration: unit.meta?.jumping ? 65 : 150, // Faster for more responsive feel
+          duration: unit.meta?.jumping ? 65 : 200, // Smooth interpolation
         });
       }
       
