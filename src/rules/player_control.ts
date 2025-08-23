@@ -85,6 +85,40 @@ export class PlayerControl extends Rule {
           // Set jump cooldown
           this.jumpCooldowns.set(unit.id, this.JUMP_COOLDOWN);
         }
+        
+        // Handle strike/attack
+        if (this.keysHeld.has('e') || this.keysHeld.has('enter')) {
+          const strikeCooldown = unit.meta?.lastStrike ? context.getCurrentTick() - unit.meta.lastStrike : 999;
+          if (strikeCooldown > 8) { // 8 tick cooldown for strikes
+            commands.push({
+              type: 'strike',
+              unitId: unit.id,
+              params: {
+                direction: unit.meta?.facing || 'right',
+                range: 2
+              }
+            });
+          }
+        }
+        
+        // Handle weapon switching (1-6 keys)
+        const weaponTypes = ['sword', 'spear', 'axe', 'bow', 'shield', 'staff'];
+        for (let i = 0; i < weaponTypes.length; i++) {
+          const key = (i + 1).toString();
+          if (this.keysHeld.has(key)) {
+            commands.push({
+              type: 'meta',
+              params: {
+                unitId: unit.id,
+                meta: {
+                  ...unit.meta,
+                  weapon: weaponTypes[i]
+                }
+              }
+            });
+            console.log(`[PlayerControl] Switching to ${weaponTypes[i]}`);
+          }
+        }
       }
     }
     

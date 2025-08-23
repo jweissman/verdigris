@@ -41,7 +41,7 @@ describe('Projectile simulation', () => {
 
 
 
-    console.log('Units in sim:', sim.units.map(u => u.id));
+    // console.log('Units in sim:', sim.units.map(u => u.id));
     
 
     sim.handleInput({

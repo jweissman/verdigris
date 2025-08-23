@@ -8,7 +8,7 @@ describe('Abilities Performance Profiling', () => {
     const abilities = sim.rulebook.find(r => r.constructor.name === 'Abilities');
     
     if (!abilities) {
-      console.log('No Abilities rule found');
+      // console.log('No Abilities rule found');
       return;
     }
     
@@ -57,18 +57,18 @@ describe('Abilities Performance Profiling', () => {
       return sorted[Math.floor(sorted.length / 2)];
     };
     
-    console.log('\nAbilities Performance Breakdown:');
-    console.log(`  Total: ${median(times.total).toFixed(4)}ms`);
-    console.log(`  getAllUnits: ${median(times.getAllUnits).toFixed(4)}ms`);
-    console.log(`  Filtering: ~${(median(times.total) - median(times.getAllUnits)).toFixed(4)}ms`);
+    // console.log('\nAbilities Performance Breakdown:');
+    // console.log(`  Total: ${median(times.total).toFixed(4)}ms`);
+    // console.log(`  getAllUnits: ${median(times.getAllUnits).toFixed(4)}ms`);
+    // console.log(`  Filtering: ~${(median(times.total) - median(times.getAllUnits)).toFixed(4)}ms`);
     
 
     const allUnits = context.getAllUnits();
     const unitsWithAbilities = allUnits.filter(u => u.abilities?.length > 0);
-    console.log(`\nUnits: ${allUnits.length} total, ${unitsWithAbilities.length} with abilities`);
+    // console.log(`\nUnits: ${allUnits.length} total, ${unitsWithAbilities.length} with abilities`);
     
 
     const dslCompiler = require('../../src/dmg/dsl_compiler').dslCompiler;
-    console.log(`DSL Cache size: ${dslCompiler.cache.size}`);
+    // console.log(`DSL Cache size: ${dslCompiler.cache.size}`);
   });
 });

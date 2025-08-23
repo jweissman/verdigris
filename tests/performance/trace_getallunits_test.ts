@@ -35,7 +35,7 @@ describe('Trace getAllUnits calls', () => {
     };
     
 
-    console.log('\n=== Tracing getAllUnits calls ===');
+    // console.log('\n=== Tracing getAllUnits calls ===');
     
     for (const rule of sim.rulebook) {
       const ruleName = rule.constructor.name;
@@ -48,11 +48,11 @@ describe('Trace getAllUnits calls', () => {
       const ruleProxies = proxyCreations - beforeProxies;
       
       if (ruleCalls > 0) {
-        console.log(`${ruleName}: ${ruleCalls} getAllUnits calls, ${ruleProxies} proxy creations`);
+        // console.log(`${ruleName}: ${ruleCalls} getAllUnits calls, ${ruleProxies} proxy creations`);
       }
     }
     
-    console.log(`\nTotal: ${callCount} getAllUnits calls, ${proxyCreations} proxy creations`);
-    console.log(`With 50 units, that's ${proxyCreations * 50} proxy objects created per step`);
+    // console.log(`\nTotal: ${callCount} getAllUnits calls, ${proxyCreations} proxy creations`);
+    // console.log(`With 50 units, that's ${proxyCreations * 50} proxy objects created per step`);
   });
 });

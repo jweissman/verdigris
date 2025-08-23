@@ -56,26 +56,31 @@ export default class View {
         continue;
       }
 
-      // For jumping units, only create interpolation for position changes, not Z changes
-      // Z will be taken directly from unit.meta.z for immediate response
-      const isJumping = unit.meta?.jumping;
-      const posChanged = prevPos.x !== unit.pos.x || prevPos.y !== unit.pos.y;
-      const zChanged = prevPos.z !== currentZ;
-      
-      if (posChanged || (!isJumping && zChanged)) {
-        // Use faster interpolation for jumping units and hero movement
-        const isHero = unit.tags?.includes('hero');
-        const duration = isJumping ? 50 : (isHero ? 100 : 400); // Very fast for jumps, fast for heroes, normal for others
+      if (
+        prevPos.x !== unit.pos.x ||
+        prevPos.y !== unit.pos.y
+      ) {
+        // For hero units with intended moves, start interpolation from intended position
+        // This gives more responsive feel
+        let targetX = unit.pos.x;
+        let targetY = unit.pos.y;
+        
+        if (unit.tags?.includes('hero') && unit.intendedMove) {
+          // Add small prediction based on intended move for responsiveness
+          const predictionAmount = 0.1;
+          targetX += unit.intendedMove.x * predictionAmount;
+          targetY += unit.intendedMove.y * predictionAmount;
+        }
         
         this.unitInterpolations.set(unit.id, {
           startX: prevPos.x,
           startY: prevPos.y,
           startZ: prevPos.z,
-          targetX: unit.pos.x,
-          targetY: unit.pos.y,
+          targetX: targetX,
+          targetY: targetY,
           targetZ: currentZ,
           progress: 0,
-          duration: duration,
+          duration: unit.meta?.jumping ? 65 : 150, // Faster for more responsive feel
         });
       }
       

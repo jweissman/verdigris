@@ -16,12 +16,12 @@ describe('Isometric Projection Issue', () => {
   test('Y movement causes X visual drift due to hex projection', () => {
     const logicalX = 10; // Hero stays at logical X=10
     
-    console.log('Hero at logical X=10, moving through Y positions:');
+    // console.log('Hero at logical X=10, moving through Y positions:');
     
     const positions = [10, 9, 8, 7, 6, 5, 4]; // Hero Y movement with odd/even mix
     const visualPositions = positions.map(y => {
       const visual = toIsometric(logicalX, y);
-      console.log(`  Y=${y} -> visual X=${visual.x}, visual Y=${visual.y} (row ${y % 2 === 0 ? 'even' : 'odd'})`);
+      // console.log(`  Y=${y} -> visual X=${visual.x}, visual Y=${visual.y} (row ${y % 2 === 0 ? 'even' : 'odd'})`);
       return visual;
     });
     
@@ -30,8 +30,8 @@ describe('Isometric Projection Issue', () => {
     const maxX = Math.max(...visualPositions.map(p => p.x));
     const drift = maxX - minX;
     
-    console.log(`\nVisual X drift: ${drift} pixels (${minX} to ${maxX})`);
-    console.log('This is why the hero appears to move sideways when moving vertically!');
+    // console.log(`\nVisual X drift: ${drift} pixels (${minX} to ${maxX})`);
+    // console.log('This is why the hero appears to move sideways when moving vertically!');
     
     expect(drift).toBeGreaterThan(0); // There will be drift due to hex projection
   });

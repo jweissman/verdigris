@@ -6,8 +6,8 @@ describe('DSL Compiler Debug', () => {
     const expr = 'self.hp < 50';
     try {
       const fn = dslCompiler.compile(expr);
-      console.log('Simple expression compiled:');
-      console.log(fn.toString().substring(0, 500));
+      // console.log('Simple expression compiled:');
+      // console.log(fn.toString().substring(0, 500));
     } catch (e) {
       console.error('Failed to compile:', e);
     }
@@ -18,8 +18,8 @@ describe('DSL Compiler Debug', () => {
     const expr = 'distance(closest.enemy()?.pos) <= 10';
     try {
       const fn = dslCompiler.compile(expr);
-      console.log('\nComplex expression compiled:');
-      console.log(fn.toString());
+      // console.log('\nComplex expression compiled:');
+      // console.log(fn.toString());
     } catch (e) {
       console.error('Failed to compile:', e);
     }

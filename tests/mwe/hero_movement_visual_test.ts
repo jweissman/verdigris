@@ -28,47 +28,25 @@ describe('Hero Movement Visual Test', () => {
       }
     });
     
-    console.log('=== HERO MOVEMENT TEST ===');
-    console.log('Initial hero:', { pos: hero.pos, meta: { controlled: hero.meta?.controlled } });
     
     // Simulate pressing W key
-    console.log('\n--- Pressing W key (move up) ---');
     playerControl.setKeyState('w', true);
     
     // Run several simulation steps
     for (let step = 0; step < 12; step++) {
-      console.log(`\nStep ${step}:`);
-      console.log('  Before step:', {
-        pos: sim.units[0].pos,
-        intendedMove: sim.units[0].intendedMove,
-        queuedCommands: sim.queuedCommands.length
-      });
-      
       sim.step();
-      
-      console.log('  After step:', {
-        pos: sim.units[0].pos,
-        intendedMove: sim.units[0].intendedMove,
-        cooldown: (playerControl as any).moveCooldowns?.get('hero') || 0
-      });
     }
     
     // Release W and press S
-    console.log('\n--- Releasing W, pressing S (move down) ---');
+    // console.log('\n--- Releasing W, pressing S (move down) ---');
     playerControl.setKeyState('w', false);
     playerControl.setKeyState('s', true);
     
     for (let step = 12; step < 20; step++) {
-      console.log(`\nStep ${step}:`);
       sim.step();
-      console.log('  After step:', {
-        pos: sim.units[0].pos,
-        intendedMove: sim.units[0].intendedMove
-      });
     }
     
     const finalPos = sim.units[0].pos;
-    console.log('\nFinal position:', finalPos);
     
     // Should have moved up then down
     expect(finalPos.x).toBe(10); // X shouldn't change

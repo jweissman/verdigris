@@ -17,7 +17,7 @@ describe('Trace Rule Commands', () => {
 
     const context = sim.getTickContext();
     
-    console.log('\n=== Testing each rule individually ===');
+    // console.log('\n=== Testing each rule individually ===');
     
 
     for (const rule of sim.rulebook) {
@@ -25,13 +25,13 @@ describe('Trace Rule Commands', () => {
       const commands = rule.execute(context);
       
       if (commands && commands.length > 0) {
-        console.log(`${ruleName}: ${commands.length} commands`);
+        // console.log(`${ruleName}: ${commands.length} commands`);
         
 
         const metaCommands = commands.filter(c => c.type === 'meta');
         if (metaCommands.length > 0) {
-          console.log(`  -> ${metaCommands.length} meta commands!`);
-          console.log('  First meta:', JSON.stringify(metaCommands[0], null, 2));
+          // console.log(`  -> ${metaCommands.length} meta commands!`);
+          // console.log('  First meta:', JSON.stringify(metaCommands[0], null, 2));
         }
       }
     }

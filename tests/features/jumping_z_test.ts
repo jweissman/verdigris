@@ -29,7 +29,7 @@ describe('Jumping Z-Height', () => {
 
     let jumped = false;
     for (let i = 0; i < 20; i++) {
-      console.log(`Step ${i}: worm at (${worm!.pos.x}, ${worm!.pos.y}), meta.jumping = ${worm!.meta?.jumping}`);
+      // console.log(`Step ${i}: worm at (${worm!.pos.x}, ${worm!.pos.y}), meta.jumping = ${worm!.meta?.jumping}`);
       sim.step();
 
       const updatedWorm = sim.units.find(u => u.sprite === 'worm');
@@ -42,14 +42,14 @@ describe('Jumping Z-Height', () => {
 
     const finalWorm = sim.units.find(u => u.sprite === 'worm');
     if (!jumped) {
-      console.log('Final worm meta:', finalWorm!.meta);
-      console.log('Final worm abilities:', finalWorm!.abilities);
-      console.log('Final worm lastAbilityTick:', finalWorm!.lastAbilityTick);
+      // console.log('Final worm meta:', finalWorm!.meta);
+      // console.log('Final worm abilities:', finalWorm!.abilities);
+      // console.log('Final worm lastAbilityTick:', finalWorm!.lastAbilityTick);
       const dx = soldier!.pos.x - finalWorm!.pos.x;
       const dy = soldier!.pos.y - finalWorm!.pos.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      console.log('Distance to enemy:', dist);
-      console.log('Queued commands:', sim.queuedCommands);
+      // console.log('Distance to enemy:', dist);
+      // console.log('Queued commands:', sim.queuedCommands);
     }
     
     expect(jumped).toBe(true);

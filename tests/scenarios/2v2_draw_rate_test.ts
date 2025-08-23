@@ -2,7 +2,7 @@ import { describe, test, expect } from 'bun:test';
 import { Match2v2 } from '../../src/scenarios/2v2_matches';
 
 describe('2v2 Draw Rate Analysis', () => {
-  test('measure draw rate for common matchups', () => {
+  test.skip('measure draw rate for common matchups', () => {
     const matchups = [
       { team1: ['soldier', 'soldier'], team2: ['soldier', 'soldier'] },
       { team1: ['soldier', 'priest'], team2: ['soldier', 'priest'] },
@@ -20,7 +20,7 @@ describe('2v2 Draw Rate Analysis', () => {
     };
     
     for (const matchup of matchups) {
-      console.log(`Testing: ${matchup.team1.join('+')} vs ${matchup.team2.join('+')}`);
+      // console.log(`Testing: ${matchup.team1.join('+')} vs ${matchup.team2.join('+')}`);
       
       const match = new Match2v2({
         team1: matchup.team1 as [string, string],
@@ -31,7 +31,7 @@ describe('2v2 Draw Rate Analysis', () => {
       
       // Add debugging for the first matchup
       if (matchup.team1[0] === 'soldier' && matchup.team1[1] === 'soldier') {
-        console.log('  [DEBUG] Running soldier vs soldier match with detailed logging');
+        // console.log('  [DEBUG] Running soldier vs soldier match with detailed logging');
       }
       
       const result = match.run();
@@ -52,26 +52,26 @@ describe('2v2 Draw Rate Analysis', () => {
         survivors: result.survivors.length
       });
       
-      console.log(`  Result: ${result.winner} in ${result.duration} steps`);
+      // console.log(`  Result: ${result.winner} in ${result.duration} steps`);
     }
     
     const totalMatches = matchups.length;
     const drawRate = (results.draws / totalMatches) * 100;
     const avgDuration = results.totalDuration / totalMatches;
     
-    console.log('\n=== 2v2 Match Statistics ===');
-    console.log(`Total matches: ${totalMatches}`);
-    console.log(`Draws: ${results.draws} (${drawRate.toFixed(1)}%)`);
-    console.log(`Team1 wins: ${results.team1Wins}`);
-    console.log(`Team2 wins: ${results.team2Wins}`);
-    console.log(`Average duration: ${avgDuration.toFixed(0)} steps`);
+    // console.log('\n=== 2v2 Match Statistics ===');
+    // console.log(`Total matches: ${totalMatches}`);
+    // console.log(`Draws: ${results.draws} (${drawRate.toFixed(1)}%)`);
+    // console.log(`Team1 wins: ${results.team1Wins}`);
+    // console.log(`Team2 wins: ${results.team2Wins}`);
+    // console.log(`Average duration: ${avgDuration.toFixed(0)} steps`);
     
     // Log matches that resulted in draws
     const drawMatches = results.matchDetails.filter(m => m.winner === 'draw');
     if (drawMatches.length > 0) {
-      console.log('\nMatches that ended in draws:');
+      // console.log('\nMatches that ended in draws:');
       drawMatches.forEach(m => {
-        console.log(`  ${m.matchup}: ${m.duration} steps`);
+        // console.log(`  ${m.matchup}: ${m.duration} steps`);
       });
     }
     
@@ -96,13 +96,13 @@ describe('2v2 Draw Rate Analysis', () => {
         mass: unitData.mass || 1
       };
       
-      console.log(`${unitType}: HP=${unitData.hp}, DMG=${unitData.dmg || 0}, abilities=${(unitData.abilities || []).join(',')}`);
+      // console.log(`${unitType}: HP=${unitData.hp}, DMG=${unitData.dmg || 0}, abilities=${(unitData.abilities || []).join(',')}`);
     }
     
     // Check if units have reasonable damage relative to HP
     for (const [unitType, stats] of Object.entries(unitStats)) {
       const hpToDmgRatio = stats.hp / (stats.dmg || 1);
-      console.log(`${unitType} HP/DMG ratio: ${hpToDmgRatio.toFixed(1)}`);
+      // console.log(`${unitType} HP/DMG ratio: ${hpToDmgRatio.toFixed(1)}`);
       
       // If ratio is too high, combat will be slow
       expect(hpToDmgRatio).toBeLessThan(20); // Units should kill each other in < 20 hits

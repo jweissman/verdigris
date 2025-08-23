@@ -46,7 +46,7 @@ describe('Abilities getAllUnits Optimization', () => {
     // Check how many times getAllUnits was called
     // Should be called once by each rule that needs it
     // Abilities should only call it once total, not once per unit
-    console.log(`getAllUnits called ${getAllUnitsCallCount} times in one step`);
+    // console.log(`getAllUnits called ${getAllUnitsCallCount} times in one step`);
     
     // The Abilities rule should call it once
     // Other rules might call it too, but total should be reasonable

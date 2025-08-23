@@ -27,25 +27,27 @@ describe('Hero Jump Visual Issue', () => {
       }
     });
     
-    console.log('=== HERO JUMP TEST ===');
-    console.log('Initial:', { pos: hero.pos, z: hero.meta?.z, jumping: hero.meta?.jumping });
+    // console.log('=== HERO JUMP TEST ===');
+    // console.log('Initial:', { pos: hero.pos, z: hero.meta?.z, jumping: hero.meta?.jumping });
     
-    // Simulate spacebar press
-    console.log('\n--- Pressing spacebar ---');
+    // Simulate spacebar press and release
+    // console.log('\n--- Pressing spacebar ---');
     playerControl.setKeyState(' ', true);
+    sim.step(); // One step with space pressed
+    playerControl.setKeyState(' ', false); // Release spacebar
     
     // Run several simulation steps
-    for (let step = 0; step < 20; step++) {
+    for (let step = 1; step < 20; step++) {
       sim.step();
       const h = sim.units.find(u => u.id === 'jump_hero');
       
       if (step <= 2 || h?.meta?.jumping || step === 19) {
-        console.log(`Step ${step}: pos=(${h?.pos.x}, ${h?.pos.y}), z=${h?.meta?.z || 0}, jumping=${h?.meta?.jumping}, progress=${h?.meta?.jumpProgress || 0}`);
+        // console.log(`Step ${step}: pos=(${h?.pos.x}, ${h?.pos.y}), z=${h?.meta?.z || 0}, jumping=${h?.meta?.jumping}, progress=${h?.meta?.jumpProgress || 0}`);
       }
     }
     
     const finalHero = sim.units.find(u => u.id === 'jump_hero');
-    console.log('\nFinal:', { pos: finalHero?.pos, z: finalHero?.meta?.z, jumping: finalHero?.meta?.jumping });
+    // console.log('\nFinal:', { pos: finalHero?.pos, z: finalHero?.meta?.z, jumping: finalHero?.meta?.jumping });
     
     // Should have jumped and landed
     expect(finalHero?.pos.x).not.toBe(10); // Should have moved horizontally

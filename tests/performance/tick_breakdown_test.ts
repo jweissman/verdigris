@@ -57,27 +57,27 @@ describe('Full Tick Performance Breakdown', () => {
     
     const commandMedian = commandTimes.length > 0 ? commandTimes[50] : 0;
     
-    console.log('\n=== PERFORMANCE BREAKDOWN ===');
-    console.log(`Full step:     ${stepMedian.toFixed(4)}ms`);
-    console.log(`Rules only:    ${rulesMedian.toFixed(4)}ms`);
-    console.log(`Commands only: ${commandMedian.toFixed(4)}ms`);
-    console.log(`Other/overhead: ${(stepMedian - rulesMedian - commandMedian).toFixed(4)}ms`);
+    // console.log('\n=== PERFORMANCE BREAKDOWN ===');
+    // console.log(`Full step:     ${stepMedian.toFixed(4)}ms`);
+    // console.log(`Rules only:    ${rulesMedian.toFixed(4)}ms`);
+    // console.log(`Commands only: ${commandMedian.toFixed(4)}ms`);
+    // console.log(`Other/overhead: ${(stepMedian - rulesMedian - commandMedian).toFixed(4)}ms`);
     
-    console.log('\n=== BUDGET ANALYSIS ===');
+    // console.log('\n=== BUDGET ANALYSIS ===');
     const totalBudget = 0.01; // 10ms total step budget
-    console.log(`Step budget:   ${totalBudget}ms`);
-    console.log(`Step actual:   ${stepMedian.toFixed(4)}ms (${((stepMedian/totalBudget)*100).toFixed(0)}% of budget)`);
+    // console.log(`Step budget:   ${totalBudget}ms`);
+    // console.log(`Step actual:   ${stepMedian.toFixed(4)}ms (${((stepMedian/totalBudget)*100).toFixed(0)}% of budget)`);
     
     if (stepMedian <= totalBudget) {
-      console.log('✅ WITHIN BUDGET!');
+      // console.log('✅ WITHIN BUDGET!');
     } else {
-      console.log(`❌ OVER BUDGET by ${(stepMedian - totalBudget).toFixed(4)}ms`);
+      // console.log(`❌ OVER BUDGET by ${(stepMedian - totalBudget).toFixed(4)}ms`);
     }
     
 
-    console.log('\n=== TIME DISTRIBUTION ===');
-    console.log(`Rules:    ${((rulesMedian/stepMedian)*100).toFixed(1)}%`);
-    console.log(`Commands: ${((commandMedian/stepMedian)*100).toFixed(1)}%`);
-    console.log(`Other:    ${(((stepMedian - rulesMedian - commandMedian)/stepMedian)*100).toFixed(1)}%`);
+    // console.log('\n=== TIME DISTRIBUTION ===');
+    // console.log(`Rules:    ${((rulesMedian/stepMedian)*100).toFixed(1)}%`);
+    // console.log(`Commands: ${((commandMedian/stepMedian)*100).toFixed(1)}%`);
+    // console.log(`Other:    ${(((stepMedian - rulesMedian - commandMedian)/stepMedian)*100).toFixed(1)}%`);
   });
 });

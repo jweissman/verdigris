@@ -13,7 +13,7 @@ describe('Hero Y-axis Movement', () => {
       tags: ['hero']
     });
     
-    console.log('Initial hero position:', hero.pos);
+    // console.log('Initial hero position:', hero.pos);
     
     // Test moving up
     sim.queuedCommands.push({
@@ -24,7 +24,7 @@ describe('Hero Y-axis Movement', () => {
     sim.step();
     
     const heroAfterUp = sim.units.find(u => u.id === 'test_hero');
-    console.log('After hero up command:', heroAfterUp?.pos, 'intendedMove:', heroAfterUp?.intendedMove);
+    // console.log('After hero up command:', heroAfterUp?.pos, 'intendedMove:', heroAfterUp?.intendedMove);
     
     // The hero command should queue a move with dy: -2
     // But intendedMove gets consumed by movement, so check actual position after more steps
@@ -33,7 +33,7 @@ describe('Hero Y-axis Movement', () => {
     }
     
     const heroFinalUp = sim.units.find(u => u.id === 'test_hero');
-    console.log('Final position after up:', heroFinalUp?.pos);
+    // console.log('Final position after up:', heroFinalUp?.pos);
     
     // Should have moved up by 2
     expect(heroFinalUp?.pos.y).toBeLessThan(10);
@@ -49,7 +49,7 @@ describe('Hero Y-axis Movement', () => {
     }
     
     const heroFinalDown = sim.units.find(u => u.id === 'test_hero');
-    console.log('Final position after down:', heroFinalDown?.pos);
+    // console.log('Final position after down:', heroFinalDown?.pos);
     
     // Should have moved down from where it was
     expect(heroFinalDown?.pos.y).toBeGreaterThan(heroFinalUp?.pos.y || 0);
@@ -66,7 +66,7 @@ describe('Hero Y-axis Movement', () => {
       tags: ['hero']
     });
     
-    console.log('Initial position:', hero.pos);
+    // console.log('Initial position:', hero.pos);
     
     // Direct move command with dy: 2
     sim.queuedCommands.push({
@@ -77,7 +77,7 @@ describe('Hero Y-axis Movement', () => {
     
     sim.step();
     const afterCommand = sim.units.find(u => u.id === 'test_hero2');
-    console.log('After move command:', afterCommand?.pos, 'intendedMove:', afterCommand?.intendedMove);
+    // console.log('After move command:', afterCommand?.pos, 'intendedMove:', afterCommand?.intendedMove);
     
     // Let movement execute
     for (let i = 0; i < 10; i++) {
@@ -85,7 +85,7 @@ describe('Hero Y-axis Movement', () => {
     }
     
     const final = sim.units.find(u => u.id === 'test_hero2');
-    console.log('Final position:', final?.pos);
+    // console.log('Final position:', final?.pos);
     
     // Should have moved down by 2
     expect(final?.pos.y).toBe(12);

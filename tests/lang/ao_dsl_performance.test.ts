@@ -132,7 +132,7 @@ describe('Ao DSL Performance', () => {
     expect(elapsed).toBeLessThan(150);
     
     const perEval = elapsed / 250;
-    console.log(`Average time per DSL evaluation: ${perEval.toFixed(3)}ms`);
+    // console.log(`Average time per DSL evaluation: ${perEval.toFixed(3)}ms`);
   });
   
   test('Cached units version avoids repeated getAllUnits calls', () => {

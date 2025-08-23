@@ -59,7 +59,7 @@ describe('Winter Snow Freeze Interactions', () => {
 
       if (tick % 10 === 0) {
         const snowPos = sim.particles.filter(p => p.type === 'snow').map(p => `(${p.pos.x.toFixed(1)},${p.pos.y.toFixed(1)})`);
-        console.log(`Tick ${tick}: Snow at ${snowPos.join(', ')}, Soldier at (${soldier.pos.x},${soldier.pos.y})`);
+        // console.log(`Tick ${tick}: Snow at ${snowPos.join(', ')}, Soldier at (${soldier.pos.x},${soldier.pos.y})`);
       }
       
       const currentSnowParticles = sim.particles.filter(p => p.type === 'snow').length;
@@ -82,10 +82,10 @@ describe('Winter Snow Freeze Interactions', () => {
         frozenUnits = currentFrozenUnits;
         const frozen = sim.units.find(u => u.meta.frozen);
         const temp = sim.temperatureField.get(Math.floor(soldier.pos.x), Math.floor(soldier.pos.y));
-        console.log(`Unit frozen at tick ${tick}! Temp at soldier: ${temp}`);
+        // console.log(`Unit frozen at tick ${tick}! Temp at soldier: ${temp}`);
       } else if (currentFrozenUnits < frozenUnits) {
         const temp = sim.temperatureField.get(Math.floor(soldier.pos.x), Math.floor(soldier.pos.y));
-        console.log(`Unit THAWED at tick ${tick}! Temp at soldier: ${temp}`);
+        // console.log(`Unit THAWED at tick ${tick}! Temp at soldier: ${temp}`);
         frozenUnits = currentFrozenUnits;
       }
     }

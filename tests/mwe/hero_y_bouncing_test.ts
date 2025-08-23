@@ -18,7 +18,7 @@ describe('Hero Y Movement Bouncing Issue', () => {
       meta: { controlled: true }
     });
     
-    console.log('Initial position:', hero.pos);
+    // console.log('Initial position:', hero.pos);
     
     // Simulate pressing and holding W key
     playerControl.setKeyState('w', true);
@@ -30,7 +30,7 @@ describe('Hero Y Movement Bouncing Issue', () => {
       sim.step();
       const h = sim.units.find(u => u.id === 'test_hero');
       positions.push({ x: h!.pos.x, y: h!.pos.y, step });
-      console.log(`Step ${step}: pos=(${h!.pos.x}, ${h!.pos.y}), intendedMove=(${h!.intendedMove.x}, ${h!.intendedMove.y})`);
+      // console.log(`Step ${step}: pos=(${h!.pos.x}, ${h!.pos.y}), intendedMove=(${h!.intendedMove.x}, ${h!.intendedMove.y})`);
     }
     
     // Check for bouncing - Y should only go down (from 10 toward 8, 6, etc)
@@ -45,7 +45,7 @@ describe('Hero Y Movement Bouncing Issue', () => {
       if (Math.abs(deltaY) > 0.01) {
         const currentDirection = deltaY > 0 ? 1 : -1;
         if (direction !== 0 && direction !== currentDirection) {
-          console.log(`BOUNCE detected at step ${i}: direction changed from ${direction} to ${currentDirection}`);
+          // console.log(`BOUNCE detected at step ${i}: direction changed from ${direction} to ${currentDirection}`);
           bounceDetected = true;
         }
         direction = currentDirection;
@@ -64,7 +64,7 @@ describe('Hero Y Movement Bouncing Issue', () => {
     for (let step = 10; step < 20; step++) {
       sim.step();
       const h = sim.units.find(u => u.id === 'test_hero');
-      console.log(`Step ${step}: pos=(${h!.pos.x}, ${h!.pos.y}), intendedMove=(${h!.intendedMove.x}, ${h!.intendedMove.y})`);
+      // console.log(`Step ${step}: pos=(${h!.pos.x}, ${h!.pos.y}), intendedMove=(${h!.intendedMove.x}, ${h!.intendedMove.y})`);
     }
   });
 });

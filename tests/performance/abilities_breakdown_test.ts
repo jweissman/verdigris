@@ -21,10 +21,10 @@ describe('Abilities Breakdown', () => {
       }
     }
     
-    console.log(`\nUnits: ${units.length} total`);
-    console.log(`Units with abilities: ${unitsWithAbilities}`);
-    console.log(`Total abilities to check: ${totalAbilities}`);
-    console.log(`Average abilities per unit: ${(totalAbilities / unitsWithAbilities).toFixed(1)}`);
+    // console.log(`\nUnits: ${units.length} total`);
+    // console.log(`Units with abilities: ${unitsWithAbilities}`);
+    // console.log(`Total abilities to check: ${totalAbilities}`);
+    // console.log(`Average abilities per unit: ${(totalAbilities / unitsWithAbilities).toFixed(1)}`);
     
 
     const times = [];
@@ -36,7 +36,7 @@ describe('Abilities Breakdown', () => {
     
     times.sort((a, b) => a - b);
     const median = times[50];
-    console.log(`\nMedian execution time: ${median.toFixed(4)}ms`);
-    console.log(`Time per ability check: ${(median / totalAbilities).toFixed(4)}ms`);
+    // console.log(`\nMedian execution time: ${median.toFixed(4)}ms`);
+    // console.log(`Time per ability check: ${(median / totalAbilities).toFixed(4)}ms`);
   });
 });

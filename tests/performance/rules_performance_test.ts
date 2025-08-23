@@ -82,11 +82,11 @@ describe('Rules Performance Analysis', () => {
     const maxStepTime = Math.max(...stepTimes);
     const minStepTime = Math.min(...stepTimes);
     
-    console.log('\n=== Performance Statistics ===');
-    console.log(`Average step time: ${avgStepTime.toFixed(3)}ms`);
-    console.log(`Min step time: ${minStepTime.toFixed(3)}ms`);
-    console.log(`Max step time: ${maxStepTime.toFixed(3)}ms`);
-    console.log(`Total units: ${sim.units.length}`);
+    // console.log('\n=== Performance Statistics ===');
+    // console.log(`Average step time: ${avgStepTime.toFixed(3)}ms`);
+    // console.log(`Min step time: ${minStepTime.toFixed(3)}ms`);
+    // console.log(`Max step time: ${maxStepTime.toFixed(3)}ms`);
+    // console.log(`Total units: ${sim.units.length}`);
     
     // Performance requirements from VISION.md: 0.1-0.2ms per tick
     expect(avgStepTime).toBeLessThan(2); // Allow 2ms for now, target is 0.2ms
@@ -99,9 +99,9 @@ describe('Rules Performance Analysis', () => {
       .slice(0, 5);
     
     if (slowSteps.length > 0) {
-      console.log('\nSlowest steps:');
+      // console.log('\nSlowest steps:');
       slowSteps.forEach(s => {
-        console.log(`  Step ${s.idx}: ${s.time.toFixed(3)}ms`);
+        // console.log(`  Step ${s.idx}: ${s.time.toFixed(3)}ms`);
       });
     }
   });
@@ -141,7 +141,7 @@ describe('Rules Performance Analysis', () => {
     const memAfter = process.memoryUsage().heapUsed / 1024 / 1024;
     const memDelta = memAfter - memBefore;
     
-    console.log(`\nMemory usage: ${memDelta.toFixed(2)}MB for 50 steps with 50 units`);
+    // console.log(`\nMemory usage: ${memDelta.toFixed(2)}MB for 50 steps with 50 units`);
     
     // Check for memory leaks
     expect(memDelta).toBeLessThan(10); // Should not use more than 10MB

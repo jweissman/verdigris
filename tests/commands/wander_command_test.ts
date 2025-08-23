@@ -128,7 +128,7 @@ describe('Wander Command', () => {
 
       for (let i = 0; i < arrays2.capacity; i++) {
         if (arrays2.unitIds[i] === deadUnit.id) {
-          console.log(`Dead unit after step: pos=(${arrays2.posX[i]}, ${arrays2.posY[i]}), intendedMove=(${arrays2.intendedMoveX[i]}, ${arrays2.intendedMoveY[i]}), state=${arrays2.state[i]}`);
+          // console.log(`Dead unit after step: pos=(${arrays2.posX[i]}, ${arrays2.posY[i]}), intendedMove=(${arrays2.intendedMoveX[i]}, ${arrays2.intendedMoveY[i]}), state=${arrays2.state[i]}`);
 
           expect(arrays2.posX[i]).toBe(initialDeadPos.x);
           expect(arrays2.posY[i]).toBe(initialDeadPos.y);

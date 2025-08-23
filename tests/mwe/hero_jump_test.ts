@@ -28,9 +28,9 @@ describe('Hero Jump Mechanics', () => {
     expect(jumpingHero?.meta?.jumpTarget).toEqual({ x: 14, y: 10 }); // 4 tiles right
     expect(jumpingHero?.meta?.jumpHeight).toBe(5);
     
-    console.log('Jump initiated successfully');
-    console.log(`  Origin: (${jumpingHero?.meta?.jumpOrigin?.x}, ${jumpingHero?.meta?.jumpOrigin?.y})`);
-    console.log(`  Target: (${jumpingHero?.meta?.jumpTarget?.x}, ${jumpingHero?.meta?.jumpTarget?.y})`);
+    // console.log('Jump initiated successfully');
+    // console.log(`  Origin: (${jumpingHero?.meta?.jumpOrigin?.x}, ${jumpingHero?.meta?.jumpOrigin?.y})`);
+    // console.log(`  Target: (${jumpingHero?.meta?.jumpTarget?.x}, ${jumpingHero?.meta?.jumpTarget?.y})`);
   });
   
   test('hero completes jump arc', () => {
@@ -55,7 +55,7 @@ describe('Hero Jump Mechanics', () => {
       });
       
       if (!hero.meta?.jumping) {
-        console.log(`Jump completed after ${i + 1} steps`);
+        // console.log(`Jump completed after ${i + 1} steps`);
         break;
       }
     }
@@ -70,9 +70,9 @@ describe('Hero Jump Mechanics', () => {
     expect(maxHeightIdx).toBeGreaterThan(0); // Not at start
     expect(maxHeightIdx).toBeLessThan(jumpPath.length - 1); // Not at end
     
-    console.log('Jump path:');
+    // console.log('Jump path:');
     jumpPath.forEach((p, i) => {
-      console.log(`  Step ${i}: x=${p.x.toFixed(1)}, y=${p.y.toFixed(1)}, z=${p.z.toFixed(2)}`);
+      // console.log(`  Step ${i}: x=${p.x.toFixed(1)}, y=${p.y.toFixed(1)}, z=${p.z.toFixed(2)}`);
     });
     
     // Final position should be at target
@@ -102,7 +102,7 @@ describe('Hero Jump Mechanics', () => {
     // Should not queue another jump
     expect(commandsAfter).toBe(commandsBefore);
     
-    console.log('Double jump correctly prevented');
+    // console.log('Double jump correctly prevented');
   });
   
   test('hero movement updates facing direction', () => {
@@ -128,6 +128,6 @@ describe('Hero Jump Mechanics', () => {
     hero = sim.units.find(u => u.id === 'hero_player');
     expect(hero?.meta?.facing).toBe('left');
     
-    console.log('Facing direction updates correctly');
+    // console.log('Facing direction updates correctly');
   });
 });

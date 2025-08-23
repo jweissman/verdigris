@@ -17,7 +17,7 @@ describe('Hero Jump Z-axis', () => {
       tags: ['hero']
     });
     
-    console.log('Initial hero:', { pos: hero.pos, z: hero.meta?.z });
+    // console.log('Initial hero:', { pos: hero.pos, z: hero.meta?.z });
     
     // Queue jump command
     sim.queuedCommands.push({
@@ -33,18 +33,18 @@ describe('Hero Jump Z-axis', () => {
     sim.step();
     
     const heroAfterStart = sim.units.find(u => u.id === 'jumping_hero');
-    console.log('After jump start:', { 
-      pos: heroAfterStart?.pos, 
-      z: heroAfterStart?.meta?.z,
-      jumping: heroAfterStart?.meta?.jumping,
-      jumpProgress: heroAfterStart?.meta?.jumpProgress
-    });
+    // console.log('After jump start:', { 
+    //   pos: heroAfterStart?.pos, 
+    //   z: heroAfterStart?.meta?.z,
+    //   jumping: heroAfterStart?.meta?.jumping,
+    //   jumpProgress: heroAfterStart?.meta?.jumpProgress
+    // });
     
     // Step through jump animation (increased duration to 20 ticks)
     for (let i = 0; i < 25; i++) {
       sim.step();
       const h = sim.units.find(u => u.id === 'jumping_hero');
-      console.log(`Step ${i+1}: x=${h?.pos.x?.toFixed(1)}, y=${h?.pos.y}, z=${h?.meta?.z?.toFixed(2)}, jumping=${h?.meta?.jumping}`);
+      // console.log(`Step ${i+1}: x=${h?.pos.x?.toFixed(1)}, y=${h?.pos.y}, z=${h?.meta?.z?.toFixed(2)}, jumping=${h?.meta?.jumping}`);
       
       // Check that Z goes up during jump
       if (i === 3) { // Peak of jump (step 4 in output)
@@ -58,11 +58,11 @@ describe('Hero Jump Z-axis', () => {
     }
     
     const heroFinal = sim.units.find(u => u.id === 'jumping_hero');
-    console.log('Final hero:', { 
-      pos: heroFinal?.pos, 
-      z: heroFinal?.meta?.z,
-      jumping: heroFinal?.meta?.jumping
-    });
+    // console.log('Final hero:', { 
+    //   pos: heroFinal?.pos, 
+    //   z: heroFinal?.meta?.z,
+    //   jumping: heroFinal?.meta?.jumping
+    // });
     
     // Should have moved and landed
     expect(heroFinal?.pos.x).toBeGreaterThan(10);

@@ -15,7 +15,7 @@ describe('Farmer Plant Ability', () => {
     
     // Initial state
     const initialUnitCount = sim.units.length;
-    console.log('Initial units:', sim.units.map(u => u.type || u.sprite));
+    // console.log('Initial units:', sim.units.map(u => u.type || u.sprite));
     
     // Farmer has plant ability
     expect(farmer.abilities).toContain('plant');
@@ -26,7 +26,7 @@ describe('Farmer Plant Ability', () => {
     
     // Check if a bush was created
     const newUnitCount = sim.units.length;
-    console.log('After plant units:', sim.units.map(u => u.type || u.sprite));
+    // console.log('After plant units:', sim.units.map(u => u.type || u.sprite));
     
     // Should have one more unit (the bush)
     expect(newUnitCount).toBe(initialUnitCount + 1);
@@ -36,14 +36,6 @@ describe('Farmer Plant Ability', () => {
     expect(bush).toBeDefined();
     
     if (bush) {
-      console.log('Bush properties:', {
-        hp: bush.hp,
-        mass: bush.mass,
-        team: bush.team,
-        pos: bush.pos,
-        tags: bush.tags
-      });
-      
       // Verify bush properties
       expect(bush.hp).toBe(1);
       expect(bush.mass).toBe(1);
@@ -86,7 +78,7 @@ describe('Farmer Plant Ability', () => {
     }
     
     // Enemy should not have moved much due to bush blocking
-    console.log('Enemy moved from', enemyStartPos, 'to', enemy.pos);
+    // console.log('Enemy moved from', enemyStartPos, 'to', enemy.pos);
   });
   
   test('multiple farmers can create bush maze', () => {
@@ -109,7 +101,7 @@ describe('Farmer Plant Ability', () => {
     
     // Should have 3 bushes
     const bushes = sim.units.filter(u => u.type === 'bush');
-    console.log('Created', bushes.length, 'bushes');
+    // console.log('Created', bushes.length, 'bushes');
     expect(bushes.length).toBe(3);
   });
 });

@@ -11,7 +11,7 @@ describe('Hero Rig Breathing', () => {
     const initialY = torsoInitial?.offset.y || 0;
     const initialFrame = torsoInitial?.frame || 0;
     
-    console.log('Start:', { y: initialY, frame: initialFrame });
+    // console.log('Start:', { y: initialY, frame: initialFrame });
     
     // Advance 30 ticks (half breathing cycle)
     for (let i = 0; i < 30; i++) {
@@ -23,7 +23,7 @@ describe('Hero Rig Breathing', () => {
     const finalY = torsoFinal?.offset.y || 0;
     const finalFrame = torsoFinal?.frame || 0;
     
-    console.log('After 30 ticks:', { y: finalY, frame: finalFrame });
+    // console.log('After 30 ticks:', { y: finalY, frame: finalFrame });
     
     // At tick 30, phase = 0.5, breathAmount = 1 (peak inhale)
     // torso.offset.y should be -3 (rounded)
@@ -52,7 +52,7 @@ describe('Hero Rig Breathing', () => {
       positions.push(torso?.offset.y || 0);
     }
     
-    console.log('Positions at 0, 15, 30, 45, 60:', positions);
+    // console.log('Positions at 0, 15, 30, 45, 60:', positions);
     
     // Should see rise and fall (Math.round(-1.5) = -1 in JS)
     expect(positions[0]).toBe(0); // Start at 0

@@ -16,7 +16,7 @@ describe('Hero Movement', () => {
       }
     });
     
-    console.log('Initial position:', hero.pos);
+    // console.log('Initial position:', hero.pos);
     
     // Queue a move command
     sim.queuedCommands.push({
@@ -32,13 +32,13 @@ describe('Hero Movement', () => {
     sim.step();
     
     const movedHero = sim.units.find(u => u.id === 'hero1');
-    console.log('After move command:', movedHero?.pos, 'intendedMove:', movedHero?.intendedMove);
+    // console.log('After move command:', movedHero?.pos, 'intendedMove:', movedHero?.intendedMove);
     
     // Movement happens over time
     for (let i = 0; i < 5; i++) {
       sim.step();
       const h = sim.units.find(u => u.id === 'hero1');
-      console.log(`After step ${i+2}:`, h?.pos, 'intendedMove:', h?.intendedMove);
+      // console.log(`After step ${i+2}:`, h?.pos, 'intendedMove:', h?.intendedMove);
     }
     
     const finalHero = sim.units.find(u => u.id === 'hero1');
@@ -64,8 +64,8 @@ describe('Hero Movement', () => {
       team: 'friendly'
     });
     
-    console.log('Even row hero at:', heroEven.pos);
-    console.log('Odd row hero at:', heroOdd.pos);
+    // console.log('Even row hero at:', heroEven.pos);
+    // console.log('Odd row hero at:', heroOdd.pos);
     
     // Move both heroes right
     sim.queuedCommands.push({
@@ -88,8 +88,8 @@ describe('Hero Movement', () => {
     const evenFinal = sim.units.find(u => u.id === 'hero_even');
     const oddFinal = sim.units.find(u => u.id === 'hero_odd');
     
-    console.log('Even row hero moved to:', evenFinal?.pos);
-    console.log('Odd row hero moved to:', oddFinal?.pos);
+    // console.log('Even row hero moved to:', evenFinal?.pos);
+    // console.log('Odd row hero moved to:', oddFinal?.pos);
     
     // Both should have moved
     expect(evenFinal?.pos.x).toBeGreaterThan(10);

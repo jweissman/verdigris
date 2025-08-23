@@ -23,9 +23,9 @@ describe('Hero Hex Movement', () => {
       tags: ['hero']
     });
     
-    console.log('Initial positions:');
-    console.log('  Even row hero:', heroEven.pos);
-    console.log('  Odd row hero:', heroOdd.pos);
+    // console.log('Initial positions:');
+    // console.log('  Even row hero:', heroEven.pos);
+    // console.log('  Odd row hero:', heroOdd.pos);
     
     // Move both right by 1
     sim.queuedCommands.push({
@@ -45,9 +45,9 @@ describe('Hero Hex Movement', () => {
     const evenAfter = sim.units.find(u => u.id === 'hero_even');
     const oddAfter = sim.units.find(u => u.id === 'hero_odd');
     
-    console.log('After horizontal move:');
-    console.log('  Even row hero:', evenAfter?.pos);
-    console.log('  Odd row hero:', oddAfter?.pos);
+    // console.log('After horizontal move:');
+    // console.log('  Even row hero:', evenAfter?.pos);
+    // console.log('  Odd row hero:', oddAfter?.pos);
     
     // Both moved the same in sim coordinates
     expect(evenAfter?.pos.x).toBe(11);
@@ -67,7 +67,7 @@ describe('Hero Hex Movement', () => {
       tags: ['hero']
     });
     
-    console.log('Initial:', hero.pos);
+    // console.log('Initial:', hero.pos);
     
     // Knight move: 2 up, 1 right
     sim.queuedCommands.push({
@@ -79,7 +79,7 @@ describe('Hero Hex Movement', () => {
     sim.step();
     
     const afterKnight = sim.units.find(u => u.id === 'knight_hero');
-    console.log('After knight move:', afterKnight?.pos);
+    // console.log('After knight move:', afterKnight?.pos);
     
     expect(afterKnight?.pos.x).toBe(11);
     expect(afterKnight?.pos.y).toBe(8);
@@ -106,7 +106,7 @@ describe('Hero Hex Movement', () => {
     sim.step();
     
     const after = sim.units.find(u => u.id === 'diag_hero');
-    console.log('Diagonal move from', hero.pos, 'to', after?.pos);
+    // console.log('Diagonal move from', hero.pos, 'to', after?.pos);
     
     expect(after?.pos.x).toBe(11);
     expect(after?.pos.y).toBe(11);

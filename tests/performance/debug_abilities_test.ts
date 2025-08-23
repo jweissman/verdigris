@@ -17,21 +17,21 @@ describe('Debug Abilities', () => {
     const context = sim.getTickContext();
     const units = context.getAllUnits();
     
-    console.log('\n=== Unit Debug ===');
+    // console.log('\n=== Unit Debug ===');
     for (const unit of units) {
-      console.log(`Unit ${unit.id}:`);
-      console.log(`  abilities: ${JSON.stringify(unit.abilities)}`);
-      console.log(`  abilities.length: ${unit.abilities?.length}`);
-      console.log(`  meta.burrowed: ${unit.meta?.burrowed}`);
-      console.log(`  team: ${unit.team}`);
-      console.log(`  tags: ${JSON.stringify(unit.tags)}`);
+      // console.log(`Unit ${unit.id}:`);
+      // console.log(`  abilities: ${JSON.stringify(unit.abilities)}`);
+      // console.log(`  abilities.length: ${unit.abilities?.length}`);
+      // console.log(`  meta.burrowed: ${unit.meta?.burrowed}`);
+      // console.log(`  team: ${unit.team}`);
+      // console.log(`  tags: ${JSON.stringify(unit.tags)}`);
       
 
       const hasAbilities = unit.abilities && unit.abilities.length > 0;
       const isBurrowed = unit.meta?.burrowed;
       const wouldProcess = hasAbilities || isBurrowed;
       
-      console.log(`  Would Abilities rule process this unit? ${wouldProcess}`);
+      // console.log(`  Would Abilities rule process this unit? ${wouldProcess}`);
     }
   });
 });

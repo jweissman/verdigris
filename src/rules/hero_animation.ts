@@ -35,6 +35,11 @@ export class HeroAnimation extends Rule {
         
         const rig = this.rigs.get(unit.id)!;
         
+        // Update weapon if changed
+        if (unit.meta?.weapon && unit.meta.weapon !== rig.getCurrentWeapon()) {
+          rig.switchWeapon(unit.meta.weapon as any);
+        }
+        
         // Update animation based on unit state
         this.updateAnimation(unit, rig);
         

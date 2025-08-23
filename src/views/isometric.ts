@@ -191,13 +191,8 @@ export default class Isometric extends View {
     if (interp) {
       const easeProgress = this.easeInOutQuad(interp.progress);
       
-      // For jumping units, use raw Z value for immediate response
-      // For non-jumping units, interpolate Z smoothly
-      if (unit.meta?.jumping) {
-        renderZ = unit.meta.z || 0;
-      } else {
-        renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
-      }
+      // Interpolate Z smoothly for all units
+      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
       
       // Convert start and end positions to screen space FIRST
       const startScreen = this.toIsometric(interp.startX, interp.startY);
@@ -217,6 +212,11 @@ export default class Isometric extends View {
     const pixelY = screenY - spriteHeight / 2;
 
     let realPixelY = pixelY;
+    
+    // Apply Z offset for all units
+    if (renderZ > 0) {
+      realPixelY -= renderZ * 8;
+    }
 
     const sprite = this.sprites.get(unit.sprite);
     if (sprite && !unit.meta?.rig) { // Don't render sprite if unit has rig
@@ -244,10 +244,6 @@ export default class Isometric extends View {
       const actualSpriteWidth = sprite.width;
       const frameX =
         actualSpriteWidth >= expectedSpriteWidth ? frameIndex * spriteWidth : 0;
-
-      if (renderZ > 0) {
-        realPixelY -= renderZ * 8;
-      }
 
       realPixelY = Math.round(realPixelY);
 
@@ -285,19 +281,19 @@ export default class Isometric extends View {
         unit,
         this.sprites,
         screenX,
-        screenY - renderZ * 8,
+        screenY - renderZ * 8, // This should already have Z offset from realPixelY calculation
         {
           flipHorizontal: shouldFlip
         }
       );
     } else {
-      // Use centralized fallback rendering
+      // Use centralized fallback rendering (includes rigged units)
       this.unitRenderer.renderUnit(
         this.ctx,
         unit,
         this.sprites,
         screenX,
-        realPixelY + 4
+        realPixelY + 4  // realPixelY now includes Z offset for all units
       );
     }
 

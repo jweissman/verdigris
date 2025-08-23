@@ -33,10 +33,10 @@ describe('No Rules Performance', () => {
     const elapsed = performance.now() - start;
     const avgStep = elapsed / iterations;
     
-    console.log(`\n=== Empty Rulebook Performance ===`);
-    console.log(`Average step: ${avgStep.toFixed(4)}ms`);
-    console.log(`Budget: 0.01ms`);
-    console.log(`${avgStep < 0.01 ? '✅ PASS' : '❌ FAIL'} - ${(avgStep / 0.01).toFixed(1)}x ${avgStep < 0.01 ? 'under' : 'over'} budget`);
+    // console.log(`\n=== Empty Rulebook Performance ===`);
+    // console.log(`Average step: ${avgStep.toFixed(4)}ms`);
+    // console.log(`Budget: 0.01ms`);
+    // console.log(`${avgStep < 0.01 ? '✅ PASS' : '❌ FAIL'} - ${(avgStep / 0.01).toFixed(1)}x ${avgStep < 0.01 ? 'under' : 'over'} budget`);
     
     expect(avgStep).toBeLessThan(0.01);
   });

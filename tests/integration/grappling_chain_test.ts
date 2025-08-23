@@ -23,7 +23,7 @@ describe('Grappling Chain IK Integration', () => {
       team: 'hostile'
     });
     
-    console.log('Initial positions:', { grappler: grappler.pos, target: target.pos });
+    // console.log('Initial positions:', { grappler: grappler.pos, target: target.pos });
     
     // Fire grappling hook at target position
     sim.queuedCommands.push({
@@ -39,7 +39,7 @@ describe('Grappling Chain IK Integration', () => {
     
     // Check that grappling was established
     const grappledTarget = sim.units.find(u => u.id === 'target');
-    console.log('Target after grapple:', grappledTarget?.meta);
+    // console.log('Target after grapple:', grappledTarget?.meta);
     
     // Now create IK chain for the grapple line
     const segmentLengths = [2, 2, 2, 2, 2]; // 5 segments of length 2
@@ -50,7 +50,7 @@ describe('Grappling Chain IK Integration', () => {
       5 // iterations
     );
     
-    console.log('IK chain created with', chain.segments.length, 'segments');
+    // console.log('IK chain created with', chain.segments.length, 'segments');
     
     // Verify chain connects the two points
     expect(chain.origin).toEqual(grappler.pos);
@@ -63,7 +63,7 @@ describe('Grappling Chain IK Integration', () => {
       Math.pow(lastSegment.end.y - target.pos.y, 2)
     );
     
-    console.log('Chain end distance from target:', endDistance);
+    // console.log('Chain end distance from target:', endDistance);
     expect(endDistance).toBeLessThan(0.1); // Should reach target
   });
   
@@ -85,7 +85,7 @@ describe('Grappling Chain IK Integration', () => {
     
     // Middle segments should sag down
     const middleSegment = chain.segments[1];
-    console.log('Middle segment Y:', middleSegment.start.y, middleSegment.end.y);
+    // console.log('Middle segment Y:', middleSegment.start.y, middleSegment.end.y);
     
     // Should sag below the straight line
     expect(middleSegment.start.y).toBeGreaterThan(10);
@@ -139,7 +139,7 @@ describe('Grappling Chain IK Integration', () => {
     }
     
     const pulledUnit = sim.units.find(u => u.id === 'pulled');
-    console.log('Unit after pull:', pulledUnit?.pos);
+    // console.log('Unit after pull:', pulledUnit?.pos);
     
     // Should have moved closer
     expect(pulledUnit?.pos.x).toBeLessThan(20);

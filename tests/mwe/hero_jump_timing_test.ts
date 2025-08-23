@@ -13,7 +13,7 @@ describe('Hero Jump Timing', () => {
       tags: ['hero']
     });
     
-    console.log('Initial:', hero.pos);
+    // console.log('Initial:', hero.pos);
     
     // Jump command
     sim.queuedCommands.push({
@@ -36,7 +36,7 @@ describe('Hero Jump Timing', () => {
       
       if (h?.meta?.jumping && !jumpStarted) {
         jumpStarted = true;
-        console.log(`Jump started at step ${i}`);
+        // console.log(`Jump started at step ${i}`);
       }
       
       if (h?.meta?.z > maxZ) {
@@ -46,12 +46,12 @@ describe('Hero Jump Timing', () => {
       if (jumpStarted && !h?.meta?.jumping && !jumpCompleted) {
         jumpCompleted = true;
         completionTime = i;
-        console.log(`Jump completed at step ${i}, final pos: x=${h.pos.x}, y=${h.pos.y}, maxZ reached: ${maxZ}`);
+        // console.log(`Jump completed at step ${i}, final pos: x=${h.pos.x}, y=${h.pos.y}, maxZ reached: ${maxZ}`);
         break;
       }
       
       if (i % 5 === 0 && h?.meta?.jumping) {
-        console.log(`Step ${i}: x=${h.pos.x.toFixed(1)}, y=${h.pos.y}, z=${h.meta?.z?.toFixed(2)}`);
+        // console.log(`Step ${i}: x=${h.pos.x.toFixed(1)}, y=${h.pos.y}, z=${h.meta?.z?.toFixed(2)}`);
       }
     }
     

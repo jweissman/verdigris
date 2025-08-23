@@ -21,20 +21,20 @@ describe('Farmer Balance Investigation', () => {
       team: 'hostile'
     });
     
-    console.log('Initial state:');
-    console.log('  Farmer HP:', farmer.hp, 'DMG:', farmer.dmg);
-    console.log('  Enemy HP:', enemy.hp, 'DMG:', enemy.dmg);
-    console.log('  Units:', sim.units.length);
+    // console.log('Initial state:');
+    // console.log('  Farmer HP:', farmer.hp, 'DMG:', farmer.dmg);
+    // console.log('  Enemy HP:', enemy.hp, 'DMG:', enemy.dmg);
+    // console.log('  Units:', sim.units.length);
     
     // Force farmer to plant
     sim.forceAbility('farmer1', 'plant', farmer.pos);
     sim.step();
     
-    console.log('\nAfter plant:');
-    console.log('  Units:', sim.units.length);
+    // console.log('\nAfter plant:');
+    // console.log('  Units:', sim.units.length);
     const bush = sim.units.find(u => u.type === 'bush');
     if (bush) {
-      console.log('  Bush HP:', bush.hp, 'Mass:', bush.mass, 'Team:', bush.team);
+      // console.log('  Bush HP:', bush.hp, 'Mass:', bush.mass, 'Team:', bush.team);
     }
     
     expect(bush).toBeDefined();
@@ -65,7 +65,7 @@ describe('Farmer Balance Investigation', () => {
     sim.step();
     
     const bush = sim.units.find(u => u.type === 'bush');
-    console.log('Bush at:', bush?.pos);
+    // console.log('Bush at:', bush?.pos);
     
     // Enemy moves toward farmer
     const startX = enemy.pos.x;
@@ -74,8 +74,8 @@ describe('Farmer Balance Investigation', () => {
     }
     
     const finalX = sim.units.find(u => u.id === 'enemy1')?.pos.x || 0;
-    console.log('Enemy moved from', startX, 'to', finalX);
-    console.log('Distance moved:', startX - finalX);
+    // console.log('Enemy moved from', startX, 'to', finalX);
+    // console.log('Distance moved:', startX - finalX);
     
     // Enemy should be slowed by bush at x=3
     // With 1 HP bush, enemy might destroy it and continue
@@ -105,9 +105,9 @@ describe('Farmer Balance Investigation', () => {
       sim.step();
     }
     
-    console.log('Without plant - Final HP:');
-    console.log('  Farmer:', farmer.hp, '/', farmer.maxHp);
-    console.log('  Soldier:', soldier.hp, '/', soldier.maxHp);
+    // console.log('Without plant - Final HP:');
+    // console.log('  Farmer:', farmer.hp, '/', farmer.maxHp);
+    // console.log('  Soldier:', soldier.hp, '/', soldier.maxHp);
     
     // Soldier should win (higher HP and damage)
     expect(soldier.hp).toBeGreaterThan(0);
@@ -142,15 +142,15 @@ describe('Farmer Balance Investigation', () => {
       sim.step();
     }
     
-    console.log('With plant - Final HP:');
-    console.log('  Farmer:', farmer.hp, '/', farmer.maxHp);
-    console.log('  Soldier:', soldier.hp, '/', soldier.maxHp);
-    console.log('  Plants created:', plantCount);
-    console.log('  Bushes alive:', sim.units.filter(u => u.type === 'bush' && u.hp > 0).length);
+    // console.log('With plant - Final HP:');
+    // console.log('  Farmer:', farmer.hp, '/', farmer.maxHp);
+    // console.log('  Soldier:', soldier.hp, '/', soldier.maxHp);
+    // console.log('  Plants created:', plantCount);
+    // console.log('  Bushes alive:', sim.units.filter(u => u.type === 'bush' && u.hp > 0).length);
     
     // Farmer might survive longer or even win
     if (farmer.hp > 0) {
-      console.log('  FARMER WON!');
+      // console.log('  FARMER WON!');
     }
   });
   
@@ -196,7 +196,7 @@ describe('Farmer Balance Investigation', () => {
     }
     
     const bushCount = sim.units.filter(u => u.type === 'bush').length;
-    console.log('Defensive line created with', bushCount, 'bushes');
+    // console.log('Defensive line created with', bushCount, 'bushes');
     
     // Run battle
     const initialEnemyHP = enemy1.hp + enemy2.hp;
@@ -207,10 +207,10 @@ describe('Farmer Balance Investigation', () => {
     const finalEnemyHP = enemy1.hp + enemy2.hp;
     const damageDealt = initialEnemyHP - finalEnemyHP;
     
-    console.log('Synergy test results:');
-    console.log('  Ranger HP:', ranger.hp);
-    console.log('  Damage dealt to enemies:', damageDealt);
-    console.log('  Projectiles fired:', sim.projectiles.length);
+    // console.log('Synergy test results:');
+    // console.log('  Ranger HP:', ranger.hp);
+    // console.log('  Damage dealt to enemies:', damageDealt);
+    // console.log('  Projectiles fired:', sim.projectiles.length);
     
     // Ranger should be able to shoot over bushes
     expect(damageDealt).toBeGreaterThan(0);
@@ -233,7 +233,7 @@ describe('Farmer Balance Investigation', () => {
       team: 'friendly'
     });
     
-    console.log('Toymaker abilities:', toymaker.abilities);
+    // console.log('Toymaker abilities:', toymaker.abilities);
     
     // Both try to create units
     sim.forceAbility('farmer1', 'plant', farmer.pos);
@@ -246,11 +246,11 @@ describe('Farmer Balance Investigation', () => {
     }
     
     const units = sim.units.filter(u => u.team === 'friendly');
-    console.log('Allied units:', units.map(u => u.type || u.id));
+    // console.log('Allied units:', units.map(u => u.type || u.id));
     
     // Problem: both create units that can clog the battlefield
     const createdUnits = units.filter(u => u.type === 'bush' || u.type === 'toy');
-    console.log('Created units:', createdUnits.length);
+    // console.log('Created units:', createdUnits.length);
     
     // Too many units block each other
     expect(createdUnits.length).toBeGreaterThanOrEqual(1);

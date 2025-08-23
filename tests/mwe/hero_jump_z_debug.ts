@@ -13,8 +13,8 @@ describe('Hero Jump Z Debug', () => {
       tags: ['hero']
     });
     
-    console.log('=== Z-AXIS DEBUG ===');
-    console.log('Before jump:', { 
+    // console.log('=== Z-AXIS DEBUG ===');
+    // console.log('Before jump:', { 
       pos: hero.pos, 
       metaZ: hero.meta?.z, 
       jumping: hero.meta?.jumping 
@@ -32,7 +32,7 @@ describe('Hero Jump Z Debug', () => {
       sim.step();
       const h = sim.units.find(u => u.id === 'z_debug_hero');
       
-      console.log(`Step ${step}:`, {
+      // console.log(`Step ${step}:`, {
         pos: { x: h?.pos.x.toFixed(2), y: h?.pos.y },
         metaZ: h?.meta?.z?.toFixed(2),
         jumping: h?.meta?.jumping,
@@ -41,7 +41,7 @@ describe('Hero Jump Z Debug', () => {
       
       // Break when jump completes
       if (!h?.meta?.jumping && step > 5) {
-        console.log(`Jump completed at step ${step}`);
+        // console.log(`Jump completed at step ${step}`);
         break;
       }
     }

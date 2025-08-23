@@ -30,13 +30,13 @@ describe('Neutral Units Performance', () => {
     const elapsed = performance.now() - start;
     const avgStep = elapsed / iterations;
     
-    console.log(`\n=== Neutral Units Only ===`);
-    console.log(`Average step: ${avgStep.toFixed(4)}ms`);
-    console.log(`Budget: 0.01ms`);
-    console.log(`${avgStep < 0.01 ? '✅ PASS' : '❌ FAIL'} - ${(avgStep / 0.01).toFixed(1)}x over budget`);
+    // console.log(`\n=== Neutral Units Only ===`);
+    // console.log(`Average step: ${avgStep.toFixed(4)}ms`);
+    // console.log(`Budget: 0.01ms`);
+    // console.log(`${avgStep < 0.01 ? '✅ PASS' : '❌ FAIL'} - ${(avgStep / 0.01).toFixed(1)}x over budget`);
     
 
-    console.log(`System baseline (no rules): 0.0005ms`);
-    console.log(`Expected with optimized rules: ~0.005ms`);
+    // console.log(`System baseline (no rules): 0.0005ms`);
+    // console.log(`Expected with optimized rules: ~0.005ms`);
   });
 });

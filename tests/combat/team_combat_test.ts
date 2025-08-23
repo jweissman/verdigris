@@ -88,7 +88,7 @@ describe.skip('2v2 Combat Tests', () => {
     );
     
     const result = runCombat(sim);
-    console.log(`Wolf & Bear vs Eagle & Snake: ${result.winner} wins in ${result.steps} steps with ${result.survivors} survivors`);
+    // console.log(`Wolf & Bear vs Eagle & Snake: ${result.winner} wins in ${result.steps} steps with ${result.survivors} survivors`);
     
     expect(['friendly', 'hostile', 'draw']).toContain(result.winner);
     expect(result.steps).toBeLessThan(500);
@@ -101,7 +101,7 @@ describe.skip('2v2 Combat Tests', () => {
     );
     
     const result = runCombat(sim);
-    console.log(`2 Wolves vs 2 Snakes: ${result.winner} wins in ${result.steps} steps`);
+    // console.log(`2 Wolves vs 2 Snakes: ${result.winner} wins in ${result.steps} steps`);
     
     expect(['friendly', 'hostile', 'draw']).toContain(result.winner);
   });
@@ -113,7 +113,7 @@ describe.skip('2v2 Combat Tests', () => {
     );
     
     const result = runCombat(sim);
-    console.log(`Golem & Snake vs 2 Wolves: ${result.winner} wins in ${result.steps} steps`);
+    // console.log(`Golem & Snake vs 2 Wolves: ${result.winner} wins in ${result.steps} steps`);
     
     expect(['friendly', 'hostile', 'draw']).toContain(result.winner);
   });
@@ -133,7 +133,7 @@ describe.skip('2v2 Combat Tests', () => {
     
     times.sort((a, b) => a - b);
     const median = times[50];
-    console.log(`2v2 combat step median: ${median.toFixed(4)}ms`);
+    // console.log(`2v2 combat step median: ${median.toFixed(4)}ms`);
     
     expect(median).toBeLessThan(0.1); // Should be fast with only 4 units
   });
@@ -164,7 +164,7 @@ describe.skip('2v2 Combat Tests', () => {
         const sim = setup2v2(team1, team2);
         const result = runCombat(sim, 300); // Shorter timeout for matrix tests
         
-        console.log(`${team1[0].name}+${team1[1].name} vs ${team2[0].name}+${team2[1].name}: ${result.winner} (${result.steps} steps)`);
+        // console.log(`${team1[0].name}+${team1[1].name} vs ${team2[0].name}+${team2[1].name}: ${result.winner} (${result.steps} steps)`);
         
         expect(['friendly', 'hostile', 'draw']).toContain(result.winner);
       });

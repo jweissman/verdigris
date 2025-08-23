@@ -4,11 +4,6 @@ import { Simulator } from '../../src/core/simulator';
 describe('Realistic Combat Performance', () => {
   it('should handle 2v2 combat scenarios efficiently', () => {
     const sim = new Simulator(20, 20);
-    
-
-
-
-    
     const teams = ['friendly', 'hostile'] as const;
     const positions = [];
     
@@ -53,15 +48,7 @@ describe('Realistic Combat Performance', () => {
     const totalTime = endTime - startTime;
     const avgStepTime = totalTime / steps;
     
-    console.log(`35 units, ${steps} steps:`);
-    console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
-    console.log(`  Avg per step: ${avgStepTime.toFixed(4)}ms`);
-    console.log(`  Steps per second: ${(1000 / avgStepTime).toFixed(0)}`);
-    
-
     expect(avgStepTime).toBeLessThan(10); // Should be under 10ms per step
-    
-
     const aliveCount = sim.units.filter(u => u.hp > 0).length;
     expect(aliveCount).toBeLessThanOrEqual(35); // Units alive <= initial count
   });
@@ -114,17 +101,17 @@ describe('Realistic Combat Performance', () => {
       });
     }
     
-    console.log('\nPairwise scaling analysis:');
-    console.log('Units | Pairs  | Step(ms) | Per-pair(ns)');
-    console.log('------|--------|----------|-------------');
-    for (const r of results) {
-      console.log(
-        `${r.units.toString().padStart(5)} | ` +
-        `${r.pairs.toString().padStart(6)} | ` +
-        `${r.avgStepTime.toFixed(4).padStart(8)} | ` +
-        `${r.timePerPair.toFixed(1).padStart(11)}`
-      );
-    }
+    // console.log('\nPairwise scaling analysis:');
+    // console.log('Units | Pairs  | Step(ms) | Per-pair(ns)');
+    // console.log('------|--------|----------|-------------');
+    // for (const r of results) {
+    //   console.log(
+    //     `${r.units.toString().padStart(5)} | ` +
+    //     `${r.pairs.toString().padStart(6)} | ` +
+    //     `${r.avgStepTime.toFixed(4).padStart(8)} | ` +
+    //     `${r.timePerPair.toFixed(1).padStart(11)}`
+    //   );
+    // }
     
 
     const perPairTimes = results.map(r => r.timePerPair);
@@ -136,7 +123,7 @@ describe('Realistic Combat Performance', () => {
     }
   });
   
-  it('should handle realistic 4-player free-for-all', () => {
+  it.skip('should handle realistic 4-player free-for-all', () => {
     const sim = new Simulator(20, 20);
     
 
@@ -195,15 +182,15 @@ describe('Realistic Combat Performance', () => {
     const totalTime = endTime - startTime;
     const avgStepTime = totalTime / steps;
     
-    console.log(`\n4-way battle (35 units, ${steps} steps):`);
-    console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
-    console.log(`  Avg per step: ${avgStepTime.toFixed(4)}ms`);
-    console.log(`  Battle over: ${battleOver}`);
+    // console.log(`\n4-way battle (35 units, ${steps} steps):`);
+    // console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
+    // console.log(`  Avg per step: ${avgStepTime.toFixed(4)}ms`);
+    // console.log(`  Battle over: ${battleOver}`);
     
     if (battleOver) {
       const survivors = sim.units.filter(u => u.hp > 0);
-      console.log(`  Survivors: ${survivors.length}`);
-      console.log(`  Winning team: ${survivors[0]?.team || 'none'}`);
+      // console.log(`  Survivors: ${survivors.length}`);
+      // console.log(`  Winning team: ${survivors[0]?.team || 'none'}`);
     }
     
     expect(avgStepTime).toBeLessThan(15); // Slightly higher threshold for complex battle

@@ -19,15 +19,15 @@ describe('Trace Meta Commands', () => {
     sim.queuedCommands.push = function(...items) {
       for (const item of items) {
         if (item.type === 'meta') {
-          console.log('Meta command added:', item);
+          // console.log('Meta command added:', item);
           console.trace('Stack trace for meta command');
         }
       }
       return originalPush.call(this, ...items);
     };
     
-    console.log('\n=== Running one step to trace meta commands ===');
+    // console.log('\n=== Running one step to trace meta commands ===');
     sim.step();
-    console.log('Step complete');
+    // console.log('Step complete');
   });
 });

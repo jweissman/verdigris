@@ -115,34 +115,34 @@ describe.skip('Abilities Detailed Performance', () => {
       return sorted[Math.floor(sorted.length / 2)];
     };
     
-    console.log('\n=== Detailed Performance Breakdown ===');
-    console.log(`Total units: ${sim.units.length}`);
-    console.log(`Units with abilities: ${sim.units.filter(u => u.abilities?.length > 0).length}`);
-    console.log(`\nMedian times (ms):`);
-    console.log(`  Total execution:    ${getMedian(measurements.total).toFixed(4)}`);
-    console.log(`  getAllUnits:        ${getMedian(measurements.getAllUnits).toFixed(4)}`);
-    console.log(`  Filter units:       ${getMedian(measurements.filterUnits).toFixed(4)}`);
-    console.log(`  Process all units:  ${getMedian(measurements.processUnits).toFixed(4)}`);
+    // console.log('\n=== Detailed Performance Breakdown ===');
+    // console.log(`Total units: ${sim.units.length}`);
+    // console.log(`Units with abilities: ${sim.units.filter(u => u.abilities?.length > 0).length}`);
+    // console.log(`\nMedian times (ms):`);
+    // console.log(`  Total execution:    ${getMedian(measurements.total).toFixed(4)}`);
+    // console.log(`  getAllUnits:        ${getMedian(measurements.getAllUnits).toFixed(4)}`);
+    // console.log(`  Filter units:       ${getMedian(measurements.filterUnits).toFixed(4)}`);
+    // console.log(`  Process all units:  ${getMedian(measurements.processUnits).toFixed(4)}`);
     
     if (measurements.checkAbilities.length > 0) {
-      console.log(`  Per ability check:  ${getMedian(measurements.checkAbilities).toFixed(4)}`);
-      console.log(`  Ability checks/run: ${measurements.checkAbilities.length / 100}`);
+      // console.log(`  Per ability check:  ${getMedian(measurements.checkAbilities).toFixed(4)}`);
+      // console.log(`  Ability checks/run: ${measurements.checkAbilities.length / 100}`);
     }
     
     if (measurements.triggerEval.length > 0) {
-      console.log(`  Per trigger eval:   ${getMedian(measurements.triggerEval).toFixed(4)}`);
-      console.log(`  Triggers/run:       ${measurements.triggerEval.length / 100}`);
+      // console.log(`  Per trigger eval:   ${getMedian(measurements.triggerEval).toFixed(4)}`);
+      // console.log(`  Triggers/run:       ${measurements.triggerEval.length / 100}`);
     }
     
     if (measurements.targetEval.length > 0) {
-      console.log(`  Per target eval:    ${getMedian(measurements.targetEval).toFixed(4)}`);
-      console.log(`  Targets/run:        ${measurements.targetEval.length / 100}`);
+      // console.log(`  Per target eval:    ${getMedian(measurements.targetEval).toFixed(4)}`);
+      // console.log(`  Targets/run:        ${measurements.targetEval.length / 100}`);
     }
     
     const budget = 0.01;
     const median = getMedian(measurements.total);
-    console.log(`\nBudget: ${budget}ms`);
-    console.log(`Status: ${median <= budget ? '✅' : '❌'} ${(median / budget).toFixed(1)}x`);
+    // console.log(`\nBudget: ${budget}ms`);
+    // console.log(`Status: ${median <= budget ? '✅' : '❌'} ${(median / budget).toFixed(1)}x`);
     
 
     const timeBreakdown = {
@@ -152,12 +152,12 @@ describe.skip('Abilities Detailed Performance', () => {
     };
     
     const totalMeasured = Object.values(timeBreakdown).reduce((a, b) => a + b, 0);
-    console.log(`\nTime distribution:`);
+    // console.log(`\nTime distribution:`);
     for (const [name, time] of Object.entries(timeBreakdown)) {
       const percent = (time / median * 100).toFixed(1);
-      console.log(`  ${name}: ${time.toFixed(4)}ms (${percent}%)`);
+      // console.log(`  ${name}: ${time.toFixed(4)}ms (${percent}%)`);
     }
-    console.log(`  Unaccounted: ${(median - totalMeasured).toFixed(4)}ms (${((median - totalMeasured) / median * 100).toFixed(1)}%)`);
+    // console.log(`  Unaccounted: ${(median - totalMeasured).toFixed(4)}ms (${((median - totalMeasured) / median * 100).toFixed(1)}%)`);
     
     expect(median).toBeLessThan(budget * 3); // Allow 3x for now
   });

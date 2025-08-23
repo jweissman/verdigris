@@ -16,15 +16,15 @@ import { Folks } from '../../src/dmg/folks';
 // 
 // 
 // const allFolks = Folks.names;
-// console.log(`=== 2v2 Synergy Analysis ===`);
-// console.log(`Testing ${allFolks.length} folk types`);
-// console.log(`Total combinations: ${(allFolks.length * (allFolks.length + 1)) / 2}`);
-// console.log();
+// // console.log(`=== 2v2 Synergy Analysis ===`);
+// // console.log(`Testing ${allFolks.length} folk types`);
+// // console.log(`Total combinations: ${(allFolks.length * (allFolks.length + 1)) / 2}`);
+// // console.log();
 // 
 // 
 // const tournament = new Tournament2v2(allFolks);
 // 
-// console.log('Running matches...');
+// // console.log('Running matches...');
 // const startTime = Date.now();
 // 
 // 
@@ -32,16 +32,16 @@ import { Folks } from '../../src/dmg/folks';
 // const results = tournament.runAll(3, (current, total) => {
 //   const percent = Math.floor((current / total) * 100);
 //   if (percent >= lastPercent + 10) {
-//     console.log(`Progress: ${percent}%`);
+//     // console.log(`Progress: ${percent}%`);
 //     lastPercent = percent;
 //   }
 // });
 // 
 // const elapsed = Date.now() - startTime;
-// console.log(`\nCompleted in ${(elapsed / 1000).toFixed(1)}s`);
+// // console.log(`\nCompleted in ${(elapsed / 1000).toFixed(1)}s`);
 // 
 // 
-// console.log('\n=== Top Synergies ===');
+// // console.log('\n=== Top Synergies ===');
 // 
 // 
 // type TeamStats = {
@@ -115,16 +115,16 @@ import { Folks } from '../../src/dmg/folks';
 // const sortedTeams = Array.from(teamStats.values()).sort((a, b) => b.winRate - a.winRate);
 // 
 // 
-// console.log('\nTop 10 Team Combinations:');
-// console.log('Team'.padEnd(30) + 'Win%'.padEnd(8) + 'W/L/D'.padEnd(15) + 'Avg Steps');
-// console.log('-'.repeat(65));
+// // console.log('\nTop 10 Team Combinations:');
+// // console.log('Team'.padEnd(30) + 'Win%'.padEnd(8) + 'W/L/D'.padEnd(15) + 'Avg Steps');
+// // console.log('-'.repeat(65));
 // 
 // for (let i = 0; i < Math.min(10, sortedTeams.length); i++) {
 //   const team = sortedTeams[i];
 //   const winPercent = (team.winRate * 100).toFixed(1);
 //   const record = `${team.wins}/${team.losses}/${team.draws}`;
 //   
-//   console.log(
+//   // console.log(
 //     team.team.padEnd(30) +
 //     `${winPercent}%`.padEnd(8) +
 //     record.padEnd(15) +
@@ -133,16 +133,16 @@ import { Folks } from '../../src/dmg/folks';
 // }
 // 
 // 
-// console.log('\nBottom 10 Team Combinations:');
-// console.log('Team'.padEnd(30) + 'Win%'.padEnd(8) + 'W/L/D'.padEnd(15) + 'Avg Steps');
-// console.log('-'.repeat(65));
+// // console.log('\nBottom 10 Team Combinations:');
+// // console.log('Team'.padEnd(30) + 'Win%'.padEnd(8) + 'W/L/D'.padEnd(15) + 'Avg Steps');
+// // console.log('-'.repeat(65));
 // 
 // for (let i = Math.max(0, sortedTeams.length - 10); i < sortedTeams.length; i++) {
 //   const team = sortedTeams[i];
 //   const winPercent = (team.winRate * 100).toFixed(1);
 //   const record = `${team.wins}/${team.losses}/${team.draws}`;
 //   
-//   console.log(
+//   // console.log(
 //     team.team.padEnd(30) +
 //     `${winPercent}%`.padEnd(8) +
 //     record.padEnd(15) +
@@ -151,7 +151,7 @@ import { Folks } from '../../src/dmg/folks';
 // }
 // 
 // 
-// console.log('\n=== Synergy Analysis ===');
+// // console.log('\n=== Synergy Analysis ===');
 // 
 // 
 // const individualWinRates: Map<string, number> = new Map();
@@ -191,17 +191,17 @@ import { Folks } from '../../src/dmg/folks';
 // 
 // synergies.sort((a, b) => b.synergy - a.synergy);
 // 
-// console.log('\nTop Positive Synergies:');
+// // console.log('\nTop Positive Synergies:');
 // for (let i = 0; i < Math.min(5, synergies.length); i++) {
 //   if (synergies[i].synergy > 0) {
-//     console.log(`  ${synergies[i].team}: +${(synergies[i].synergy * 100).toFixed(1)}% synergy`);
+//     // console.log(`  ${synergies[i].team}: +${(synergies[i].synergy * 100).toFixed(1)}% synergy`);
 //   }
 // }
 // 
-// console.log('\nTop Negative Synergies (anti-synergies):');
+// // console.log('\nTop Negative Synergies (anti-synergies):');
 // const antiSynergies = synergies.filter(s => s.synergy < 0).reverse();
 // for (let i = 0; i < Math.min(5, antiSynergies.length); i++) {
-//   console.log(`  ${antiSynergies[i].team}: ${(antiSynergies[i].synergy * 100).toFixed(1)}% synergy`);
+//   // console.log(`  ${antiSynergies[i].team}: ${(antiSynergies[i].synergy * 100).toFixed(1)}% synergy`);
 // }
 // 
 // 
@@ -215,4 +215,4 @@ import { Folks } from '../../src/dmg/folks';
 //   synergies: synergies.slice(0, 20)
 // };
 // 
-// console.log(`\n📊 Full results saved to ${outputFile}`);
+// // console.log(`\n📊 Full results saved to ${outputFile}`);

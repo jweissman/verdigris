@@ -6,10 +6,10 @@ describe.skip('2v2 Tournament Performance', () => {
     const units = ['soldier', 'ranger', 'bombardier', 'worm'];
     const tournament = new Tournament2v2(units);
     
-    console.log('\n=== Testing with 4 units ===');
+    // console.log('\n=== Testing with 4 units ===');
     const numTeams = (4 * 5) / 2; // 10 teams
     const numMatchups = numTeams * numTeams; // 100 matchups
-    console.log(`Teams: ${numTeams}, Matchups: ${numMatchups}`);
+    // console.log(`Teams: ${numTeams}, Matchups: ${numMatchups}`);
     
     const startTime = performance.now();
     let matchCount = 0;
@@ -36,15 +36,15 @@ describe.skip('2v2 Tournament Performance', () => {
     const stepsPerSecond = stepCount / totalTime;
     const avgStepsPerMatch = stepCount / matchCount;
     
-    console.log(`\n=== Performance Results ===`);
-    console.log(`Total time: ${totalTime.toFixed(2)}s`);
-    console.log(`Matches completed: ${matchCount}`);
-    console.log(`Total steps: ${stepCount}`);
-    console.log(`Matches/second: ${matchesPerSecond.toFixed(1)}`);
-    console.log(`Steps/second: ${stepsPerSecond.toFixed(0)}`);
-    console.log(`Avg steps/match: ${avgStepsPerMatch.toFixed(0)}`);
-    console.log(`Avg ms/match: ${(totalTime * 1000 / matchCount).toFixed(1)}ms`);
-    console.log(`Avg ms/step: ${(totalTime * 1000 / stepCount).toFixed(3)}ms`);
+    // console.log(`\n=== Performance Results ===`);
+    // console.log(`Total time: ${totalTime.toFixed(2)}s`);
+    // console.log(`Matches completed: ${matchCount}`);
+    // console.log(`Total steps: ${stepCount}`);
+    // console.log(`Matches/second: ${matchesPerSecond.toFixed(1)}`);
+    // console.log(`Steps/second: ${stepsPerSecond.toFixed(0)}`);
+    // console.log(`Avg steps/match: ${avgStepsPerMatch.toFixed(0)}`);
+    // console.log(`Avg ms/match: ${(totalTime * 1000 / matchCount).toFixed(1)}ms`);
+    // console.log(`Avg ms/step: ${(totalTime * 1000 / stepCount).toFixed(3)}ms`);
     
     // Check performance targets
     expect(matchesPerSecond).toBeGreaterThan(10); // Should handle at least 10 matches/sec
@@ -90,10 +90,10 @@ describe.skip('2v2 Tournament Performance', () => {
     const results = tournament.runAll(1);
     
     if (slowMatches.length > 0) {
-      console.log('\n=== Slow Matches ===');
+      // console.log('\n=== Slow Matches ===');
       slowMatches.sort((a, b) => b.time - a.time);
       slowMatches.slice(0, 5).forEach(m => {
-        console.log(`${m.match}: ${m.time.toFixed(1)}ms (${m.steps} steps)`);
+        // console.log(`${m.match}: ${m.time.toFixed(1)}ms (${m.steps} steps)`);
       });
     }
     
@@ -103,11 +103,11 @@ describe.skip('2v2 Tournament Performance', () => {
       for (const match of matches) {
         if (match.winner === 'draw') {
           drawCount++;
-          console.log(`Draw: ${key} after ${match.duration} steps`);
+          // console.log(`Draw: ${key} after ${match.duration} steps`);
         }
       }
     }
     
-    console.log(`\nTotal draws: ${drawCount}/${results.size}`);
+    // console.log(`\nTotal draws: ${drawCount}/${results.size}`);
   });
 });

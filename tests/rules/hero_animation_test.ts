@@ -96,8 +96,8 @@ describe('Hero Animation Rule', () => {
     const finalFrame = torso2?.frame || 0;
     
     // Debug output
-    console.log('Initial:', { offset: initialOffset, frame: initialFrame });
-    console.log('Final:', { offset: finalOffset, frame: finalFrame });
+    // console.log('Initial:', { offset: initialOffset, frame: initialFrame });
+    // console.log('Final:', { offset: finalOffset, frame: finalFrame });
     
     // Should have changed after half a breathing cycle
     const changed = (finalOffset !== initialOffset) || (finalFrame !== initialFrame);

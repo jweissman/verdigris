@@ -4,7 +4,6 @@ import { Simulator } from '../../src/core/simulator';
 describe('Rule Performance Profiling', () => {
   test('Profile individual rule execution times', () => {
     const sim = new Simulator(50, 50);
-    
 
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
@@ -50,9 +49,9 @@ describe('Rule Performance Profiling', () => {
     const sorted = Array.from(ruleTimes.entries())
       .sort((a, b) => b[1].total - a[1].total);
     
-    console.log('\n=== Rule Performance Analysis (1000 iterations) ===');
-    console.log('Rule                     | Avg Time (ms) | Total (ms) | Commands | % of Total');
-    console.log('------------------------ | ------------- | ---------- | -------- | ----------');
+    console.warn('\n=== Rule Performance Analysis (1000 iterations) ===');
+    console.warn('Rule                     | Avg Time (ms) | Total (ms) | Commands | % of Total');
+    console.warn('------------------------ | ------------- | ---------- | -------- | ----------');
     
     let totalTime = 0;
     for (const stats of ruleTimes.values()) {
@@ -64,15 +63,15 @@ describe('Rule Performance Profiling', () => {
       const avgCommands = stats.commands / stats.count;
       const percent = (stats.total / totalTime) * 100;
       
-      console.log(
+      console.warn(
         `${ruleName.padEnd(24)} | ${avgTime.toFixed(4).padStart(13)} | ${stats.total.toFixed(2).padStart(10)} | ${avgCommands.toFixed(1).padStart(8)} | ${percent.toFixed(1).padStart(9)}%`
       );
     }
     
-    console.log('------------------------ | ------------- | ---------- | -------- | ----------');
-    console.log(`TOTAL                    |               | ${totalTime.toFixed(2).padStart(10)} |          |      100.0%`);
-    console.log(`\nAverage total per step: ${(totalTime / iterations).toFixed(4)}ms`);
-    console.log(`Budget: 0.01ms per step`);
-    console.log(`Over budget by: ${((totalTime / iterations) / 0.01).toFixed(1)}x`);
+    console.warn('------------------------ | ------------- | ---------- | -------- | ----------');
+    console.warn(`TOTAL                    |               | ${totalTime.toFixed(2).padStart(10)} |          |      100.0%`);
+    console.debug(`\nAverage total per step: ${(totalTime / iterations).toFixed(4)}ms`);
+    console.debug(`Budget: 0.01ms per step`);
+    console.debug(`Over budget by: ${((totalTime / iterations) / 0.01).toFixed(1)}x`);
   });
 });
