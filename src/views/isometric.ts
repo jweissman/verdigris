@@ -191,8 +191,13 @@ export default class Isometric extends View {
     if (interp) {
       const easeProgress = this.easeInOutQuad(interp.progress);
       
-      // Interpolate Z in unit space
-      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
+      // For jumping units, use raw Z value for immediate response
+      // For non-jumping units, interpolate Z smoothly
+      if (unit.meta?.jumping) {
+        renderZ = unit.meta.z || 0;
+      } else {
+        renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
+      }
       
       // Convert start and end positions to screen space FIRST
       const startScreen = this.toIsometric(interp.startX, interp.startY);

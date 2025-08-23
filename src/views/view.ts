@@ -56,15 +56,16 @@ export default class View {
         continue;
       }
 
-      if (
-        prevPos.x !== unit.pos.x ||
-        prevPos.y !== unit.pos.y ||
-        prevPos.z !== currentZ
-      ) {
+      // For jumping units, only create interpolation for position changes, not Z changes
+      // Z will be taken directly from unit.meta.z for immediate response
+      const isJumping = unit.meta?.jumping;
+      const posChanged = prevPos.x !== unit.pos.x || prevPos.y !== unit.pos.y;
+      const zChanged = prevPos.z !== currentZ;
+      
+      if (posChanged || (!isJumping && zChanged)) {
         // Use faster interpolation for jumping units and hero movement
-        const isJumping = unit.meta?.jumping;
         const isHero = unit.tags?.includes('hero');
-        const duration = isJumping ? 100 : (isHero ? 200 : 400); // Fast for jumps, medium for heroes, normal for others
+        const duration = isJumping ? 50 : (isHero ? 100 : 400); // Very fast for jumps, fast for heroes, normal for others
         
         this.unitInterpolations.set(unit.id, {
           startX: prevPos.x,
@@ -76,13 +77,14 @@ export default class View {
           progress: 0,
           duration: duration,
         });
-
-        this.previousPositions.set(unit.id, {
-          x: unit.pos.x,
-          y: unit.pos.y,
-          z: currentZ,
-        });
       }
+      
+      // Always update previous position
+      this.previousPositions.set(unit.id, {
+        x: unit.pos.x,
+        y: unit.pos.y,
+        z: currentZ,
+      });
     }
 
     let entries = Array.from(this.unitInterpolations.entries());

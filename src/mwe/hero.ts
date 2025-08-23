@@ -6,6 +6,12 @@ import { Jumping } from "../rules/jumping";
 export class HeroGame extends Game {
   private playerControl: PlayerControl;
   
+  constructor(canvas: HTMLCanvasElement, opts?: any) {
+    super(canvas, opts);
+    // Speed up tick rate for more responsive hero movement
+    this.simTickRate = 16; // 16fps instead of 8fps
+  }
+  
   bootstrap() {
     super.bootstrap();
     this.renderer.setViewMode("iso");
