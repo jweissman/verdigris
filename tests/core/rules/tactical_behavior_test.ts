@@ -1,12 +1,9 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { Abilities } from '../../src/rules/abilities';
-import { EventHandler } from '../../src/rules/event_handler';
-import { CommandHandler } from '../../src/core/command_handler';
-import { UnitBehavior } from '../../src/rules/unit_behavior';
-import { UnitMovement } from '../../src/rules/unit_movement';
-import { setupTest } from '../test_helper';
+import { Simulator } from '../../../src/core/simulator';
+import Encyclopaedia from '../../../src/dmg/encyclopaedia';
+import { Abilities } from '../../../src/rules/abilities';
+import { setupTest } from '../../test_helper';
+
 
 describe('Tactical Behavior Improvements', () => {
   beforeEach(() => {

@@ -1,6 +1,5 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
-import { TextRenderer } from '../../src/rendering/text_renderer';
-
+import { TextRenderer } from '../../../src/rendering/text_renderer';
 
 class MockCanvasContext {
   public savedStates: any[] = [];

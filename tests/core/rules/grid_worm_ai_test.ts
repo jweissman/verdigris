@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import { UnitMovement } from '../../src/rules/unit_movement';
-import Encyclopaedia from '../../src/dmg/encyclopaedia';
+import { Simulator } from '../../../src/core/simulator';
+import Encyclopaedia from '../../../src/dmg/encyclopaedia';
+import { UnitMovement } from '../../../src/rules/unit_movement';
 
 describe('Grid Worm AI', () => {
   it('worms move on a grid and wander randomly', () => {

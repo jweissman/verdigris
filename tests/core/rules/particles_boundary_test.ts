@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import { ParticleArrays } from '../../src/sim/particle_arrays';
+import { Simulator } from '../../../src/core/simulator';
 
 describe('Particle Boundary and Landing Logic', () => {
   it('should not remove particles within bounds', () => {

@@ -58,10 +58,10 @@ export class ProjectileMotion extends Rule {
       } else {
         const projectileTeam =
           projectile.team === "friendly"
-            ? 0
+            ? 1
             : projectile.team === "hostile"
-              ? 1
-              : 2;
+              ? 2
+              : 0;
 
         for (const idx of arrays.activeIndices) {
           if (arrays.team[idx] === projectileTeam || arrays.hp[idx] <= 0)
@@ -110,13 +110,16 @@ export class ProjectileMotion extends Rule {
         const explosionDamage = projectile.damage || 20;
         const projectileTeam =
           projectile.team === "friendly"
-            ? 0
+            ? 1
             : projectile.team === "hostile"
-              ? 1
-              : 2;
+              ? 2
+              : 0;
 
         for (const idx of arrays.activeIndices) {
           if (arrays.team[idx] === projectileTeam) continue;
+          
+          // Skip the unit that fired this projectile
+          if (projectile.sourceId && arrays.unitIds[idx] === projectile.sourceId) continue;
 
           const dx = arrays.posX[idx] - projectile.pos.x;
           const dy = arrays.posY[idx] - projectile.pos.y;

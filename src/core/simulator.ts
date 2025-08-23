@@ -34,19 +34,25 @@ import { Transform } from "./transform";
 import { SpatialQueryBatcher } from "./spatial_queries";
 import { PairwiseBatcher } from "./pairwise_batcher";
 import { UnitArrays } from "../sim/unit_arrays";
-import { UnitProxy, UnitProxyManager } from "../sim/unit_proxy";
-import { UnitDataStore } from "../sim/unit_data_store";
+import { UnitProxyManager } from "../sim/unit_proxy";
 import { GridPartition } from "./grid_partition";
 import { ScalarField } from "./ScalarField";
 import { TargetCache } from "./target_cache";
 import { ParticleArrays } from "../sim/particle_arrays";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
+// TODO some kind of config model??
+// interface SimulatorConfiguration {
+//   scene?: { bg?: string; }
+//   field?:  { width: number, height: number }
+//   fx?: { environment?: boolean }
+// }
+
 class Simulator {
   public sceneBackground: string = "winter";
   public fieldWidth: number;
   public fieldHeight: number;
-  public enableEnvironmentalEffects: boolean = false; // Disabled by default for performance
+  public enableEnvironmentalEffects: boolean = false;
 
   get width() {
     return this.fieldWidth;
@@ -516,7 +522,14 @@ class Simulator {
   lastCall: number = 0;
   private ruleApplicability: Map<string, boolean> = new Map();
 
+  private stepDepth = 0;
+  
   step(force = false) {
+    this.stepDepth++;
+    if (this.stepDepth > 1) {
+      console.error(`ERROR: Recursive step() call detected! Depth=${this.stepDepth}`);
+      console.trace();
+    }
     if (this.paused) {
       if (!force) {
         return this;
@@ -604,6 +617,7 @@ class Simulator {
     }
 
     this.lastCall = t0;
+    this.stepDepth--;
     return this;
   }
 

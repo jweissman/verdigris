@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import { HeroAnimation } from '../../src/rules/hero_animation';
+import { Simulator } from '../../../src/core/simulator';
+import { HeroAnimation } from '../../../src/rules/hero_animation';
 
 describe('Hero Animation Rule', () => {
   test('adds rig to units with useRig flag', () => {

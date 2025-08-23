@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { SegmentedCreatures } from '../../src/rules/segmented_creatures';
+import { Simulator } from '../../../src/core/simulator';
+import Encyclopaedia from '../../../src/dmg/encyclopaedia';
 
 describe('Regular-sized Segmented Worm', () => {
   it('should create a segmented worm that is not huge', () => {

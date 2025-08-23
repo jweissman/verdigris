@@ -1,10 +1,7 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import Encyclopaedia from '../../src/dmg/encyclopaedia';
-import { BiomeEffects } from '../../src/rules/biome_effects';
-import { Perdurance } from '../../src/rules/perdurance';
-import { EventHandler } from '../../src/rules/event_handler';
-import { CommandHandler } from '../../src/core/command_handler';
+import { Simulator } from '../../../src/core/simulator';
+import Encyclopaedia from '../../../src/dmg/encyclopaedia';
+import { BiomeEffects } from '../../../src/rules/biome_effects';
 
 describe('Winter Effects System (BiomeEffects)', () => {
   beforeEach(() => {

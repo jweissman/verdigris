@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { HeroRig } from '../../src/rendering/hero_rig';
+import { HeroRig } from '../../../src/rendering/hero_rig';
 
 describe('Hero Rig Weapon System', () => {
   test('can switch between weapons', () => {

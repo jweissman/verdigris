@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { Simulator } from '../../src/core/simulator';
-import Encyclopaedia from "../../src/dmg/encyclopaedia";
+import { Simulator } from "../../../src/core/simulator";
+import Encyclopaedia from "../../../src/dmg/encyclopaedia";
 
 describe("Combat Mechanics", () => {
   it("should verify soldiers can damage other soldiers", () => {

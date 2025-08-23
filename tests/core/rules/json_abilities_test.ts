@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
-import { Abilities } from '../../src/rules/abilities';
-import { CommandHandler } from '../../src/core/command_handler';
-import { Simulator } from '../../src/core/simulator';
+import { CommandHandler } from '../../../src/core/command_handler';
+import { Simulator } from '../../../src/core/simulator';
+import { Abilities } from '../../../src/rules/abilities';
 
 describe('Abilities', () => {
   let sim: Simulator;

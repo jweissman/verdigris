@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import { BiomeEffects } from '../../src/rules/biome_effects';
+import { Simulator } from '../../../src/core/simulator';
+import { BiomeEffects } from '../../../src/rules/biome_effects';
 
 describe('Granular Cell-Based Particle Rendering', () => {
   it('should render particles at correct cell positions', () => {

@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import { Jumping } from '../../src/rules/jumping';
-import { AreaOfEffect } from '../../src/rules/area_of_effect';
+import { Simulator } from '../../../src/core/simulator';
+import { AreaOfEffect } from '../../../src/rules/area_of_effect';
+import { Jumping } from '../../../src/rules/jumping';
 
 describe('Jumping AOE', () => {
   test('jump landing AOE should not affect the jumping unit itself', () => {

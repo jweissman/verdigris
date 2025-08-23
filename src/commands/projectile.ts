@@ -37,6 +37,7 @@ export class Projectile extends Command {
       damage: damage,
       team: projectileTeam,
       type: projectileType,
+      sourceId: unitId, // Track who fired this projectile
     };
 
     if (targetX !== undefined && targetY !== undefined) {

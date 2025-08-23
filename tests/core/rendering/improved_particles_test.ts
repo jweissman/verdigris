@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import { BiomeEffects } from '../../src/rules/biome_effects';
+import { Simulator } from '../../../src/core/simulator';
+import { BiomeEffects } from '../../../src/rules/biome_effects';
 
 describe('Improved Particle System', () => {
   it('should create single-pixel snowflakes with vertical fall', () => {

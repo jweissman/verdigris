@@ -4,7 +4,6 @@ import Encyclopaedia from '../../../src/dmg/encyclopaedia';
 import { CommandHandler } from '../../../src/core/command_handler';
 import { Abilities } from '../../../src/rules/abilities';
 import { EventHandler } from '../../../src/rules/event_handler';
-import { AirdropPhysics } from '../../../src/rules/airdrop_physics';
 
 describe('Mechatronist Deployment System', () => {
   beforeEach(() => {
@@ -90,13 +89,6 @@ describe('Mechatronist Deployment System', () => {
 
   it('should handle full Mechatronist to Mechatron deployment sequence', () => {
     const sim = new Simulator();
-
-    const hasAirdrop = sim.rulebook.some(r => r instanceof AirdropPhysics);
-    if (!hasAirdrop) {
-
-      sim.rulebook.splice(1, 0, new AirdropPhysics());
-    }
-    
     
 
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 3, y: 3 } };
@@ -114,7 +106,6 @@ describe('Mechatronist Deployment System', () => {
     
     for (let tick = 0; tick < 200; tick++) {
       sim.step();
-      
 
       if (deploymentPhase === 'waiting') {
         const mechatronInAir = sim.units.find(u => u.sprite === 'mechatron');

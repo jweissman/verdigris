@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
-import { ParticleRenderer } from '../../src/rendering/particle_renderer';
+import { ParticleRenderer } from '../../../src/rendering/particle_renderer';
 
 describe('Common Particle Renderer', () => {
   let mockCtx: any;

@@ -1,9 +1,6 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
-import { Simulator } from '../../src/core/simulator';
-import { CommandHandler } from '../../src/core/command_handler';
-import { BiomeEffects } from '../../src/rules/biome_effects';
-import { EventHandler } from '../../src/rules/event_handler';
-import Encyclopaedia from '../../src/dmg/encyclopaedia';
+import { Simulator } from '../../../src/core/simulator';
+import Encyclopaedia from '../../../src/dmg/encyclopaedia';
 
 describe('Winter Snow Freeze Interactions', () => {
   beforeEach(() => {
@@ -11,20 +8,11 @@ describe('Winter Snow Freeze Interactions', () => {
   });
 
   it('should demonstrate snow particles freezing units on contact', () => {
-    
     const sim = new Simulator();
-
-
-
-
     const soldier = { ...Encyclopaedia.unit('soldier'), pos: { x: 10, y: 8 } };
     const worm = { ...Encyclopaedia.unit('worm'), pos: { x: 12, y: 10 }, team: 'hostile' as const };
-    
     sim.addUnit(soldier);
     sim.addUnit(worm);
-    
-    
-
     for (let i = 0; i < 5; i++) {
       sim.particles.push({
         pos: { x: soldier.pos.x + (i * 0.1), y: 1 }, // Start above soldier
@@ -37,142 +25,88 @@ describe('Winter Snow Freeze Interactions', () => {
         landed: false
       });
     }
-
-
     sim.winterActive = true;
     for (let x = 0; x < sim.fieldWidth; x++) {
       for (let y = 0; y < sim.fieldHeight; y++) {
         sim.temperatureField.set(x, y, -5);
       }
     }
-    
-
     let frozenUnits = 0;
     let snowParticles = 0;
     let freezeImpacts = 0;
-    
-
     let anyUnitWasFrozen = false;
     for (let tick = 0; tick < 50; tick++) {
       sim.step();
-      
-
-      if (tick % 10 === 0) {
-        const snowPos = sim.particles.filter(p => p.type === 'snow').map(p => `(${p.pos.x.toFixed(1)},${p.pos.y.toFixed(1)})`);
-        // console.log(`Tick ${tick}: Snow at ${snowPos.join(', ')}, Soldier at (${soldier.pos.x},${soldier.pos.y})`);
-      }
-      
       const currentSnowParticles = sim.particles.filter(p => p.type === 'snow').length;
       const currentFreezeImpacts = sim.particles.filter(p => p.type === 'freeze_impact').length;
-      
       if (currentSnowParticles > snowParticles) {
         snowParticles = Math.max(snowParticles, currentSnowParticles);
       }
-      
       if (currentFreezeImpacts > freezeImpacts) {
         freezeImpacts = Math.max(freezeImpacts, currentFreezeImpacts);
       }
-      
-
       const currentFrozenUnits = sim.units.filter(u => u.meta.frozen).length;
       if (currentFrozenUnits > 0) {
         anyUnitWasFrozen = true;
       }
       if (currentFrozenUnits > frozenUnits) {
         frozenUnits = currentFrozenUnits;
-        const frozen = sim.units.find(u => u.meta.frozen);
-        const temp = sim.temperatureField.get(Math.floor(soldier.pos.x), Math.floor(soldier.pos.y));
-        // console.log(`Unit frozen at tick ${tick}! Temp at soldier: ${temp}`);
       } else if (currentFrozenUnits < frozenUnits) {
-        const temp = sim.temperatureField.get(Math.floor(soldier.pos.x), Math.floor(soldier.pos.y));
-        // console.log(`Unit THAWED at tick ${tick}! Temp at soldier: ${temp}`);
         frozenUnits = currentFrozenUnits;
       }
     }
-
-
     expect(anyUnitWasFrozen).toBe(true);
-    
     const totalParticles = sim.particles.length;
     expect(totalParticles).toBeGreaterThan(0);
-    
   });
 
   it('should show field overlay integration with winter effects', () => {
-    
     const sim = new Simulator();
-    
-
     sim.winterActive = true;
     for (let x = 0; x < sim.fieldWidth; x++) {
       for (let y = 0; y < sim.fieldHeight; y++) {
         sim.temperatureField.set(x, y, -5);
       }
     }
-    
-
     if (sim.temperatureField) {
       const sampleTemp = sim.temperatureField.get(10, 10);
       expect(sampleTemp).toBeLessThan(20); // Should be cold
     }
-    
-
     const testUnit = { ...Encyclopaedia.unit('soldier'), pos: { x: 15, y: 15 } };
     sim.addUnit(testUnit);
-    
-
     for (let i = 0; i < 30; i++) {
       sim.step();
     }
-    
     const winterParticles = sim.particles.filter(p => 
       p.type === 'snow' || p.type === 'freeze_impact'
     ).length;
-    
-    
     expect(winterParticles).toBeGreaterThan(0);
   });
 
   it('should demonstrate complete environmental system integration', () => {
-    
     const sim = new Simulator();
-
-    
-
     const mechanistForce = [
       { ...Encyclopaedia.unit('mechatronist'), pos: { x: 8, y: 8 } },
       { ...Encyclopaedia.unit('builder'), pos: { x: 9, y: 8 } },
       { ...Encyclopaedia.unit('clanker'), pos: { x: 10, y: 8 } }
     ];
-    
     mechanistForce.forEach(unit => sim.addUnit(unit));
-    
-    
-
     sim.queuedCommands = [
       { type: 'weather', params: { weatherType: 'winter' } },
       { type: 'lightning', params: { x: 9, y: 9 } } // Strike near units
     ];
     sim.step();
-    
     let environmentalEvents = 0;
-    
-
     for (let tick = 0; tick < 25; tick++) {
       sim.step();
-      
-
       const frozenUnits = sim.units.filter(u => u.meta.frozen).length;
       const boostedUnits = sim.units.filter(u => u.meta.lightningBoost).length;
       const snowflakes = sim.particles.filter(p => p.type === 'snow').length;
       const lightning = sim.particles.filter(p => p.type === 'lightning').length;
-      
       if (frozenUnits + boostedUnits + snowflakes + lightning > 0) {
         environmentalEvents++;
       }
     }
-    
-    
     expect(environmentalEvents).toBeGreaterThanOrEqual(9);
   });
 });

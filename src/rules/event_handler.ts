@@ -16,8 +16,10 @@ export class EventHandler extends Rule {
         const type = e.meta.aspect === "heal" ? "Healing circle" : "Impact";
         return `${type} from ${e.source} at (${e.target.x}, ${e.target.y}) with radius ${e.meta.radius}`;
       },
-      damage: (e) =>
-        `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage (now at ${targetUnit?.hp} hp)`,
+      damage: (e) => {
+        const origin = e.meta?.origin ? ` from (${e.meta.origin.x}, ${e.meta.origin.y})` : '';
+        return `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage${origin} (now at ${targetUnit?.hp} hp)`;
+      },
       heal: (e) =>
         `${e.source} healed ${e.target} for ${e.meta.amount} (now at ${targetUnit?.hp} hp)`,
       terrain: (e) =>
@@ -42,6 +44,11 @@ export class EventHandler extends Rule {
       }
 
       (event as any)._processed = true;
+      
+      // Log event for debugging
+      if (process.env.DEBUG_EVENTS || (global as any).DEBUG_EVENTS) {
+        console.log(`Event: ${this.glossary(event, context)}`);
+      }
 
       switch (event.kind) {
         case "aoe":
