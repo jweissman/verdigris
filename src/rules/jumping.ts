@@ -108,6 +108,7 @@ export class Jumping extends Rule {
             radius: unit.meta.jumpRadius,
             amount: unit.meta.jumpDamage,
             force: 3,
+            friendlyFire: false, // Don't damage allies on landing
           },
         });
       }

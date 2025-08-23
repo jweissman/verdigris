@@ -1,5 +1,6 @@
 import { Simulator } from "./core/simulator";
 import { Unit } from "./types/Unit";
+import { isEnemy } from "./core/team_utils";
 
 export class UnitOperations {
   static move(unit: Unit, deltaTime: number = 1, sim?: any): Unit {
@@ -63,7 +64,7 @@ export class UnitOperations {
   static hunt(unit: Unit, sim: any): Unit {
     const hostiles = sim
       .getRealUnits()
-      .filter((u: Unit) => u.team !== unit.team && u.state !== "dead");
+      .filter((u: Unit) => isEnemy(unit, u));
     if (hostiles.length === 0) {
       return unit;
     }

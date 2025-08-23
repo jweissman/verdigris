@@ -82,6 +82,8 @@ import welder from "../assets/sprites/welder.png";
 import assembler from "../assets/sprites/assembler.png";
 // @ts-ignore
 import champion from "../assets/sprites/champion.png";
+// @ts-ignore
+import penguin from "../assets/sprites/penguin.png";
 
 // Hero body parts (16x16, 3 frames each)
 // @ts-ignore
@@ -131,7 +133,7 @@ import Renderer, { createScaledRenderer } from "./renderer";
 class Game {
   public sim: Simulator;
   private lastSimTime: number = 0;
-  protected simTickRate: number = 8; // Simulation runs at 8fps for strategic gameplay
+  protected simTickRate: number = 60; // Simulation runs at 60fps for smooth gameplay
 
   renderer: Renderer;
   private _handleResize: () => void;
@@ -248,6 +250,7 @@ class Game {
     { name: "welder", src: welder },
     { name: "assembler", src: assembler },
     { name: "champion", src: champion },
+    { name: "penguin", src: penguin },
     { name: "cell-effects", src: cellEffects },
     // Hero body parts
     { name: "hero-head", src: heroHead },

@@ -7,8 +7,8 @@ export class PlayerControl extends Rule {
   private moveCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
   private jumpCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
   private commandBuffer: Map<string, QueuedCommand[]> = new Map(); // unitId -> buffered commands
-  private readonly MOVE_COOLDOWN = 2; // Balanced movement speed
-  private readonly JUMP_COOLDOWN = 10; // Ticks between jump commands
+  private readonly MOVE_COOLDOWN = 3; // Slower movement at 60fps
+  private readonly JUMP_COOLDOWN = 20; // Ticks between jump commands at 60fps
   
   constructor() {
     super();

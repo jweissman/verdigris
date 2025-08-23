@@ -66,7 +66,7 @@ export class HeroRig {
     this.parts.set('lleg', {
       name: 'lleg',
       sprite: 'hero-lleg',
-      offset: { x: -2, y: 8 },
+      offset: { x: -6, y: 6 },
       rotation: 0,
       scale: 1,
       frame: 0,
@@ -76,7 +76,7 @@ export class HeroRig {
     this.parts.set('rleg', {
       name: 'rleg',
       sprite: 'hero-rleg',
-      offset: { x: 2, y: 8 },
+      offset: { x: 6, y: 6 },
       rotation: 0,
       scale: 1,
       frame: 0,
@@ -445,6 +445,7 @@ export class HeroRig {
   }
   
   update(deltaTime: number = 1) {
+    // Debug: console.log(`HeroRig.update: currentAnimation='${this.currentAnimation}', animTime=${this.animationTime}`);
     if (!this.currentAnimation) return;
     
     const anim = this.animations.get(this.currentAnimation);
@@ -456,8 +457,8 @@ export class HeroRig {
       this.animationTime = this.animationTime % anim.duration;
     }
     
-    // For breathing, use smooth sine interpolation
-    if (this.currentAnimation === 'breathing') {
+    // For breathing and wind, use smooth sine interpolation
+    if (this.currentAnimation === 'breathing' || this.currentAnimation === 'wind') {
       this.applyBreathingInterpolation();
     } else {
       // Find current frame for other animations
@@ -471,6 +472,8 @@ export class HeroRig {
       
       if (currentFrame) {
         this.applyFrame(currentFrame);
+      } else {
+        // No frame found for current time
       }
     }
     
@@ -482,26 +485,44 @@ export class HeroRig {
   }
   
   private applyBreathingInterpolation() {
-    // Fast breathing cycle - 8 ticks total
-    const anim = this.animations.get('breathing');
-    const duration = anim?.duration || 8;
+    // Get animation-specific duration
+    const anim = this.animations.get(this.currentAnimation);
+    const isWind = this.currentAnimation === 'wind';
+    const duration = isWind ? 16 : (anim?.duration || 8); // Wind uses faster cycle
     const phase = (this.animationTime % duration) / duration;
     const breathAmount = (1 - Math.cos(phase * Math.PI * 2)) / 2; // 0 to 1
     
     // Much more visible movement
     const torso = this.parts.get('torso');
     if (torso) {
-      torso.offset.y = -breathAmount * 8; // MUCH bigger movement - up to 8 pixels
-      torso.offset.x = Math.sin(phase * Math.PI * 4) * 2; // Side sway
+      const oldY = torso.offset.y;
+      if (isWind) {
+        // Wind animation - subtle torso movement
+        torso.offset.y = -breathAmount * 1.5; // Subtle vertical movement
+        torso.offset.x = Math.sin(phase * Math.PI * 2) * 0.5; // Very gentle sway
+      } else {
+        // Normal breathing - subtle torso
+        torso.offset.y = -breathAmount * 1; // Very subtle rise and fall
+        torso.offset.x = Math.sin(phase * Math.PI * 4) * 0.25; // Minimal sway
+      }
       torso.frame = Math.floor(phase * 3) % 3; // Cycle frames
+      // Debug logging removed
     }
     
     // Head follows torso with delay
     const head = this.parts.get('head');
     if (head) {
-      head.offset.y = -8 - breathAmount * 6; // Big movement
-      head.offset.x = Math.sin(phase * Math.PI * 4 + 0.5) * 1.5; // Delayed sway
-      head.rotation = Math.sin(phase * Math.PI * 2) * 0.1; // More tilt
+      if (isWind) {
+        // Wind - hair blowing effect, more movement than torso
+        head.offset.y = -8 - breathAmount * 3; // Head moves moderately
+        head.offset.x = Math.sin(phase * Math.PI * 2 + 0.3) * 1.5; // Reduced wind-blown hair
+        head.rotation = Math.sin(phase * Math.PI * 2) * 0.06; // Much less tilt
+      } else {
+        // Normal breathing
+        head.offset.y = -8 - breathAmount * 1.5; // Subtle movement
+        head.offset.x = Math.sin(phase * Math.PI * 4 + 0.5) * 0.5; // Very slight delayed sway
+        head.rotation = Math.sin(phase * Math.PI * 2) * 0.03; // Minimal tilt
+      }
       head.frame = Math.floor(phase * 3) % 3;
     }
     
@@ -509,13 +530,29 @@ export class HeroRig {
     const larm = this.parts.get('larm');
     const rarm = this.parts.get('rarm');
     if (larm) {
-      larm.offset.y = -breathAmount * 4; // Arms rise
-      larm.rotation = breathAmount * 0.2; // More rotation
+      if (isWind) {
+        // Wind - arms sway gently
+        larm.offset.y = -breathAmount * 2;
+        larm.offset.x = -6 + Math.sin(phase * Math.PI * 2 - 0.5) * 1;
+        larm.rotation = Math.sin(phase * Math.PI * 2) * 0.08;
+      } else {
+        larm.offset.y = -breathAmount * 1.5; // Subtle rise
+        larm.offset.x = -6; // Keep stable position
+        larm.rotation = breathAmount * 0.08; // Gentle rotation
+      }
       larm.frame = Math.floor(phase * 3) % 3;
     }
     if (rarm) {
-      rarm.offset.y = -breathAmount * 4; // Arms rise  
-      rarm.rotation = -breathAmount * 0.2; // More rotation
+      if (isWind) {
+        // Wind - opposite arm sway gently
+        rarm.offset.y = -breathAmount * 2;
+        rarm.offset.x = 6 + Math.sin(phase * Math.PI * 2 + 0.5) * 1;
+        rarm.rotation = -Math.sin(phase * Math.PI * 2) * 0.08;
+      } else {
+        rarm.offset.y = -breathAmount * 1.5; // Subtle rise
+        rarm.offset.x = 6; // Keep stable position
+        rarm.rotation = -breathAmount * 0.08; // Gentle rotation
+      }
       rarm.frame = Math.floor(phase * 3) % 3;
     }
     
@@ -523,11 +560,13 @@ export class HeroRig {
     const lleg = this.parts.get('lleg');
     const rleg = this.parts.get('rleg');
     if (lleg) {
-      lleg.offset.x = -2 + Math.sin(phase * Math.PI * 2) * 0.5;
+      lleg.offset.x = -6 + (isWind ? Math.sin(phase * Math.PI * 2) * 0.4 : Math.sin(phase * Math.PI * 2) * 0.2);
+      lleg.offset.y = 6 - breathAmount * 0.5; // Base at y:6, very subtle vertical
       lleg.frame = Math.floor(phase * 3) % 3;
     }
     if (rleg) {
-      rleg.offset.x = 2 - Math.sin(phase * Math.PI * 2) * 0.5;
+      rleg.offset.x = 6 - (isWind ? Math.sin(phase * Math.PI * 2) * 0.4 : Math.sin(phase * Math.PI * 2) * 0.2);
+      rleg.offset.y = 6 - breathAmount * 0.5; // Base at y:6, very subtle vertical
       rleg.frame = Math.floor(phase * 3) % 3;
     }
   }

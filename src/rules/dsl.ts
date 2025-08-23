@@ -1,5 +1,6 @@
 import type { TickContext } from "../core/tick_context";
 import { Unit } from "../types/Unit";
+import { isEnemy } from "../core/team_utils";
 
 export default class DSL {
   static clearCache() {}
@@ -56,7 +57,7 @@ export default class DSL {
         let bestScore = sort ? Infinity : 0;
 
         for (const u of allUnits) {
-          if (u.team !== unit.team && u.state !== "dead" && filter(u)) {
+          if (isEnemy(unit, u) && filter(u)) {
             if (!sort) {
               return u; // Return first enemy found when not sorting
             }
@@ -81,7 +82,7 @@ export default class DSL {
         const rangeSq = range * range;
 
         for (const u of allUnits) {
-          if (u.team !== unit.team && u.state !== "dead" && filter(u)) {
+          if (isEnemy(unit, u) && filter(u)) {
             const distSq = dist2(u, unit);
             if (distSq <= rangeSq) {
               if (!sort) {

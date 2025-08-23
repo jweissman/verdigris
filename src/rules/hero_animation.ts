@@ -12,14 +12,7 @@ export class HeroAnimation extends Rule {
     const commands: QueuedCommand[] = [];
     const allUnits = context.getAllUnits();
     
-    // Debug: count calls
-    if (!this.debugCallCount) {
-      this.debugCallCount = 0;
-    }
-    this.debugCallCount++;
-    if (this.debugCallCount === 1 || this.debugCallCount === 31) {
-      console.log(`HeroAnimation.execute called ${this.debugCallCount} times`);
-    }
+    // Debug counting removed
     
     // Find units that should have rigs
     for (const unit of allUnits) {
@@ -46,11 +39,7 @@ export class HeroAnimation extends Rule {
         // Update rig (advance by 1 tick)
         rig.update(1);
         
-        // Debug on specific ticks
-        if (this.debugCallCount === 1 || this.debugCallCount === 31) {
-          const torso = rig.getPartByName('torso');
-          console.log(`Tick ${this.debugCallCount} - Torso: y=${torso?.offset.y}, frame=${torso?.frame}, animTime=${rig.getAnimationTime()}`);
-        }
+        // Debug logging removed
         
         // Store rig in unit meta for renderer
         commands.push({

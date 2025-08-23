@@ -26,8 +26,8 @@ describe('Hero Rig Breathing', () => {
     // console.log('After 4 ticks:', { y: finalY, frame: finalFrame });
     
     // At tick 4 (half cycle), breathAmount = 1 (peak inhale)
-    // torso.offset.y = -8 * 1 = -8
-    expect(finalY).toBe(-8);
+    // torso.offset.y = -1 * 1 = -1 (changed to be more subtle)
+    expect(finalY).toBe(-1);
     expect(finalFrame).toBe(1); // floor(0.5 * 3) = 1
   });
   
@@ -54,16 +54,16 @@ describe('Hero Rig Breathing', () => {
     
     // console.log('Positions at 0, 2, 4, 6, 8:', positions);
     
-    // Breathing uses cosine wave: -8 * (1 - cos(phase * 2π)) / 2
-    // At phase 0: -8 * (1 - 1) / 2 = 0
-    // At phase 0.25: -8 * (1 - 0) / 2 = -4
-    // At phase 0.5: -8 * (1 - (-1)) / 2 = -8
-    // At phase 0.75: -8 * (1 - 0) / 2 = -4
-    // At phase 1: -8 * (1 - 1) / 2 = 0
+    // Breathing uses cosine wave: -1 * (1 - cos(phase * 2π)) / 2 (changed to be more subtle)
+    // At phase 0: -1 * (1 - 1) / 2 = 0
+    // At phase 0.25: -1 * (1 - 0) / 2 = -0.5
+    // At phase 0.5: -1 * (1 - (-1)) / 2 = -1
+    // At phase 0.75: -1 * (1 - 0) / 2 = -0.5
+    // At phase 1: -1 * (1 - 1) / 2 = 0
     expect(positions[0]).toBeCloseTo(0, 10); // Start at 0
-    expect(positions[1]).toBeCloseTo(-4, 10); // Quarter way at tick 2
-    expect(positions[2]).toBeCloseTo(-8, 10); // Peak at tick 4
-    expect(positions[3]).toBeCloseTo(-4, 10); // Three quarters at tick 6
+    expect(positions[1]).toBeCloseTo(-0.5, 10); // Quarter way at tick 2
+    expect(positions[2]).toBeCloseTo(-1, 10); // Peak at tick 4
+    expect(positions[3]).toBeCloseTo(-0.5, 10); // Three quarters at tick 6
     expect(positions[4]).toBeCloseTo(0, 10); // Back to start at tick 8
   });
 });
