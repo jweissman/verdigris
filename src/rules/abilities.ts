@@ -9,6 +9,10 @@ import type { QueuedCommand } from "../core/command_handler";
 import { dslCompiler } from "../dmg/dsl_compiler";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
+// Global guard to prevent duplicate execution
+let globalLastExecutedTick = -1;
+let globalExecutionCount = 0;
+
 export class Abilities extends Rule {
   // @ts-ignore
   static all: { [key: string]: Ability } = abilitiesJson as any;
@@ -90,10 +94,19 @@ export class Abilities extends Rule {
   }
 
   execute(context: TickContext): QueuedCommand[] {
+    const currentTick = context.getCurrentTick();
+    
+    // Global guard to prevent executing twice in the same tick across all instances
+    if (globalLastExecutedTick === currentTick) {
+      globalExecutionCount++;
+      // Silently skip duplicate executions
+      return [];
+    }
+    globalLastExecutedTick = currentTick;
+    globalExecutionCount = 1;
+    
     this.commands = [];
     const metaCommands: QueuedCommand[] = []; // Collect meta commands separately
-
-    const currentTick = context.getCurrentTick();
 
     const arrays = (context as any).getArrays?.();
     const useArrays = arrays?.posX && arrays?.posY && arrays?.team;
@@ -206,6 +219,7 @@ export class Abilities extends Rule {
         if (!ability) {
           continue;
         }
+        
 
         if (context.isAbilityForced(unit.id, abilityName)) {
           continue;
@@ -975,6 +989,11 @@ export class Abilities extends Rule {
     caster: any,
     primaryTarget: any,
   ): void {
+    // Prevent duplicate airdrops in the same tick
+    if (caster.sprite === "mechatronist" && caster.meta?.airdropCalledThisTick === context.getCurrentTick()) {
+      return;
+    }
+    
     const target = this.resolveTarget(
       context,
       effect.target || "self.pos",
@@ -1010,6 +1029,19 @@ export class Abilities extends Rule {
       },
       unitId: caster.id,
     });
+    
+    // Mark that airdrop was called this tick
+    if (caster.sprite === "mechatronist") {
+      this.commands.push({
+        type: "meta",
+        params: {
+          unitId: caster.id,
+          meta: {
+            airdropCalledThisTick: context.getCurrentTick(),
+          },
+        },
+      });
+    }
   }
 
   private buff(

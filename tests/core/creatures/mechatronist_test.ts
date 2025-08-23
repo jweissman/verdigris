@@ -112,10 +112,8 @@ describe('Mechatronist Deployment System', () => {
     let deploymentPhase = 'waiting';
     let mechatron = null;
     
-
     for (let tick = 0; tick < 200; tick++) {
       sim.step();
-      
       
 
       if (deploymentPhase === 'waiting') {

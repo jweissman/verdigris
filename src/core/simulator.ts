@@ -354,9 +354,6 @@ class Simulator {
     this.projectiles = [];
     this.processedEvents = [];
     this.queuedCommands = [];
-    
-    // Reset tick counter
-    this.ticks = 0;
 
     this.commandProcessor = new CommandHandler(this, this.transform);
 
@@ -387,6 +384,7 @@ class Simulator {
     ];
 
     this.rulebook = [...coreRules, ...combatRules, ...specialRules];
+    
   }
 
   addUnit(unit: Partial<Unit>): Unit {
@@ -562,6 +560,7 @@ class Simulator {
 
     for (const rule of this.rulebook) {
       const ruleName = rule.constructor.name;
+      
 
       const commands = rule.execute(context);
       if (commands && commands.length > 0) {
