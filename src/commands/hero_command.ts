@@ -24,7 +24,7 @@ export class HeroCommand extends Command {
             unitId: hero.id,
             params: {
               distance: params.distance || 3,
-              height: params.height || 5
+              height: params.height || 5  // Back to original height
             }
           });
           break;
@@ -71,6 +71,7 @@ export class HeroCommand extends Command {
           
         case 'up':
           // Move 2 cells vertically to compensate for hex offset
+          console.log(`[HeroCommand] Moving hero up by 2: unit=${hero.id}, pos=${JSON.stringify(hero.pos)}`);
           this.sim.queuedCommands.push({
             type: 'move',
             unitId: hero.id,
@@ -80,6 +81,7 @@ export class HeroCommand extends Command {
           
         case 'down':
           // Move 2 cells vertically to compensate for hex offset
+          console.log(`[HeroCommand] Moving hero down by 2: unit=${hero.id}, pos=${JSON.stringify(hero.pos)}`);
           this.sim.queuedCommands.push({
             type: 'move',
             unitId: hero.id,

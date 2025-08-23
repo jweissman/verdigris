@@ -32,8 +32,8 @@ class HeroGameRunner {
     // Set scene background
     (this.sim as any).sceneBackground = 'rooftop';
     
-    // Create renderer with sprites and backgrounds
-    this.renderer = new Renderer(canvas, this.sim, sprites, backgrounds);
+    // Create renderer with proper parameters (width, height, canvas, sim, sprites, backgrounds)
+    this.renderer = new Renderer(320, 200, canvas, this.sim, sprites, backgrounds);
     
     // Create hero controller
     this.hero = new HeroController(this.sim);

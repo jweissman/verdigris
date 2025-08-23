@@ -344,6 +344,37 @@ export class HeroRig {
         }
       ]
     });
+    
+    // Walk animation - legs alternate, arms swing
+    this.animations.set('walk', {
+      name: 'walk',
+      loop: true,
+      duration: 16, // Faster cycle for walking
+      frames: [
+        {
+          tick: 0,
+          parts: {
+            lleg: { offset: { x: -2, y: 8 }, rotation: -0.1, frame: 0 },
+            rleg: { offset: { x: 2, y: 8 }, rotation: 0.1, frame: 0 },
+            larm: { rotation: 0.1, frame: 0 },
+            rarm: { rotation: -0.1, frame: 0 },
+            head: { frame: 0 },
+            torso: { frame: 0 }
+          }
+        },
+        {
+          tick: 8,
+          parts: {
+            lleg: { offset: { x: -2, y: 8 }, rotation: 0.1, frame: 1 },
+            rleg: { offset: { x: 2, y: 8 }, rotation: -0.1, frame: 1 },
+            larm: { rotation: -0.1, frame: 1 },
+            rarm: { rotation: 0.1, frame: 1 },
+            head: { frame: 1 },
+            torso: { frame: 1 }
+          }
+        }
+      ]
+    });
   }
   
   play(animationName: string) {

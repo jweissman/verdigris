@@ -25,7 +25,7 @@ export class JumpCommand extends Command {
     if (unit.meta?.jumping) {
       // Buffer the jump for when we land
       unit.meta.jumpBuffered = true;
-      unit.meta.jumpBufferTick = this.sim.tickCount || 0;
+      unit.meta.jumpBufferTick = this.sim.ticks || 0;
       unit.meta.bufferedJumpParams = params;
       return;
     }

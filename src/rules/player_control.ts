@@ -4,6 +4,10 @@ import { QueuedCommand } from "../core/command_handler";
 
 export class PlayerControl extends Rule {
   private keysHeld: Set<string> = new Set();
+  private moveCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
+  private jumpCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
+  private readonly MOVE_COOLDOWN = 4; // Ticks between movement commands
+  private readonly JUMP_COOLDOWN = 10; // Ticks between jump commands
   
   constructor() {
     super();
@@ -21,11 +25,26 @@ export class PlayerControl extends Rule {
     const commands: QueuedCommand[] = [];
     const allUnits = context.getAllUnits();
     
+    // Update cooldowns
+    for (const [unitId, cooldown] of this.moveCooldowns.entries()) {
+      if (cooldown > 0) {
+        this.moveCooldowns.set(unitId, cooldown - 1);
+      }
+    }
+    
+    for (const [unitId, cooldown] of this.jumpCooldowns.entries()) {
+      if (cooldown > 0) {
+        this.jumpCooldowns.set(unitId, cooldown - 1);
+      }
+    }
+    
     // Find player-controlled units
     for (const unit of allUnits) {
       if (unit.meta?.controlled || unit.tags?.includes('hero')) {
-        // Only move if unit is not already moving
-        if (unit.intendedMove.x === 0 && unit.intendedMove.y === 0) {
+        // Check cooldown
+        const cooldown = this.moveCooldowns.get(unit.id) || 0;
+        
+        if (cooldown <= 0) {
           // Calculate movement from held keys
           let action = '';
           
@@ -40,15 +59,20 @@ export class PlayerControl extends Rule {
           }
           
           if (action) {
+            console.log(`[PlayerControl] Sending hero ${action} command, unit at ${JSON.stringify(unit.pos)}`);
             commands.push({
               type: 'hero',
               params: { action }
             });
+            
+            // Set cooldown
+            this.moveCooldowns.set(unit.id, this.MOVE_COOLDOWN);
           }
         }
         
         // Handle jump
-        if (this.keysHeld.has(' ') && !unit.meta?.jumping) {
+        const jumpCooldown = this.jumpCooldowns.get(unit.id) || 0;
+        if (this.keysHeld.has(' ') && !unit.meta?.jumping && jumpCooldown <= 0) {
           commands.push({
             type: 'jump',
             unitId: unit.id,
@@ -57,6 +81,9 @@ export class PlayerControl extends Rule {
               height: 5
             }
           });
+          
+          // Set jump cooldown
+          this.jumpCooldowns.set(unit.id, this.JUMP_COOLDOWN);
         }
       }
     }

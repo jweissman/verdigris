@@ -179,20 +179,34 @@ export default class Isometric extends View {
     let renderY = unit.pos.y;
     let renderZ = unit.meta.z || 0;
 
-    const interp = this.unitInterpolations.get(unit.id);
-    if (interp) {
-      const easeProgress = this.easeInOutQuad(interp.progress);
-      renderX = interp.startX + (interp.targetX - interp.startX) * easeProgress;
-      renderY = interp.startY + (interp.targetY - interp.startY) * easeProgress;
-      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
-    }
-
     // Use proper sprite dimensions based on unit scale
     const dimensions = this.unitRenderer.getSpriteDimensions(unit);
     const spriteWidth = dimensions.width;
     const spriteHeight = dimensions.height;
 
-    const { x: screenX, y: screenY } = this.toIsometric(renderX, renderY);
+    let screenX: number;
+    let screenY: number;
+    
+    const interp = this.unitInterpolations.get(unit.id);
+    if (interp) {
+      const easeProgress = this.easeInOutQuad(interp.progress);
+      
+      // Interpolate Z in unit space
+      renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
+      
+      // Convert start and end positions to screen space FIRST
+      const startScreen = this.toIsometric(interp.startX, interp.startY);
+      const endScreen = this.toIsometric(interp.targetX, interp.targetY);
+      
+      // Then interpolate in screen space to avoid hex offset issues
+      screenX = startScreen.x + (endScreen.x - startScreen.x) * easeProgress;
+      screenY = startScreen.y + (endScreen.y - startScreen.y) * easeProgress;
+    } else {
+      // No interpolation, just convert directly
+      const screenPos = this.toIsometric(renderX, renderY);
+      screenX = screenPos.x;
+      screenY = screenPos.y;
+    }
 
     const pixelX = screenX - spriteWidth / 2;
     const pixelY = screenY - spriteHeight / 2;
@@ -200,7 +214,7 @@ export default class Isometric extends View {
     let realPixelY = pixelY;
 
     const sprite = this.sprites.get(unit.sprite);
-    if (sprite) {
+    if (sprite && !unit.meta?.rig) { // Don't render sprite if unit has rig
       let frameIndex = 0;
 
       const recentAttack = this.sim.processedEvents.find(

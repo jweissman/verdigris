@@ -95,7 +95,7 @@ export class HeroAnimation extends Rule {
     const currentAnim = this.currentAnimations.get(unit.id);
     if (currentAnim !== desiredAnimation) {
       // For now, only play animations that exist
-      if (desiredAnimation === 'breathing' || desiredAnimation === 'wind') {
+      if (desiredAnimation === 'breathing' || desiredAnimation === 'wind' || desiredAnimation === 'walk') {
         rig.play(desiredAnimation);
         this.currentAnimations.set(unit.id, desiredAnimation);
       }

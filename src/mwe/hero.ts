@@ -1,6 +1,7 @@
 import { Game } from "../core/game";
 import { HeroAnimation } from "../rules/hero_animation";
 import { PlayerControl } from "../rules/player_control";
+import { Jumping } from "../rules/jumping";
 
 export class HeroGame extends Game {
   private playerControl: PlayerControl;
@@ -13,6 +14,7 @@ export class HeroGame extends Game {
     this.playerControl = new PlayerControl();
     this.sim.rulebook.push(this.playerControl);
     this.sim.rulebook.push(new HeroAnimation());
+    this.sim.rulebook.push(new Jumping());
     
     // Set background
     this.sim.sceneBackground = "rooftop";
@@ -25,6 +27,7 @@ export class HeroGame extends Game {
       hp: 100,
       maxHp: 100,
       dmg: 15,
+      sprite: "hero", // Add sprite for Z-axis rendering to work
       tags: ["hero"],
       meta: {
         controlled: true,

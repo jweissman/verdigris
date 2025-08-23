@@ -211,6 +211,7 @@ export class UnitRenderer {
   ) {
     // Handle rigged units (modular body parts)
     if (unit.meta?.rig) {
+      // screenY already includes Z offset from isometric renderer
       this.renderRiggedUnit(ctx, unit, sprites, screenX, screenY, options);
       return;
     }

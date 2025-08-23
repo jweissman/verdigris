@@ -51,7 +51,7 @@ export class Jumping extends Rule {
     const progress = (unit.meta.jumpProgress || 0) + 1;
     
     // Simple parabolic arc with good feel
-    const jumpDuration = 15; // Total jump duration in ticks
+    const jumpDuration = 8; // Total jump duration in ticks - faster
     const t = progress / jumpDuration;
     
     let newX = jumpOrigin.x;
@@ -66,8 +66,8 @@ export class Jumping extends Rule {
       newY = jumpOrigin.y + dy * t;
     }
     
-    // Parabolic height with good arc
-    const peakHeight = 5;
+    // Parabolic height with good arc - use actual jump height from meta
+    const peakHeight = unit.meta.jumpHeight || 5;
     const z = Math.max(0, 4 * peakHeight * t * (1 - t));
 
     // Check if we should land

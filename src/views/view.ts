@@ -61,6 +61,11 @@ export default class View {
         prevPos.y !== unit.pos.y ||
         prevPos.z !== currentZ
       ) {
+        // Use faster interpolation for jumping units and hero movement
+        const isJumping = unit.meta?.jumping;
+        const isHero = unit.tags?.includes('hero');
+        const duration = isJumping ? 100 : (isHero ? 200 : 400); // Fast for jumps, medium for heroes, normal for others
+        
         this.unitInterpolations.set(unit.id, {
           startX: prevPos.x,
           startY: prevPos.y,
@@ -69,7 +74,7 @@ export default class View {
           targetY: unit.pos.y,
           targetZ: currentZ,
           progress: 0,
-          duration: 400, // 400ms movement (slower)
+          duration: duration,
         });
 
         this.previousPositions.set(unit.id, {
