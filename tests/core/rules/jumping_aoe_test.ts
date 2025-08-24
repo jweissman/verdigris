@@ -7,6 +7,8 @@ import { EventHandler } from '../../../src/rules/event_handler';
 describe('Jumping AOE', () => {
   test('jump landing AOE should not affect the jumping unit itself', () => {
     const sim = new Simulator(20, 20);
+    // Clear default rules to isolate jumping behavior
+    sim.rulebook = [];
     sim.rulebook.push(new Jumping());
     sim.rulebook.push(new AreaOfEffect());
     sim.rulebook.push(new EventHandler());

@@ -193,13 +193,19 @@ describe('Hero Combat', () => {
       expect(heroAfterStart?.meta?.attackStartTick).toBeDefined();
       expect(heroAfterStart?.meta?.attackEndTick).toBeDefined();
 
-      // Step through attack animation (12 ticks)
-      for (let i = 0; i < 12; i++) {
+      // Step through attack animation (16 ticks - matches attackEndTick in HeroCommand)
+      for (let i = 0; i < 16; i++) {
         sim.step();
       }
 
       // Check attack state is cleared
       const heroAfterEnd = sim.units.find(u => u.id === 'hero');
+      console.log('Hero after attack animation:', {
+        state: heroAfterEnd?.state,
+        attackStartTick: heroAfterEnd?.meta?.attackStartTick,
+        attackEndTick: heroAfterEnd?.meta?.attackEndTick,
+        currentTick: sim.ticks
+      });
       expect(heroAfterEnd?.state).toBe('idle');
       expect(heroAfterEnd?.meta?.attackStartTick).toBeUndefined();
       expect(heroAfterEnd?.meta?.attackEndTick).toBeUndefined();

@@ -78,22 +78,21 @@ export class HeroAnimation extends Rule {
       currentTick >= unit.meta.attackStartTick &&
       currentTick < unit.meta.attackEndTick;
     
-    // Check if attack just ended
+    // Check if attack just ended (only clear once at the exact end tick)
     const attackJustEnded = unit.meta?.attackEndTick && 
-      currentTick >= unit.meta.attackEndTick &&
-      unit.state === 'attack';
+      currentTick === unit.meta.attackEndTick;
     
     if (attackJustEnded) {
-      // Reset attack state via command
+// Clear the attack metadata directly
+      delete unit.meta.attackStartTick;
+      delete unit.meta.attackEndTick;
+      
+      // Reset state to idle
       commands.push({
         type: 'meta',
         params: {
           unitId: unit.id,
-          state: 'idle',
-          meta: {
-            attackStartTick: undefined,
-            attackEndTick: undefined
-          }
+          state: 'idle'
         }
       });
     }

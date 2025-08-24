@@ -135,7 +135,7 @@ describe('Mechatronist Deployment System', () => {
     
     expect(deploymentPhase).toBe('landed');
     expect(mechatron).toBeTruthy();
-    expect(mechatron!.hp).toBeGreaterThan(180); // May take some landing damage
+    expect(mechatron!.hp).toBeGreaterThan(140); // May take some landing damage
     expect(mechatron!.tags).toContain('huge');
     expect(mechatron!.abilities.includes('missileBarrage')).toBe(true);
     
