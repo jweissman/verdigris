@@ -1068,7 +1068,7 @@ class Simulator {
             y: -10 - Simulator.rng.random() * 10, // Start above the field
           },
           vel: {
-            x: Simulator.rng.random() * 0.5 - 0.25, // Gentle drift
+            x: 0, // No horizontal drift - fall straight down
             y: 0.2 + Simulator.rng.random() * 0.2, // Slow fall
           },
           z: 15 + Simulator.rng.random() * 25, // Varying heights
@@ -1101,7 +1101,7 @@ class Simulator {
         y: -1, // Start above visible area
       },
       vel: {
-        x: 0.2 + Simulator.rng.random() * 0.3, // Diagonal movement (right)
+        x: 0, // No horizontal movement - fall straight down
         y: 0.8 + Simulator.rng.random() * 0.4, // Fast downward
       },
       radius: 0.5 + Simulator.rng.random() * 0.5, // Small drops

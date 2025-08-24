@@ -171,7 +171,7 @@ export class EventHandler extends Rule {
       } else if (isChill) {
         return inRange && unit.team !== sourceUnit?.team; // Chill affects enemies
       } else {
-        const friendlyFire = event.meta.friendlyFire !== false; // Default to true for backwards compatibility
+        const friendlyFire = event.meta.friendlyFire === true; // Default to false - AOE command handles damage
         const excludeSource = event.meta.excludeSource === true;
         
         // Check if unit should be excluded
@@ -230,37 +230,10 @@ export class EventHandler extends Rule {
           },
         });
       } else if (isHealing) {
-        context.queueEvent({
-          kind: "heal",
-          source: event.source,
-          target: unit.id,
-          meta: {
-            amount: event.meta.amount || 10,
-            aspect: "magic",
-            origin: event.target,
-          },
-        });
+        // Healing AOE events don't create commands - handled by AoE command
       } else {
-        const falloff = event.meta.falloff !== false;
-        const maxRadius = event.meta.radius || 5;
-        const damageMultiplier = falloff
-          ? Math.max(0.3, 1 - (distance / maxRadius) * 0.5)
-          : 1;
-        const damage = Math.floor((event.meta.amount ?? 10) * damageMultiplier);
-
-        if (damage > 0) {
-          commands.push({
-            type: "damage",
-            params: {
-              targetId: unit.id,
-              amount: damage,
-              aspect: event.meta.aspect || "explosion",
-              sourceId: event.source,
-              origin: event.target,
-            },
-          });
-        }
-
+        // Regular AOE damage events don't create damage commands - handled by AoE command
+        // Only handle knockback for visual/physics effects
         if (event.meta.force && sourceUnit) {
           const massDiff = (sourceUnit.mass || 1) - (unit.mass || 1);
           if (massDiff >= 3) {

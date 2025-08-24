@@ -49,6 +49,37 @@ export class JumpCommand extends Command {
     const damage = (params.damage as number) || 0; // Default to no damage
     const radius = (params.radius as number) || 0; // Default to no radius
 
+    // Add warning indicators at landing zone if there's AoE damage
+    if (damage > 0 && radius > 0) {
+      // Create warning particles at the landing zone
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist <= radius) {
+            const zoneX = Math.round(targetX + dx);
+            const zoneY = Math.round(targetY + dy);
+            if (zoneX >= 0 && zoneX < this.sim.width && 
+                zoneY >= 0 && zoneY < this.sim.height) {
+              
+              // Add pre-impact warning particles
+              this.sim.queuedCommands.push({
+                type: 'particle',
+                params: {
+                  pos: { x: zoneX * 8 + 4, y: zoneY * 8 + 4 },
+                  vel: { x: 0, y: -0.1 },
+                  lifetime: 20,
+                  type: 'warning',
+                  color: `hsla(30, 100%, ${70 - dist * 10}%, ${0.6 - dist * 0.1})`,
+                  radius: 3 - dist * 0.3,
+                  z: 1
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+
     transform.updateUnit(unitId, {
       meta: {
         ...unit.meta,

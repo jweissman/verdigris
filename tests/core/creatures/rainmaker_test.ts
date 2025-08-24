@@ -24,7 +24,7 @@ describe("Rainmaker Integration", () => {
     const rainParticles = sim.particles.filter(p => p.type === 'rain');
     expect(rainParticles.length).toBe(1);
     const rainDrop = rainParticles[0];
-    expect(rainDrop.vel.x).toBeGreaterThan(0.2); // Minimum diagonal movement
+    expect(rainDrop.vel.x).toBe(0); // Rain falls straight down
     expect(rainDrop.vel.y).toBeGreaterThan(0.8); // Minimum downward movement
   });
 

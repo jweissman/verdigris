@@ -18,8 +18,9 @@ export class AoE extends Command {
     const type = (params.type as string) || "physical";
     const stunDuration = params.stunDuration as number;
     const falloff = params.falloff !== false;
-    const friendlyFire = params.friendlyFire !== false;
+    const friendlyFire = params.friendlyFire === true;
     const excludeSource = params.excludeSource === true;
+    
 
     const center = { x, y };
 

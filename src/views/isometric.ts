@@ -242,9 +242,10 @@ export default class Isometric extends View {
     }
     
 
-    let renderX = unit.pos.x;
-    let renderY = unit.pos.y;
-    let renderZ = unit.meta.z || 0;
+    // Use smooth positions during jumping for better interpolation
+    let renderX = unit.meta?.smoothX ?? unit.pos.x;
+    let renderY = unit.meta?.smoothY ?? unit.pos.y;
+    let renderZ = unit.meta?.z || 0;
 
     // Use proper sprite dimensions based on unit scale
     const dimensions = this.unitRenderer.getSpriteDimensions(unit);
@@ -294,7 +295,7 @@ export default class Isometric extends View {
     
     // Draw unit above ground (offset up by sprite height/2 plus any Z-offset)
     const isHero = unit.tags?.includes('hero');
-    const spriteOffset = isHero ? 16 : 8; // Heroes render higher (full body height)
+    const spriteOffset = 8; // Use consistent offset for all units
     this.unitRenderer.renderUnit(
       this.ctx,
       unit,

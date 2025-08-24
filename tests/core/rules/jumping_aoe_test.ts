@@ -3,21 +3,20 @@ import { Simulator } from '../../../src/core/simulator';
 import { AreaOfEffect } from '../../../src/rules/area_of_effect';
 import { Jumping } from '../../../src/rules/jumping';
 import { EventHandler } from '../../../src/rules/event_handler';
+import { CommandHandler } from '../../../src/core/command_handler';
 
 describe('Jumping AOE', () => {
   test('jump landing AOE should not affect the jumping unit itself', () => {
     const sim = new Simulator(20, 20);
-    // Clear default rules to isolate jumping behavior
-    sim.rulebook = [];
-    sim.rulebook.push(new Jumping());
-    sim.rulebook.push(new AreaOfEffect());
-    sim.rulebook.push(new EventHandler());
+    // Simulator already includes Jumping and AreaOfEffect rules by default
+    // No need to add them again
     
     // Add jumping unit with AOE damage
     const jumper = sim.addUnit({
       id: 'jumper',
       pos: { x: 10, y: 10 },
       hp: 100,
+      dmg: 0,  // No melee damage
       team: 'friendly',
       meta: {
         jumping: true,
@@ -30,16 +29,17 @@ describe('Jumping AOE', () => {
       }
     });
     
-    // Add enemy nearby
+    // Add enemy in range of AoE but not adjacent (to avoid melee)
     const enemy = sim.addUnit({
       id: 'enemy',
-      pos: { x: 11, y: 10 },
+      pos: { x: 12, y: 10 },  // 2 cells away, within radius 3
       hp: 100,
+      dmg: 0,  // No damage to avoid melee combat interfering
       team: 'hostile'
     });
     
-    // Simulate jump landing (18 ticks to complete based on current jump duration)
-    for (let i = 0; i < 19; i++) {
+    // Simulate jump landing (8 ticks to complete based on current jump duration)
+    for (let i = 0; i < 9; i++) {
       sim.step();
     }
     
@@ -54,15 +54,15 @@ describe('Jumping AOE', () => {
   
   test('jump landing AOE should not affect allied units', () => {
     const sim = new Simulator(20, 20);
-    sim.rulebook.push(new Jumping());
-    sim.rulebook.push(new AreaOfEffect());
-    sim.rulebook.push(new EventHandler());
+    // Simulator already includes Jumping and AreaOfEffect rules by default
+    // No need to add them again
     
     // Add jumping unit
     const jumper = sim.addUnit({
       id: 'jumper',
       pos: { x: 10, y: 10 },
       hp: 100,
+      dmg: 0,  // No melee damage
       team: 'friendly',
       meta: {
         jumping: true,
@@ -83,16 +83,17 @@ describe('Jumping AOE', () => {
       team: 'friendly'
     });
     
-    // Add enemy nearby
+    // Add enemy nearby (but with no damage so it can't hurt units)
     const enemy = sim.addUnit({
       id: 'enemy',
       pos: { x: 9, y: 10 },
       hp: 100,
+      dmg: 0,  // No damage to avoid melee combat interfering
       team: 'hostile'
     });
     
     // Simulate jump landing - need to complete the full jump duration
-    for (let i = 0; i < 20; i++) { // Jump duration is longer now
+    for (let i = 0; i < 9; i++) { // Jump duration is 8 ticks
       sim.step();
     }
     
@@ -116,6 +117,7 @@ describe('Jumping AOE', () => {
       id: 'jumper',
       pos: { x: 10, y: 10 },
       hp: 100,
+      dmg: 0,  // No melee damage
       team: 'friendly',
       meta: {
         jumping: true,
@@ -144,7 +146,7 @@ describe('Jumping AOE', () => {
     });
     
     // Simulate jump landing - need to complete the full jump duration
-    for (let i = 0; i < 20; i++) { // Jump duration is longer now
+    for (let i = 0; i < 9; i++) { // Jump duration is 8 ticks
       sim.step();
     }
     

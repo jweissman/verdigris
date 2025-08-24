@@ -102,16 +102,16 @@ export class Jumping extends Rule {
         const landingPos = unit.meta.jumpTarget || unit.pos;
         const radius = unit.meta.jumpRadius;
         
-        // Queue AOE damage
-        context.queueEvent({
-          kind: "aoe",
-          source: unit.id,
-          target: landingPos,
-          meta: {
-            aspect: "kinetic",
+        // Queue AOE damage command
+        this.commands.push({
+          type: "aoe",
+          unitId: unit.id,
+          params: {
+            x: landingPos.x,
+            y: landingPos.y,
             radius: radius,
-            amount: unit.meta.jumpDamage,
-            force: 5, // Stronger knockback
+            damage: unit.meta.jumpDamage,
+            type: "kinetic",
             friendlyFire: false,
             excludeSource: true
           },
@@ -192,17 +192,21 @@ export class Jumping extends Rule {
             jumpOrigin: null,
             jumpDamage: null,
             jumpRadius: null,
+            smoothX: null,
+            smoothY: null,
           },
         },
       });
     } else {
       // Continue jump - update position and metadata
+      // Store smooth interpolated positions in meta for rendering
+      // while still updating grid position for game logic
       this.commands.push({
         type: "move",
         params: {
           unitId: unit.id,
-          x: newX,
-          y: newY,
+          x: Math.round(newX),
+          y: Math.round(newY),
         },
       });
 
@@ -214,6 +218,9 @@ export class Jumping extends Rule {
             ...unit.meta,
             jumpProgress: progress,
             z: z,
+            // Store smooth positions for interpolated rendering
+            smoothX: newX,
+            smoothY: newY,
           },
         },
       });
