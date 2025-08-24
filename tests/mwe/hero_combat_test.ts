@@ -272,8 +272,6 @@ describe('Hero Combat', () => {
       }
 
       const heroAfter = sim.units.find(u => u.id === 'hero');
-      const ninjaAfter = sim.units.find(u => u.id === 'ninja');
-      console.log('After combat:', { heroHp: heroAfter?.hp, ninjaHp: ninjaAfter?.hp });
       expect(heroAfter?.hp).toBeLessThan(100); // Hero should have taken damage
     });
   });

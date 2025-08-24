@@ -68,9 +68,13 @@ export class MeleeCombat extends Rule {
         const y1 = arrays.posY[idxA];
         const team1 = arrays.team[idxA];
         const isHero = coldA?.tags?.includes("hero");
+        const isControlled = coldA?.meta?.controlled;
+        
+        // Mark if this unit already attacked (for heroes with special attacks)
+        let heroAlreadyAttacked = false;
 
         // Hero special attack - wide visor AOE (only if not controlled)
-        if (isHero && !coldA?.meta?.controlled) {
+        if (isHero && !isControlled) {
           const facing = coldA?.meta?.facing || "right";
           const currentTick = context.getCurrentTick();
           const attackerLastAttack = this.lastAttacks.get(attackerId) || -100;
@@ -133,11 +137,17 @@ export class MeleeCombat extends Rule {
                 },
               },
             });
+            
+            heroAlreadyAttacked = true;
           }
-          continue; // Skip normal melee for hero
+        }
+        
+        // Skip controlled heroes or heroes that already attacked from normal melee
+        if ((isHero && isControlled) || heroAlreadyAttacked) {
+          continue;
         }
 
-        // Normal melee combat for non-heroes
+        // Normal melee combat
         for (let j = i + 1; j < count; j++) {
           const idxB = activeIndices[j];
 
