@@ -320,6 +320,7 @@ export class EventHandler extends Rule {
     context: TickContext,
     commands: QueuedCommand[],
   ) {
+    // Events are purely observational - only create visual feedback
     if (!event.target || !event.meta?.amount) {
       return;
     }
@@ -328,20 +329,8 @@ export class EventHandler extends Rule {
     if (!targetUnit) {
       return;
     }
-
-    // Create damage command from event
-    commands.push({
-      type: "damage",
-      params: {
-        targetId: targetUnit.id,
-        amount: event.meta.amount,
-        aspect: event.meta.aspect || "physical",
-        sourceId: event.source,
-        origin: event.meta.origin,
-      },
-    });
-
-    const origin = event.meta.origin || targetUnit.pos;
+    
+    // Visual feedback particles only
     const aspect = event.meta.aspect || "physical";
     for (let i = 0; i < 5; i++) {
       commands.push({
@@ -368,6 +357,7 @@ export class EventHandler extends Rule {
     context: TickContext,
     commands: QueuedCommand[],
   ) {
+    // Events are purely observational - only create visual feedback
     if (!event.target || !event.meta?.amount) {
       return;
     }
@@ -376,15 +366,8 @@ export class EventHandler extends Rule {
     if (!targetUnit) {
       return;
     }
-
-    commands.push({
-      type: "heal",
-      params: {
-        targetId: targetUnit.id,
-        amount: event.meta.amount,
-      },
-    });
-
+    
+    // Visual feedback particles only
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2;
       commands.push({

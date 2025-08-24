@@ -124,14 +124,13 @@ describe("Perdurance System", () => {
     const initialHp = demon.hp;
     
 
-    sim.queuedEvents.push({
-      kind: 'damage',
-      source: soldier.id,
-      target: demon.id,
-      meta: {
-        aspect: 'physical',
+    sim.queuedCommands.push({
+      type: 'damage',
+      params: {
+        targetId: demon.id,
         amount: 10,
-        origin: soldier.pos
+        aspect: 'physical',
+        sourceId: soldier.id
       }
     });
     
@@ -209,26 +208,19 @@ describe("Perdurance System", () => {
     sim.addUnit(construct);
     
 
-    sim.queuedEvents.push({
-      kind: 'damage',
-      source: 'test',
-      target: construct.id,
-      meta: {
+    sim.queuedCommands.push({
+      type: 'damage',
+      params: {
+        targetId: construct.id,
+        amount: 10, // High damage
         aspect: 'impact',
-        amount: 10 // High damage
+        sourceId: 'test'
       }
     });
     
     const initialHp = construct.hp;
-    console.debug('Construct ID:', construct.id, 'Initial HP:', initialHp, 'Perdurance:', construct.meta?.perdurance);
-    console.debug('Events before step:', sim.queuedEvents.length);
-    console.debug('Commands before step:', sim.queuedCommands.length);
     
 
-    sim.step(); // Process damage event -> creates damage command
-    console.debug('Events after step 1:', sim.queuedEvents.length);
-    console.debug('Commands after step 1:', sim.queuedCommands.length);
-    
     sim.step(); // Process damage command -> applies damage
     
     const constructUnit = sim.units.find(u => u.id === construct.id);
@@ -245,20 +237,20 @@ describe("Perdurance System", () => {
     sim.addUnit(swarmbot);
     
 
-    sim.queuedEvents.push({
-      kind: 'damage',
-      source: 'test',
-      target: swarmbot.id,
-      meta: {
+    sim.queuedCommands.push({
+      type: 'damage',
+      params: {
+        targetId: swarmbot.id,
+        amount: 3,
         aspect: 'impact',
-        amount: 3
+        sourceId: 'test'
       }
     });
     
     const initialHp = swarmbot.hp;
     
 
-    sim.step(); // Fixpoint processing handles event -> damage command -> damage application
+    sim.step(); // Process damage command -> applies damage
     
     const swarmbotUnit = sim.units.find(u => u.id === swarmbot.id);
 
@@ -275,13 +267,14 @@ describe("Perdurance System", () => {
     
 
     for (let i = 0; i < 8; i++) {
-      sim.queuedEvents.push({
-        kind: 'damage',
-        source: 'test',
-        target: construct.id,
-        meta: {
+      // Queue damage command directly
+      sim.queuedCommands.push({
+        type: 'damage',
+        params: {
+          targetId: construct.id,
+          amount: Math.random() * 10 + 5, // 5-15 damage, all should be reduced to 1
           aspect: 'impact',
-          amount: Math.random() * 10 + 5 // 5-15 damage, all should be reduced to 1
+          sourceId: 'test'
         }
       });
     }

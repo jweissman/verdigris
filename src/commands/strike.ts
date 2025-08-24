@@ -37,7 +37,19 @@ export class StrikeCommand extends Command {
     }
 
     if (target && (targetId || this.isInRange(attacker, target, range))) {
-      // Queue damage event - EventHandler will convert to damage command
+      // Queue damage command to handle perdurance properly
+      this.sim.queuedCommands.push({
+        type: "damage",
+        params: {
+          targetId: target.id,
+          amount: damage,
+          aspect: aspect,
+          sourceId: attacker.id,
+          origin: attacker.pos
+        }
+      });
+      
+      // Create damage event for record-keeping/visuals only
       if (!this.sim.queuedEvents) {
         this.sim.queuedEvents = [];
       }
@@ -49,7 +61,7 @@ export class StrikeCommand extends Command {
           amount: damage,
           aspect: aspect,
           tick: this.sim.ticks,
-          isStrike: true, // Mark as strike for visual effects
+          isStrike: true,
           knockback: knockback
         }
       });

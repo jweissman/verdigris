@@ -95,6 +95,7 @@ describe('Mechatronist Deployment System', () => {
     const ally1 = { ...Encyclopaedia.unit('soldier'), pos: { x: 2, y: 3 } };
     const ally2 = { ...Encyclopaedia.unit('soldier'), pos: { x: 4, y: 3 } };
     const enemy = { ...Encyclopaedia.unit('worm'), pos: { x: 12, y: 3 }, team: 'hostile' as const };
+    console.log('Initial enemy HP:', enemy.hp, 'Initial enemy damage:', enemy.dmg);
     
     sim.addUnit(mechatronist);
     sim.addUnit(ally1);
@@ -112,6 +113,7 @@ describe('Mechatronist Deployment System', () => {
         if (mechatronInAir) {
           deploymentPhase = 'called';
           mechatron = mechatronInAir;
+          console.log(`Tick ${tick}: Mechatron deployed with HP ${mechatron.hp}`);
         }
       }
       
@@ -119,6 +121,11 @@ describe('Mechatronist Deployment System', () => {
       if (deploymentPhase === 'called' && mechatron) {
         if (mechatron.meta?.dropping) {
           deploymentPhase = 'dropping';
+        }
+        // Track HP changes
+        const currentMechatron = sim.units.find(u => u.sprite === 'mechatron');
+        if (currentMechatron && currentMechatron.hp < 200) {
+          console.log(`Tick ${tick}: Mechatron damaged while dropping - HP: ${currentMechatron.hp}`);
         }
       }
       
@@ -128,6 +135,7 @@ describe('Mechatronist Deployment System', () => {
         if (currentMechatron && !currentMechatron.meta?.dropping) {
           deploymentPhase = 'landed';
           mechatron = currentMechatron;
+          console.log(`Tick ${tick}: Mechatron landed with HP ${mechatron.hp}`);
           break;
         }
       }

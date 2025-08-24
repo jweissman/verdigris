@@ -196,13 +196,14 @@ describe('Mesoworm - Medium Segmented Creature', () => {
       const initialHeadHp = headUnit!.hp;
       
 
-      sim.queuedEvents.push({
-        kind: 'damage',
-        source: 'test',
-        target: tailSegment.id,
-        meta: {
+      // Queue damage command directly
+      sim.queuedCommands.push({
+        type: 'damage',
+        params: {
+          targetId: tailSegment.id,
+          amount: 10,
           aspect: 'physical',
-          amount: 10
+          sourceId: 'test'
         }
       });
       

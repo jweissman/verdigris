@@ -78,17 +78,18 @@ export class AirdropPhysics extends Rule {
       const impactRadius = unit.meta.huge ? 8 : 4; // Larger impact for huge units
       const impactDamage = unit.meta.huge ? 25 : 15;
 
-      context.queueEvent({
-        kind: "aoe",
-        source: unit.id,
-        target: unit.pos,
-        meta: {
-          aspect: "kinetic",
+      // Queue AoE command for landing impact damage
+      commands.push({
+        type: "aoe",
+        unitId: unit.id,
+        params: {
+          x: unit.pos.x,
+          y: unit.pos.y,
           radius: impactRadius,
-          amount: impactDamage,
-          force: 8, // Strong knockback
-          origin: unit.pos,
+          damage: impactDamage,
+          type: "kinetic",
           excludeSource: true, // Don't damage the landing unit itself
+          friendlyFire: true, // Impact affects all units in the area
         },
       });
     }

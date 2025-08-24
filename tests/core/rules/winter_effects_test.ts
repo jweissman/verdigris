@@ -148,13 +148,14 @@ describe('Winter Effects System (BiomeEffects)', () => {
     expect(sim.units.find(u => u.id === construct.id)?.meta.frozen).toBe(true);
     
 
-    sim.queuedEvents.push({
-      kind: 'damage',
-      source: 'test',
-      target: construct.id,
-      meta: {
+    // Queue damage command directly
+    sim.queuedCommands.push({
+      type: 'damage',
+      params: {
+        targetId: construct.id,
+        amount: 4,
         aspect: 'impact',
-        amount: 4
+        sourceId: 'test'
       }
     });
     

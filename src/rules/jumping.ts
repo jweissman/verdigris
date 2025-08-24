@@ -100,6 +100,7 @@ export class Jumping extends Rule {
       
       if (unit.meta.jumpDamage && unit.meta.jumpRadius) {
         const landingPos = unit.meta.jumpTarget || unit.pos;
+        const radius = unit.meta.jumpRadius;
         
         // Queue AOE damage
         context.queueEvent({
@@ -108,34 +109,70 @@ export class Jumping extends Rule {
           target: landingPos,
           meta: {
             aspect: "kinetic",
-            radius: unit.meta.jumpRadius,
+            radius: radius,
             amount: unit.meta.jumpDamage,
-            force: 3,
-            friendlyFire: false, // Don't damage allies on landing
-            excludeSource: true // Don't damage self
+            force: 5, // Stronger knockback
+            friendlyFire: false,
+            excludeSource: true
           },
         });
         
-        // Add visual impact particles
-        for (let i = 0; i < 8; i++) {
-          const angle = (Math.PI * 2 * i) / 8;
-          const speed = 0.3;
+        // Add MASSIVE visual impact - shockwave rings
+        for (let ring = 0; ring < 3; ring++) {
+          const ringDelay = ring * 2;
+          const ringRadius = (ring + 1) * radius / 3;
+          
+          // Create ring of particles
+          for (let i = 0; i < 16; i++) {
+            const angle = (Math.PI * 2 * i) / 16;
+            const speed = 0.5 + ring * 0.2;
+            
+            this.commands.push({
+              type: "particle",
+              params: {
+                particle: {
+                  pos: {
+                    x: landingPos.x * 8 + 4 + Math.cos(angle) * ringRadius * 2,
+                    y: landingPos.y * 8 + 4 + Math.sin(angle) * ringRadius * 2
+                  },
+                  vel: {
+                    x: Math.cos(angle) * speed,
+                    y: Math.sin(angle) * speed - 0.3
+                  },
+                  radius: 2.5 - ring * 0.5,
+                  lifetime: 20 - ring * 3,
+                  color: `hsl(${45 - ring * 10}, 100%, ${70 - ring * 10}%)`,
+                  type: "shockwave"
+                }
+              }
+            });
+          }
+        }
+        
+        // Highlight all damaged cells
+        const impactedUnits = context.getAllUnits().filter(u => {
+          if (u.id === unit.id || u.team === unit.team) return false;
+          const dx = u.pos.x - landingPos.x;
+          const dy = u.pos.y - landingPos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          return dist <= radius;
+        });
+        
+        // Flash particles on impacted cells
+        for (const target of impactedUnits) {
           this.commands.push({
             type: "particle",
             params: {
               particle: {
                 pos: {
-                  x: landingPos.x * 8 + 4,
-                  y: landingPos.y * 8 + 4
+                  x: target.pos.x * 8 + 4,
+                  y: target.pos.y * 8 + 4
                 },
-                vel: {
-                  x: Math.cos(angle) * speed,
-                  y: Math.sin(angle) * speed - 0.2 // Slightly upward
-                },
-                radius: 1.5,
-                lifetime: 15,
-                color: "#FFD700", // Gold impact
-                type: "impact"
+                vel: { x: 0, y: -1 },
+                radius: 4,
+                lifetime: 10,
+                color: "#FF4444",
+                type: "damage_flash"
               }
             }
           });

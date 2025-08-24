@@ -470,84 +470,84 @@ export class HeroRig {
       ]
     });
     
-    // Attack animation - EXPLOSIVE power strike with dramatic wind-up
+    // Attack animation - SHARP SNAP with incredible whiplash
     this.animations.set('attack', {
       name: 'attack',
       loop: false,
-      duration: 12, // Slightly longer for more impact
+      duration: 10, // Faster, sharper
       frames: [
         {
           tick: 0,
           parts: {
-            // EXTREME wind up - coiled like a spring
-            torso: { offset: { x: -3, y: -3 }, rotation: -0.4, frame: 1 }, // Body twisted back
-            rarm: { offset: { x: -8, y: -10 }, rotation: -2.0, frame: 1 }, // Arm WAY back
-            larm: { offset: { x: -4, y: -5 }, rotation: 0.6, frame: 1 }, // Counterbalance
-            head: { offset: { x: -2, y: -11 }, rotation: -0.3, frame: 1 }, // Looking at target
-            lleg: { offset: { x: -1, y: 6 }, rotation: -0.1, frame: 1 }, // Weight shift back
-            rleg: { offset: { x: 3, y: 7 }, rotation: 0.1, frame: 1 }, // Rear leg braced
-            sword: { offset: { x: -12, y: -8 }, rotation: -2.5, scale: 1.5 } // Sword HIGH overhead
+            // EXTREME wind up - body coiled tight
+            torso: { offset: { x: -5, y: -2 }, rotation: -0.6, frame: 1 }, // Body twisted WAY back
+            rarm: { offset: { x: -15, y: -8 }, rotation: -2.8, frame: 1 }, // Arm WOUND up behind
+            larm: { offset: { x: -2, y: -6 }, rotation: 0.8, frame: 1 }, // Counterbalance forward
+            head: { offset: { x: -4, y: -10 }, rotation: -0.4, frame: 1 }, // Head turned to target
+            lleg: { offset: { x: -3, y: 6 }, rotation: -0.3, frame: 1 }, // Back leg loaded
+            rleg: { offset: { x: 5, y: 7 }, rotation: 0.3, frame: 1 }, // Front leg braced
+            sword: { offset: { x: -18, y: -12 }, rotation: -3.0, scale: 1.8 } // Sword WAY back
           }
         },
         {
           tick: 2,
           parts: {
-            // Beginning of explosive forward motion
-            torso: { offset: { x: 0, y: -4 }, rotation: 0, frame: 2 },
-            rarm: { offset: { x: 4, y: -6 }, rotation: -0.5, frame: 2 }, // Starting to swing
-            larm: { offset: { x: -8, y: -3 }, rotation: 0.3, frame: 2 },
-            head: { offset: { x: 0, y: -12 }, rotation: 0, frame: 2 },
-            sword: { offset: { x: 0, y: -4 }, rotation: -1.0, scale: 1.8 } // Sword accelerating
+            // INSTANT SNAP - like a whip crack
+            torso: { offset: { x: 6, y: -3 }, rotation: 0.5, frame: 2 }, // Body WHIPS forward
+            rarm: { offset: { x: 22, y: 2 }, rotation: 1.2, frame: 2 }, // Arm SNAPS out
+            larm: { offset: { x: -12, y: 2 }, rotation: -0.5, frame: 2 }, // Pull back hard
+            head: { offset: { x: 7, y: -10 }, rotation: 0.3, frame: 2 }, // Head follows
+            lleg: { offset: { x: -5, y: 8 }, rotation: 0.4, frame: 2 }, // Planted hard
+            rleg: { offset: { x: 10, y: 5 }, rotation: -0.3, frame: 2 }, // Pushing forward
+            sword: { offset: { x: 26, y: 6 }, rotation: 1.8, scale: 2.5 } // HUGE sweep arc
           }
         },
         {
           tick: 3,
           parts: {
-            // SNAP! Peak power moment
-            torso: { offset: { x: 3, y: -4 }, rotation: 0.3, frame: 2 }, // Body lunges forward
-            rarm: { offset: { x: 18, y: -1 }, rotation: 0.8, frame: 2 }, // FULL extension
-            larm: { offset: { x: -10, y: 0 }, rotation: -0.3, frame: 2 }, // Pulls back for balance
-            head: { offset: { x: 4, y: -11 }, rotation: 0.2, frame: 2 }, // Following through
-            lleg: { offset: { x: -4, y: 7 }, rotation: 0.2, frame: 2 }, // Front foot planted
-            rleg: { offset: { x: 8, y: 6 }, rotation: -0.2, frame: 2 }, // Pushing off
-            sword: { offset: { x: 20, y: 4 }, rotation: 1.2, scale: 2.0 } // MASSIVE sweep
+            // Overshoot - like elastic snap
+            torso: { offset: { x: 7, y: -3 }, rotation: 0.6, frame: 2 },
+            rarm: { offset: { x: 24, y: 4 }, rotation: 1.5, frame: 2 }, // Overextended
+            larm: { offset: { x: -14, y: 3 }, rotation: -0.6, frame: 2 },
+            head: { offset: { x: 8, y: -9 }, rotation: 0.35, frame: 2 },
+            sword: { offset: { x: 28, y: 8 }, rotation: 2.2, scale: 2.3 } // Maximum reach
           }
         },
         {
-          tick: 5,
+          tick: 4,
           parts: {
-            // Follow through - sword continues arc
-            torso: { offset: { x: 2, y: -4 }, rotation: 0.25, frame: 2 },
-            rarm: { offset: { x: 14, y: 2 }, rotation: 1.0, frame: 2 }, // Following through
-            larm: { offset: { x: -8, y: -1 }, rotation: -0.2, frame: 2 },
-            head: { offset: { x: 3, y: -12 }, rotation: 0.15, frame: 2 },
-            sword: { offset: { x: 16, y: 6 }, rotation: 1.8, scale: 1.8 } // Completing arc
+            // Sharp pullback begins - elastic recoil
+            torso: { offset: { x: 3, y: -3 }, rotation: 0.2, frame: 1 },
+            rarm: { offset: { x: 16, y: 0 }, rotation: 0.6, frame: 1 }, // Snapping back
+            larm: { offset: { x: -10, y: -1 }, rotation: -0.2, frame: 1 },
+            head: { offset: { x: 4, y: -11 }, rotation: 0.1, frame: 1 },
+            sword: { offset: { x: 18, y: 2 }, rotation: 0.8, scale: 1.6 }
           }
         },
         {
-          tick: 7,
+          tick: 6,
           parts: {
-            // Recovery begins - pulling back
-            torso: { offset: { x: 1, y: -4 }, rotation: 0.1, frame: 1 },
-            rarm: { offset: { x: 10, y: -2 }, rotation: 0.3, frame: 1 },
-            larm: { offset: { x: -8, y: -2 }, rotation: 0, frame: 1 },
-            head: { offset: { x: 1, y: -12 }, rotation: 0.05, frame: 1 },
-            lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 1 },
-            rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 1 },
-            sword: { offset: { x: 6, y: 0 }, rotation: 0.4, scale: 1.3 }
+            // Quick reset - bouncing back
+            torso: { offset: { x: 0, y: -3 }, rotation: 0, frame: 0 },
+            rarm: { offset: { x: 10, y: -3 }, rotation: 0.1, frame: 0 },
+            larm: { offset: { x: -8, y: -3 }, rotation: 0.05, frame: 0 },
+            head: { offset: { x: 0, y: -11 }, rotation: 0, frame: 0 },
+            lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 0 },
+            rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 0 },
+            sword: { offset: { x: 12, y: -2 }, rotation: 0.2, scale: 1.2 }
           }
         },
         {
-          tick: 10,
+          tick: 8,
           parts: {
-            // Return to ready stance
-            torso: { offset: { x: 0, y: -4 }, rotation: 0, frame: 0 },
-            rarm: { offset: { x: 8, y: -2 }, rotation: 0, frame: 0 },
-            larm: { offset: { x: -8, y: -2 }, rotation: 0, frame: 0 },
+            // Final settle - ready stance
+            torso: { offset: { x: 0, y: 0 }, rotation: 0, frame: 0 },
+            rarm: { offset: { x: 6, y: -4 }, rotation: 0, frame: 0 },
+            larm: { offset: { x: -6, y: -4 }, rotation: 0, frame: 0 },
             head: { offset: { x: 0, y: -12 }, rotation: 0, frame: 0 },
             lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 0 },
             rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 0 },
-            sword: { offset: { x: 0, y: 0 }, rotation: 0, scale: 1.0 }
+            sword: { offset: { x: 14, y: -2 }, rotation: -Math.PI / 6, scale: 1.4 }
           }
         }
       ]
@@ -574,9 +574,17 @@ export class HeroRig {
       this.animationTime = this.animationTime % anim.duration;
     }
     
+    // Advance frame counter for all parts (for individual animations)
+    for (const part of this.parts.values()) {
+      part.frame = (part.frame + 0.1) % 3; // Cycle through 3 frames
+    }
+    
     // For breathing and wind, use smooth sine interpolation
     if (this.currentAnimation === 'breathing' || this.currentAnimation === 'wind') {
       this.applyBreathingInterpolation();
+    } else if (this.currentAnimation === 'attack') {
+      // Use interpolation for attack for smoother motion
+      this.applyAttackInterpolation();
     } else {
       // Find current frame for other animations
       let currentFrame: BodyPartFrame | undefined;
@@ -772,14 +780,27 @@ export class HeroRig {
         swordPart.sprite = '';
         swordPart.scale = 0;
       } else {
-        // Position weapon at hand anchor
+        // Position weapon at hand anchor with better attachment
         swordPart.sprite = config.sprite;
+        
+        // During attack animation, follow the hand more closely
+        const isAttacking = this.currentAnimation === 'attack';
+        const attachmentScale = isAttacking ? 1.2 : 1.0;
+        
         swordPart.offset = {
-          x: handAnchor.position.x + config.offset.x,
-          y: handAnchor.position.y + config.offset.y
+          x: handAnchor.position.x + config.offset.x * attachmentScale,
+          y: handAnchor.position.y + config.offset.y * attachmentScale
         };
-        swordPart.rotation = handAnchor.rotation + config.rotation;
-        swordPart.scale = config.scale;
+        
+        // Add hand rotation to weapon rotation for proper tracking
+        const armPart = this.parts.get('rarm');
+        const baseRotation = armPart ? armPart.rotation : 0;
+        swordPart.rotation = baseRotation + config.rotation;
+        
+        // Keep existing scale from animation or use config
+        if (!isAttacking) {
+          swordPart.scale = config.scale;
+        }
       }
     }
   }
@@ -797,5 +818,72 @@ export class HeroRig {
   
   getAvailableWeapons(): WeaponType[] {
     return Array.from(this.weaponConfigs.keys());
+  }
+  
+  private applyAttackInterpolation() {
+    const anim = this.animations.get('attack');
+    if (!anim) return;
+    
+    // Find which frames we're between
+    let frame1: BodyPartFrame | undefined;
+    let frame2: BodyPartFrame | undefined;
+    let t = 0;
+    
+    for (let i = 0; i < anim.frames.length - 1; i++) {
+      const f1 = anim.frames[i];
+      const f2 = anim.frames[i + 1];
+      
+      if (this.animationTime >= f1.tick && this.animationTime < f2.tick) {
+        frame1 = f1;
+        frame2 = f2;
+        t = (this.animationTime - f1.tick) / (f2.tick - f1.tick);
+        break;
+      }
+    }
+    
+    // Handle last frame
+    if (!frame1 && anim.frames.length > 0) {
+      const lastFrame = anim.frames[anim.frames.length - 1];
+      if (this.animationTime >= lastFrame.tick) {
+        this.applyFrame(lastFrame);
+        return;
+      }
+    }
+    
+    if (frame1 && frame2) {
+      // Apply easing for sharper motion
+      // Use exponential easing for the snap
+      if (this.animationTime < 3) {
+        // Wind-up to snap: ease out exponential
+        t = 1 - Math.pow(1 - t, 3);
+      } else if (this.animationTime < 5) {
+        // Snap back: ease in exponential  
+        t = Math.pow(t, 2);
+      }
+      
+      // Interpolate between frames
+      for (const [partName, targetProps] of Object.entries(frame2.parts)) {
+        const part = this.parts.get(partName as BodyPart['name']);
+        const sourceProps = frame1.parts[partName as BodyPart['name']];
+        
+        if (part && sourceProps && targetProps) {
+          // Interpolate offset
+          if (sourceProps.offset && targetProps.offset) {
+            part.offset.x = sourceProps.offset.x + (targetProps.offset.x - sourceProps.offset.x) * t;
+            part.offset.y = sourceProps.offset.y + (targetProps.offset.y - sourceProps.offset.y) * t;
+          }
+          
+          // Interpolate rotation
+          if (sourceProps.rotation !== undefined && targetProps.rotation !== undefined) {
+            part.rotation = sourceProps.rotation + (targetProps.rotation - sourceProps.rotation) * t;
+          }
+          
+          // Interpolate scale
+          if (sourceProps.scale !== undefined && targetProps.scale !== undefined) {
+            part.scale = sourceProps.scale + (targetProps.scale - sourceProps.scale) * t;
+          }
+        }
+      }
+    }
   }
 }
