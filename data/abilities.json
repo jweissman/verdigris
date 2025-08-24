@@ -1165,5 +1165,18 @@
         "lifetime": 30
       }
     ]
+  },
+  "heroRegeneration": {
+    "name": "Hero Regeneration",
+    "cooldown": 30,
+    "trigger": "self.hp < self.maxHp",
+    "target": "self",
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 2,
+        "target": "self"
+      }
+    ]
   }
 }

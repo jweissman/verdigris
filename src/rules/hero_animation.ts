@@ -107,9 +107,10 @@ export class HeroAnimation extends Rule {
     if (inAttackWindow || unit.state === 'attack') {
       desiredAnimation = 'attack';
     } else if (unit.meta?.jumping) {
-      desiredAnimation = 'jump'; // Not implemented yet
+      desiredAnimation = 'jump'; // Now implemented!
     } else if (unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0) {
       desiredAnimation = 'walk';
+      console.log(`Hero walking: intendedMove=(${unit.intendedMove.x}, ${unit.intendedMove.y})`);
     } else {
       // Idle animations
       if (unit.meta?.onRooftop) {
@@ -124,7 +125,8 @@ export class HeroAnimation extends Rule {
     if (currentAnim !== desiredAnimation) {
       // Play animations that exist
       if (desiredAnimation === 'breathing' || desiredAnimation === 'wind' || 
-          desiredAnimation === 'walk' || desiredAnimation === 'attack') {
+          desiredAnimation === 'walk' || desiredAnimation === 'attack' || 
+          desiredAnimation === 'jump') {
         rig.play(desiredAnimation);
         this.currentAnimations.set(unit.id, desiredAnimation);
       }

@@ -36,6 +36,7 @@ export class HeroCommand extends Command {
     // Find all hero-tagged units
     const heroes = this.sim.units.filter(u => u.tags?.includes('hero'));
     
+    
     for (const hero of heroes) {
       switch (action) {
         case 'jump':
@@ -49,7 +50,7 @@ export class HeroCommand extends Command {
           });
           break;
           
-        case 'move':
+        case 'move': {
           // Handle hex offset by adjusting movement based on current row
           const dx = params.dx || 0;
           const dy = params.dy || 0;
@@ -70,6 +71,7 @@ export class HeroCommand extends Command {
             params: { dx: adjustedDx, dy: adjustedDy }
           });
           break;
+        }
           
         case 'left':
           // Normal horizontal movement
@@ -160,36 +162,97 @@ export class HeroCommand extends Command {
           break;
           
         case 'attack':
-        case 'strike':
-          // Find nearby enemies for AOE swipe
-          const enemies = this.sim.units.filter(u => 
-            u.team !== hero.team && 
-            u.hp > 0 &&
-            Math.abs(u.pos.x - hero.pos.x) <= 2 &&
-            Math.abs(u.pos.y - hero.pos.y) <= 2
-          );
+        case 'strike': {
+          const direction = params.direction || hero.meta?.facing || 'right';
+          const range = params.range || 2;
+          const damage = params.damage || hero.dmg || 15;
           
-          if (enemies.length > 0) {
-            // Strike first enemy found
+          // Calculate attack zones (3 lanes wide sweep)
+          const attackZones: Array<{x: number, y: number}> = [];
+          const attackDx = direction === 'right' ? 1 : direction === 'left' ? -1 : 0;
+          const attackDy = direction === 'down' ? 1 : direction === 'up' ? -1 : 0;
+          
+          // Create 3-lane attack arc  
+          for (let dist = 1; dist <= range; dist++) {
+            const baseX = hero.pos.x + attackDx * dist;
+            const baseY = hero.pos.y + attackDy * dist;
+            
+            if (attackDx !== 0) {
+              // Horizontal attack - hit 3 vertical lanes
+              for (let lane = -1; lane <= 1; lane++) {
+                attackZones.push({ x: baseX, y: baseY + lane });
+                
+                // Add visual effect for attack visor
+                this.sim.queuedCommands.push({
+                  type: 'particle',
+                  params: {
+                    pos: { x: baseX * 8 + 4, y: baseY * 8 + 4 }, // Convert to pixel coords
+                    vel: { x: 0, y: 0 },
+                    lifetime: 8, // Very brief flash
+                    type: 'spark',
+                    color: direction === 'right' ? '#FFD700' : '#FF6B00', // Golden/orange glow
+                    radius: 1.5,
+                    z: 2
+                  }
+                });
+              }
+            } else {
+              // Vertical attack - hit 3 horizontal lanes
+              for (let lane = -1; lane <= 1; lane++) {
+                attackZones.push({ x: baseX + lane, y: baseY });
+                
+                // Add visual effect for attack visor
+                this.sim.queuedCommands.push({
+                  type: 'particle',
+                  params: {
+                    pos: { x: (baseX + lane) * 8 + 4, y: baseY * 8 + 4 },
+                    vel: { x: 0, y: 0 },
+                    lifetime: 8,
+                    type: 'spark',
+                    color: '#FFD700',
+                    radius: 1.5,
+                    z: 2
+                  }
+                });
+              }
+            }
+          }
+          
+          // Store attack zones for visualization
+          hero.meta.attackZones = attackZones;
+          hero.meta.attackZonesExpiry = this.sim.ticks + 8; // Show for 8 ticks
+          
+          // Find all enemies in attack zones
+          const enemies = this.sim.units.filter(u => {
+            if (u.team === hero.team || u.hp <= 0) return false;
+            return attackZones.some(zone => 
+              u.pos.x === zone.x && u.pos.y === zone.y
+            );
+          });
+          
+          // Damage all enemies in the arc
+          for (const enemy of enemies) {
             this.sim.queuedCommands.push({
               type: 'strike',
               unitId: hero.id,
               params: {
-                targetId: enemies[0].id,
-                direction: hero.meta?.facing || 'right',
-                range: params.range || 2,
-                damage: params.damage || hero.dmg || 15
+                targetId: enemy.id,
+                direction: direction,
+                range: range,
+                damage: damage
               }
             });
-          } else {
-            // Swipe attack even without target
+          }
+          
+          // Visual swipe effect even without targets
+          if (enemies.length === 0) {
             this.sim.queuedCommands.push({
               type: 'strike',
               unitId: hero.id,
               params: {
-                direction: hero.meta?.facing || 'right',
-                range: params.range || 2,
-                damage: params.damage || hero.dmg || 15
+                direction: direction,
+                range: range,
+                damage: damage
               }
             });
           }
@@ -199,8 +262,31 @@ export class HeroCommand extends Command {
           if (!hero.meta) hero.meta = {};
           hero.meta.lastStrike = this.sim.ticks;
           hero.meta.attackStartTick = this.sim.ticks;
-          hero.meta.attackEndTick = this.sim.ticks + 12; // 12 tick attack animation to match rig duration
+          hero.meta.attackEndTick = this.sim.ticks + 16; // 16 tick attack animation to match rig duration
           break;
+        }
+
+        case 'charge_attack': {
+          // Start charging attack - increase damage over time
+          if (!hero.meta) hero.meta = {};
+          const currentCharge = hero.meta.attackCharge || 0;
+          hero.meta.attackCharge = Math.min(currentCharge + 1, 5); // Max 5x charge
+          
+          // Visual feedback for charging
+          this.sim.queuedCommands.push({
+            type: 'particle',
+            params: {
+              pos: { x: hero.pos.x * 8 + 4, y: hero.pos.y * 8 + 4 },
+              vel: { x: 0, y: -0.5 },
+              lifetime: 15,
+              type: 'energy',
+              color: `hsl(${60 + currentCharge * 30}, 100%, ${50 + currentCharge * 10}%)`,
+              radius: 0.8 + currentCharge * 0.2,
+              z: 3
+            }
+          });
+          break;
+        }
           
         default:
           console.warn(`Unknown hero action: ${action}`);

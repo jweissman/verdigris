@@ -2,6 +2,8 @@ import { Game } from "../core/game";
 import { HeroAnimation } from "../rules/hero_animation";
 import { PlayerControl } from "../rules/player_control";
 import { Jumping } from "../rules/jumping";
+import { Hunting } from "../rules/hunting";
+import { MeleeCombat } from "../rules/melee_combat";
 
 export class HeroGame extends Game {
   private playerControl: PlayerControl;
@@ -9,50 +11,51 @@ export class HeroGame extends Game {
   
   constructor(canvas: HTMLCanvasElement, opts?: any) {
     super(canvas, opts);
-    // Balanced tick rate for smooth yet controlled movement
-    this.simTickRate = 60;
-    this.ninjaCount = 0;
-    this.waveNumber = 0;
-    // Half-size battlefield for rooftop scene
-    this.fieldWidth = 15;
-    this.fieldHeight = 10;
+    // Lower tick rate for smoother movement without fighting renderer
+    this.simTickRate = 30;
+    // this.ninjaCount = 0;
+    // this.waveNumber = 0;
+    // NOTE: THIS DOESN'T WORK AT ALL AND IS MISGUIDED
+    // this.fieldWidth = 15;
+    // this.fieldHeight = 10;
+    // we need to send commands to the sim?
   }
   
-  private ninjaCount: number;
-  private waveNumber: number;
-  
-  spawnNinjaWave() {
-    // Spawn ninjas in multiple lanes within battlefield bounds
-    const lanes = [4, 5, 6]; // Three lanes in the middle of 10-height battlefield
+  // private ninjaCount: number;
+  // private waveNumber: number;
+  // TODO create a spawning pool object!! what is this
+  // spawnNinjaWave() {
+  //   // Spawn ninjas in multiple lanes within battlefield bounds
+  //   const lanes = [4, 5, 6]; // Three lanes in the middle of 10-height battlefield
     
-    for (const lane of lanes) {
-      const ninja = {
-        id: `ninja_${this.ninjaCount++}`,
-        pos: { x: 14, y: lane }, // Spawn at right edge of 15-width battlefield
-        team: "hostile",
-        hp: 10,
-        maxHp: 10,
-        dmg: 3,
-        sprite: "ninja",
-        type: "ninja", // Add type fallback
-        tags: ["enemy", "ninja"],
-        intendedMove: { x: -1, y: 0 }, // Move left towards hero
-        meta: {
-          speed: 0.5
-        }
-      };
-      console.log(`Spawning ninja: ${ninja.id} at (${ninja.pos.x}, ${ninja.pos.y})`);
-      this.sim.addUnit(ninja);
-    }
+  //   for (const lane of lanes) {
+  //     const ninja = {
+  //       id: `ninja_${this.ninjaCount++}`,
+  //       pos: { x: 14, y: lane }, // Spawn at right edge of 15-width battlefield
+  //       team: "hostile",
+  //       hp: 10,
+  //       maxHp: 10,
+  //       dmg: 3,
+  //       sprite: "ninja",
+  //       type: "ninja", // Add type fallback
+  //       tags: ["enemy", "ninja"],
+  //       meta: {
+  //         speed: 0.5,
+  //         hunting: true // Enable hunting behavior
+  //       }
+  //     };
+  //     console.log(`Spawning ninja: ${ninja.id} at (${ninja.pos.x}, ${ninja.pos.y})`);
+  //     this.sim.addUnit(ninja);
+  //   }
     
-    // Schedule next wave
-    setTimeout(() => {
-      if (this.waveNumber < 10) { // Limit to 10 waves
-        this.waveNumber++;
-        this.spawnNinjaWave();
-      }
-    }, 3000); // New wave every 3 seconds
-  }
+  //   // Schedule next wave
+  //   setTimeout(() => {
+  //     if (this.waveNumber < 10) { // Limit to 10 waves
+  //       this.waveNumber++;
+  //       this.spawnNinjaWave();
+  //     }
+  //   }, 3000); // New wave every 3 seconds
+  // }
   
   bootstrap() {
     super.bootstrap();
@@ -63,13 +66,15 @@ export class HeroGame extends Game {
     this.sim.rulebook.push(this.playerControl);
     this.sim.rulebook.push(new HeroAnimation());
     this.sim.rulebook.push(new Jumping());
+    this.sim.rulebook.push(new Hunting());
+    this.sim.rulebook.push(new MeleeCombat());
     
     // Add move-to-target rule for click navigation
     const MoveToTarget = require("../rules/move_to_target").MoveToTarget;
     this.sim.rulebook.push(new MoveToTarget());
     
     // Set background
-    this.sim.sceneBackground = "rooftop";
+    this.sim.sceneBackground = "grad";
     
     // Spawn hero unit - just a unit with hero tag
     this.sim.addUnit({
@@ -81,6 +86,7 @@ export class HeroGame extends Game {
       dmg: 15,
       sprite: "hero", // Add sprite for Z-axis rendering to work
       tags: ["hero"],
+      abilities: ["heroRegeneration"], // Add regeneration passive
       meta: {
         controlled: true,
         useRig: true,
@@ -91,7 +97,7 @@ export class HeroGame extends Game {
     });
     
     // Start spawning ninjas
-    this.spawnNinjaWave();
+    // this.spawnNinjaWave(); // Disabled temporarily to focus on hero
   }
   
 
@@ -133,6 +139,35 @@ export class HeroGame extends Game {
       document.addEventListener("keyup", (e) => {
         if (game && game.playerControl) {
           game.playerControl.setKeyState(e.key, false);
+        }
+      });
+      
+      // Add mouse hover tracking
+      canvas.addEventListener("mousemove", (e) => {
+        if (game && game.sim) {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          const x = (e.clientX - rect.left) * scaleX;
+          const y = (e.clientY - rect.top) * scaleY;
+          
+          // Convert to world coordinates using proper isometric inverse
+          // For isometric view, we need to account for the offsets and spacing
+          const offsets = { x: -20, y: 130 }; // Default rooftop offsets
+          const tileWidth = 16;
+          const verticalSpacing = 3;
+          
+          // Inverse isometric conversion
+          const adjustedY = Math.floor((y - offsets.y) / verticalSpacing);
+          const hexOffset = adjustedY % 2 === 1 ? tileWidth / 2 : 0;
+          const adjustedX = Math.floor((x - offsets.x - hexOffset) / tileWidth);
+          
+          const worldX = adjustedX;
+          const worldY = adjustedY;
+          
+          // Store hover position in sim metadata
+          if (!game.sim.meta) game.sim.meta = {};
+          game.sim.meta.hoverCell = { x: worldX, y: worldY };
         }
       });
       

@@ -21,6 +21,8 @@ export class StrikeCommand extends Command {
     const direction = params.direction as string;
     const damage = (params.damage as number) || attacker.dmg || 10;
     const range = (params.range as number) || 1;
+    const knockback = (params.knockback as number) || 0;
+    const aspect = (params.aspect as string) || "kinetic";
 
     let target: any = null;
 
@@ -33,19 +35,53 @@ export class StrikeCommand extends Command {
       target = this.findTargetInDirection(attacker, strikeDirection, range);
     }
 
-    if (target && this.isInRange(attacker, target, range)) {
-      // Queue damage event
+    if (target && (targetId || this.isInRange(attacker, target, range))) {
+      // Queue damage COMMAND to actually reduce HP
+      this.sim.queuedCommands.push({
+        type: 'damage',
+        params: {
+          targetId: target.id,
+          amount: damage,
+          aspect: aspect,
+          sourceId: attacker.id
+        }
+      });
+      
+      // Queue damage event for visual effects
       this.sim.processedEvents.push({
         kind: "damage",
         source: attacker.id,
         target: target.id,
         meta: {
           amount: damage,
-          aspect: "kinetic",
+          aspect: aspect,
           tick: this.sim.ticks,
-          isStrike: true // Mark as strike for visual effects
+          isStrike: true, // Mark as strike for visual effects
+          knockback: knockback
         }
       });
+      
+      // Apply knockback if specified
+      if (knockback > 0) {
+        const dx = target.pos.x - attacker.pos.x;
+        const dy = target.pos.y - attacker.pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 0) {
+          const knockX = (dx / dist) * knockback;
+          const knockY = (dy / dist) * knockback;
+          
+          this.sim.queuedCommands.push({
+            type: "move",
+            unitId: target.id,
+            params: {
+              dx: Math.round(knockX),
+              dy: Math.round(knockY),
+              force: true // Force movement even if pinned/stunned
+            }
+          });
+        }
+      }
 
       // Set attacker state for animation
       const transform = new Transform(this.sim);
@@ -57,18 +93,8 @@ export class StrikeCommand extends Command {
         }
       });
 
-      // Apply damage
-      transform.updateUnit(target.id, {
-        hp: Math.max(0, target.hp - damage)
-      });
-
-      // Check if target died
-      if (target.hp - damage <= 0) {
-        transform.updateUnit(target.id, {
-          state: "dead",
-          hp: 0
-        });
-      }
+      // Damage will be applied by EventHandler processing the damage event
+      // No need to apply it here
     }
   }
 

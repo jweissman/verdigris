@@ -7,8 +7,8 @@ export class PlayerControl extends Rule {
   private moveCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
   private jumpCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
   private commandBuffer: Map<string, QueuedCommand[]> = new Map(); // unitId -> buffered commands
-  private readonly MOVE_COOLDOWN = 3; // Balanced movement for tile alignment at 60fps
-  private readonly JUMP_COOLDOWN = 8; // Faster jump cooldown for better feel
+  private readonly MOVE_COOLDOWN = 1; // No cooldown for smoothest movement
+  private readonly JUMP_COOLDOWN = 15; // Reasonable jump cooldown
   private moveTarget: { x: number; y: number } | null = null;
   private attackMoveTarget: { x: number; y: number } | null = null;
   
@@ -122,20 +122,23 @@ export class PlayerControl extends Rule {
           let dx = 0;
           let dy = 0;
           
+          // Smoother movement increments
+          const moveSpeed = 0.25; // Quarter tile per update for smoothness
+          
           if (this.keysHeld.has('w') || this.keysHeld.has('arrowup')) {
-            dy = -1;
+            dy = -moveSpeed;
           }
           if (this.keysHeld.has('s') || this.keysHeld.has('arrowdown')) {
-            dy = 1;
+            dy = moveSpeed;
           }
           if (this.keysHeld.has('a') || this.keysHeld.has('arrowleft')) {
-            dx = -1;
+            dx = -moveSpeed;
             // Update facing direction
             if (!unit.meta) unit.meta = {};
             unit.meta.facing = 'left';
           }
           if (this.keysHeld.has('d') || this.keysHeld.has('arrowright')) {
-            dx = 1;
+            dx = moveSpeed;
             // Update facing direction
             if (!unit.meta) unit.meta = {};
             unit.meta.facing = 'right';
@@ -143,14 +146,14 @@ export class PlayerControl extends Rule {
           
           // Map diagonal movement to action
           let action = '';
-          if (dx === -1 && dy === 0) action = 'left';
-          else if (dx === 1 && dy === 0) action = 'right';
-          else if (dx === 0 && dy === -1) action = 'up';
-          else if (dx === 0 && dy === 1) action = 'down';
-          else if (dx === -1 && dy === -1) action = 'up-left';
-          else if (dx === 1 && dy === -1) action = 'up-right';
-          else if (dx === -1 && dy === 1) action = 'down-left';
-          else if (dx === 1 && dy === 1) action = 'down-right';
+          if (dx < 0 && dy === 0) action = 'left';
+          else if (dx > 0 && dy === 0) action = 'right';
+          else if (dx === 0 && dy < 0) action = 'up';
+          else if (dx === 0 && dy > 0) action = 'down';
+          else if (dx < 0 && dy < 0) action = 'up-left';
+          else if (dx > 0 && dy < 0) action = 'up-right';
+          else if (dx < 0 && dy > 0) action = 'down-left';
+          else if (dx > 0 && dy > 0) action = 'down-right';
           
           if (action) {
             // Buffer the command if we're already moving
@@ -185,17 +188,56 @@ export class PlayerControl extends Rule {
           }
         }
         
+        // Reset jump count when on ground for a while
+        if (!unit.meta?.jumping && unit.meta?.jumpResetTime && 
+            context.getCurrentTick() >= unit.meta.jumpResetTime) {
+          commands.push({
+            type: 'meta',
+            params: {
+              unitId: unit.id,
+              meta: {
+                jumpCount: 0,
+                jumpResetTime: null
+              }
+            }
+          });
+        }
+        
         // Handle jump
         const jumpCooldown = this.jumpCooldowns.get(unit.id) || 0;
         if (this.keysHeld.has(' ') && !unit.meta?.jumping && jumpCooldown <= 0) {
-          commands.push({
-            type: 'jump',
-            unitId: unit.id,
-            params: {
-              distance: 3,
-              height: 5
-            }
-          });
+          // Check for multiple jumps - double and triple jumps!
+          const isHero = unit.tags?.includes('hero');
+          const jumpCount = unit.meta?.jumpCount || 0;
+          const maxJumps = isHero ? 3 : 1; // Heroes can triple jump!
+          
+          if (jumpCount < maxJumps) {
+            const jumpPower = 1 + jumpCount * 0.5; // Each jump is more powerful
+            const jumpDistance = Math.min(5, 2 + jumpCount); // Distance increases
+            
+            commands.push({
+              type: 'jump',
+              unitId: unit.id,
+              params: {
+                distance: jumpDistance,
+                height: isHero ? Math.floor(6 * jumpPower) : 5,
+                damage: isHero ? Math.floor(15 * jumpPower) : 0, // More damage per jump
+                radius: isHero ? 2 + jumpCount : 0 // Bigger AOE for multi-jumps
+              }
+            });
+            
+            // Update jump count and reset timer
+            commands.push({
+              type: 'meta',
+              params: {
+                unitId: unit.id,
+                meta: {
+                  jumpCount: jumpCount + 1,
+                  jumpResetTime: context.getCurrentTick() + 30 // Reset after 30 ticks on ground
+                }
+              }
+            });
+          }
           
           // Set jump cooldown
           this.jumpCooldowns.set(unit.id, this.JUMP_COOLDOWN);

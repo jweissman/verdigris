@@ -29,6 +29,12 @@ export default class Isometric extends View {
     this.renderCellEffects();
 
     this.grid();
+    
+    // Render hover cell
+    this.renderHoverCell();
+    
+    // Render attack zones
+    this.renderAttackZones();
 
     const sortedUnits = [...this.sim.units].sort((a, b) =>
       b.pos.y - a.pos.y > 0 ? 1 : -1,
@@ -156,6 +162,67 @@ export default class Isometric extends View {
     
     this.ctx.restore();
   }
+  
+  private renderHoverCell() {
+    if (this.sim.meta?.hoverCell) {
+      const { x, y } = this.sim.meta.hoverCell;
+      
+      // Check if within bounds
+      if (x >= 0 && x < this.sim.fieldWidth && y >= 0 && y < this.sim.fieldHeight) {
+        const isoPos = this.toIsometric(x, y);
+        
+        this.ctx.save();
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        this.ctx.lineWidth = 2;
+        
+        // Draw diamond outline for hover
+        this.ctx.beginPath();
+        this.ctx.moveTo(isoPos.x, isoPos.y - 6);
+        this.ctx.lineTo(isoPos.x + 10, isoPos.y);
+        this.ctx.lineTo(isoPos.x, isoPos.y + 6);
+        this.ctx.lineTo(isoPos.x - 10, isoPos.y);
+        this.ctx.closePath();
+        this.ctx.stroke();
+        
+        this.ctx.restore();
+      }
+    }
+  }
+  
+  private renderAttackZones() {
+    // Find units with attack zones
+    for (const unit of this.sim.units) {
+      if (unit.meta?.attackZones && unit.meta?.attackZonesExpiry) {
+        if (this.sim.ticks < unit.meta.attackZonesExpiry) {
+          // Render attack zones
+          this.ctx.save();
+          this.ctx.fillStyle = 'rgba(255, 100, 100, 0.4)';
+          this.ctx.strokeStyle = 'rgba(255, 50, 50, 0.8)';
+          this.ctx.lineWidth = 2;
+          
+          for (const zone of unit.meta.attackZones) {
+            const isoPos = this.toIsometric(zone.x, zone.y);
+            
+            // Draw diamond shape for isometric grid
+            this.ctx.beginPath();
+            this.ctx.moveTo(isoPos.x, isoPos.y - 4);
+            this.ctx.lineTo(isoPos.x + 8, isoPos.y);
+            this.ctx.lineTo(isoPos.x, isoPos.y + 4);
+            this.ctx.lineTo(isoPos.x - 8, isoPos.y);
+            this.ctx.closePath();
+            this.ctx.fill();
+            this.ctx.stroke();
+          }
+          
+          this.ctx.restore();
+        } else {
+          // Clear expired zones
+          delete unit.meta.attackZones;
+          delete unit.meta.attackZonesExpiry;
+        }
+      }
+    }
+  }
 
   private showUnit(unit: Unit) {
     if (unit.meta.phantom) {
@@ -226,7 +293,8 @@ export default class Isometric extends View {
     this.unitRenderer.drawShadow(this.ctx, unit, screenX, screenY);
     
     // Draw unit above ground (offset up by sprite height/2 plus any Z-offset)
-    const spriteOffset = 8; // Half the sprite height for proper grounding
+    const isHero = unit.tags?.includes('hero');
+    const spriteOffset = isHero ? 16 : 8; // Heroes render higher (full body height)
     this.unitRenderer.renderUnit(
       this.ctx,
       unit,

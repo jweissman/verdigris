@@ -50,11 +50,6 @@ export class EventHandler extends Rule {
       }
 
       (event as any)._processed = true;
-      
-      // Log event for debugging
-      if ((typeof process !== 'undefined' && process.env?.DEBUG_EVENTS) || (global as any).DEBUG_EVENTS) {
-        console.log(this.glossary(event, context));
-      }
 
       switch (event.kind) {
         case "aoe":
@@ -177,8 +172,11 @@ export class EventHandler extends Rule {
         return inRange && unit.team !== sourceUnit?.team; // Chill affects enemies
       } else {
         const friendlyFire = event.meta.friendlyFire !== false; // Default to true for backwards compatibility
+        const excludeSource = event.meta.excludeSource === true;
+        
         if (!friendlyFire) {
-          return inRange && sourceUnit && unit.team !== sourceUnit.team;
+          const notSameTeam = inRange && sourceUnit && unit.team !== sourceUnit.team;
+          return excludeSource ? (notSameTeam && unit.id !== event.source) : notSameTeam;
         } else {
           return inRange && unit.id !== event.source;
         }

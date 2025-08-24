@@ -108,6 +108,8 @@ import lakeBg from "../assets/bg/lake.png";
 // @ts-ignore
 import mountainBg from "../assets/bg/mountain.png";
 // @ts-ignore
+import gradBg from "../assets/bg/grad.png";
+// @ts-ignore
 import monasteryBg from "../assets/bg/monastery.png";
 // @ts-ignore
 import burningCityBg from "../assets/bg/burning-city.png";
@@ -278,6 +280,7 @@ class Game {
     { name: "cityscape", src: cityscapeBg },
     { name: "castle", src: castleBg },
     { name: "tower-gate", src: towerGateBg },
+    { name: "grad", src: gradBg },
   ];
 
   static loadBackgrounds(): Map<string, HTMLImageElement> {

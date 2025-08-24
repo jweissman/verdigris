@@ -43,6 +43,8 @@ export class MeleeCombat extends Rule {
   ): void {
     const meleeRange = 1.5;
     const meleeRangeSq = meleeRange * meleeRange;
+    const heroRange = 3.5; // Much wider range for hero
+    const heroRangeSq = heroRange * heroRange;
 
     const arrays = (context as any).sim?.unitArrays;
     const coldData = (context as any).sim?.unitColdData;
@@ -65,7 +67,79 @@ export class MeleeCombat extends Rule {
         const x1 = arrays.posX[idxA];
         const y1 = arrays.posY[idxA];
         const team1 = arrays.team[idxA];
+        const isHero = coldA?.tags?.includes("hero");
 
+        // Hero special attack - wide visor AOE
+        if (isHero) {
+          const facing = coldA?.meta?.facing || "right";
+          const currentTick = context.getCurrentTick();
+          const attackerLastAttack = this.lastAttacks.get(attackerId) || -100;
+          const attackCooldown = 5; // Faster attacks for hero
+          
+          // Check cooldown once for the hero
+          if (currentTick - attackerLastAttack >= attackCooldown) {
+            this.lastAttacks.set(attackerId, currentTick);
+            
+            // Find all enemies in hero's range and attack them ALL
+            for (let j = 0; j < count; j++) {
+              const idxB = activeIndices[j];
+              if (idxB === idxA) continue;
+              if (arrays.state[idxB] === 3 || arrays.hp[idxB] <= 0) continue;
+              if (team1 === arrays.team[idxB]) continue;
+
+              const targetId = arrays.unitIds[idxB];
+              const dx = arrays.posX[idxB] - x1;
+              const dy = arrays.posY[idxB] - y1;
+              const distSq = dx * dx + dy * dy;
+
+              if (distSq > heroRangeSq) continue;
+
+              // Check if target is in the visor cone based on facing
+              // Make the cone VERY wide - basically a half-circle
+              let inCone = false;
+              if (facing === "right" && dx >= -1) inCone = true; // Everything not directly behind
+              else if (facing === "left" && dx <= 1) inCone = true;
+              else if (facing === "up" && dy <= 1) inCone = true;
+              else if (facing === "down" && dy >= -1) inCone = true;
+
+              if (!inCone) continue;
+
+              const coldB = coldData.get(targetId);
+              if (coldB?.meta?.jumping || coldB?.tags?.includes("noncombatant"))
+                continue;
+
+              console.log(`Hero attacking ${targetId} at tick ${currentTick}`);
+              
+              // Heavy damage with knockback - attack THIS enemy
+              commands.push({
+                type: "strike",
+                unitId: attackerId,
+                params: {
+                  targetId: targetId,
+                  damage: arrays.dmg[idxA] * 2, // Double damage for hero
+                  knockback: 3, // Strong knockback
+                  aspect: "heroic"
+                },
+              });
+            }
+            
+            // Visual feedback - attack state
+            commands.push({
+              type: "meta",
+              params: {
+                unitId: attackerId,
+                state: "attacking",
+                meta: {
+                  lastAttacked: currentTick,
+                  attacking: true,
+                },
+              },
+            });
+          }
+          continue; // Skip normal melee for hero
+        }
+
+        // Normal melee combat for non-heroes
         for (let j = i + 1; j < count; j++) {
           const idxB = activeIndices[j];
 

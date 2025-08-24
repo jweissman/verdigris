@@ -66,17 +66,17 @@ export class HeroRig {
     this.parts.set('lleg', {
       name: 'lleg',
       sprite: 'hero-lleg',
-      offset: { x: -6, y: 6 },
+      offset: { x: -2, y: 6 },
       rotation: 0,
       scale: 1,
       frame: 0,
-      zIndex: 1
+      zIndex: 4  // Left leg renders above torso
     });
     
     this.parts.set('rleg', {
       name: 'rleg',
       sprite: 'hero-rleg',
-      offset: { x: 6, y: 6 },
+      offset: { x: 2, y: 6 },
       rotation: 0,
       scale: 1,
       frame: 0,
@@ -86,7 +86,7 @@ export class HeroRig {
     this.parts.set('larm', {
       name: 'larm',
       sprite: 'hero-larm',
-      offset: { x: -8, y: 0 },
+      offset: { x: -6, y: -4 }, // Match torso height
       rotation: 0,
       scale: 1,
       frame: 0,
@@ -96,7 +96,7 @@ export class HeroRig {
     this.parts.set('torso', {
       name: 'torso',
       sprite: 'hero-torso',
-      offset: { x: 0, y: 0 },
+      offset: { x: 0, y: 0 }, // Base position for animations
       rotation: 0,
       scale: 1,
       frame: 0,
@@ -106,29 +106,29 @@ export class HeroRig {
     this.parts.set('rarm', {
       name: 'rarm',
       sprite: 'hero-rarm',
-      offset: { x: 8, y: 0 },
+      offset: { x: 6, y: -4 }, // Match torso height
       rotation: 0,
       scale: 1,
       frame: 0,
-      zIndex: 4
+      zIndex: 5  // Adjusted for new ordering
     });
     
     this.parts.set('head', {
       name: 'head',
       sprite: 'hero-head',
-      offset: { x: 0, y: -8 },
+      offset: { x: 0, y: -12 }, // Adjust for raised torso
       rotation: 0,
       scale: 1,
       frame: 0,
-      zIndex: 5
+      zIndex: 6
     });
     
     this.parts.set('sword', {
       name: 'sword',
       sprite: 'hero-sword',
-      offset: { x: 12, y: 0 },
-      rotation: Math.PI / 4, // Diagonal
-      scale: 1,
+      offset: { x: 14, y: -2 }, // More visible position
+      rotation: -Math.PI / 6, // Less diagonal, more forward
+      scale: 1.4, // Bigger and more visible
       frame: 0,
       zIndex: 6
     });
@@ -370,67 +370,165 @@ export class HeroRig {
     this.animations.set('walk', {
       name: 'walk',
       loop: true,
-      duration: 16, // Faster cycle for walking
+      duration: 12, // Faster cycle for snappy walking
       frames: [
         {
           tick: 0,
           parts: {
-            lleg: { offset: { x: -2, y: 8 }, rotation: -0.1, frame: 0 },
-            rleg: { offset: { x: 2, y: 8 }, rotation: 0.1, frame: 0 },
-            larm: { rotation: 0.1, frame: 0 },
-            rarm: { rotation: -0.1, frame: 0 },
-            head: { frame: 0 },
-            torso: { frame: 0 }
+            // Left step - right leg forward
+            torso: { offset: { x: 0, y: -5 }, rotation: 0.05, frame: 1 },
+            head: { offset: { x: 0, y: -13 }, rotation: 0.02, frame: 1 },
+            lleg: { offset: { x: -2, y: 9 }, rotation: -0.2, frame: 0 }, // Left leg back
+            rleg: { offset: { x: 2, y: 7 }, rotation: 0.3, frame: 1 }, // Right leg forward
+            larm: { offset: { x: -7, y: -3 }, rotation: 0.2, frame: 1 }, // Left arm forward
+            rarm: { offset: { x: 9, y: -1 }, rotation: -0.2, frame: 0 } // Right arm back
           }
         },
         {
-          tick: 8,
+          tick: 6,
           parts: {
-            lleg: { offset: { x: -2, y: 8 }, rotation: 0.1, frame: 1 },
-            rleg: { offset: { x: 2, y: 8 }, rotation: -0.1, frame: 1 },
-            larm: { rotation: -0.1, frame: 1 },
-            rarm: { rotation: 0.1, frame: 1 },
-            head: { frame: 1 },
-            torso: { frame: 1 }
+            // Right step - left leg forward
+            torso: { offset: { x: 0, y: -5 }, rotation: -0.05, frame: 2 },
+            head: { offset: { x: 0, y: -13 }, rotation: -0.02, frame: 2 },
+            lleg: { offset: { x: -2, y: 7 }, rotation: 0.3, frame: 1 }, // Left leg forward
+            rleg: { offset: { x: 2, y: 9 }, rotation: -0.2, frame: 0 }, // Right leg back
+            larm: { offset: { x: -9, y: -1 }, rotation: -0.2, frame: 0 }, // Left arm back
+            rarm: { offset: { x: 7, y: -3 }, rotation: 0.2, frame: 1 } // Right arm forward
           }
         }
       ]
     });
     
-    // Attack animation - sword swing
-    this.animations.set('attack', {
-      name: 'attack',
+    // Jump animation - EXPLOSIVE leap with maximum extension
+    this.animations.set('jump', {
+      name: 'jump',
       loop: false,
-      duration: 12, // Quick attack
+      duration: 8, // Match jump duration
       frames: [
         {
           tick: 0,
           parts: {
-            // Wind up - pull sword back
-            torso: { offset: { x: -1, y: 0 }, rotation: -0.1, frame: 1 },
-            rarm: { offset: { x: 6, y: -2 }, rotation: -0.4, frame: 1 }, // Pull back
-            larm: { offset: { x: -6, y: 0 }, rotation: 0.2, frame: 1 }, // Balance
-            head: { offset: { x: -1, y: -8 }, rotation: -0.05, frame: 1 }
+            // Deep crouch - coiled spring
+            torso: { offset: { x: 0, y: -1 }, rotation: 0.2, frame: 1 },
+            head: { offset: { x: 0, y: -9 }, rotation: 0.15, frame: 1 },
+            larm: { offset: { x: -6, y: 1 }, rotation: -0.5, frame: 1 }, // Arms way back
+            rarm: { offset: { x: 6, y: 1 }, rotation: -0.5, frame: 1 },
+            lleg: { offset: { x: -2, y: 11 }, rotation: 0.6, frame: 1 }, // Legs deeply bent
+            rleg: { offset: { x: 2, y: 11 }, rotation: 0.6, frame: 1 },
+            sword: { rotation: -0.3, scale: 1.1 } // Sword ready
+          }
+        },
+        {
+          tick: 1,
+          parts: {
+            // LAUNCH - explosive extension
+            torso: { offset: { x: 0, y: -8 }, rotation: -0.2, frame: 2 },
+            head: { offset: { x: 0, y: -16 }, rotation: -0.2, frame: 2 },
+            larm: { offset: { x: -12, y: -6 }, rotation: 0.6, frame: 2 }, // Arms WIDE
+            rarm: { offset: { x: 12, y: -6 }, rotation: -0.6, frame: 2 },
+            lleg: { offset: { x: -4, y: 12 }, rotation: -0.7, frame: 2 }, // Legs EXTENDED
+            rleg: { offset: { x: 4, y: 12 }, rotation: 0.7, frame: 2 },
+            sword: { rotation: 0.4, scale: 1.3 } // Sword trails
           }
         },
         {
           tick: 4,
           parts: {
-            // Mid swing - sword across body
-            torso: { offset: { x: 0, y: 0 }, rotation: 0, frame: 2 },
-            rarm: { offset: { x: 10, y: 0 }, rotation: 0.2, frame: 2 }, // Swing through
-            larm: { offset: { x: -8, y: -1 }, rotation: 0.1, frame: 2 },
-            head: { offset: { x: 0, y: -8 }, rotation: 0, frame: 2 }
+            // Peak - floating
+            torso: { offset: { x: 0, y: -5 }, rotation: 0, frame: 2 },
+            head: { offset: { x: 0, y: -13 }, rotation: 0, frame: 2 },
+            larm: { offset: { x: -8, y: -3 }, rotation: 0.2, frame: 2 },
+            rarm: { offset: { x: 8, y: -3 }, rotation: -0.2, frame: 2 },
+            lleg: { offset: { x: -2, y: 9 }, rotation: -0.2, frame: 2 },
+            rleg: { offset: { x: 2, y: 9 }, rotation: 0.2, frame: 2 }
           }
         },
         {
-          tick: 8,
+          tick: 6,
           parts: {
-            // Follow through - sword extended
-            torso: { offset: { x: 1, y: 0 }, rotation: 0.1, frame: 2 },
-            rarm: { offset: { x: 12, y: 2 }, rotation: 0.5, frame: 2 }, // Full extension
-            larm: { offset: { x: -7, y: 1 }, rotation: -0.1, frame: 2 },
-            head: { offset: { x: 1, y: -8 }, rotation: 0.05, frame: 2 }
+            // Landing prep
+            torso: { offset: { x: 0, y: -3 }, rotation: 0.05, frame: 1 },
+            head: { offset: { x: 0, y: -11 }, rotation: 0.05, frame: 1 },
+            larm: { offset: { x: -8, y: -2 }, rotation: 0.1, frame: 1 },
+            rarm: { offset: { x: 8, y: -2 }, rotation: -0.1, frame: 1 },
+            lleg: { offset: { x: -2, y: 8 }, rotation: 0.2, frame: 1 }, // Legs ready to absorb
+            rleg: { offset: { x: 2, y: 8 }, rotation: -0.2, frame: 1 }
+          }
+        },
+        {
+          tick: 7,
+          parts: {
+            // Impact - crouch to absorb
+            torso: { offset: { x: 0, y: -2 }, rotation: 0.1, frame: 0 },
+            head: { offset: { x: 0, y: -10 }, rotation: 0.1, frame: 0 },
+            larm: { offset: { x: -7, y: 0 }, rotation: 0, frame: 0 },
+            rarm: { offset: { x: 7, y: 0 }, rotation: 0, frame: 0 },
+            lleg: { offset: { x: -2, y: 9 }, rotation: 0.3, frame: 0 },
+            rleg: { offset: { x: 2, y: 9 }, rotation: 0.3, frame: 0 }
+          }
+        }
+      ]
+    });
+    
+    // Attack animation - powerful wide sweep
+    this.animations.set('attack', {
+      name: 'attack',
+      loop: false,
+      duration: 10, // Fast powerful attack
+      frames: [
+        {
+          tick: 0,
+          parts: {
+            // Wind up - sword pulled way back
+            torso: { offset: { x: -1, y: -4 }, rotation: -0.15, frame: 1 },
+            rarm: { offset: { x: 6, y: -8 }, rotation: -0.8, frame: 1 }, // Arm way back
+            larm: { offset: { x: -6, y: -3 }, rotation: 0.2, frame: 1 },
+            head: { offset: { x: -1, y: -12 }, rotation: -0.1, frame: 1 },
+            sword: { offset: { x: -4, y: -2 }, rotation: -1.2, scale: 1.2 } // Big wind up
+          }
+        },
+        {
+          tick: 2,
+          parts: {
+            // Power sweep begins
+            torso: { offset: { x: 1, y: -4 }, rotation: 0.1, frame: 2 },
+            rarm: { offset: { x: 12, y: -4 }, rotation: 0, frame: 2 }, // Arm sweeps wide
+            larm: { offset: { x: -7, y: -2 }, rotation: 0.1, frame: 2 },
+            head: { offset: { x: 1, y: -12 }, rotation: 0.05, frame: 2 },
+            sword: { offset: { x: 8, y: 0 }, rotation: 0, scale: 1.3 } // Sword horizontal, bigger
+          }
+        },
+        {
+          tick: 4,
+          parts: {
+            // Maximum extension - cleaving through
+            torso: { offset: { x: 2, y: -4 }, rotation: 0.2, frame: 2 },
+            rarm: { offset: { x: 16, y: -2 }, rotation: 0.4, frame: 2 }, // Full extension
+            larm: { offset: { x: -6, y: -1 }, rotation: -0.1, frame: 2 },
+            head: { offset: { x: 2, y: -12 }, rotation: 0.1, frame: 2 },
+            sword: { offset: { x: 12, y: 2 }, rotation: 0.7, scale: 1.4 } // Sword swept across
+          }
+        },
+        {
+          tick: 7,
+          parts: {
+            // Recovery
+            torso: { offset: { x: 1, y: -4 }, rotation: 0.05, frame: 1 },
+            rarm: { offset: { x: 10, y: -3 }, rotation: 0.1, frame: 1 },
+            larm: { offset: { x: -7, y: -2 }, rotation: 0, frame: 1 },
+            head: { offset: { x: 0, y: -12 }, rotation: 0, frame: 1 },
+            sword: { offset: { x: 2, y: 0 }, rotation: 0.2, scale: 1.1 }
+          }
+        },
+        {
+          tick: 9,
+          parts: {
+            // Return to idle
+            torso: { offset: { x: 0, y: -4 }, rotation: 0, frame: 0 },
+            rarm: { offset: { x: 8, y: -2 }, rotation: 0, frame: 0 },
+            larm: { offset: { x: -8, y: -2 }, rotation: 0, frame: 0 },
+            head: { offset: { x: 0, y: -12 }, rotation: 0, frame: 0 },
+            sword: { offset: { x: 0, y: 0 }, rotation: 0, scale: 1.0 } // Normal size
           }
         }
       ]
@@ -519,7 +617,7 @@ export class HeroRig {
         head.rotation = Math.sin(phase * Math.PI * 2) * 0.06; // Much less tilt
       } else {
         // Normal breathing
-        head.offset.y = -8 - breathAmount * 1.5; // Subtle movement
+        head.offset.y = -12 - breathAmount * 1.5; // Subtle movement from base -12
         head.offset.x = Math.sin(phase * Math.PI * 4 + 0.5) * 0.5; // Very slight delayed sway
         head.rotation = Math.sin(phase * Math.PI * 2) * 0.03; // Minimal tilt
       }
@@ -575,7 +673,16 @@ export class HeroRig {
     for (const [partName, updates] of Object.entries(frame.parts)) {
       const part = this.parts.get(partName as BodyPart['name']);
       if (part) {
-        Object.assign(part, updates);
+        // Apply updates to the part
+        if (updates.offset) {
+          part.offset = { ...part.offset, ...updates.offset };
+        }
+        if (updates.rotation !== undefined) {
+          part.rotation = updates.rotation;
+        }
+        if (updates.frame !== undefined) {
+          part.frame = updates.frame;
+        }
       }
     }
   }

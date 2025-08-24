@@ -51,7 +51,7 @@ export class Jumping extends Rule {
     const progress = (unit.meta.jumpProgress || 0) + 1;
     
     // Simple parabolic arc with good feel
-    const jumpDuration = 18; // Slightly slower for better visual
+    const jumpDuration = 8; // Very fast jump - faster than movement
     const t = progress / jumpDuration;
     
     let newX = jumpOrigin.x;
@@ -99,10 +99,13 @@ export class Jumping extends Rule {
       }
       
       if (unit.meta.jumpDamage && unit.meta.jumpRadius) {
+        const landingPos = unit.meta.jumpTarget || unit.pos;
+        
+        // Queue AOE damage
         context.queueEvent({
           kind: "aoe",
           source: unit.id,
-          target: unit.meta.jumpTarget || unit.pos,
+          target: landingPos,
           meta: {
             aspect: "kinetic",
             radius: unit.meta.jumpRadius,
@@ -112,6 +115,31 @@ export class Jumping extends Rule {
             excludeSource: true // Don't damage self
           },
         });
+        
+        // Add visual impact particles
+        for (let i = 0; i < 8; i++) {
+          const angle = (Math.PI * 2 * i) / 8;
+          const speed = 0.3;
+          this.commands.push({
+            type: "particle",
+            params: {
+              particle: {
+                pos: {
+                  x: landingPos.x * 8 + 4,
+                  y: landingPos.y * 8 + 4
+                },
+                vel: {
+                  x: Math.cos(angle) * speed,
+                  y: Math.sin(angle) * speed - 0.2 // Slightly upward
+                },
+                radius: 1.5,
+                lifetime: 15,
+                color: "#FFD700", // Gold impact
+                type: "impact"
+              }
+            }
+          });
+        }
       }
 
       this.commands.push({

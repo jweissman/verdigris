@@ -655,23 +655,45 @@ class Simulator {
   updateParticles() {
     const arrays = this.particleArrays;
 
-    arrays.updatePhysics();
-    arrays.applyGravity(0.1); // Moved from Particles rule
-
+    // Fix particle velocities BEFORE physics update
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
 
       const type = arrays.type[i];
 
       if (type === 1) {
-        arrays.velX[i] += (Math.random() - 0.5) * 0.02; // Gentle sway
-        arrays.velY[i] = Math.min(arrays.velY[i], 0.5); // Terminal velocity
-      } else if (type === 2) {
-        arrays.velY[i] = 1.0; // Constant fall speed
+        // Leaves fall straight down - set before physics
+        arrays.velX[i] = 0; // No horizontal movement
+        arrays.velY[i] = 0.5; // Constant fall speed
       } else if (type === 3) {
         arrays.velX[i] = 0; // No horizontal drift
         arrays.velY[i] = 0.15;
+      }
+    }
 
+    arrays.updatePhysics();
+    arrays.applyGravity(0.1); // Moved from Particles rule
+
+    // Override velocities AFTER gravity for controlled particles
+    for (let i = 0; i < arrays.capacity; i++) {
+      if (arrays.active[i] === 0) continue;
+
+      const type = arrays.type[i];
+
+      if (type === 3) {
+        // Snowflakes - override after gravity to maintain exact speed
+        arrays.velX[i] = 0;
+        arrays.velY[i] = 0.15;
+      }
+    }
+
+    for (let i = 0; i < arrays.capacity; i++) {
+      if (arrays.active[i] === 0) continue;
+
+      const type = arrays.type[i];
+
+      if (type === 3) {
+        // Snow - check if landed
         const fieldHeightPx = this.fieldHeight * 8;
         if (arrays.posY[i] >= fieldHeightPx - 1) {
           arrays.landed[i] = 1;
@@ -757,18 +779,13 @@ class Simulator {
       return;
     }
 
-    const gravity = 0.02;
-    const airResistance = 0.98;
-    const wind = 0.0;
+    // Simple straight-down movement for controlled effect
+    particle.vel.x = 0; // No horizontal movement
+    particle.vel.y = 0.5; // Constant fall speed
 
-    const sway = Math.sin(this.ticks * 0.05 + particle.pos.x * 0.1) * 0.01;
-
-    particle.vel.y += gravity; // Gravity pulls down
-    particle.vel.x += wind + sway; // Wind and swaying
-    particle.vel.x *= airResistance;
-    particle.vel.y *= airResistance;
-
-    particle.pos.x += particle.vel.x;
+    // Keep aligned to grid center
+    const gridX = Math.floor(particle.pos.x / 8);
+    particle.pos.x = gridX * 8 + 4; // Center of grid cell
     particle.pos.y += particle.vel.y;
     if (particle.z !== undefined) {
       particle.z = Math.max(0, particle.z - Math.abs(particle.vel.y) * 0.5);
@@ -801,16 +818,13 @@ class Simulator {
       return;
     }
 
-    const gravity = 0.1; // Stronger gravity than leaves
-    const airResistance = 0.99; // Less air resistance
-    const wind = 0.05; // Slight diagonal drift
+    // Simple straight-down movement for controlled effect
+    particle.vel.x = 0; // No horizontal movement
+    particle.vel.y = 1.0; // Faster than leaves
 
-    particle.vel.y += gravity;
-    particle.vel.x += wind;
-    particle.vel.x *= airResistance;
-    particle.vel.y *= airResistance;
-
-    particle.pos.x += particle.vel.x;
+    // Keep aligned to grid center
+    const gridX = Math.floor(particle.pos.x / 8);
+    particle.pos.x = gridX * 8 + 4; // Center of grid cell
     particle.pos.y += particle.vel.y;
     if (particle.z !== undefined) {
       particle.z = Math.max(0, particle.z - particle.vel.y * 2); // Descend faster than leaves
@@ -837,14 +851,16 @@ class Simulator {
   }
 
   spawnLeafParticle() {
+    // Spawn at grid-aligned position
+    const gridX = Math.floor(Simulator.rng.random() * this.fieldWidth);
     this.particleArrays.addParticle({
       pos: {
-        x: Simulator.rng.random() * this.fieldWidth,
+        x: gridX * 8 + 4, // Center of grid cell
         y: -2, // Start above the visible area
       },
       vel: {
-        x: (Simulator.rng.random() - 0.5) * 0.1, // Small initial horizontal velocity
-        y: Simulator.rng.random() * 0.05 + 0.02, // Small downward velocity
+        x: 0, // No horizontal velocity - drops straight down
+        y: 0.5, // Consistent downward velocity
       },
       radius: Simulator.rng.random() * 1.5 + 0.5, // Small leaf size
       lifetime: 1000 + Simulator.rng.random() * 500, // Long lifetime for drifting
