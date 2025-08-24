@@ -682,7 +682,15 @@ class Simulator {
 
       const type = arrays.type[i];
 
-      if (type === 3) {
+      if (type === 1) {
+        // Leaves - override after gravity to maintain steady fall
+        arrays.velX[i] = 0;  // No horizontal movement
+        arrays.velY[i] = 0.5; // Constant fall speed
+      } else if (type === 2) {
+        // Rain - maintain diagonal rain pattern without acceleration
+        if (arrays.velY[i] > 1.2) arrays.velY[i] = 1.2; // Cap fall speed
+        if (arrays.velX[i] === 0) arrays.velX[i] = 0.3; // Ensure some diagonal movement
+      } else if (type === 3) {
         // Snowflakes - override after gravity to maintain exact speed
         arrays.velX[i] = 0;
         arrays.velY[i] = 0.15;

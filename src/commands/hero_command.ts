@@ -268,7 +268,7 @@ export class HeroCommand extends Command {
             meta: {
               ...hero.meta,
               attackStartTick: this.sim.ticks,
-              attackEndTick: this.sim.ticks + 16 // 16 tick attack animation to match rig duration
+              attackEndTick: this.sim.ticks + 12 // 12 tick attack animation to match rig duration
             }
           });
           break;

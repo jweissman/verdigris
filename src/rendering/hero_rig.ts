@@ -470,65 +470,84 @@ export class HeroRig {
       ]
     });
     
-    // Attack animation - powerful wide sweep
+    // Attack animation - EXPLOSIVE power strike with dramatic wind-up
     this.animations.set('attack', {
       name: 'attack',
       loop: false,
-      duration: 10, // Fast powerful attack
+      duration: 12, // Slightly longer for more impact
       frames: [
         {
           tick: 0,
           parts: {
-            // Wind up - sword pulled way back
-            torso: { offset: { x: -1, y: -4 }, rotation: -0.15, frame: 1 },
-            rarm: { offset: { x: 6, y: -8 }, rotation: -0.8, frame: 1 }, // Arm way back
-            larm: { offset: { x: -6, y: -3 }, rotation: 0.2, frame: 1 },
-            head: { offset: { x: -1, y: -12 }, rotation: -0.1, frame: 1 },
-            sword: { offset: { x: -4, y: -2 }, rotation: -1.2, scale: 1.2 } // Big wind up
+            // EXTREME wind up - coiled like a spring
+            torso: { offset: { x: -3, y: -3 }, rotation: -0.4, frame: 1 }, // Body twisted back
+            rarm: { offset: { x: -8, y: -10 }, rotation: -2.0, frame: 1 }, // Arm WAY back
+            larm: { offset: { x: -4, y: -5 }, rotation: 0.6, frame: 1 }, // Counterbalance
+            head: { offset: { x: -2, y: -11 }, rotation: -0.3, frame: 1 }, // Looking at target
+            lleg: { offset: { x: -1, y: 6 }, rotation: -0.1, frame: 1 }, // Weight shift back
+            rleg: { offset: { x: 3, y: 7 }, rotation: 0.1, frame: 1 }, // Rear leg braced
+            sword: { offset: { x: -12, y: -8 }, rotation: -2.5, scale: 1.5 } // Sword HIGH overhead
           }
         },
         {
           tick: 2,
           parts: {
-            // Power sweep begins
-            torso: { offset: { x: 1, y: -4 }, rotation: 0.1, frame: 2 },
-            rarm: { offset: { x: 12, y: -4 }, rotation: 0, frame: 2 }, // Arm sweeps wide
-            larm: { offset: { x: -7, y: -2 }, rotation: 0.1, frame: 2 },
-            head: { offset: { x: 1, y: -12 }, rotation: 0.05, frame: 2 },
-            sword: { offset: { x: 8, y: 0 }, rotation: 0, scale: 1.3 } // Sword horizontal, bigger
+            // Beginning of explosive forward motion
+            torso: { offset: { x: 0, y: -4 }, rotation: 0, frame: 2 },
+            rarm: { offset: { x: 4, y: -6 }, rotation: -0.5, frame: 2 }, // Starting to swing
+            larm: { offset: { x: -8, y: -3 }, rotation: 0.3, frame: 2 },
+            head: { offset: { x: 0, y: -12 }, rotation: 0, frame: 2 },
+            sword: { offset: { x: 0, y: -4 }, rotation: -1.0, scale: 1.8 } // Sword accelerating
           }
         },
         {
-          tick: 4,
+          tick: 3,
           parts: {
-            // Maximum extension - cleaving through
-            torso: { offset: { x: 2, y: -4 }, rotation: 0.2, frame: 2 },
-            rarm: { offset: { x: 16, y: -2 }, rotation: 0.4, frame: 2 }, // Full extension
-            larm: { offset: { x: -6, y: -1 }, rotation: -0.1, frame: 2 },
-            head: { offset: { x: 2, y: -12 }, rotation: 0.1, frame: 2 },
-            sword: { offset: { x: 12, y: 2 }, rotation: 0.7, scale: 1.4 } // Sword swept across
+            // SNAP! Peak power moment
+            torso: { offset: { x: 3, y: -4 }, rotation: 0.3, frame: 2 }, // Body lunges forward
+            rarm: { offset: { x: 18, y: -1 }, rotation: 0.8, frame: 2 }, // FULL extension
+            larm: { offset: { x: -10, y: 0 }, rotation: -0.3, frame: 2 }, // Pulls back for balance
+            head: { offset: { x: 4, y: -11 }, rotation: 0.2, frame: 2 }, // Following through
+            lleg: { offset: { x: -4, y: 7 }, rotation: 0.2, frame: 2 }, // Front foot planted
+            rleg: { offset: { x: 8, y: 6 }, rotation: -0.2, frame: 2 }, // Pushing off
+            sword: { offset: { x: 20, y: 4 }, rotation: 1.2, scale: 2.0 } // MASSIVE sweep
+          }
+        },
+        {
+          tick: 5,
+          parts: {
+            // Follow through - sword continues arc
+            torso: { offset: { x: 2, y: -4 }, rotation: 0.25, frame: 2 },
+            rarm: { offset: { x: 14, y: 2 }, rotation: 1.0, frame: 2 }, // Following through
+            larm: { offset: { x: -8, y: -1 }, rotation: -0.2, frame: 2 },
+            head: { offset: { x: 3, y: -12 }, rotation: 0.15, frame: 2 },
+            sword: { offset: { x: 16, y: 6 }, rotation: 1.8, scale: 1.8 } // Completing arc
           }
         },
         {
           tick: 7,
           parts: {
-            // Recovery
-            torso: { offset: { x: 1, y: -4 }, rotation: 0.05, frame: 1 },
-            rarm: { offset: { x: 10, y: -3 }, rotation: 0.1, frame: 1 },
-            larm: { offset: { x: -7, y: -2 }, rotation: 0, frame: 1 },
-            head: { offset: { x: 0, y: -12 }, rotation: 0, frame: 1 },
-            sword: { offset: { x: 2, y: 0 }, rotation: 0.2, scale: 1.1 }
+            // Recovery begins - pulling back
+            torso: { offset: { x: 1, y: -4 }, rotation: 0.1, frame: 1 },
+            rarm: { offset: { x: 10, y: -2 }, rotation: 0.3, frame: 1 },
+            larm: { offset: { x: -8, y: -2 }, rotation: 0, frame: 1 },
+            head: { offset: { x: 1, y: -12 }, rotation: 0.05, frame: 1 },
+            lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 1 },
+            rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 1 },
+            sword: { offset: { x: 6, y: 0 }, rotation: 0.4, scale: 1.3 }
           }
         },
         {
-          tick: 9,
+          tick: 10,
           parts: {
-            // Return to idle
+            // Return to ready stance
             torso: { offset: { x: 0, y: -4 }, rotation: 0, frame: 0 },
             rarm: { offset: { x: 8, y: -2 }, rotation: 0, frame: 0 },
             larm: { offset: { x: -8, y: -2 }, rotation: 0, frame: 0 },
             head: { offset: { x: 0, y: -12 }, rotation: 0, frame: 0 },
-            sword: { offset: { x: 0, y: 0 }, rotation: 0, scale: 1.0 } // Normal size
+            lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 0 },
+            rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 0 },
+            sword: { offset: { x: 0, y: 0 }, rotation: 0, scale: 1.0 }
           }
         }
       ]

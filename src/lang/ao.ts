@@ -79,6 +79,8 @@ const aoGrammar = ohm.grammar(`
  */
 export class Ao {
   private context: any;
+  private static parseCache = new Map<string, any>();
+  private static semanticsCache = new WeakMap<any, any>();
 
   constructor(context: any = {}) {
     this.context = context;
@@ -89,10 +91,15 @@ export class Ao {
    */
   interpret(expression: string): any {
     try {
-      const match = aoGrammar.match(expression);
-      if (match.failed()) {
-        console.error("Parse error:", match.message);
-        return undefined;
+      // Cache parsed expressions
+      let match = Ao.parseCache.get(expression);
+      if (!match) {
+        match = aoGrammar.match(expression);
+        if (match.failed()) {
+          console.error("Parse error:", match.message);
+          return undefined;
+        }
+        Ao.parseCache.set(expression, match);
       }
 
       const semantics = this.createSemantics(this.context);
