@@ -84,6 +84,8 @@ import assembler from "../assets/sprites/assembler.png";
 import champion from "../assets/sprites/champion.png";
 // @ts-ignore
 import penguin from "../assets/sprites/penguin.png";
+// @ts-ignore
+import ninja from "../assets/sprites/ninja.png";
 
 // Hero body parts (16x16, 3 frames each)
 // @ts-ignore
@@ -251,6 +253,7 @@ class Game {
     { name: "assembler", src: assembler },
     { name: "champion", src: champion },
     { name: "penguin", src: penguin },
+    { name: "ninja", src: ninja },
     { name: "cell-effects", src: cellEffects },
     // Hero body parts
     { name: "hero-head", src: heroHead },

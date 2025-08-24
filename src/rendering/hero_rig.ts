@@ -580,8 +580,23 @@ export class HeroRig {
     }
   }
   
-  getParts(): BodyPart[] {
-    return Array.from(this.parts.values()).sort((a, b) => a.zIndex - b.zIndex);
+  getParts(facing: 'left' | 'right' = 'right'): BodyPart[] {
+    const partsArray = Array.from(this.parts.values());
+    
+    // Adjust z-indices based on facing for proper layering
+    partsArray.forEach(part => {
+      if (facing === 'left') {
+        // When facing left, right arm should be behind torso
+        if (part.name === 'rarm') part.zIndex = 2;
+        else if (part.name === 'larm') part.zIndex = 4;
+      } else {
+        // When facing right, left arm should be behind torso
+        if (part.name === 'larm') part.zIndex = 2;
+        else if (part.name === 'rarm') part.zIndex = 4;
+      }
+    });
+    
+    return partsArray.sort((a, b) => a.zIndex - b.zIndex);
   }
   
   getPartByName(name: BodyPart['name']): BodyPart | undefined {

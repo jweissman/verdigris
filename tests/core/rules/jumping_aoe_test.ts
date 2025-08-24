@@ -2,12 +2,14 @@ import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../../src/core/simulator';
 import { AreaOfEffect } from '../../../src/rules/area_of_effect';
 import { Jumping } from '../../../src/rules/jumping';
+import { EventHandler } from '../../../src/rules/event_handler';
 
 describe('Jumping AOE', () => {
   test('jump landing AOE should not affect the jumping unit itself', () => {
     const sim = new Simulator(20, 20);
     sim.rulebook.push(new Jumping());
     sim.rulebook.push(new AreaOfEffect());
+    sim.rulebook.push(new EventHandler());
     
     // Add jumping unit with AOE damage
     const jumper = sim.addUnit({
@@ -34,8 +36,8 @@ describe('Jumping AOE', () => {
       team: 'hostile'
     });
     
-    // Simulate jump landing (8 ticks to complete)
-    for (let i = 0; i < 8; i++) {
+    // Simulate jump landing (18 ticks to complete based on current jump duration)
+    for (let i = 0; i < 19; i++) {
       sim.step();
     }
     
@@ -52,6 +54,7 @@ describe('Jumping AOE', () => {
     const sim = new Simulator(20, 20);
     sim.rulebook.push(new Jumping());
     sim.rulebook.push(new AreaOfEffect());
+    sim.rulebook.push(new EventHandler());
     
     // Add jumping unit
     const jumper = sim.addUnit({
@@ -86,8 +89,8 @@ describe('Jumping AOE', () => {
       team: 'hostile'
     });
     
-    // Simulate jump landing
-    for (let i = 0; i < 8; i++) {
+    // Simulate jump landing - need to complete the full jump duration
+    for (let i = 0; i < 20; i++) { // Jump duration is longer now
       sim.step();
     }
     
@@ -138,8 +141,8 @@ describe('Jumping AOE', () => {
       team: 'hostile'
     });
     
-    // Simulate jump landing
-    for (let i = 0; i < 8; i++) {
+    // Simulate jump landing - need to complete the full jump duration
+    for (let i = 0; i < 20; i++) { // Jump duration is longer now
       sim.step();
     }
     

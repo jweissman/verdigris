@@ -53,20 +53,9 @@ export class StrikeCommand extends Command {
         state: "attack",
         meta: {
           ...attacker.meta,
-          lastStrike: this.sim.ticks,
-          attackStartTick: this.sim.ticks
+          lastStrike: this.sim.ticks
         }
       });
-      
-      // Clear attack state after animation
-      setTimeout(() => {
-        const unit = this.sim.units.find(u => u.id === attacker.id);
-        if (unit && unit.meta?.attackStartTick === this.sim.ticks) {
-          transform.updateUnit(attacker.id, {
-            state: "idle"
-          });
-        }
-      }, 800); // 8 frames at 100ms each
 
       // Apply damage
       transform.updateUnit(target.id, {

@@ -23,7 +23,13 @@ export class EventHandler extends Rule {
       heal: (e) =>
         `${e.source} healed ${e.target} for ${e.meta.amount} (now at ${targetUnit?.hp} hp)`,
       terrain: (e) =>
-        `${e.source} modified terrain at (${e.target?.x}, ${e.target?.y}): ${e.meta.terrainType}`,
+        `${e.source} formed ${e.meta.terrainType} at (${e.target?.x}, ${e.target?.y})`,
+      particle: (e) =>
+        `${e.source} created a particle effect at (${e.target?.x}, ${e.target?.y})`,
+      moisture: (e) => 
+        `${e.source} changed moisture at (${e.target?.x}, ${e.target?.y}) by ${e.meta.amount}`,
+      spawn: (e) =>
+        `${e.source} spawned a unit at (${e.target?.x}, ${e.target?.y})`,
     };
     if (!tx.hasOwnProperty(event.kind)) {
       return `Event: ${event.kind} from ${event.source} to ${event.target}`;
@@ -46,8 +52,8 @@ export class EventHandler extends Rule {
       (event as any)._processed = true;
       
       // Log event for debugging
-      if (process.env.DEBUG_EVENTS || (global as any).DEBUG_EVENTS) {
-        console.log(`Event: ${this.glossary(event, context)}`);
+      if ((typeof process !== 'undefined' && process.env?.DEBUG_EVENTS) || (global as any).DEBUG_EVENTS) {
+        console.log(this.glossary(event, context));
       }
 
       switch (event.kind) {

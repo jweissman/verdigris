@@ -13,6 +13,26 @@ export class HeroCommand extends Command {
     const action = params.action as string;
     console.log(`HeroCommand: action=${action}`);
     
+    // Support direct move to coordinates
+    if (action === 'move-to') {
+      const targetX = params.x as number;
+      const targetY = params.y as number;
+      const heroes = this.sim.units.filter(u => u.tags?.includes('hero'));
+      
+      for (const hero of heroes) {
+        // Set move target in meta
+        if (!hero.meta) hero.meta = {};
+        hero.meta.moveTarget = {
+          x: targetX,
+          y: targetY,
+          attackMove: params.attackMove || false,
+          setTick: this.sim.ticks
+        };
+        console.log(`[HeroCommand] Hero ${hero.id} move-to (${targetX}, ${targetY})`);
+      }
+      return;
+    }
+    
     // Find all hero-tagged units
     const heroes = this.sim.units.filter(u => u.tags?.includes('hero'));
     
@@ -141,15 +161,45 @@ export class HeroCommand extends Command {
           
         case 'attack':
         case 'strike':
-          this.sim.queuedCommands.push({
-            type: 'strike',
-            unitId: hero.id,
-            params: {
-              direction: hero.meta?.facing || 'right',
-              range: params.range || 1.5,
-              damage: params.damage || hero.dmg
-            }
-          });
+          // Find nearby enemies for AOE swipe
+          const enemies = this.sim.units.filter(u => 
+            u.team !== hero.team && 
+            u.hp > 0 &&
+            Math.abs(u.pos.x - hero.pos.x) <= 2 &&
+            Math.abs(u.pos.y - hero.pos.y) <= 2
+          );
+          
+          if (enemies.length > 0) {
+            // Strike first enemy found
+            this.sim.queuedCommands.push({
+              type: 'strike',
+              unitId: hero.id,
+              params: {
+                targetId: enemies[0].id,
+                direction: hero.meta?.facing || 'right',
+                range: params.range || 2,
+                damage: params.damage || hero.dmg || 15
+              }
+            });
+          } else {
+            // Swipe attack even without target
+            this.sim.queuedCommands.push({
+              type: 'strike',
+              unitId: hero.id,
+              params: {
+                direction: hero.meta?.facing || 'right',
+                range: params.range || 2,
+                damage: params.damage || hero.dmg || 15
+              }
+            });
+          }
+          
+          // Set attack state and timing
+          hero.state = 'attack';
+          if (!hero.meta) hero.meta = {};
+          hero.meta.lastStrike = this.sim.ticks;
+          hero.meta.attackStartTick = this.sim.ticks;
+          hero.meta.attackEndTick = this.sim.ticks + 12; // 12 tick attack animation to match rig duration
           break;
           
         default:

@@ -11,8 +11,8 @@ export class HeroAnimation extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
     const allUnits = context.getAllUnits();
-    
-    // Debug counting removed
+    const currentTick = context.getCurrentTick();
+    this.debugCallCount = currentTick; // Store for animation update
     
     // Find units that should have rigs
     for (const unit of allUnits) {
@@ -34,20 +34,21 @@ export class HeroAnimation extends Rule {
         }
         
         // Update animation based on unit state
-        this.updateAnimation(unit, rig);
+        this.updateAnimation(unit, rig, commands);
         
         // Update rig (advance by 1 tick)
         rig.update(1);
         
         // Debug logging removed
         
-        // Store rig in unit meta for renderer
+        // Store rig in unit meta for renderer with facing
+        const facing = unit.meta?.facing || 'right';
         commands.push({
           type: 'meta',
           params: {
             unitId: unit.id,
             meta: {
-              rig: rig.getParts()
+              rig: rig.getParts(facing)
             }
           }
         });
@@ -66,15 +67,44 @@ export class HeroAnimation extends Rule {
     return commands;
   }
   
-  private updateAnimation(unit: any, rig: HeroRig) {
+  private updateAnimation(unit: any, rig: HeroRig, commands: QueuedCommand[]) {
     // Determine desired animation
     let desiredAnimation: string;
+    const currentTick = this.debugCallCount; // Using as a tick counter
     
-    // Check for recent strike
-    const recentStrike = unit.meta?.lastStrike && 
-      ((rig.getAnimationTime() / 16) - unit.meta.lastStrike) < 12;
+    // Check if we're in attack animation window
+    const inAttackWindow = unit.meta?.attackStartTick && 
+      unit.meta?.attackEndTick &&
+      currentTick >= unit.meta.attackStartTick &&
+      currentTick < unit.meta.attackEndTick;
     
-    if (unit.state === 'attack' || recentStrike) {
+    // Check if attack just ended
+    const attackJustEnded = unit.meta?.attackEndTick && 
+      currentTick >= unit.meta.attackEndTick &&
+      unit.state === 'attack';
+    
+    if (attackJustEnded) {
+      // Reset attack state via command
+      commands.push({
+        type: 'meta',
+        params: {
+          unitId: unit.id,
+          meta: {
+            attackStartTick: undefined,
+            attackEndTick: undefined
+          }
+        }
+      });
+      commands.push({
+        type: 'state',
+        params: {
+          unitId: unit.id,
+          state: 'idle'
+        }
+      });
+    }
+    
+    if (inAttackWindow || unit.state === 'attack') {
       desiredAnimation = 'attack';
     } else if (unit.meta?.jumping) {
       desiredAnimation = 'jump'; // Not implemented yet

@@ -50,6 +50,7 @@ import { HumidityCommand } from "../commands/humidity";
 import { MovesCommand } from "../commands/moves";
 import { EffectsCommand } from "../commands/effects";
 import { AbilityEffectsCommand } from "../commands/ability_effects";
+import { MoveTargetCommand } from "../commands/move_target";
 
 export type QueuedCommand = {
   type: string;
@@ -98,6 +99,7 @@ export class CommandHandler {
     this.commands.set("move", new MoveCommand(sim));
     this.commands.set("moves", new MovesCommand(sim));
     this.commands.set("hero", new HeroCommand(sim));
+    this.commands.set("move_target", new MoveTargetCommand(sim, this.transform));
     this.commands.set("knockback", new KnockbackCommand(sim));
 
     this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim));

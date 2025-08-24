@@ -5,6 +5,7 @@ j# we need _some_ spec that flav end-to-end produces expected folk isotypes (whi
 describe "Isotypes" do
   describe "S-Tier" do
     # These are quasihero npc ranks for all folk moieties
+    # ideally we build up a whole matrix and run flav tasks and say 'it generates the folk with the right ability'
     # Divine (Hero)
     # Occult (Siege Mage)
     # Military (ranked: Infantry -> Lieutenant -> Commander -> General -> Strategist)

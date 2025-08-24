@@ -138,19 +138,22 @@ export class UnitRenderer {
     scale: number = 8,
   ) {
     const isHuge = unit.meta.huge;
+    const z = unit.meta?.z || 0;
+    
+    // Only show shadow when jumping
+    if (z <= 0) return;
 
     ctx.save();
-    ctx.fillStyle = "#00000050";
+    ctx.fillStyle = "#00000040";
     ctx.beginPath();
 
     const shadowWidth = isHuge ? 24 : 6;
     const shadowHeight = isHuge ? 6 : 3;
-    const shadowOffsetY = isHuge ? -4 : 6;
-    const shadowOffsetX = isHuge ? 8 : -2;
 
+    // Shadow stays exactly at the ground position (screenX, screenY)
     ctx.ellipse(
-      screenX + shadowOffsetX,
-      screenY + shadowOffsetY,
+      screenX,
+      screenY,
       shadowWidth,
       shadowHeight,
       0,
@@ -263,6 +266,8 @@ export class UnitRenderer {
     const parts = unit.meta.rig;
     if (!parts || !Array.isArray(parts)) return;
     
+    const shouldFlip = options?.flipHorizontal || unit.meta?.facing === 'left';
+    
     for (const part of parts) {
       const sprite = sprites.get(part.sprite);
       if (!sprite || !sprite.complete) {
@@ -271,7 +276,8 @@ export class UnitRenderer {
       }
       
       // Calculate position for this part
-      const pixelX = centerX + part.offset.x;
+      const offsetX = shouldFlip ? -part.offset.x : part.offset.x;
+      const pixelX = centerX + offsetX;
       const pixelY = centerY + part.offset.y;
       
       // Calculate frame position (3 frames at 16x16)
@@ -279,20 +285,27 @@ export class UnitRenderer {
       
       ctx.save();
       
+      // Apply flipping if needed
+      if (shouldFlip) {
+        ctx.scale(-1, 1);
+        ctx.translate(-centerX * 2, 0);
+      }
+      
       // Apply rotation if needed
       if (part.rotation) {
         ctx.translate(pixelX, pixelY);
-        ctx.rotate(part.rotation);
+        const rotation = shouldFlip ? -part.rotation : part.rotation;
+        ctx.rotate(rotation);
         ctx.translate(-8, -8);
       } else {
         ctx.translate(pixelX - 8, pixelY - 8);
       }
       
-      // Draw the sprite frame
+      // Draw the sprite frame with slight overlap for better layering
       ctx.drawImage(
         sprite,
         frameX, 0, 16, 16, // Source: 16x16 frame
-        0, 0, 16, 16 // Dest: 16x16
+        -1, -1, 18, 18 // Dest: slightly larger for overlap
       );
       
       ctx.restore();

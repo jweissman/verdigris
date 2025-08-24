@@ -222,16 +222,17 @@ export default class Isometric extends View {
     const facing = unit.meta?.facing || "right";
     const shouldFlip = facing === "left";
     
-    // Draw shadow
+    // Draw shadow at ground position
     this.unitRenderer.drawShadow(this.ctx, unit, screenX, screenY);
     
-    // Use centralized unit renderer
+    // Draw unit above ground (offset up by sprite height/2 plus any Z-offset)
+    const spriteOffset = 8; // Half the sprite height for proper grounding
     this.unitRenderer.renderUnit(
       this.ctx,
       unit,
       this.sprites,
       screenX,
-      realPixelY, // Already includes Z offset
+      screenY - spriteOffset - renderZ * 8, // Offset up by sprite height + Z
       {
         flipHorizontal: shouldFlip
       }

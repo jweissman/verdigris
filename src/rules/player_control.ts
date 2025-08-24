@@ -7,8 +7,10 @@ export class PlayerControl extends Rule {
   private moveCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
   private jumpCooldowns: Map<string, number> = new Map(); // unitId -> remaining ticks
   private commandBuffer: Map<string, QueuedCommand[]> = new Map(); // unitId -> buffered commands
-  private readonly MOVE_COOLDOWN = 2; // Balanced movement at 30fps
-  private readonly JUMP_COOLDOWN = 10; // Ticks between jump commands at 30fps
+  private readonly MOVE_COOLDOWN = 3; // Balanced movement for tile alignment at 60fps
+  private readonly JUMP_COOLDOWN = 8; // Faster jump cooldown for better feel
+  private moveTarget: { x: number; y: number } | null = null;
+  private attackMoveTarget: { x: number; y: number } | null = null;
   
   constructor() {
     super();
@@ -20,6 +22,16 @@ export class PlayerControl extends Rule {
     } else {
       this.keysHeld.delete(key.toLowerCase());
     }
+  }
+  
+  setMoveTarget(target: { x: number; y: number }) {
+    this.moveTarget = target;
+    this.attackMoveTarget = null;
+  }
+  
+  setAttackMoveTarget(target: { x: number; y: number }) {
+    this.attackMoveTarget = target;
+    this.moveTarget = null;
   }
   
   execute(context: TickContext): QueuedCommand[] {
@@ -42,6 +54,66 @@ export class PlayerControl extends Rule {
     // Find player-controlled units
     for (const unit of allUnits) {
       if (unit.meta?.controlled || unit.tags?.includes('hero')) {
+        // Handle click-to-move
+        if (this.moveTarget || this.attackMoveTarget) {
+          const target = this.moveTarget || this.attackMoveTarget;
+          if (target) {
+            const dx = target.x - unit.pos.x;
+            const dy = target.y - unit.pos.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 0.5) {
+              // Move towards target
+              const cooldown = this.moveCooldowns.get(unit.id) || 0;
+              if (cooldown <= 0) {
+                const moveX = Math.sign(dx);
+                const moveY = Math.sign(dy);
+                
+                // Update facing
+                if (moveX !== 0) {
+                  unit.meta = unit.meta || {};
+                  unit.meta.facing = moveX > 0 ? 'right' : 'left';
+                }
+                
+                commands.push({
+                  type: 'hero' as const,
+                  params: {
+                    action: this.getMoveAction(moveX, moveY)
+                  }
+                });
+                this.moveCooldowns.set(unit.id, this.MOVE_COOLDOWN);
+              }
+            } else {
+              // Reached target
+              this.moveTarget = null;
+              this.attackMoveTarget = null;
+            }
+            
+            // Attack-move: look for enemies near path
+            if (this.attackMoveTarget) {
+              const enemies = allUnits.filter(u => 
+                u.team !== unit.team && 
+                u.hp > 0 &&
+                Math.abs(u.pos.x - unit.pos.x) < 2 &&
+                Math.abs(u.pos.y - unit.pos.y) < 2
+              );
+              
+              if (enemies.length > 0) {
+                // Stop and attack
+                this.attackMoveTarget = null;
+                commands.push({
+                  type: 'strike',
+                  unitId: unit.id,
+                  params: {
+                    targetId: enemies[0].id
+                  }
+                });
+              }
+            }
+            continue; // Skip keyboard controls when using click-to-move
+          }
+        }
+        
         // Check cooldown
         const cooldown = this.moveCooldowns.get(unit.id) || 0;
         
@@ -58,9 +130,15 @@ export class PlayerControl extends Rule {
           }
           if (this.keysHeld.has('a') || this.keysHeld.has('arrowleft')) {
             dx = -1;
+            // Update facing direction
+            if (!unit.meta) unit.meta = {};
+            unit.meta.facing = 'left';
           }
           if (this.keysHeld.has('d') || this.keysHeld.has('arrowright')) {
             dx = 1;
+            // Update facing direction
+            if (!unit.meta) unit.meta = {};
+            unit.meta.facing = 'right';
           }
           
           // Map diagonal movement to action
@@ -123,18 +201,21 @@ export class PlayerControl extends Rule {
           this.jumpCooldowns.set(unit.id, this.JUMP_COOLDOWN);
         }
         
-        // Handle strike/attack
+        // Handle strike/attack - use hero command
         if (this.keysHeld.has('e') || this.keysHeld.has('enter')) {
           const strikeCooldown = unit.meta?.lastStrike ? context.getCurrentTick() - unit.meta.lastStrike : 999;
           if (strikeCooldown > 8) { // 8 tick cooldown for strikes
             commands.push({
-              type: 'strike',
-              unitId: unit.id,
+              type: 'hero',
               params: {
+                action: 'attack',
                 direction: unit.meta?.facing || 'right',
                 range: 2
               }
             });
+            // Update last strike time
+            unit.meta = unit.meta || {};
+            unit.meta.lastStrike = context.getCurrentTick();
           }
         }
         
@@ -160,5 +241,17 @@ export class PlayerControl extends Rule {
     }
     
     return commands;
+  }
+  
+  private getMoveAction(dx: number, dy: number): string {
+    if (dx === -1 && dy === 0) return 'left';
+    if (dx === 1 && dy === 0) return 'right';
+    if (dx === 0 && dy === -1) return 'up';
+    if (dx === 0 && dy === 1) return 'down';
+    if (dx === -1 && dy === -1) return 'up-left';
+    if (dx === 1 && dy === -1) return 'up-right';
+    if (dx === -1 && dy === 1) return 'down-left';
+    if (dx === 1 && dy === 1) return 'down-right';
+    return 'left'; // Default
   }
 }
