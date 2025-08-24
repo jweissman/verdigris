@@ -246,7 +246,7 @@ export class EventHandler extends Rule {
         const damageMultiplier = falloff
           ? Math.max(0.3, 1 - (distance / maxRadius) * 0.5)
           : 1;
-        const damage = Math.floor((event.meta.amount || 10) * damageMultiplier);
+        const damage = Math.floor((event.meta.amount ?? 10) * damageMultiplier);
 
         if (damage > 0) {
           commands.push({
