@@ -7,9 +7,10 @@ export class PlantCommand extends Command {
   }
 
   execute(unitId: string | null, params: CommandParams): void {
-    if (!unitId) return;
+    const planterId = (params.unitId as string) || unitId;
+    if (!planterId) return;
     
-    const unit = this.sim.roster[unitId];
+    const unit = this.sim.roster[planterId];
     if (!unit) return;
 
     // Plant a bush at the unit's current position or nearby
@@ -42,7 +43,7 @@ export class PlantCommand extends Command {
       abilities: [],
       tags: ['terrain', 'plant', 'obstacle'],
       meta: {
-        plantedBy: unitId
+        plantedBy: planterId
       }
     };
 

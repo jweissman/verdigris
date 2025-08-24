@@ -33,6 +33,8 @@ export interface AbilityEffect {
   range?: ValueExpression;
   width?: ValueExpression;
   force?: ValueExpression;
+  offsetX?: ValueExpression;
+  offsetY?: ValueExpression;
 
   particleType?: string;
   count?: ValueExpression;

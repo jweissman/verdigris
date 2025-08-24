@@ -1127,8 +1127,8 @@ export class Abilities extends Rule {
     
     context.queueCommand({
       type: "plant",
-      unitId: caster.id,
       params: {
+        unitId: caster.id,
         offsetX: offsetX,
         offsetY: offsetY
       }
