@@ -2,6 +2,7 @@ import { MeleeCombat } from "../rules/melee_combat";
 import { Knockback } from "../rules/knockback";
 import { ProjectileMotion } from "../rules/projectile_motion";
 import { UnitMovement } from "../rules/unit_movement";
+import { ChargeAccumulator } from "../rules/charge_accumulator";
 import { AreaOfEffect } from "../rules/area_of_effect";
 import { Rule } from "../rules/rule";
 import { UnitBehavior } from "../rules/unit_behavior";
@@ -372,6 +373,7 @@ class Simulator {
       new Knockback(),
       new StatusEffects(),
       new Perdurance(),
+      new ChargeAccumulator(), // Handles charge accumulation for charging attacks
     ];
 
     const specialRules = [

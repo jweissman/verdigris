@@ -16,6 +16,7 @@ export class StrikeCommand extends Command {
 
     const attacker = this.sim.units.find((u) => u.id === unitId);
     if (!attacker) return;
+    
 
     const targetId = params.targetId as string;
     const direction = params.direction as string;
@@ -36,19 +37,11 @@ export class StrikeCommand extends Command {
     }
 
     if (target && (targetId || this.isInRange(attacker, target, range))) {
-      // Queue damage COMMAND to actually reduce HP
-      this.sim.queuedCommands.push({
-        type: 'damage',
-        params: {
-          targetId: target.id,
-          amount: damage,
-          aspect: aspect,
-          sourceId: attacker.id
-        }
-      });
-      
-      // Queue damage event for visual effects
-      this.sim.processedEvents.push({
+      // Queue damage event - EventHandler will convert to damage command
+      if (!this.sim.queuedEvents) {
+        this.sim.queuedEvents = [];
+      }
+      this.sim.queuedEvents.push({
         kind: "damage",
         source: attacker.id,
         target: target.id,

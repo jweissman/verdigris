@@ -11,7 +11,6 @@ import { Command } from "../rules/command";
 export class HeroCommand extends Command {
   execute(unitId: string | null, params: Record<string, any>): void {
     const action = params.action as string;
-    console.log(`HeroCommand: action=${action}`);
     
     // Support direct move to coordinates
     if (action === 'move-to') {
@@ -35,7 +34,6 @@ export class HeroCommand extends Command {
     
     // Find all hero-tagged units
     const heroes = this.sim.units.filter(u => u.tags?.includes('hero'));
-    
     
     for (const hero of heroes) {
       switch (action) {
@@ -222,17 +220,22 @@ export class HeroCommand extends Command {
           hero.meta.attackZones = attackZones;
           hero.meta.attackZonesExpiry = this.sim.ticks + 8; // Show for 8 ticks
           
-          // Find all enemies in attack zones
+          // Find all enemies in attack zones  
+          const enemiesSet = new Set<string>();
           const enemies = this.sim.units.filter(u => {
             if (u.team === hero.team || u.hp <= 0) return false;
-            return attackZones.some(zone => 
+            const inZone = attackZones.some(zone => 
               u.pos.x === zone.x && u.pos.y === zone.y
             );
+            if (inZone) {
+              enemiesSet.add(u.id);
+            }
+            return inZone;
           });
           
           // Damage all enemies in the arc
           for (const enemy of enemies) {
-            this.sim.queuedCommands.push({
+            const strikeCommand = {
               type: 'strike',
               unitId: hero.id,
               params: {
@@ -241,10 +244,11 @@ export class HeroCommand extends Command {
                 range: range,
                 damage: damage
               }
-            });
+            };
+            this.sim.queuedCommands.push(strikeCommand);
           }
           
-          // Visual swipe effect even without targets
+          // Visual swipe effect ONLY if no targets
           if (enemies.length === 0) {
             this.sim.queuedCommands.push({
               type: 'strike',
@@ -257,20 +261,34 @@ export class HeroCommand extends Command {
             });
           }
           
-          // Set attack state and timing
-          hero.state = 'attack';
-          if (!hero.meta) hero.meta = {};
-          hero.meta.lastStrike = this.sim.ticks;
-          hero.meta.attackStartTick = this.sim.ticks;
-          hero.meta.attackEndTick = this.sim.ticks + 16; // 16 tick attack animation to match rig duration
+          // Set attack state immediately since we're initiating the attack sequence
+          const transform = this.sim.getTransform();
+          transform.updateUnit(hero.id, {
+            state: 'attack',
+            meta: {
+              ...hero.meta,
+              attackStartTick: this.sim.ticks,
+              attackEndTick: this.sim.ticks + 16 // 16 tick attack animation to match rig duration
+            }
+          });
           break;
         }
 
         case 'charge_attack': {
           // Start charging attack - increase damage over time
-          if (!hero.meta) hero.meta = {};
-          const currentCharge = hero.meta.attackCharge || 0;
-          hero.meta.attackCharge = Math.min(currentCharge + 1, 5); // Max 5x charge
+          const currentCharge = hero.meta?.attackCharge || 0;
+          const newCharge = Math.min(currentCharge + 1, 5); // Max 5x charge
+          
+          // Update charge directly via transform
+          const transform = this.sim.getTransform();
+          transform.updateUnit(hero.id, {
+            state: 'charging',
+            meta: {
+              ...hero.meta,
+              attackCharge: newCharge,
+              chargingAttack: true
+            }
+          });
           
           // Visual feedback for charging
           this.sim.queuedCommands.push({
@@ -280,9 +298,42 @@ export class HeroCommand extends Command {
               vel: { x: 0, y: -0.5 },
               lifetime: 15,
               type: 'energy',
-              color: `hsl(${60 + currentCharge * 30}, 100%, ${50 + currentCharge * 10}%)`,
+              color: `hsl(${60 + newCharge * 30}, 100%, ${50 + newCharge * 10}%)`,
               radius: 0.8 + currentCharge * 0.2,
               z: 3
+            }
+          });
+          break;
+        }
+          
+        case 'release_attack': {
+          // Release charged attack
+          const chargeLevel = hero.meta?.attackCharge || 1;
+          const baseDamage = hero.dmg || 15;
+          const chargedDamage = baseDamage * chargeLevel;
+          const direction = params.direction || hero.meta?.facing || 'right';
+          
+          // Clear charging state
+          const transform = this.sim.getTransform();
+          transform.updateUnit(hero.id, {
+            state: 'attack',
+            meta: {
+              ...hero.meta,
+              attackCharge: 0,
+              chargingAttack: false
+            }
+          });
+          
+          // Queue a strike with charged damage
+          this.sim.queuedCommands.push({
+            type: 'strike',
+            unitId: hero.id,
+            params: {
+              direction: direction,
+              damage: chargedDamage,
+              range: 3, // Longer range for charged attack
+              knockback: chargeLevel * 2, // More knockback with charge
+              aspect: 'charged'
             }
           });
           break;

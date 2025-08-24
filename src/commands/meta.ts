@@ -29,6 +29,10 @@ export class MetaCommand extends Command {
     if (params.state) {
       updates.state = params.state;
     }
+    
+    if (params.lastAbilityTick) {
+      updates.lastAbilityTick = params.lastAbilityTick;
+    }
 
     if (Object.keys(updates).length > 0) {
       this.transform.updateUnit(targetId, updates);

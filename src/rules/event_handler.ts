@@ -174,11 +174,15 @@ export class EventHandler extends Rule {
         const friendlyFire = event.meta.friendlyFire !== false; // Default to true for backwards compatibility
         const excludeSource = event.meta.excludeSource === true;
         
+        // Check if unit should be excluded
+        if (excludeSource && unit.id === event.source) {
+          return false; // Always exclude source if excludeSource is true
+        }
+        
         if (!friendlyFire) {
-          const notSameTeam = inRange && sourceUnit && unit.team !== sourceUnit.team;
-          return excludeSource ? (notSameTeam && unit.id !== event.source) : notSameTeam;
+          return inRange && sourceUnit && unit.team !== sourceUnit.team;
         } else {
-          return inRange && unit.id !== event.source;
+          return inRange;
         }
       }
     });
@@ -325,6 +329,7 @@ export class EventHandler extends Rule {
       return;
     }
 
+    // Create damage command from event
     commands.push({
       type: "damage",
       params: {

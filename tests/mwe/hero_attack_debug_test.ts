@@ -6,6 +6,8 @@ import { StrikeCommand } from '../../src/commands/strike';
 describe('Hero Attack Debug', () => {
   test('strike command should damage enemy', () => {
     const sim = new Simulator(10, 10);
+    // Clear default rulebook to isolate strike command behavior
+    sim.rulebook = [];
     sim.rulebook.push(new EventHandler());
     
     const hero = sim.addUnit({
@@ -54,6 +56,8 @@ describe('Hero Attack Debug', () => {
 
   test('hero command attack should hit multiple enemies', () => {
     const sim = new Simulator(20, 20);
+    // Clear default rulebook to isolate hero command behavior
+    sim.rulebook = [];
     sim.rulebook.push(new EventHandler());
     
     const hero = sim.addUnit({

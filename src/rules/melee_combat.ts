@@ -69,8 +69,8 @@ export class MeleeCombat extends Rule {
         const team1 = arrays.team[idxA];
         const isHero = coldA?.tags?.includes("hero");
 
-        // Hero special attack - wide visor AOE
-        if (isHero) {
+        // Hero special attack - wide visor AOE (only if not controlled)
+        if (isHero && !coldA?.meta?.controlled) {
           const facing = coldA?.meta?.facing || "right";
           const currentTick = context.getCurrentTick();
           const attackerLastAttack = this.lastAttacks.get(attackerId) || -100;
@@ -108,8 +108,6 @@ export class MeleeCombat extends Rule {
               if (coldB?.meta?.jumping || coldB?.tags?.includes("noncombatant"))
                 continue;
 
-              console.log(`Hero attacking ${targetId} at tick ${currentTick}`);
-              
               // Heavy damage with knockback - attack THIS enemy
               commands.push({
                 type: "strike",

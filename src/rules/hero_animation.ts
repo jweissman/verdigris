@@ -89,17 +89,11 @@ export class HeroAnimation extends Rule {
         type: 'meta',
         params: {
           unitId: unit.id,
+          state: 'idle',
           meta: {
             attackStartTick: undefined,
             attackEndTick: undefined
           }
-        }
-      });
-      commands.push({
-        type: 'state',
-        params: {
-          unitId: unit.id,
-          state: 'idle'
         }
       });
     }
@@ -110,7 +104,6 @@ export class HeroAnimation extends Rule {
       desiredAnimation = 'jump'; // Now implemented!
     } else if (unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0) {
       desiredAnimation = 'walk';
-      console.log(`Hero walking: intendedMove=(${unit.intendedMove.x}, ${unit.intendedMove.y})`);
     } else {
       // Idle animations
       if (unit.meta?.onRooftop) {

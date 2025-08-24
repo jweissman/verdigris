@@ -195,7 +195,7 @@ export class Abilities extends Rule {
         continue; // Skip this unit
       }
 
-      const lastAbilityTick = unit.lastAbilityTick; // Cache property access
+      const lastAbilityTick = unit.lastAbilityTick || unit.meta?.lastAbilityTick; // Check both locations
 
       for (const abilityName of abilities) {
         if (abilityName === "melee" || abilityName === "ranged") {
@@ -292,6 +292,12 @@ export class Abilities extends Rule {
         if (!this.pendingEffects) {
           this.pendingEffects = [];
         }
+        // Update lastAbilityTick IMMEDIATELY to prevent double-triggering
+        if (!unit.lastAbilityTick) {
+          unit.lastAbilityTick = {};
+        }
+        unit.lastAbilityTick[abilityName] = currentTick;
+        
         for (const effect of ability.effects) {
           this.pendingEffects.push({ effect, caster: unit, target });
         }
@@ -311,11 +317,13 @@ export class Abilities extends Rule {
           metaUpdate[usesKey] = currentUses + 1;
         }
         
+        // Update lastAbilityTick directly as a unit property, not in meta
         metaCommands.push({
           type: "meta",
           params: {
             unitId: unit.id,
             meta: metaUpdate,
+            lastAbilityTick: metaUpdate.lastAbilityTick, // Also set as direct property
           },
         });
       }
