@@ -88,6 +88,7 @@ export class AirdropPhysics extends Rule {
           amount: impactDamage,
           force: 8, // Strong knockback
           origin: unit.pos,
+          excludeSource: true, // Don't damage the landing unit itself
         },
       });
     }
