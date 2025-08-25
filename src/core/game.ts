@@ -138,7 +138,7 @@ import Renderer, { createScaledRenderer } from "./renderer";
 class Game {
   public sim: Simulator;
   private lastSimTime: number = 0;
-  protected simTickRate: number = 30; // Simulation runs at 30fps for balanced gameplay
+  protected simTickRate: number = 60; // Increased to 60fps for smoother gameplay
 
   renderer: Renderer;
   private _handleResize: () => void;

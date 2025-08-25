@@ -46,8 +46,10 @@ describe('Hero Rig Weapon System', () => {
     rig.play('breathing');
     
 
+    const armInitial = rig.getPartByName('rarm');
     const weaponInitial = rig.getPartByName('sword');
-    const initialX = weaponInitial?.offset.x || 0;
+    const initialArmX = armInitial?.offset.x || 0;
+    const initialWeaponX = weaponInitial?.offset.x || 0;
     
 
     for (let i = 0; i < 30; i++) {
@@ -55,12 +57,17 @@ describe('Hero Rig Weapon System', () => {
     }
     
 
+    const armFinal = rig.getPartByName('rarm');
     const weaponFinal = rig.getPartByName('sword');
-    const finalX = weaponFinal?.offset.x || 0;
+    const finalArmX = armFinal?.offset.x || 0;
+    const finalWeaponX = weaponFinal?.offset.x || 0;
     
 
-    // Sword position should change as arm moves during breathing
-    expect(Math.abs(finalX - initialX)).toBeGreaterThan(0.01);
+    // Sword should maintain fixed offset from arm
+    // If arm moves, sword moves with it
+    const initialOffset = initialWeaponX - initialArmX;
+    const finalOffset = finalWeaponX - finalArmX;
+    expect(Math.abs(finalOffset - initialOffset)).toBeLessThan(5);
   });
   
   test('available weapons list', () => {

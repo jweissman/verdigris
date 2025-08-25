@@ -38,13 +38,15 @@ export class StrikeCommand extends Command {
         taper: 1.2   // Gentle taper
       });
       
-      // Store attack zones on attacker for visualization
+      // Store attack zones on attacker for visualization and trigger animation
       const transform = new Transform(this.sim);
       transform.updateUnit(attacker.id, {
         meta: {
           ...attacker.meta,
           attackZones: attackZones,
           attackZonesExpiry: this.sim.ticks + 30, // Show for 30 ticks
+          attackStartTick: this.sim.ticks,
+          attackEndTick: this.sim.ticks + 10, // Attack animation duration
         }
       });
 

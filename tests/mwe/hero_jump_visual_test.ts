@@ -21,8 +21,18 @@ describe('Hero Jump Visual Issue', () => {
     });
     
 
+    // Set facing direction first
+    playerControl.setKeyState('a', true);
+    sim.step();
+    playerControl.setKeyState('a', false);
+    
     playerControl.setKeyState(' ', true);
     sim.step(); // One step with space pressed
+    
+    // Check if jump command was queued
+    const jumpCmd = sim.queuedCommands.find(c => c.type === 'jump');
+    console.log('Jump command queued:', jumpCmd);
+    
     playerControl.setKeyState(' ', false); // Release spacebar
     
 
@@ -31,7 +41,7 @@ describe('Hero Jump Visual Issue', () => {
       const h = sim.units.find(u => u.id === 'jump_hero');
       
       if (step <= 2 || h?.meta?.jumping || step === 19) {
-
+        console.log(`Step ${step}: pos.x=${h?.pos.x}, jumping=${h?.meta?.jumping}, facing=${h?.meta?.facing}`);
       }
     }
     
@@ -39,7 +49,7 @@ describe('Hero Jump Visual Issue', () => {
 
     
 
-    expect(finalHero?.pos.x).not.toBe(10); // Should have moved horizontally
+    expect(finalHero?.pos.x).toBeLessThan(10); // Should have moved left
     expect(finalHero?.meta?.jumping).toBe(false); // Should have finished jumping
   });
 });

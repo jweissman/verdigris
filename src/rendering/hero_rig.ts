@@ -423,13 +423,13 @@ export class HeroRig {
         {
           tick: 1,
           parts: {
-            torso: { offset: { x: 0, y: -8 }, rotation: -0.2, frame: 2 },
-            head: { offset: { x: 0, y: -16 }, rotation: -0.2, frame: 2 },
-            larm: { offset: { x: -12, y: -6 }, rotation: 0.6, frame: 2 }, // Arms WIDE
-            rarm: { offset: { x: 12, y: -6 }, rotation: -0.6, frame: 2 },
-            lleg: { offset: { x: -4, y: 12 }, rotation: -0.7, frame: 2 }, // Legs EXTENDED
-            rleg: { offset: { x: 4, y: 12 }, rotation: 0.7, frame: 2 },
-            sword: { rotation: 0.4, scale: 1.3 }, // Sword trails
+            torso: { offset: { x: 0, y: -3 }, rotation: -0.1, frame: 2 }, // Less vertical separation
+            head: { offset: { x: 0, y: -11 }, rotation: -0.1, frame: 2 },
+            larm: { offset: { x: -10, y: -4 }, rotation: 0.4, frame: 2 }, // Arms still wide but less extreme
+            rarm: { offset: { x: 10, y: -4 }, rotation: -0.4, frame: 2 },
+            lleg: { offset: { x: -3, y: 10 }, rotation: -0.4, frame: 2 }, // Some leg rotation
+            rleg: { offset: { x: 3, y: 10 }, rotation: 0.4, frame: 2 },
+            sword: { rotation: 0.3, scale: 1.2 }, // Sword trails
           },
         },
         {
@@ -482,7 +482,8 @@ export class HeroRig {
             head: { offset: { x: -4, y: -10 }, rotation: -0.4, frame: 1 }, // Head turned to target
             lleg: { offset: { x: -3, y: 6 }, rotation: -0.3, frame: 1 }, // Back leg loaded
             rleg: { offset: { x: 5, y: 7 }, rotation: 0.3, frame: 1 }, // Front leg braced
-            sword: { offset: { x: -18, y: -12 }, rotation: -3.0, scale: 1.8 }, // Sword WAY back
+            // Sword follows rarm position + wrist offset
+            sword: { offset: { x: -15 + 6, y: -8 - 3 }, rotation: -2.8 + 0.2, scale: 1.8 }, // Fixed to wrist
           },
         },
         {
@@ -494,7 +495,8 @@ export class HeroRig {
             head: { offset: { x: 7, y: -10 }, rotation: 0.3, frame: 2 }, // Head follows
             lleg: { offset: { x: -5, y: 8 }, rotation: 0.4, frame: 2 }, // Planted hard
             rleg: { offset: { x: 10, y: 5 }, rotation: -0.3, frame: 2 }, // Pushing forward
-            sword: { offset: { x: 26, y: 6 }, rotation: 1.8, scale: 2.5 }, // HUGE sweep arc
+            // Sword follows rarm position + wrist offset
+            sword: { offset: { x: 22 + 8, y: 2 - 2 }, rotation: 1.2 + 0.3, scale: 2.5 }, // Fixed to wrist
           },
         },
         {
@@ -504,7 +506,8 @@ export class HeroRig {
             rarm: { offset: { x: 24, y: 4 }, rotation: 1.5, frame: 2 }, // Overextended
             larm: { offset: { x: -14, y: 3 }, rotation: -0.6, frame: 2 },
             head: { offset: { x: 8, y: -9 }, rotation: 0.35, frame: 2 },
-            sword: { offset: { x: 28, y: 8 }, rotation: 2.2, scale: 2.3 }, // Maximum reach
+            // Sword follows rarm position + wrist offset
+            sword: { offset: { x: 24 + 8, y: 4 - 1 }, rotation: 1.5 + 0.4, scale: 2.3 }, // Fixed to wrist
           },
         },
         {
@@ -514,7 +517,8 @@ export class HeroRig {
             rarm: { offset: { x: 16, y: 0 }, rotation: 0.6, frame: 1 }, // Snapping back
             larm: { offset: { x: -10, y: -1 }, rotation: -0.2, frame: 1 },
             head: { offset: { x: 4, y: -11 }, rotation: 0.1, frame: 1 },
-            sword: { offset: { x: 18, y: 2 }, rotation: 0.8, scale: 1.6 },
+            // Sword follows rarm position + wrist offset
+            sword: { offset: { x: 16 + 6, y: 0 - 2 }, rotation: 0.6 + 0.2, scale: 1.6 }, // Fixed to wrist
           },
         },
         {
@@ -526,7 +530,8 @@ export class HeroRig {
             head: { offset: { x: 0, y: -11 }, rotation: 0, frame: 0 },
             lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 0 },
             rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 0 },
-            sword: { offset: { x: 12, y: -2 }, rotation: 0.2, scale: 1.2 },
+            // Sword follows rarm position + wrist offset
+            sword: { offset: { x: 10 + 4, y: -3 - 1 }, rotation: 0.1 + 0.1, scale: 1.2 }, // Fixed to wrist
           },
         },
         {
@@ -569,7 +574,7 @@ export class HeroRig {
     }
 
     for (const part of this.parts.values()) {
-      part.frame = (part.frame + 0.1) % 3; // Cycle through 3 frames
+      part.frame = (part.frame + 1.0) % 3; // Cycle through 3 frames - 10x faster
     }
 
     if (
@@ -709,28 +714,39 @@ export class HeroRig {
       if (facing === "left") {
         if (part.name === "rarm") part.zIndex = 2;
         else if (part.name === "larm") part.zIndex = 4;
+        // Adjust sword position when facing left
+        else if (part.name === "sword") {
+          // Mirror the offset but keep it relative to the arm
+          const armPart = this.parts.get("rarm");
+          if (armPart) {
+            part.offset = {
+              x: armPart.offset.x - 4, // Flip the offset
+              y: armPart.offset.y - 2,
+            };
+          }
+        }
       } else {
         if (part.name === "larm") part.zIndex = 2;
         else if (part.name === "rarm") part.zIndex = 4;
-      }
 
-      // Apply flip rotation if provided
-      if (rotation > 0) {
-        // Adjust positions for rotation effect
-        const rad = (rotation * Math.PI) / 180;
-        const cos = Math.cos(rad);
-        const sin = Math.sin(rad);
+        // Apply flip rotation if provided
+        if (rotation > 0) {
+          // Adjust positions for rotation effect
+          const rad = (rotation * Math.PI) / 180;
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
 
-        // Rotate offsets around center
-        const cx = part.offset.x;
-        const cy = part.offset.y;
-        part.offset = {
-          x: cx * cos - cy * sin,
-          y: cx * sin + cy * cos,
-        };
+          // Rotate offsets around center
+          const cx = part.offset.x;
+          const cy = part.offset.y;
+          part.offset = {
+            x: cx * cos - cy * sin,
+            y: cx * sin + cy * cos,
+          };
 
-        // Add rotation to part
-        part.rotation = (part.rotation || 0) + rad;
+          // Add rotation to part
+          part.rotation = (part.rotation || 0) + rad;
+        }
       }
     });
 
