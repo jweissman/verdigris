@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 
-// Define basic types for our kinematic system
+
 interface Point2D {
   x: number;
   y: number;
@@ -29,10 +29,10 @@ describe.skip('Kinematics System', () => {
       const start = { x: 0, y: 0 };
       const end = { x: 10, y: 0 };
       
-      // A taut line should have minimal sag
+
       const tautLine = createTautLine(start, end);
       
-      // All points should be on the straight line between start and end
+
       for (const point of tautLine.points) {
         const t = (point.x - start.x) / (end.x - start.x);
         const expectedY = start.y + t * (end.y - start.y);
@@ -47,11 +47,11 @@ describe.skip('Kinematics System', () => {
       
       const catenaryLine = createCatenaryLine(start, end, ropeLength);
       
-      // Middle should sag below the endpoints
+
       const midPoint = catenaryLine.points[Math.floor(catenaryLine.points.length / 2)];
       expect(midPoint.y).toBeGreaterThan(0); // Assuming +y is down
       
-      // Should be symmetric
+
       const leftHalf = catenaryLine.points.slice(0, Math.floor(catenaryLine.points.length / 2));
       const rightHalf = catenaryLine.points.slice(Math.ceil(catenaryLine.points.length / 2)).reverse();
       
@@ -85,7 +85,7 @@ describe.skip('Kinematics System', () => {
         segmentLength: 2
       });
       
-      // Each segment should maintain its length
+
       for (let i = 0; i < chain.segments.length; i++) {
         const segment = chain.segments[i];
         const dx = segment.end.x - segment.start.x;
@@ -104,13 +104,13 @@ describe.skip('Kinematics System', () => {
       
       const originalEnd = { ...chain.segments[chain.segments.length - 1].end };
       
-      // Move anchor
+
       chain.moveAnchor({ x: 7, y: 0 });
       chain.update();
       
       const newEnd = chain.segments[chain.segments.length - 1].end;
       
-      // End should have moved
+
       expect(newEnd.x).not.toBe(originalEnd.x);
     });
     
@@ -129,14 +129,14 @@ describe.skip('Kinematics System', () => {
         totalMass: 10
       });
       
-      // Apply same horizontal force
+
       lightChain.applyForce({ x: 5, y: 0 });
       heavyChain.applyForce({ x: 5, y: 0 });
       
       lightChain.update();
       heavyChain.update();
       
-      // Light chain should move more
+
       const lightDisplacement = getHorizontalDisplacement(lightChain);
       const heavyDisplacement = getHorizontalDisplacement(heavyChain);
       
@@ -159,7 +159,7 @@ describe.skip('Kinematics System', () => {
       
       expect(reached).toBe(true);
       
-      // End effector should be close to target
+
       const endEffector = arm.getEndEffector();
       const distance = Math.sqrt(
         Math.pow(endEffector.x - target.x, 2) + 
@@ -177,13 +177,13 @@ describe.skip('Kinematics System', () => {
         ]
       });
       
-      // Try to reach behind (impossible with constraints)
+
       const target = { x: -5, y: 0 };
       const reached = arm.reachFor(target);
       
       expect(reached).toBe(false);
       
-      // Should be at maximum extension within constraints
+
       const angles = arm.getJointAngles();
       expect(angles[0]).toBeGreaterThanOrEqual(0);
       expect(angles[0]).toBeLessThanOrEqual(Math.PI/4);
@@ -224,7 +224,7 @@ describe.skip('Kinematics System', () => {
       const target = { x: 15, y: 5 };
       grappler.fireAt(target);
       
-      // Rope should extend toward target
+
       const ropeEnd = grappler.getRopeEnd();
       const direction = {
         x: target.x - grappler.origin.x,
@@ -232,7 +232,7 @@ describe.skip('Kinematics System', () => {
       };
       const length = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
       
-      // Should be moving in right direction
+
       expect(ropeEnd.x / direction.x).toBeGreaterThan(0);
       expect(ropeEnd.y / direction.y).toBeGreaterThan(0);
     });
@@ -245,15 +245,15 @@ describe.skip('Kinematics System', () => {
       
       grappler.attachTo({ x: 10, y: 0 });
       
-      // Apply pendulum physics
+
       const initialPos = { ...grappler.origin };
       grappler.applyGravity();
       grappler.update();
       
-      // Should swing down
+
       expect(grappler.origin.y).toBeGreaterThan(initialPos.y);
       
-      // Rope length should remain constant
+
       const ropeLength = grappler.getRopeLength();
       expect(Math.abs(ropeLength - 10)).toBeLessThan(0.1);
     });
@@ -273,11 +273,11 @@ describe.skip('Kinematics System', () => {
       
       hero.equipWeapon(sword, 'right_hand');
       
-      // Move hand
+
       hero.moveHand('right_hand', { x: 52, y: 48 });
       hero.update();
       
-      // Weapon should follow
+
       const weaponPos = hero.getWeaponPosition();
       expect(weaponPos.x).toBeCloseTo(52, 1);
       expect(weaponPos.y).toBeCloseTo(48, 1);
@@ -298,20 +298,20 @@ describe.skip('Kinematics System', () => {
       
       const initialAngle = hero.getWeaponAngle();
       
-      // Perform swing
+
       hero.performSwing();
       hero.update();
       
       const swingAngle = hero.getWeaponAngle();
       
-      // Angle should change during swing
+
       expect(swingAngle).not.toBe(initialAngle);
     });
   });
 });
 
-// Mock implementations for testing
-// These would be replaced with actual implementations
+
+
 
 function createTautLine(start: Point2D, end: Point2D): { points: Point2D[] } {
   const points: Point2D[] = [];
@@ -327,7 +327,7 @@ function createTautLine(start: Point2D, end: Point2D): { points: Point2D[] } {
 }
 
 function createCatenaryLine(start: Point2D, end: Point2D, length: number): { points: Point2D[] } {
-  // Simplified catenary - would use actual hyperbolic cosine in real implementation
+
   const points: Point2D[] = [];
   const segments = 20;
   const sag = (length - Math.abs(end.x - start.x)) * 0.5;
@@ -335,7 +335,7 @@ function createCatenaryLine(start: Point2D, end: Point2D, length: number): { poi
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     const x = start.x + t * (end.x - start.x);
-    // Parabolic approximation of catenary
+
     const y = start.y + 4 * sag * t * (1 - t);
     points.push({ x, y });
   }
@@ -378,13 +378,13 @@ function createChain(config: RopeConfig): any {
       segments[0].start = newPos;
     },
     update: () => {
-      // Simplified update
+
       for (let i = 1; i < segments.length; i++) {
         segments[i].start = segments[i - 1].end;
       }
     },
     applyForce: (force: Point2D) => {
-      // Simplified force application
+
     }
   };
 }
@@ -396,7 +396,7 @@ function getHorizontalDisplacement(chain: any): number {
 function createIKChain(config: any): any {
   return {
     reachFor: (target: Point2D) => {
-      // Simplified IK
+
       return true;
     },
     getEndEffector: () => ({ x: 7, y: 3 }),
@@ -408,9 +408,9 @@ function createFABRIKChain(config: any): any {
   return {
     points: config.points,
     solve: (target: Point2D) => {
-      // Simplified FABRIK
+
       config.points[config.points.length - 1] = target;
-      return 5; // iterations
+      return 5;
     }
   };
 }

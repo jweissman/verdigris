@@ -99,12 +99,12 @@ export class ChangeWeather extends Command {
             id: `leaf_${Date.now()}_${i}`,
             type: "leaf",
             pos: {
-              x: Simulator.rng.random() * this.sim.fieldWidth * 8, // Spread across full width
+              x: Math.floor(Simulator.rng.random() * this.sim.fieldWidth) * 8 + 4, // Center of grid cells
               y: -Simulator.rng.random() * 20, // Start above the field
             },
             vel: {
-              x: Simulator.rng.random() * 0.5 - 0.25,
-              y: 0.2 + Simulator.rng.random() * 0.2,
+              x: 0, // No horizontal movement - fall straight down
+              y: 0.5, // Consistent downward velocity
             },
             z: 10 + Simulator.rng.random() * 30, // Start high in the air
             lifetime: 300 + Simulator.rng.random() * 200, // Longer lifetime to fall across field

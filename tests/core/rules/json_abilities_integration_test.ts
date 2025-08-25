@@ -85,7 +85,7 @@ describe('Abilities Integration', () => {
     console.debug('Priest abilities:', priest.abilities);
     console.debug('Projectiles before:', sim.projectiles.length);
 
-    // Run multiple steps to account for cooldowns
+
     for (let i = 0; i < 10; i++) {
       sim.step();
       if (sim.queuedCommands.length > 0 || sim.projectiles.length > 0) {

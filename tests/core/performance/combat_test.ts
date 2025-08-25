@@ -101,17 +101,17 @@ describe('Realistic Combat Performance', () => {
       });
     }
     
-    // console.log('\nPairwise scaling analysis:');
-    // console.log('Units | Pairs  | Step(ms) | Per-pair(ns)');
-    // console.log('------|--------|----------|-------------');
-    // for (const r of results) {
-    //   console.log(
-    //     `${r.units.toString().padStart(5)} | ` +
-    //     `${r.pairs.toString().padStart(6)} | ` +
-    //     `${r.avgStepTime.toFixed(4).padStart(8)} | ` +
-    //     `${r.timePerPair.toFixed(1).padStart(11)}`
-    //   );
-    // }
+
+
+
+
+
+
+
+
+
+
+
     
 
     const perPairTimes = results.map(r => r.timePerPair);
@@ -182,15 +182,15 @@ describe('Realistic Combat Performance', () => {
     const totalTime = endTime - startTime;
     const avgStepTime = totalTime / steps;
     
-    // console.log(`\n4-way battle (35 units, ${steps} steps):`);
-    // console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
-    // console.log(`  Avg per step: ${avgStepTime.toFixed(4)}ms`);
-    // console.log(`  Battle over: ${battleOver}`);
+
+
+
+
     
     if (battleOver) {
       const survivors = sim.units.filter(u => u.hp > 0);
-      // console.log(`  Survivors: ${survivors.length}`);
-      // console.log(`  Winning team: ${survivors[0]?.team || 'none'}`);
+
+
     }
     
     expect(avgStepTime).toBeLessThan(15); // Slightly higher threshold for complex battle

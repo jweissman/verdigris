@@ -5,7 +5,7 @@ describe('Hero Rig Anchors', () => {
   test('anchors are created and positioned correctly', () => {
     const rig = new HeroRig();
     
-    // Check all anchors exist
+
     const anchorNames = ['hand_l', 'hand_r', 'shoulder_l', 'shoulder_r', 
                          'hip_l', 'hip_r', 'foot_l', 'foot_r', 'crown', 'chest'];
     
@@ -21,39 +21,39 @@ describe('Hero Rig Anchors', () => {
     const rig = new HeroRig();
     rig.play('breathing');
     
-    // Get initial hand position
+
     const handInitial = rig.getAnchor('hand_r');
     const initialY = handInitial?.position.y || 0;
     
-    // Advance breathing animation (torso moves up)
+
     for (let i = 0; i < 30; i++) {
       rig.update(1);
     }
     
-    // Hand should follow arm movement
+
     const handFinal = rig.getAnchor('hand_r');
     const finalY = handFinal?.position.y || 0;
     
-    // Since arms rotate during breathing, hand position should change
+
     expect(finalY).not.toBe(initialY);
   });
   
   test('weapon follows hand anchor', () => {
     const rig = new HeroRig();
     
-    // Get right hand anchor (where sword would attach)
+
     const handAnchor = rig.getAnchor('hand_r');
     expect(handAnchor).toBeDefined();
     
-    // The sword part should be positioned near the hand
+
     const sword = rig.getPartByName('sword');
     const hand = rig.getAnchor('hand_r');
     
-    // Sword should be positioned relative to hand
+
     expect(sword).toBeDefined();
     expect(hand).toBeDefined();
     
-    // Basic proximity check - sword is near the right arm/hand area
+
     const armPart = rig.getPartByName('rarm');
     expect(armPart).toBeDefined();
     expect(sword?.offset.x).toBeGreaterThan(0); // On right side

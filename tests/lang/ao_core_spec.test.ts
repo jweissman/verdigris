@@ -270,17 +270,17 @@ describe('Ao Core Language Specification', () => {
         }
       };
       
-      // Low health and enemy nearby
+
       expect(Ao.eval('self.hp < 30 && closest.enemy()', ctx)).toBeTruthy();
       
-      // Check if we should retreat
+
       expect(Ao.eval('self.hp < self.maxHp * 0.3 && count.enemies_in_range(10) > 2', ctx))
         .toBe(true);
       
-      // Check if ally needs help
+
       expect(Ao.eval('closest.ally()?.hp < 30', ctx)).toBe(true);
       
-      // Complex targeting priority
+
       expect(Ao.eval('closest.enemy()?.hp > 50 && distance(closest.enemy()) <= 10', ctx))
         .toBe(true);
     });
@@ -341,7 +341,7 @@ describe('Ao Core Language Specification', () => {
       }
       const elapsed = performance.now() - start;
       
-      // Should be fast even without caching
+
       expect(elapsed).toBeLessThan(50);
     });
     

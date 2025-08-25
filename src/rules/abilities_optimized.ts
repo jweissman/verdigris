@@ -136,15 +136,13 @@ export class AbilitiesOptimized extends Rule {
 
         this.queueAbilityEffects(ability, idx, targetIdx, arrays, unitId);
 
-        // Build the meta update
         const metaUpdate: any = {
           lastAbilityTick: {
             ...(coldData.lastAbilityTick || {}),
             [abilityName]: currentTick,
           },
         };
-        
-        // Increment uses counter if ability has maxUses
+
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
           const currentUses = coldData.meta?.[usesKey] || 0;

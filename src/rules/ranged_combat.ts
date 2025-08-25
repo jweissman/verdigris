@@ -43,13 +43,11 @@ export class RangedCombat extends Rule {
       let closestEnemyIdx = -1;
       let minDistSq = 36; // 6² - original max range
 
-      // Optimized enemy search with early termination  
       for (const enemyIdx of activeIndices) {
         if (enemyIdx === idx) continue;
         if (state[enemyIdx] === 5 || hp[enemyIdx] <= 0) continue;
         if (team[enemyIdx] === unitTeam) continue; // Same team
 
-        // Quick distance check with Manhattan distance first (cheaper than Euclidean)
         const absDx = Math.abs(posX[enemyIdx] - unitX);
         const absDy = Math.abs(posY[enemyIdx] - unitY);
         if (absDx > 6 || absDy > 6) continue; // Early reject based on Manhattan distance
@@ -63,8 +61,7 @@ export class RangedCombat extends Rule {
         if (distSq < minDistSq) {
           minDistSq = distSq;
           closestEnemyIdx = enemyIdx;
-          
-          // Early termination if we find a very close enemy
+
           if (distSq <= 9) break; // 3² - stop searching if enemy is very close
         }
       }
@@ -136,7 +133,6 @@ export class RangedCombat extends Rule {
         if (other.state === "dead" || other.hp <= 0) continue;
         if (other.team === unit.team) continue;
 
-        // Quick Manhattan distance check first
         const absDx = Math.abs(other.pos.x - unit.pos.x);
         const absDy = Math.abs(other.pos.y - unit.pos.y);
         if (absDx > 6 || absDy > 6) continue; // Early reject
@@ -148,8 +144,7 @@ export class RangedCombat extends Rule {
         if (dist < minDist) {
           minDist = dist;
           closestEnemy = other;
-          
-          // Early termination for close enemies
+
           if (dist <= 3) break;
         }
       }

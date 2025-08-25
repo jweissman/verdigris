@@ -91,7 +91,6 @@ export class Ao {
    */
   interpret(expression: string): any {
     try {
-      // Cache parsed expressions
       let match = Ao.parseCache.get(expression);
       if (!match) {
         match = aoGrammar.match(expression);
@@ -242,14 +241,11 @@ export class Ao {
       },
 
       Property(key, _, value) {
-        // Handle both ident and string keys
         const keyNode = key.child(0);
         let k;
-        if (keyNode.ctorName === 'string') {
-          // Remove quotes from string keys
+        if (keyNode.ctorName === "string") {
           k = keyNode.children[1].sourceString;
         } else {
-          // Use ident as-is
           k = keyNode.sourceString;
         }
         return [k, value.eval()];

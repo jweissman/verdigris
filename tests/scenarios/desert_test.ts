@@ -94,7 +94,7 @@ describe('Desert', () => {
 
       sim.projectiles = [];
       
-      // Queue grapple command to trigger the ability
+
       sim.queuedCommands.push({
         type: 'grapple',
         unitId: grappler.id,
@@ -109,7 +109,7 @@ describe('Desert', () => {
       const grapples = sim.projectiles.filter(p => p.type === 'grapple');
       expect(grapples.length).toBeGreaterThan(0);
     } else {
-      // Skip test if no grappler found
+
       expect(true).toBe(true);
     }
   });
@@ -780,7 +780,7 @@ describe('Desert', () => {
 
   });
 
-  // very slow?
+
   it.skip('waterbearers should detect hidden enemies', () => {
     const sim = new Simulator();
     const loader = new SceneLoader(sim);

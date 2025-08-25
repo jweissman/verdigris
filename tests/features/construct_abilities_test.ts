@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 describe('Construct Abilities', () => {
-  // flaky/order-dependent?
+
   it.skip('should trigger clanker explosion when enemy gets close', () => {
     const sim = new Simulator();
     const clankerData = Encyclopaedia.unit('clanker');

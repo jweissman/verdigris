@@ -72,35 +72,37 @@ export default class Orthographic extends View {
       unit,
       this.unitInterpolations,
     );
-    
-    // Render each body part
+
     const parts = unit.meta.rig;
     if (!parts || !Array.isArray(parts)) return;
-    
+
     for (const part of parts) {
       const sprite = this.sprites.get(part.sprite);
       if (!sprite || !sprite.complete) {
-        console.warn(`Missing sprite for part ${part.name}: ${part.sprite}`, sprite);
-        // Draw blue square as fallback
-        this.ctx.fillStyle = 'blue';
+        console.warn(
+          `Missing sprite for part ${part.name}: ${part.sprite}`,
+          sprite,
+        );
+
+        this.ctx.fillStyle = "blue";
         this.ctx.fillRect(
           renderPos.x * 8 + part.offset.x,
           renderPos.y * 8 + part.offset.y - renderPos.z * 8,
-          16, 16
+          16,
+          16,
         );
         continue;
       }
-      
-      // Calculate position for this part
+
       const pixelX = Math.round(renderPos.x * 8 + part.offset.x);
-      const pixelY = Math.round(renderPos.y * 8 + part.offset.y - renderPos.z * 8);
-      
-      // Calculate frame position (3 frames at 16x16)
+      const pixelY = Math.round(
+        renderPos.y * 8 + part.offset.y - renderPos.z * 8,
+      );
+
       const frameX = part.frame * 16;
-      
+
       this.ctx.save();
-      
-      // Apply rotation if needed
+
       if (part.rotation) {
         this.ctx.translate(pixelX + 8, pixelY + 8);
         this.ctx.rotate(part.rotation);
@@ -108,18 +110,23 @@ export default class Orthographic extends View {
       } else {
         this.ctx.translate(pixelX, pixelY);
       }
-      
-      // Draw the sprite frame
+
       this.ctx.drawImage(
         sprite,
-        frameX, 0, 16, 16, // Source: 16x16 frame
-        0, 0, 16, 16 // Dest: 16x16 at translated position
+        frameX,
+        0,
+        16,
+        16, // Source: 16x16 frame
+        0,
+        0,
+        16,
+        16, // Dest: 16x16 at translated position
       );
-      
+
       this.ctx.restore();
     }
   }
-  
+
   private showUnit(unit: Unit) {
     if (!this.unitRenderer.shouldRenderUnit(unit)) {
       return;
@@ -128,8 +135,7 @@ export default class Orthographic extends View {
     if (this.unitRenderer.shouldBlinkFromDamage(unit, this.animationTime)) {
       return;
     }
-    
-    // Check if unit has a rig (modular body parts)
+
     if (unit.meta?.rig) {
       this.showRiggedUnit(unit);
       return;
@@ -154,14 +160,13 @@ export default class Orthographic extends View {
     const gridCenterX = Math.round(renderX * cellWidth + cellWidth / 2);
     const gridCenterY = Math.round(renderY * cellHeight + cellHeight / 2);
 
-    // Calculate offset based on actual sprite dimensions
     const pixelX = gridCenterX - spriteWidth / 2;
     const pixelY = gridCenterY - spriteHeight + cellHeight / 2; // Align bottom of sprite with grid
 
     let realPixelY = pixelY; // Default to pixelY unless adjusted for z height
 
     const sprite = this.sprites.get(unit.sprite);
-    
+
     if (sprite && sprite.complete) {
       const frameIndex = this.unitRenderer.getAnimationFrame(
         unit,
@@ -200,7 +205,6 @@ export default class Orthographic extends View {
 
       this.ctx.restore();
     } else {
-      // Fallback rendering when sprite not loaded
       const fallbackX = Math.round(renderX * 8);
       const fallbackY = Math.round(renderY * 8);
       this.ctx.fillStyle = this.unitRenderer.getUnitColor(unit);

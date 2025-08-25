@@ -10,33 +10,30 @@ export class AttackAnimationCleanup extends Rule {
     const commands: QueuedCommand[] = [];
     const currentTick = context.getCurrentTick();
     const allUnits = context.getAllUnits();
-    
+
     for (const unit of allUnits) {
-      // Check if unit is in attack state and animation should end
-      if (unit.state === 'attack' && unit.meta?.attackEndTick) {
+      if (unit.state === "attack" && unit.meta?.attackEndTick) {
         if (currentTick >= unit.meta.attackEndTick) {
-          // Reset to idle state
           commands.push({
-            type: 'meta',
+            type: "meta",
             params: {
               unitId: unit.id,
               meta: {
                 ...unit.meta,
                 attackStartTick: undefined,
-                attackEndTick: undefined
-              }
-            }
+                attackEndTick: undefined,
+              },
+            },
           });
-          
-          // Actually reset the unit state directly
+
           const unitToReset = context.findUnitById(unit.id);
           if (unitToReset) {
-            unitToReset.state = 'idle';
+            unitToReset.state = "idle";
           }
         }
       }
     }
-    
+
     return commands;
   }
 }

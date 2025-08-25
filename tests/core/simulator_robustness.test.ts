@@ -2,11 +2,11 @@ import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 
 describe.skip('Simulator Robustness', () => {
-  // takes 8000ms??
+
   test.skip('simulator can handle unit array capacity limits gracefully', () => {
     const sim = new Simulator(100, 100);
     
-    // The simulator sets capacity to 10000 in constructor
+
     const unitCount = 10001;
     let successCount = 0;
     
@@ -32,7 +32,7 @@ describe.skip('Simulator Robustness', () => {
       }
     }
     
-    // Should handle up to capacity (10000 as set in simulator constructor)
+
     expect(successCount).toBe(10000);
     expect(sim.units.length).toBe(10000);
   });
@@ -40,7 +40,7 @@ describe.skip('Simulator Robustness', () => {
   test('simulator can reset and reuse properly', () => {
     const sim = new Simulator(50, 50);
     
-    // Add some units
+
     for (let i = 0; i < 100; i++) {
       sim.addUnit({
         id: `first_batch_${i}`,
@@ -58,7 +58,7 @@ describe.skip('Simulator Robustness', () => {
       });
     }
     
-    // Run some ticks
+
     for (let i = 0; i < 10; i++) {
       sim.step();
     }
@@ -66,13 +66,13 @@ describe.skip('Simulator Robustness', () => {
     expect(sim.units.length).toBe(100);
     expect(sim.ticks).toBe(10);
     
-    // Reset the simulator
+
     sim.reset();
     
     expect(sim.units.length).toBe(0);
     expect(sim.ticks).toBe(0);
     
-    // Add units again
+
     for (let i = 0; i < 50; i++) {
       sim.addUnit({
         id: `second_batch_${i}`,
@@ -92,7 +92,7 @@ describe.skip('Simulator Robustness', () => {
     
     expect(sim.units.length).toBe(50);
     
-    // Run some more ticks
+
     for (let i = 0; i < 5; i++) {
       sim.step();
     }
@@ -103,9 +103,9 @@ describe.skip('Simulator Robustness', () => {
   test('simulator handles repeated resets without memory leaks', () => {
     const sim = new Simulator(30, 30);
     
-    // Simulate multiple battle rounds
+
     for (let round = 0; round < 10; round++) {
-      // Add units for this round
+
       for (let i = 0; i < 20; i++) {
         sim.addUnit({
           id: `round${round}_unit${i}`,
@@ -123,17 +123,17 @@ describe.skip('Simulator Robustness', () => {
         });
       }
       
-      // Run battle for a few ticks
+
       for (let tick = 0; tick < 20; tick++) {
         sim.step();
       }
       
-      // Reset for next round
+
       sim.reset();
       expect(sim.units.length).toBe(0);
     }
     
-    // After all rounds, simulator should be clean
+
     expect(sim.units.length).toBe(0);
     expect(sim.ticks).toBe(0);
   });
@@ -141,7 +141,7 @@ describe.skip('Simulator Robustness', () => {
   test('simulator maintains stability with toymaker spawning units', () => {
     const sim = new Simulator(50, 50);
     
-    // Add toymakers that will spawn bots
+
     for (let i = 0; i < 5; i++) {
       sim.addUnit({
         id: `toymaker_${i}`,
@@ -162,15 +162,15 @@ describe.skip('Simulator Robustness', () => {
     
     const initialCount = sim.units.length;
     
-    // Run for many ticks to trigger spawning
+
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
     
-    // Should have more units due to spawning
+
     expect(sim.units.length).toBeGreaterThan(initialCount);
     
-    // Reset should clear everything
+
     sim.reset();
     expect(sim.units.length).toBe(0);
   });

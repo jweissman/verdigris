@@ -28,22 +28,22 @@ export class Damage extends Command {
     const transform = this.sim.getTransform();
 
     let finalDamage = amount;
-    
-    // Apply brittle modifier first (doubles damage)
+
     if (target.meta?.brittle) {
       finalDamage = finalDamage * 2;
     }
-    
-    // Apply damage reduction from meta (e.g., Mechatron's 0.2 = 20% reduction)
-    if (target.meta?.damageReduction && typeof target.meta.damageReduction === 'number') {
+
+    if (
+      target.meta?.damageReduction &&
+      typeof target.meta.damageReduction === "number"
+    ) {
       finalDamage = Math.floor(finalDamage * (1 - target.meta.damageReduction));
     }
 
-    // Apply armor (flat damage reduction)
-    if (target.meta?.armor && typeof target.meta.armor === 'number') {
+    if (target.meta?.armor && typeof target.meta.armor === "number") {
       finalDamage = Math.max(0, finalDamage - target.meta.armor);
     }
-    
+
     const perdurance = target.meta?.perdurance;
     if (perdurance) {
       if (perdurance === "spectral" && aspect === "physical") {
@@ -55,12 +55,10 @@ export class Damage extends Command {
       }
 
       if (perdurance === "fiendish" && aspect === "physical") {
-        // 50% damage resistance to physical
         finalDamage = Math.floor(finalDamage * 0.5);
       }
 
       if (perdurance === "sturdiness") {
-        // Sturdiness caps damage at 1, even after brittle
         finalDamage = 1;
       }
 

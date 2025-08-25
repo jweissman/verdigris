@@ -7,10 +7,10 @@ describe('Hero Rig Engine Integration', () => {
   test('hero with useRig gets animated body parts', () => {
     const sim = new Simulator(40, 40);
     
-    // Add hero animation rule
+
     sim.rulebook.push(new HeroAnimation());
     
-    // Create hero with rig
+
     const hero = sim.addUnit({
       id: 'rigged_hero',
       pos: { x: 10, y: 10 },
@@ -23,17 +23,17 @@ describe('Hero Rig Engine Integration', () => {
     });
     
     
-    // Step to trigger animation rule
+
     sim.step();
     
-    // Hero should have rig parts in meta
+
     const riggedHero = sim.units.find(u => u.id === 'rigged_hero');
     
     
     expect(riggedHero?.meta?.rig).toBeDefined();
     expect(riggedHero?.meta?.rig?.length).toBe(7); // 7 body parts
     
-    // Check parts have correct properties
+
     const torso = riggedHero?.meta?.rig?.find((p: any) => p.name === 'torso');
     
     expect(torso).toBeDefined();
@@ -57,14 +57,14 @@ describe('Hero Rig Engine Integration', () => {
       }
     });
     
-    // Get initial torso position
+
     sim.step();
     const hero1 = sim.units.find(u => u.id === 'breathing_hero');
     const torso1 = hero1?.meta?.rig?.find((p: any) => p.name === 'torso');
     const initialY = torso1?.offset?.y || 0;
     
     
-    // Advance 4 ticks (half of 8-tick breathing cycle)
+
     for (let i = 0; i < 4; i++) {
       sim.step();
     }
@@ -74,9 +74,9 @@ describe('Hero Rig Engine Integration', () => {
     const finalY = torso2?.offset?.y || 0;
     
     
-    // Should have moved (breathing)
+
     expect(finalY).not.toBe(initialY);
-    // At tick 4, should be at peak of breath (breathAmount = 1)
+
     expect(Math.abs(finalY)).toBeGreaterThan(0); // Should be negative (moved up)
   });
   
@@ -96,7 +96,7 @@ describe('Hero Rig Engine Integration', () => {
     });
     
     
-    // Use hero command to move right
+
     sim.queuedCommands.push({
       type: 'hero',
       params: {
@@ -108,14 +108,14 @@ describe('Hero Rig Engine Integration', () => {
     
     const heroAfterCommand = sim.units.find(u => u.id === 'commanded_hero');
     
-    // First step sets intendedMove
+
     expect(heroAfterCommand?.intendedMove.x).toBe(1);
     
     sim.step(); // Second step applies movement
     const movedHero = sim.units.find(u => u.id === 'commanded_hero');
     expect(movedHero?.pos.x).toBe(11);
     
-    // Rig should still be present
+
     expect(movedHero?.meta?.rig).toBeDefined();
   });
   
@@ -134,7 +134,7 @@ describe('Hero Rig Engine Integration', () => {
       }
     });
     
-    // Hero jump command
+
     sim.queuedCommands.push({
       type: 'hero',
       params: {
@@ -149,7 +149,7 @@ describe('Hero Rig Engine Integration', () => {
     expect(jumpingHero?.meta?.jumping).toBe(true);
     expect(jumpingHero?.meta?.rig).toBeDefined();
     
-    // Complete jump
+
     for (let i = 0; i < 20; i++) {
       sim.step();
     }

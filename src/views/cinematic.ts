@@ -140,19 +140,17 @@ export default class CinematicView extends View {
       this.ctx.fill();
       this.ctx.restore();
 
-      // Use centralized renderer with scaling
       const pixelX = cinematicX;
       const pixelY = Math.round(finalY);
-      
+
       this.ctx.save();
-      // Apply cinematic scaling
+
       const scaleX = pixelWidth / baseWidth;
       const scaleY = pixelHeight / baseHeight;
       this.ctx.translate(pixelX, pixelY);
       this.ctx.scale(scaleX, scaleY);
       this.ctx.translate(-pixelX, -pixelY);
-      
-      // Use centralized unit renderer
+
       this.unitRenderer.renderUnit(
         this.ctx,
         unit,
@@ -160,8 +158,8 @@ export default class CinematicView extends View {
         pixelX,
         pixelY,
         {
-          flipHorizontal: !this.unitRenderer.shouldFlipSprite(unit)
-        }
+          flipHorizontal: !this.unitRenderer.shouldFlipSprite(unit),
+        },
       );
       this.ctx.restore();
     } else {

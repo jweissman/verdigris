@@ -23,12 +23,12 @@ describe('Hero Weapon Switching', () => {
       }
     });
     
-    // Initial state - should have default sword
+
     sim.step();
     let heroUnit = sim.units.find(u => u.id === 'weapon_hero');
     expect(heroUnit?.meta?.weapon).toBeUndefined(); // Default is sword
     
-    // Switch to spear (key 2)
+
     playerControl.setKeyState('2', true);
     sim.step();
     playerControl.setKeyState('2', false);
@@ -36,7 +36,7 @@ describe('Hero Weapon Switching', () => {
     heroUnit = sim.units.find(u => u.id === 'weapon_hero');
     expect(heroUnit?.meta?.weapon).toBe('spear');
     
-    // Switch to axe (key 3)
+
     playerControl.setKeyState('3', true);
     sim.step();
     playerControl.setKeyState('3', false);
@@ -44,7 +44,7 @@ describe('Hero Weapon Switching', () => {
     heroUnit = sim.units.find(u => u.id === 'weapon_hero');
     expect(heroUnit?.meta?.weapon).toBe('axe');
     
-    // Switch to bow (key 4)
+
     playerControl.setKeyState('4', true);
     sim.step();
     playerControl.setKeyState('4', false);
@@ -52,7 +52,7 @@ describe('Hero Weapon Switching', () => {
     heroUnit = sim.units.find(u => u.id === 'weapon_hero');
     expect(heroUnit?.meta?.weapon).toBe('bow');
     
-    // Switch back to sword (key 1)
+
     playerControl.setKeyState('1', true);
     sim.step();
     playerControl.setKeyState('1', false);
@@ -80,7 +80,7 @@ describe('Hero Weapon Switching', () => {
       }
     });
     
-    // Switch to staff (key 6)
+
     playerControl.setKeyState('6', true);
     sim.step();
     playerControl.setKeyState('6', false);
@@ -88,23 +88,25 @@ describe('Hero Weapon Switching', () => {
     let heroUnit = sim.units.find(u => u.id === 'persist_hero');
     expect(heroUnit?.meta?.weapon).toBe('staff');
     
-    // Move right
+
     playerControl.setKeyState('d', true);
-    sim.step();
-    sim.step();
+    // Need more steps due to movement delay (moves every 3 ticks)
+    for (let i = 0; i < 6; i++) {
+      sim.step();
+    }
     playerControl.setKeyState('d', false);
     
-    // Weapon should still be staff
+
     heroUnit = sim.units.find(u => u.id === 'persist_hero');
     expect(heroUnit?.meta?.weapon).toBe('staff');
     expect(heroUnit?.pos.x).toBeGreaterThan(10);
     
-    // Jump
+
     playerControl.setKeyState(' ', true);
     sim.step();
     playerControl.setKeyState(' ', false);
     
-    // Weapon should still be staff
+
     heroUnit = sim.units.find(u => u.id === 'persist_hero');
     expect(heroUnit?.meta?.weapon).toBe('staff');
     expect(heroUnit?.meta?.jumping).toBe(true);

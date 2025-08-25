@@ -196,7 +196,7 @@ describe('Mesoworm - Medium Segmented Creature', () => {
       const initialHeadHp = headUnit!.hp;
       
 
-      // Queue damage command directly
+
       sim.queuedCommands.push({
         type: 'damage',
         params: {

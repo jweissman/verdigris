@@ -362,7 +362,7 @@ describe('Mechatron', () => {
     sim.forceAbility(mechatronist.id, 'tacticalOverride', mechatronist.pos);
     sim.step(); // Process the commands
       
-    // Get updated units from simulator
+
     const updatedConstruct1 = sim.units.find(u => u.id === construct1.id)!;
     const updatedConstruct2 = sim.units.find(u => u.id === construct2.id)!;
 

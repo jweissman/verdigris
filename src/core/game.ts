@@ -87,7 +87,6 @@ import penguin from "../assets/sprites/penguin.png";
 // @ts-ignore
 import ninja from "../assets/sprites/ninja.png";
 
-// Hero body parts (16x16, 3 frames each)
 // @ts-ignore
 import heroHead from "../assets/sprites/hero-head.png";
 // @ts-ignore
@@ -257,7 +256,7 @@ class Game {
     { name: "penguin", src: penguin },
     { name: "ninja", src: ninja },
     { name: "cell-effects", src: cellEffects },
-    // Hero body parts
+
     { name: "hero-head", src: heroHead },
     { name: "hero-torso", src: heroTorso },
     { name: "hero-larm", src: heroLarm },
@@ -314,7 +313,7 @@ class Game {
     let master = Game.spriteList;
     master.forEach(({ name, src }) => {
       const img = new Image();
-      // Set the sprite immediately so it's available even if not loaded
+
       sprites.set(name, img);
       img.onload = () => {
         console.debug(`Loaded sprite: ${name}`);

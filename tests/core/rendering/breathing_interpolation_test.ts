@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 
-// Simple interpolation for breathing animation
+
 export function interpolate(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
@@ -15,7 +15,7 @@ export class BreathingAnimation {
   private time: number = 0;
   private period: number = 60; // 60 ticks for full breath cycle
   
-  // Two key poses for breathing
+
   private inhale: BreathingPose = {
     chestY: -2,  // Chest rises
     headY: -10,  // Head lifts slightly
@@ -33,7 +33,7 @@ export class BreathingAnimation {
   }
   
   getCurrentPose(): BreathingPose {
-    // Cosine wave for smooth breathing (starts at exhale)
+
     const phase = (this.time % this.period) / this.period;
     const breathAmount = (1 - Math.cos(phase * Math.PI * 2)) / 2; // 0 to 1, starts at 0 (exhale)
     
@@ -56,7 +56,7 @@ describe('Breathing Interpolation', () => {
     const anim = new BreathingAnimation();
     const pose = anim.getCurrentPose();
     
-    // Should start near exhale position
+
     expect(pose.chestY).toBeCloseTo(0, 1);
     expect(pose.headY).toBeCloseTo(-8, 1);
     expect(pose.armRotation).toBeCloseTo(0, 1);
@@ -68,7 +68,7 @@ describe('Breathing Interpolation', () => {
     
     const pose = anim.getCurrentPose();
     
-    // Should be at inhale position
+
     expect(pose.chestY).toBeCloseTo(-2, 1);
     expect(pose.headY).toBeCloseTo(-10, 1);
     expect(pose.armRotation).toBeCloseTo(0.1, 1);
@@ -80,7 +80,7 @@ describe('Breathing Interpolation', () => {
     
     const pose = anim.getCurrentPose();
     
-    // Should be back at exhale
+
     expect(pose.chestY).toBeCloseTo(0, 1);
     expect(pose.headY).toBeCloseTo(-8, 1);
     expect(pose.armRotation).toBeCloseTo(0, 1);
@@ -93,7 +93,7 @@ describe('Breathing Interpolation', () => {
     anim.update(60); // Full cycle
     const endPose = anim.getCurrentPose();
     
-    // Should be back where we started
+
     expect(endPose.chestY).toBeCloseTo(startPose.chestY, 1);
     expect(endPose.headY).toBeCloseTo(startPose.headY, 1);
     expect(endPose.armRotation).toBeCloseTo(startPose.armRotation, 1);

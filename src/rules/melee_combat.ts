@@ -69,22 +69,18 @@ export class MeleeCombat extends Rule {
         const team1 = arrays.team[idxA];
         const isHero = coldA?.tags?.includes("hero");
         const isControlled = coldA?.meta?.controlled;
-        
-        // Mark if this unit already attacked (for heroes with special attacks)
+
         let heroAlreadyAttacked = false;
 
-        // Hero special attack - wide visor AOE (only if not controlled)
         if (isHero && !isControlled) {
           const facing = coldA?.meta?.facing || "right";
           const currentTick = context.getCurrentTick();
           const attackerLastAttack = this.lastAttacks.get(attackerId) || -100;
           const attackCooldown = 5; // Faster attacks for hero
-          
-          // Check cooldown once for the hero
+
           if (currentTick - attackerLastAttack >= attackCooldown) {
             this.lastAttacks.set(attackerId, currentTick);
-            
-            // Find all enemies in hero's range and attack them ALL
+
             for (let j = 0; j < count; j++) {
               const idxB = activeIndices[j];
               if (idxB === idxA) continue;
@@ -98,10 +94,9 @@ export class MeleeCombat extends Rule {
 
               if (distSq > heroRangeSq) continue;
 
-              // Check if target is in the visor cone based on facing
-              // Make the cone VERY wide - basically a half-circle
               let inCone = false;
-              if (facing === "right" && dx >= -1) inCone = true; // Everything not directly behind
+              if (facing === "right" && dx >= -1)
+                inCone = true; // Everything not directly behind
               else if (facing === "left" && dx <= 1) inCone = true;
               else if (facing === "up" && dy <= 1) inCone = true;
               else if (facing === "down" && dy >= -1) inCone = true;
@@ -112,7 +107,6 @@ export class MeleeCombat extends Rule {
               if (coldB?.meta?.jumping || coldB?.tags?.includes("noncombatant"))
                 continue;
 
-              // Heavy damage with knockback - attack THIS enemy
               commands.push({
                 type: "strike",
                 unitId: attackerId,
@@ -120,12 +114,11 @@ export class MeleeCombat extends Rule {
                   targetId: targetId,
                   damage: arrays.dmg[idxA] * 2, // Double damage for hero
                   knockback: 3, // Strong knockback
-                  aspect: "heroic"
+                  aspect: "heroic",
                 },
               });
             }
-            
-            // Visual feedback - attack state
+
             commands.push({
               type: "meta",
               params: {
@@ -137,17 +130,15 @@ export class MeleeCombat extends Rule {
                 },
               },
             });
-            
+
             heroAlreadyAttacked = true;
           }
         }
-        
-        // Skip controlled heroes or heroes that already attacked from normal melee
+
         if ((isHero && isControlled) || heroAlreadyAttacked) {
           continue;
         }
 
-        // Normal melee combat
         for (let j = i + 1; j < count; j++) {
           const idxB = activeIndices[j];
 
@@ -170,14 +161,15 @@ export class MeleeCombat extends Rule {
           this.engagements.set(attackerId, targetId);
           this.engagements.set(targetId, attackerId);
 
-          // Add attack cooldown to prevent simultaneous deaths
           const currentTick = context.getCurrentTick();
           const attackerLastAttack = this.lastAttacks.get(attackerId) || -100;
           const targetLastAttack = this.lastAttacks.get(targetId) || -100;
           const attackCooldown = 5; // Reduced cooldown for faster combat
-          
-          const attackerCanAttack = currentTick - attackerLastAttack >= attackCooldown;
-          const targetCanAttack = currentTick - targetLastAttack >= attackCooldown;
+
+          const attackerCanAttack =
+            currentTick - attackerLastAttack >= attackCooldown;
+          const targetCanAttack =
+            currentTick - targetLastAttack >= attackCooldown;
 
           if (attackerCanAttack) {
             this.registerHit(
@@ -190,12 +182,8 @@ export class MeleeCombat extends Rule {
           }
 
           if (targetCanAttack && attackerCanAttack) {
-            // Only counter-attack if both can attack - use unit index for deterministic asymmetry
-            // Lower index attacks first (since they were deployed first)
             if (idxA < idxB) {
-              // Attacker has priority, target doesn't counter this tick
             } else {
-              // Target has priority, they counter-attack
               this.registerHit(
                 targetId,
                 attackerId,

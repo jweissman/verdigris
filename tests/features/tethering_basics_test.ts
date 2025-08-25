@@ -66,13 +66,13 @@ describe('Tethering Basics - Step by Step', () => {
 
       const grappleProjectile = sim.projectiles.find(p => p.type === 'grapple');
       if (grappleProjectile) {
-        // console.log(`Step ${i+1}: Grapple at (${grappleProjectile.pos.x.toFixed(1)}, ${grappleProjectile.pos.y.toFixed(1)}), target at (10, 5)`);
+
       }
       
 
       const heavyUnit = sim.units.find(u => u.id === 'heavy-1');
       if (heavyUnit?.meta?.grappled) {
-        // console.log(`Grapple hit at step ${i+1}`);
+
         break;
       }
     }

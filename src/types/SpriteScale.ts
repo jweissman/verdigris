@@ -3,18 +3,21 @@
  * Each scale represents a different sprite dimension category
  */
 export enum SpriteScale {
-  PIXIE = "pixie",       // 8x8 - tiny creatures
-  FOLK = "folk",         // 16x16 - standard humanoids and creatures
+  PIXIE = "pixie", // 8x8 - tiny creatures
+  FOLK = "folk", // 16x16 - standard humanoids and creatures
   CREATURE = "creature", // 24x24 - larger creatures and mounts
-  HERO = "hero",         // 48x48 - hero units
-  TITAN = "titan",       // 64x64 - huge creatures
-  DEITY = "deity"        // 128x128 - godlike beings
+  HERO = "hero", // 48x48 - hero units
+  TITAN = "titan", // 64x64 - huge creatures
+  DEITY = "deity", // 128x128 - godlike beings
 }
 
 /**
  * Get sprite dimensions for a given scale
  */
-export function getSpriteDimensions(scale: SpriteScale): { width: number; height: number } {
+export function getSpriteDimensions(scale: SpriteScale): {
+  width: number;
+  height: number;
+} {
   switch (scale) {
     case SpriteScale.PIXIE:
       return { width: 8, height: 8 };
@@ -37,33 +40,29 @@ export function getSpriteDimensions(scale: SpriteScale): { width: number; height
  * Determine appropriate scale based on unit type/tags
  */
 export function getUnitScale(unit: any): SpriteScale {
-  // Check explicit scale in meta
   if (unit.meta?.scale) {
     return unit.meta.scale;
   }
-  
-  // Check for size tags
+
   if (unit.tags?.includes("pixie") || unit.tags?.includes("tiny")) {
     return SpriteScale.PIXIE;
   }
-  
+
   if (unit.tags?.includes("hero") || unit.tags?.includes("champion")) {
     return SpriteScale.HERO;
   }
-  
+
   if (unit.tags?.includes("titan") || unit.tags?.includes("colossal")) {
     return SpriteScale.TITAN;
   }
-  
+
   if (unit.tags?.includes("deity") || unit.tags?.includes("god")) {
     return SpriteScale.DEITY;
   }
-  
-  // Check for huge meta flag (legacy)
+
   if (unit.meta?.huge) {
     return SpriteScale.TITAN;
   }
-  
-  // Default to folk size
+
   return SpriteScale.FOLK;
 }

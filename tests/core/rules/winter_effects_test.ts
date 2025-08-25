@@ -148,7 +148,7 @@ describe('Winter Effects System (BiomeEffects)', () => {
     expect(sim.units.find(u => u.id === construct.id)?.meta.frozen).toBe(true);
     
 
-    // Queue damage command directly
+
     sim.queuedCommands.push({
       type: 'damage',
       params: {

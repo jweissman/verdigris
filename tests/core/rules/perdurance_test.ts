@@ -267,7 +267,7 @@ describe("Perdurance System", () => {
     
 
     for (let i = 0; i < 8; i++) {
-      // Queue damage command directly
+
       sim.queuedCommands.push({
         type: 'damage',
         params: {

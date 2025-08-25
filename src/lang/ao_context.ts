@@ -1,10 +1,10 @@
 /**
  * AoContext - Compositional context model for the Ao DSL
- * 
+ *
  * From a PLT perspective, this provides a clean, extensible environment
  * for expression evaluation. Rather than ad-hoc context building, we define
  * a structured model with clear semantics.
- * 
+ *
  * Key principles:
  * 1. Compositional: Contexts can be combined/extended
  * 2. Lazy: Expensive operations are deferred until needed
@@ -12,8 +12,8 @@
  * 4. Extensible: New helpers can be added without modifying core
  */
 
-import type { Unit } from '../types/Unit';
-import type { TickContext } from '../core/tick_context';
+import type { Unit } from "../types/Unit";
+import type { TickContext } from "../core/tick_context";
 
 /**
  * A helper group provides named functions/values for a specific domain
@@ -33,7 +33,7 @@ export type ContextBuilder = () => HelperGroup;
 export class AoContext {
   private helpers: Map<string, HelperGroup | ContextBuilder> = new Map();
   private cache: Map<string, HelperGroup> = new Map();
-  
+
   /**
    * Register a helper group with immediate values
    */
@@ -41,7 +41,7 @@ export class AoContext {
     this.helpers.set(name, helpers);
     return this;
   }
-  
+
   /**
    * Register a helper group with lazy evaluation
    */
@@ -49,19 +49,17 @@ export class AoContext {
     this.helpers.set(name, builder);
     return this;
   }
-  
+
   /**
    * Build the final context object for Ao evaluation
    */
   build(): any {
     const context: any = {};
-    
-    // Merge all helper groups into flat context
+
     for (const [name, helperOrBuilder] of this.helpers) {
       let helpers: HelperGroup;
-      
-      if (typeof helperOrBuilder === 'function') {
-        // Lazy evaluation with caching
+
+      if (typeof helperOrBuilder === "function") {
         if (!this.cache.has(name)) {
           this.cache.set(name, helperOrBuilder());
         }
@@ -69,27 +67,26 @@ export class AoContext {
       } else {
         helpers = helperOrBuilder;
       }
-      
-      // Merge helpers into context
+
       Object.assign(context, helpers);
     }
-    
+
     return context;
   }
-  
+
   /**
    * Clear any cached lazy evaluations
    */
   clearCache(): void {
     this.cache.clear();
   }
-  
+
   /**
    * Create a new context by extending this one
    */
   extend(): AoContext {
     const extended = new AoContext();
-    // Copy existing helpers (not cache)
+
     for (const [name, helpers] of this.helpers) {
       extended.helpers.set(name, helpers);
     }
@@ -113,10 +110,10 @@ export class StandardHelpers {
       pos: unit.pos,
       team: unit.team,
       state: unit.state,
-      abilities: unit.abilities || []
+      abilities: unit.abilities || [],
     };
   }
-  
+
   /**
    * Math utilities
    */
@@ -130,19 +127,19 @@ export class StandardHelpers {
       pow: Math.pow,
       floor: Math.floor,
       ceil: Math.ceil,
-      round: Math.round
+      round: Math.round,
     };
   }
-  
+
   /**
    * Array utilities
    */
   static arrays(): HelperGroup {
     return {
-      Array: Array
+      Array: Array,
     };
   }
-  
+
   /**
    * Distance calculations
    */
@@ -154,10 +151,10 @@ export class StandardHelpers {
         const dx = pos.x - unit.pos.x;
         const dy = pos.y - unit.pos.y;
         return Math.sqrt(dx * dx + dy * dy);
-      }
+      },
     };
   }
-  
+
   /**
    * Unit finders (expensive, should be lazy)
    */
@@ -165,18 +162,19 @@ export class StandardHelpers {
     return {
       closest: {
         enemy: () => {
-          let closest = null, minDistSq = Infinity;
+          let closest = null,
+            minDistSq = Infinity;
           const units = getUnits();
           for (let i = 0; i < units.length; i++) {
             const e = units[i];
-            if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
+            if (e.team !== unit.team && e.state !== "dead" && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
               const distSq = dx * dx + dy * dy;
               if (distSq < minDistSq) {
                 minDistSq = distSq;
                 closest = e;
-                // Early termination if very close
+
                 if (distSq < 4) break; // Stop if distance < 2
               }
             }
@@ -184,44 +182,63 @@ export class StandardHelpers {
           return closest;
         },
         ally: () => {
-          let closest = null, minDistSq = Infinity;
+          let closest = null,
+            minDistSq = Infinity;
           const units = getUnits();
           for (let i = 0; i < units.length; i++) {
             const a = units[i];
-            if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0) {
+            if (
+              a.team === unit.team &&
+              a.id !== unit.id &&
+              a.state !== "dead" &&
+              a.hp > 0
+            ) {
               const dx = a.pos.x - unit.pos.x;
               const dy = a.pos.y - unit.pos.y;
               const distSq = dx * dx + dy * dy;
               if (distSq < minDistSq) {
                 minDistSq = distSq;
                 closest = a;
-                // Early termination if very close
+
                 if (distSq < 4) break;
               }
             }
           }
           return closest;
-        }
+        },
       },
-      
+
       weakest: {
         ally: () => {
-          let weakest = null, minHp = Infinity;
+          let weakest = null,
+            minHp = Infinity;
           for (const a of getUnits()) {
-            if (a.team === unit.team && a.id !== unit.id && a.state !== 'dead' && a.hp > 0 && a.hp < minHp) {
+            if (
+              a.team === unit.team &&
+              a.id !== unit.id &&
+              a.state !== "dead" &&
+              a.hp > 0 &&
+              a.hp < minHp
+            ) {
               minHp = a.hp;
               weakest = a;
             }
           }
           return weakest;
-        }
+        },
       },
-      
+
       healthiest: {
         enemy: () => {
-          let healthiest = null, maxHp = 0;
+          let healthiest = null,
+            maxHp = 0;
           for (const e of getUnits()) {
-            if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0 && e.hp > maxHp) {
+            if (
+              e.team !== unit.team &&
+              e.state !== "dead" &&
+              e.hp > 0 &&
+              e.hp > maxHp
+            ) {
               maxHp = e.hp;
               healthiest = e;
             }
@@ -229,10 +246,11 @@ export class StandardHelpers {
           return healthiest;
         },
         enemy_in_range: (range: number) => {
-          let healthiest = null, maxHp = 0;
+          let healthiest = null,
+            maxHp = 0;
           const rangeSq = range * range;
           for (const e of getUnits()) {
-            if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
+            if (e.team !== unit.team && e.state !== "dead" && e.hp > 0) {
               const dx = e.pos.x - unit.pos.x;
               const dy = e.pos.y - unit.pos.y;
               if (dx * dx + dy * dy <= rangeSq && e.hp > maxHp) {
@@ -242,11 +260,11 @@ export class StandardHelpers {
             }
           }
           return healthiest;
-        }
-      }
+        },
+      },
     };
   }
-  
+
   /**
    * Counting helpers
    */
@@ -259,8 +277,7 @@ export class StandardHelpers {
           const units = getUnits();
           for (let i = 0; i < units.length; i++) {
             const e = units[i];
-            if (e.team !== unit.team && e.state !== 'dead' && e.hp > 0) {
-              // Quick Manhattan distance check first (cheaper)
+            if (e.team !== unit.team && e.state !== "dead" && e.hp > 0) {
               const absDx = Math.abs(e.pos.x - unit.pos.x);
               const absDy = Math.abs(e.pos.y - unit.pos.y);
               if (absDx <= range && absDy <= range) {
@@ -271,18 +288,22 @@ export class StandardHelpers {
           }
           return count;
         },
-        
+
         allies: () => {
-          return getUnits().filter(u => u.team === unit.team && u.state !== 'dead' && u.hp > 0).length;
+          return getUnits().filter(
+            (u) => u.team === unit.team && u.state !== "dead" && u.hp > 0,
+          ).length;
         },
-        
+
         enemies: () => {
-          return getUnits().filter(u => u.team !== unit.team && u.state !== 'dead' && u.hp > 0).length;
-        }
-      }
+          return getUnits().filter(
+            (u) => u.team !== unit.team && u.state !== "dead" && u.hp > 0,
+          ).length;
+        },
+      },
     };
   }
-  
+
   /**
    * Centroid calculations
    */
@@ -333,21 +354,22 @@ export class StandardHelpers {
             enemies.length;
           return { x: Math.round(x), y: Math.round(y) };
         },
-      }
+      },
     };
   }
-  
+
   /**
    * Random utilities
    */
   static random(tickContext: TickContext): HelperGroup {
     return {
       random: () => tickContext.getRandom(),
-      pick: (array: any[]) => array[Math.floor(tickContext.getRandom() * array.length)],
+      pick: (array: any[]) =>
+        array[Math.floor(tickContext.getRandom() * array.length)],
       randomPos: (centerX: number, centerY: number, range: number) => ({
         x: centerX + (tickContext.getRandom() - 0.5) * 2 * range,
         y: centerY + (tickContext.getRandom() - 0.5) * 2 * range,
-      })
+      }),
     };
   }
 }
@@ -356,21 +378,23 @@ export class StandardHelpers {
  * Create a standard game context for DSL evaluation
  */
 export function createGameContext(
-  unit: Unit, 
+  unit: Unit,
   tickContext: TickContext,
-  cachedUnits?: readonly Unit[]
+  cachedUnits?: readonly Unit[],
 ): any {
   const getUnits = () => cachedUnits || tickContext.getAllUnits();
-  
+
   return new AoContext()
-    .addHelpers('unit', StandardHelpers.unitProperties(unit))
-    .addHelpers('math', StandardHelpers.math())
-    .addHelpers('arrays', StandardHelpers.arrays())
-    .addHelpers('distance', StandardHelpers.distance(unit))
-    .addLazyHelpers('finders', () => StandardHelpers.finders(unit, getUnits))
-    .addLazyHelpers('counters', () => StandardHelpers.counters(unit, getUnits))
-    .addLazyHelpers('centroids', () => StandardHelpers.centroids(unit, getUnits))
-    .addHelpers('random', StandardHelpers.random(tickContext))
+    .addHelpers("unit", StandardHelpers.unitProperties(unit))
+    .addHelpers("math", StandardHelpers.math())
+    .addHelpers("arrays", StandardHelpers.arrays())
+    .addHelpers("distance", StandardHelpers.distance(unit))
+    .addLazyHelpers("finders", () => StandardHelpers.finders(unit, getUnits))
+    .addLazyHelpers("counters", () => StandardHelpers.counters(unit, getUnits))
+    .addLazyHelpers("centroids", () =>
+      StandardHelpers.centroids(unit, getUnits),
+    )
+    .addHelpers("random", StandardHelpers.random(tickContext))
     .build();
 }
 

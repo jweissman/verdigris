@@ -18,12 +18,10 @@ export class MovesCommand extends Command {
       const unit = this.sim.units.find((u: any) => u.id === id);
       if (!unit) continue;
 
-      // Movement rate limiting - units can only move every N ticks
-      // Heroes and some units can move every tick
-      const movementRate = unit.meta?.movementRate || (unit.tags?.includes('hero') ? 1 : 2);
+      const movementRate =
+        unit.meta?.movementRate || (unit.tags?.includes("hero") ? 1 : 2);
       const lastMoveTick = unit.meta?.lastMoveTick || 0;
-      
-      // Skip movement if still in cooldown
+
       if (currentTick - lastMoveTick < movementRate) {
         continue;
       }

@@ -12,9 +12,9 @@ describe('Hero Gradual Movement', () => {
       team: 'friendly'
     });
     
-    // console.log('Initial:', hero.pos);
+
     
-    // Move with dx/dy (gradual)
+
     sim.queuedCommands.push({
       type: 'move',
       unitId: 'hero1',
@@ -26,12 +26,12 @@ describe('Hero Gradual Movement', () => {
     
     sim.step();
     const h1 = sim.units.find(u => u.id === 'hero1');
-    // console.log('After dx move:', h1?.pos, 'intendedMove:', h1?.intendedMove);
+
     
-    // Should have moved by 0.2
+
     expect(h1?.pos.x).toBeCloseTo(10.2, 1);
     
-    // Keep moving
+
     for (let i = 0; i < 5; i++) {
       sim.queuedCommands.push({
         type: 'move',
@@ -45,9 +45,9 @@ describe('Hero Gradual Movement', () => {
     }
     
     const h2 = sim.units.find(u => u.id === 'hero1');
-    // console.log('After 6 moves:', h2?.pos);
+
     
-    // Should have moved by 0.2 * 6 = 1.2 total
+
     expect(h2?.pos.x).toBeCloseTo(11.2, 1);
   });
   
@@ -61,7 +61,7 @@ describe('Hero Gradual Movement', () => {
       team: 'friendly'
     });
     
-    // Move with x/y (instant)
+
     sim.queuedCommands.push({
       type: 'move',
       unitId: 'hero2',
@@ -73,9 +73,9 @@ describe('Hero Gradual Movement', () => {
     
     sim.step();
     const h = sim.units.find(u => u.id === 'hero2');
-    // console.log('After x/y move:', h?.pos);
+
     
-    // Should have teleported instantly
+
     expect(h?.pos.x).toBe(15);
   });
 });

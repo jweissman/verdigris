@@ -29,7 +29,7 @@ export class MetaCommand extends Command {
     if (params.state) {
       updates.state = params.state;
     }
-    
+
     if (params.lastAbilityTick) {
       updates.lastAbilityTick = params.lastAbilityTick;
     }

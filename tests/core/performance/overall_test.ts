@@ -17,16 +17,14 @@ describe('Overall', () => {
   for (const [ruleName, timing] of results) {
     describe(`${ruleName}`, () => {
       test(`runs in under ${PerfBudgets.rule_execution_ms * grace}ms`, () => {
-        // Allow up to 500% of expected rule budget before we fail the _whole suite_ due to slow exec
+
         expect(timing.median).toBeLessThan(PerfBudgets.rule_execution_ms * grace);
       });
     });
   }
 
-  test.skip('display output', () => {
-    console.log(
-      formatPerformanceTable(results)
-    )
+  test('display output', () => {
+    console.warn(formatPerformanceTable(results))
     expect(true).toBe(true);
   })
   
@@ -60,7 +58,7 @@ describe('Overall', () => {
     }
     
     const result = timeExecution(() => sim.step(), 1000);
-    // console.log(`Neutral units: median=${result.median.toFixed(4)}ms`);
+
     expect(result.median).toBeLessThan(PerfBudgets.step_50_units_ms);
   });
   
@@ -82,7 +80,7 @@ describe('Overall', () => {
     }
     
     const result = timeExecution(() => sim.step(), 1000);
-    // console.log(`Stationary units: median=${result.median.toFixed(4)}ms`);
+
     expect(result.median).toBeLessThan(PerfBudgets.step_50_units_ms);
   });
   
@@ -114,21 +112,21 @@ describe('Overall', () => {
     }, 1000);
     
     const overhead = proxyResult.median / directResult.median;
-    // console.log(`\nProxy overhead: ${overhead.toFixed(1)}x (budget: ${PerfBudgets.proxy_overhead_multiplier}x)`);
+
     expect(overhead).toBeLessThan(PerfBudgets.proxy_overhead_multiplier);
   });
   
-  // flaky somehow
+
   test.skip('Scales linearly with unit count', () => {
     const sizes = [10, 20, 40, 80];
     const timings: number[] = [];
     
-    // console.log('\n=== Scaling Analysis ===');
+
     for (const size of sizes) {
       const sim = createTestSimulator(size);
       const result = timeExecution(() => sim.step(), 100);
       timings.push(result.median);
-      // console.log(`${size} units: ${result.median.toFixed(4)}ms`);
+
     }
     
     for (let i = 1; i < sizes.length; i++) {
@@ -136,7 +134,7 @@ describe('Overall', () => {
       const timeRatio = timings[i] / timings[i-1];
       const efficiency = sizeRatio / timeRatio;
       
-      // console.log(`${sizes[i-1]} → ${sizes[i]}: efficiency=${efficiency.toFixed(2)}`);
+
       expect(efficiency).toBeGreaterThan(PerfBudgets.scaling_efficiency_min);
     }
   });
@@ -171,7 +169,7 @@ describe('Overall', () => {
       return originalGetAllProxies();
     };
     
-    // console.log('\n=== getAllUnits Call Analysis ===');
+
     
     for (const rule of sim.rulebook) {
       const ruleName = rule.constructor.name;
@@ -184,12 +182,12 @@ describe('Overall', () => {
       const ruleProxies = proxyCreations - beforeProxies;
       
       if (ruleCalls > 0) {
-        // console.log(`${ruleName.padEnd(20)}: ${ruleCalls.toString().padStart(3)} getAllUnits calls, ${ruleProxies.toString().padStart(3)} proxy creations`);
+
       }
     }
     
-    // console.log(`\nTOTAL: ${callCount} getAllUnits calls, ${proxyCreations} proxy creations per step`);
-    // console.log(`With 50 units = ${proxyCreations * 50} proxy objects created per step`);
+
+
     
 
     expect(callCount).toBeLessThan(120); // Reasonable limit with Ohm-based DSL

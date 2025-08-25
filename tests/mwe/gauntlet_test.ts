@@ -12,12 +12,12 @@ describe('Gauntlet MWE', () => {
   test('has stage configuration data', () => {
     const gauntlet = new GauntletGame();
     
-    // Access private stages array via bracket notation for testing
+
     const stages = (gauntlet as any).stages;
     expect(stages).toBeDefined();
     expect(stages.length).toBe(5);
     
-    // Verify first stage
+
     expect(stages[0].name).toBe('Castle Gates');
     expect(stages[0].background).toBe('castle');
     expect(stages[0].width).toBe(80);
@@ -30,13 +30,13 @@ describe('Gauntlet MWE', () => {
     const gauntlet = new GauntletGame();
     const stages = (gauntlet as any).stages;
     
-    // All stages should have epic scale battlefields
+
     for (const stage of stages) {
       expect(stage.width).toBeGreaterThan(50);
       expect(stage.height).toBeGreaterThan(25);
     }
     
-    // Check specific epic dimensions
+
     expect(stages[1].width).toBe(120); // Piedmont Hills
     expect(stages[3].width).toBe(140); // Mountain Pass  
     expect(stages[4].width).toBe(160); // Desert Oasis
@@ -46,16 +46,16 @@ describe('Gauntlet MWE', () => {
     const gauntlet = new GauntletGame();
     const stages = (gauntlet as any).stages;
     
-    // Castle Gates
+
     expect(stages[0].enemies).toEqual(['soldier', 'ranger']);
     
-    // Forest Depths
+
     expect(stages[2].enemies).toEqual(['ranger', 'wildmage', 'naturist']);
     
-    // Mountain Pass
+
     expect(stages[3].enemies).toEqual(['bombardier', 'clanker', 'mechatronist']);
     
-    // Desert Oasis
+
     expect(stages[4].enemies).toEqual(['bombardier', 'naturist', 'farmer']);
   });
 
@@ -65,13 +65,13 @@ describe('Gauntlet MWE', () => {
     
     const backgrounds = stages.map((stage: any) => stage.background);
     
-    // Verify diverse backgrounds for seamless stitching
+
     expect(backgrounds).toContain('castle');
     expect(backgrounds).toContain('mountain');
     expect(backgrounds).toContain('forest');
     expect(backgrounds).toContain('desert');
     
-    // No duplicates in sequence
+
     expect(new Set(backgrounds).size).toBe(4);
   });
 
@@ -89,7 +89,7 @@ describe('Gauntlet MWE', () => {
     expect(abilityMap('mechatronist')).toEqual(['callAirdrop']);
     expect(abilityMap('farmer')).toEqual(['plant']);
     
-    // Unknown type defaults to melee
+
     expect(abilityMap('unknown')).toEqual(['melee']);
   });
 
@@ -100,7 +100,7 @@ describe('Gauntlet MWE', () => {
     expect(handler).toBeDefined();
     expect(typeof handler).toBe('function');
     
-    // Test that handler doesn't crash on various inputs
+
     handler({ key: 'w', type: 'keydown' });
     handler({ key: 'a', type: 'keydown' });
     handler({ key: ' ', type: 'keydown' });
@@ -114,7 +114,7 @@ describe('Gauntlet MWE', () => {
     const gauntlet = new GauntletGame();
     const stages = (gauntlet as any).stages;
     
-    // Verify the epic adventure sequence from VISION.md
+
     expect(stages[0].name).toBe('Castle Gates');
     expect(stages[0].description).toBe('Storm the castle gates');
     

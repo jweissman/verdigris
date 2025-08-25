@@ -4,10 +4,12 @@ import { Unit } from "../types/Unit";
 import View from "./view";
 import { ParticleRenderer } from "../rendering/particle_renderer";
 import { UnitRenderer } from "../rendering/unit_renderer";
+import FontAtlas from "../core/font_atlas";
 
 export default class Isometric extends View {
   private particleRenderer: ParticleRenderer;
   private unitRenderer: UnitRenderer;
+  private fontAtlas: FontAtlas;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -20,6 +22,7 @@ export default class Isometric extends View {
     super(ctx, sim, width, height, sprites, backgrounds);
     this.particleRenderer = new ParticleRenderer(sprites);
     this.unitRenderer = new UnitRenderer(sim);
+    this.fontAtlas = new FontAtlas(ctx);
   }
 
   show() {
@@ -29,11 +32,9 @@ export default class Isometric extends View {
     this.renderCellEffects();
 
     this.grid();
-    
-    // Render hover cell
+
     this.renderHoverCell();
-    
-    // Render attack zones
+
     this.renderAttackZones();
 
     const sortedUnits = [...this.sim.units].sort((a, b) =>
@@ -53,6 +54,8 @@ export default class Isometric extends View {
     this.renderParticles();
 
     this.renderOverlays();
+    
+    this.renderHeroUI();
   }
 
   private renderBackground() {
@@ -151,31 +154,34 @@ export default class Isometric extends View {
 
   private grid() {
     this.ctx.save();
-    this.ctx.fillStyle = 'rgba(100, 100, 100, 0.3)';
-    
+    this.ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
+
     for (let y = 0; y < this.sim.fieldHeight; y++) {
       for (let x = 0; x < this.sim.fieldWidth; x++) {
         const isoPos = this.toIsometric(x, y);
         this.ctx.fillRect(isoPos.x - 1, isoPos.y - 1, 2, 2);
       }
     }
-    
+
     this.ctx.restore();
   }
-  
+
   private renderHoverCell() {
     if (this.sim.meta?.hoverCell) {
       const { x, y } = this.sim.meta.hoverCell;
-      
-      // Check if within bounds
-      if (x >= 0 && x < this.sim.fieldWidth && y >= 0 && y < this.sim.fieldHeight) {
+
+      if (
+        x >= 0 &&
+        x < this.sim.fieldWidth &&
+        y >= 0 &&
+        y < this.sim.fieldHeight
+      ) {
         const isoPos = this.toIsometric(x, y);
-        
+
         this.ctx.save();
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
         this.ctx.lineWidth = 2;
-        
-        // Draw diamond outline for hover
+
         this.ctx.beginPath();
         this.ctx.moveTo(isoPos.x, isoPos.y - 6);
         this.ctx.lineTo(isoPos.x + 10, isoPos.y);
@@ -183,27 +189,24 @@ export default class Isometric extends View {
         this.ctx.lineTo(isoPos.x - 10, isoPos.y);
         this.ctx.closePath();
         this.ctx.stroke();
-        
+
         this.ctx.restore();
       }
     }
   }
-  
+
   private renderAttackZones() {
-    // Find units with attack zones
     for (const unit of this.sim.units) {
       if (unit.meta?.attackZones && unit.meta?.attackZonesExpiry) {
         if (this.sim.ticks < unit.meta.attackZonesExpiry) {
-          // Render attack zones
           this.ctx.save();
-          this.ctx.fillStyle = 'rgba(255, 100, 100, 0.4)';
-          this.ctx.strokeStyle = 'rgba(255, 50, 50, 0.8)';
+          this.ctx.fillStyle = "rgba(255, 100, 100, 0.4)";
+          this.ctx.strokeStyle = "rgba(255, 50, 50, 0.8)";
           this.ctx.lineWidth = 2;
-          
+
           for (const zone of unit.meta.attackZones) {
             const isoPos = this.toIsometric(zone.x, zone.y);
-            
-            // Draw diamond shape for isometric grid
+
             this.ctx.beginPath();
             this.ctx.moveTo(isoPos.x, isoPos.y - 4);
             this.ctx.lineTo(isoPos.x + 8, isoPos.y);
@@ -213,10 +216,9 @@ export default class Isometric extends View {
             this.ctx.fill();
             this.ctx.stroke();
           }
-          
+
           this.ctx.restore();
         } else {
-          // Clear expired zones
           delete unit.meta.attackZones;
           delete unit.meta.attackZonesExpiry;
         }
@@ -240,37 +242,30 @@ export default class Isometric extends View {
     if (recentDamage && Math.floor(this.animationTime / 100) % 2 === 0) {
       return;
     }
-    
 
-    // Use smooth positions during jumping for better interpolation
     let renderX = unit.meta?.smoothX ?? unit.pos.x;
     let renderY = unit.meta?.smoothY ?? unit.pos.y;
     let renderZ = unit.meta?.z || 0;
 
-    // Use proper sprite dimensions based on unit scale
     const dimensions = this.unitRenderer.getSpriteDimensions(unit);
     const spriteWidth = dimensions.width;
     const spriteHeight = dimensions.height;
 
     let screenX: number;
     let screenY: number;
-    
+
     const interp = this.unitInterpolations.get(unit.id);
     if (interp) {
       const easeProgress = this.easeInOutQuad(interp.progress);
-      
-      // Interpolate Z smoothly for all units
+
       renderZ = interp.startZ + (interp.targetZ - interp.startZ) * easeProgress;
-      
-      // Convert start and end positions to screen space FIRST
+
       const startScreen = this.toIsometric(interp.startX, interp.startY);
       const endScreen = this.toIsometric(interp.targetX, interp.targetY);
-      
-      // Then interpolate in screen space to avoid hex offset issues
+
       screenX = startScreen.x + (endScreen.x - startScreen.x) * easeProgress;
       screenY = startScreen.y + (endScreen.y - startScreen.y) * easeProgress;
     } else {
-      // No interpolation, just convert directly
       const screenPos = this.toIsometric(renderX, renderY);
       screenX = screenPos.x;
       screenY = screenPos.y;
@@ -280,21 +275,17 @@ export default class Isometric extends View {
     const pixelY = screenY - spriteHeight / 2;
 
     let realPixelY = pixelY;
-    
-    // Apply Z offset for all units
+
     if (renderZ > 0) {
       realPixelY -= renderZ * 8;
     }
 
-    // Always use centralized unit renderer for consistency
     const facing = unit.meta?.facing || "right";
     const shouldFlip = facing === "left";
-    
-    // Draw shadow at ground position
+
     this.unitRenderer.drawShadow(this.ctx, unit, screenX, screenY);
-    
-    // Draw unit above ground (offset up by sprite height/2 plus any Z-offset)
-    const isHero = unit.tags?.includes('hero');
+
+    const isHero = unit.tags?.includes("hero");
     const spriteOffset = 8; // Use consistent offset for all units
     this.unitRenderer.renderUnit(
       this.ctx,
@@ -303,8 +294,8 @@ export default class Isometric extends View {
       screenX,
       screenY - spriteOffset - renderZ * 8, // Offset up by sprite height + Z
       {
-        flipHorizontal: shouldFlip
-      }
+        flipHorizontal: shouldFlip,
+      },
     );
 
     if (typeof unit.hp === "number" && unit.hp < unit.maxHp) {
@@ -896,6 +887,66 @@ export default class Isometric extends View {
     if (particle.type === "leaf" && z > 0 && z < 5) {
       this.ctx.fillStyle = "#000000";
       this.ctx.fillRect(Math.floor(isoPos.x) - 1, Math.floor(isoPos.y), 2, 1);
+    }
+  }
+
+  private renderHeroUI() {
+    // Find the hero unit
+    const hero = this.sim.units.find((u: Unit) => u.tags?.includes("hero"));
+    if (!hero) return;
+
+    // Only render if fonts are ready
+    if (!this.fontAtlas.fontsReady) return;
+
+    // Draw health bar at top left
+    const barWidth = 60;
+    const barHeight = 8;
+    const barX = 10;
+    const barY = 10;
+    
+    // Background
+    this.ctx.fillStyle = "#000000";
+    this.ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
+    
+    // Health bar
+    const healthPercent = hero.hp / (hero.maxHp || 100);
+    this.ctx.fillStyle = healthPercent > 0.5 ? "#00FF00" : healthPercent > 0.25 ? "#FFFF00" : "#FF0000";
+    this.ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+    
+    // HP text
+    this.fontAtlas.drawTinyText(`${hero.hp}/${hero.maxHp || 100}`, barX + barWidth + 5, barY + 2, "#FFFFFF", 1);
+
+    // Draw current weapon at top right
+    const weapon = hero.meta?.weapon || "sword";
+    const weaponText = weapon.charAt(0).toUpperCase() + weapon.slice(1);
+    this.fontAtlas.drawTinyText(`Weapon: ${weaponText}`, this.width - 80, barY + 2, "#FFFFFF", 1);
+
+    // Draw abilities list at bottom left
+    const abilities = hero.abilities || [];
+    let abilityY = this.height - 30;
+    
+    this.fontAtlas.drawTinyText("Abilities:", 10, abilityY, "#FFFF00", 1);
+    abilityY += 6;
+    
+    for (let i = 0; i < abilities.length; i++) {
+      const ability = abilities[i];
+      const abilityName = ability.replace(/([A-Z])/g, ' $1').trim();
+      this.fontAtlas.drawTinyText(`- ${abilityName}`, 15, abilityY, "#FFFFFF", 1);
+      abilityY += 6;
+    }
+
+    // Draw controls hint at bottom right
+    const hints = [
+      "WASD: Move",
+      "Space: Jump", 
+      "Q: Attack",
+      "1-6: Weapons"
+    ];
+    
+    let hintY = this.height - 30;
+    for (const hint of hints) {
+      this.fontAtlas.drawTinyText(hint, this.width - 70, hintY, "#888888", 1);
+      hintY += 6;
     }
   }
 }

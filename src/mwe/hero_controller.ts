@@ -9,11 +9,11 @@ export class HeroController {
   private heroId: string = "hero_player";
   private sim: Simulator;
   private keysPressed: Set<string> = new Set();
-  
+
   constructor(sim: Simulator) {
     this.sim = sim;
   }
-  
+
   spawnHero(x: number = 10, y: number = 10) {
     const hero = {
       id: this.heroId,
@@ -31,140 +31,144 @@ export class HeroController {
       tags: ["hero", "controlled"],
       meta: {
         facing: "right" as const,
-        controlled: true
-      }
+        controlled: true,
+      },
     };
-    
+
     this.sim.addUnit(hero);
     console.log(`Hero spawned at (${x}, ${y})`);
   }
-  
+
   handleKeyDown(key: string) {
     this.keysPressed.add(key);
-    
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero) return;
-    
-    switch(key.toLowerCase()) {
-      case ' ':
+
+    switch (key.toLowerCase()) {
+      case " ":
         this.jump();
         break;
-      case 'q':
-        this.useAbility('groundPound');
+      case "q":
+        this.useAbility("groundPound");
         break;
-      case 'e':
-        this.useAbility('heroicLeap');
+      case "e":
+        this.useAbility("heroicLeap");
         break;
     }
   }
-  
+
   handleKeyUp(key: string) {
     this.keysPressed.delete(key);
   }
-  
-  // Called each frame to handle continuous movement
+
   update() {
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero || hero.meta?.jumping) return;
-    
-    let dx = 0, dy = 0;
-    
-    if (this.keysPressed.has('w')) dy = -1;
-    if (this.keysPressed.has('s')) dy = 1;
-    if (this.keysPressed.has('a')) dx = -1;
-    if (this.keysPressed.has('d')) dx = 1;
-    
+
+    let dx = 0,
+      dy = 0;
+
+    if (this.keysPressed.has("w")) dy = -1;
+    if (this.keysPressed.has("s")) dy = 1;
+    if (this.keysPressed.has("a")) dx = -1;
+    if (this.keysPressed.has("d")) dx = 1;
+
     if (dx !== 0 || dy !== 0) {
       this.move(dx, dy);
     }
   }
-  
+
   private move(dx: number, dy: number) {
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero) return;
-    
-    const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, hero.pos.x + dx));
-    const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, hero.pos.y + dy));
-    
-    // Queue move command
+
+    const newX = Math.max(
+      0,
+      Math.min(this.sim.fieldWidth - 1, hero.pos.x + dx),
+    );
+    const newY = Math.max(
+      0,
+      Math.min(this.sim.fieldHeight - 1, hero.pos.y + dy),
+    );
+
     this.sim.queuedCommands.push({
       type: "move",
       params: {
         unitId: this.heroId,
         x: newX,
-        y: newY
-      }
+        y: newY,
+      },
     });
-    
-    // Update facing
+
     if (dx !== 0) {
       this.sim.queuedCommands.push({
         type: "meta",
         params: {
           unitId: this.heroId,
           meta: {
-            facing: dx > 0 ? "right" : "left"
-          }
-        }
+            facing: dx > 0 ? "right" : "left",
+          },
+        },
       });
     }
   }
-  
+
   private jump() {
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero) {
-      console.log('Jump failed: Hero not found');
+      console.log("Jump failed: Hero not found");
       return;
     }
-    
+
     if (hero.meta?.jumping) {
-      console.log(`Jump blocked: Already jumping (progress: ${hero.meta.jumpProgress})`);
+      console.log(
+        `Jump blocked: Already jumping (progress: ${hero.meta.jumpProgress})`,
+      );
       return;
     }
-    
+
     const jumpDistance = 4;
     const facingRight = hero.meta?.facing === "right";
-    const targetX = facingRight ? 
-      Math.min(this.sim.fieldWidth - 1, hero.pos.x + jumpDistance) :
-      Math.max(0, hero.pos.x - jumpDistance);
-    
-    // Use the proper jump command from the simulator
+    const targetX = facingRight
+      ? Math.min(this.sim.fieldWidth - 1, hero.pos.x + jumpDistance)
+      : Math.max(0, hero.pos.x - jumpDistance);
+
     const jumpCommand = {
       type: "jump",
-      unitId: this.heroId,  // unitId goes here, not in params
+      unitId: this.heroId,
       params: {
         targetX: targetX,
         targetY: hero.pos.y,
         height: 5,
         damage: 0,
-        radius: 0
-      }
+        radius: 0,
+      },
     };
-    
+
     this.sim.queuedCommands.push(jumpCommand);
-    
+
     console.log(`[JUMP] Queued jump command:`);
     console.log(`  From: (${hero.pos.x.toFixed(1)}, ${hero.pos.y.toFixed(1)})`);
     console.log(`  To: (${targetX}, ${hero.pos.y})`);
-    console.log(`  Facing: ${hero.meta?.facing || 'right'}`);
+    console.log(`  Facing: ${hero.meta?.facing || "right"}`);
     console.log(`  Height: 5`);
     console.log(`  Command queue length: ${this.sim.queuedCommands.length}`);
   }
-  
+
   private useAbility(abilityName: string) {
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero || !hero.abilities?.includes(abilityName)) return;
-    
-    // Queue ability command
+
     this.sim.queuedCommands.push({
       type: "ability",
       params: {
         unitId: this.heroId,
         abilityName: abilityName,
-        target: hero.pos
-      }
+        target: hero.pos,
+      },
     });
-    
+
     console.log(`Hero using ability: ${abilityName}`);
   }
 }

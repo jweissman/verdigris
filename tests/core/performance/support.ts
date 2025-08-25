@@ -45,7 +45,7 @@ export function createTestSimulator(unitCount: number = 50): Simulator {
   for (let i = 0; i < 5; i++) {
     sim.step();
   }
-  // console.log("Rules => ", sim.rulebook.map(r => r.constructor.name));
+
   return sim;
 }
 

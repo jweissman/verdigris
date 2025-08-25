@@ -56,11 +56,7 @@ export default class View {
         continue;
       }
 
-      if (
-        prevPos.x !== unit.pos.x ||
-        prevPos.y !== unit.pos.y
-      ) {
-        // Don't create new interpolations while jumping or tossing - let the existing one complete
+      if (prevPos.x !== unit.pos.x || prevPos.y !== unit.pos.y) {
         const isAirborne = unit.meta?.jumping || unit.meta?.tossing;
         if (!isAirborne || !this.unitInterpolations.has(unit.id)) {
           this.unitInterpolations.set(unit.id, {
@@ -75,8 +71,7 @@ export default class View {
           });
         }
       }
-      
-      // Always update previous position
+
       this.previousPositions.set(unit.id, {
         x: unit.pos.x,
         y: unit.pos.y,

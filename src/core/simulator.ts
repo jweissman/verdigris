@@ -43,11 +43,6 @@ import { ParticleArrays } from "../sim/particle_arrays";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
 // TODO some kind of config model??
-// interface SimulatorConfiguration {
-//   scene?: { bg?: string; }
-//   field?:  { width: number, height: number }
-//   fx?: { environment?: boolean }
-// }
 
 class Simulator {
   public sceneBackground: string = "winter";
@@ -392,7 +387,6 @@ class Simulator {
     ];
 
     this.rulebook = [...coreRules, ...combatRules, ...specialRules];
-    
   }
 
   addUnit(unit: Partial<Unit>): Unit {
@@ -421,13 +415,11 @@ class Simulator {
     } as Unit;
 
     const index = this.unitArrays.addUnit(u);
-    
-    // Check if unit was successfully added
+
     if (index === -1) {
-      // Capacity exceeded - return null instead of throwing
       return null;
     }
-    
+
     this.dirtyUnits.add(u.id); // Mark as dirty for rendering
     this.proxyManager.rebuildIndex(); // Ensure proxy index is updated
 
@@ -452,10 +444,8 @@ class Simulator {
   create(unit: Unit) {
     const newUnit = { ...unit, id: unit.id || `unit_${Date.now()}` };
     const index = this.unitArrays.addUnit(newUnit);
-    
-    // Check if unit was successfully added
+
     if (index === -1) {
-      // Capacity exceeded - return null instead of throwing
       return null;
     }
 
@@ -525,11 +515,13 @@ class Simulator {
   private ruleApplicability: Map<string, boolean> = new Map();
 
   private stepDepth = 0;
-  
+
   step(force = false) {
     this.stepDepth++;
     if (this.stepDepth > 1) {
-      console.error(`ERROR: Recursive step() call detected! Depth=${this.stepDepth}`);
+      console.error(
+        `ERROR: Recursive step() call detected! Depth=${this.stepDepth}`,
+      );
       console.trace();
     }
     if (this.paused) {
@@ -575,7 +567,6 @@ class Simulator {
 
     for (const rule of this.rulebook) {
       const ruleName = rule.constructor.name;
-      
 
       const commands = rule.execute(context);
       if (commands && commands.length > 0) {
@@ -657,14 +648,12 @@ class Simulator {
   updateParticles() {
     const arrays = this.particleArrays;
 
-    // Fix particle velocities BEFORE physics update
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
 
       const type = arrays.type[i];
 
       if (type === 1) {
-        // Leaves fall straight down - set before physics
         arrays.velX[i] = 0; // No horizontal movement
         arrays.velY[i] = 0.5; // Constant fall speed
       } else if (type === 3) {
@@ -676,22 +665,18 @@ class Simulator {
     arrays.updatePhysics();
     arrays.applyGravity(0.1); // Moved from Particles rule
 
-    // Override velocities AFTER gravity for controlled particles
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
 
       const type = arrays.type[i];
 
       if (type === 1) {
-        // Leaves - override after gravity to maintain steady fall
-        arrays.velX[i] = 0;  // No horizontal movement
+        arrays.velX[i] = 0; // No horizontal movement
         arrays.velY[i] = 0.5; // Constant fall speed
       } else if (type === 2) {
-        // Rain - maintain diagonal rain pattern without acceleration
         if (arrays.velY[i] > 1.2) arrays.velY[i] = 1.2; // Cap fall speed
         if (arrays.velX[i] === 0) arrays.velX[i] = 0.3; // Ensure some diagonal movement
       } else if (type === 3) {
-        // Snowflakes - override after gravity to maintain exact speed
         arrays.velX[i] = 0;
         arrays.velY[i] = 0.15;
       }
@@ -703,7 +688,6 @@ class Simulator {
       const type = arrays.type[i];
 
       if (type === 3) {
-        // Snow - check if landed
         const fieldHeightPx = this.fieldHeight * 8;
         if (arrays.posY[i] >= fieldHeightPx - 1) {
           arrays.landed[i] = 1;
@@ -789,11 +773,9 @@ class Simulator {
       return;
     }
 
-    // Simple straight-down movement for controlled effect
     particle.vel.x = 0; // No horizontal movement
     particle.vel.y = 0.5; // Constant fall speed
 
-    // Keep aligned to grid center
     const gridX = Math.floor(particle.pos.x / 8);
     particle.pos.x = gridX * 8 + 4; // Center of grid cell
     particle.pos.y += particle.vel.y;
@@ -828,11 +810,9 @@ class Simulator {
       return;
     }
 
-    // Simple straight-down movement for controlled effect
     particle.vel.x = 0; // No horizontal movement
     particle.vel.y = 1.0; // Faster than leaves
 
-    // Keep aligned to grid center
     const gridX = Math.floor(particle.pos.x / 8);
     particle.pos.x = gridX * 8 + 4; // Center of grid cell
     particle.pos.y += particle.vel.y;
@@ -861,7 +841,6 @@ class Simulator {
   }
 
   spawnLeafParticle() {
-    // Spawn at grid-aligned position
     const gridX = Math.floor(Simulator.rng.random() * this.fieldWidth);
     this.particleArrays.addParticle({
       pos: {
@@ -1804,8 +1783,7 @@ class Simulator {
     const primaryTarget = target || unit;
 
     (abilitiesRule as any).commands = [];
-    
-    // Ensure cached units are populated for domainBuff effects
+
     (abilitiesRule as any).cachedAllUnits = context.getAllUnits();
 
     for (const effect of jsonAbility.effects) {

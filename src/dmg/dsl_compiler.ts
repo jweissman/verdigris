@@ -25,9 +25,11 @@ export class DSLCompiler {
     this.cache.set(expression, fn);
     return fn;
   }
-  
-  compileWithCachedUnits(expression: string, cachedUnits?: readonly Unit[]): CompiledExpression {
-    // Special version that accepts pre-cached units to avoid repeated getAllUnits calls
+
+  compileWithCachedUnits(
+    expression: string,
+    cachedUnits?: readonly Unit[],
+  ): CompiledExpression {
     const fn = (unit: Unit, tickContext: TickContext) => {
       const context = createGameContext(unit, tickContext, cachedUnits);
       return Ao.eval(expression, context);
@@ -36,7 +38,6 @@ export class DSLCompiler {
   }
 
   private buildContext(unit: Unit, tickContext: TickContext): any {
-    // Use the new compositional context model
     return createGameContext(unit, tickContext);
   }
 

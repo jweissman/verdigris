@@ -16,7 +16,6 @@ export class StrikeCommand extends Command {
 
     const attacker = this.sim.units.find((u) => u.id === unitId);
     if (!attacker) return;
-    
 
     const targetId = params.targetId as string;
     const direction = params.direction as string;
@@ -28,16 +27,13 @@ export class StrikeCommand extends Command {
     let target: any = null;
 
     if (targetId) {
-      // Strike specific target
       target = this.sim.units.find((u) => u.id === targetId && u.hp > 0);
     } else {
-      // Strike in direction or facing
       const strikeDirection = direction || attacker.meta?.facing || "right";
       target = this.findTargetInDirection(attacker, strikeDirection, range);
     }
 
     if (target && (targetId || this.isInRange(attacker, target, range))) {
-      // Queue damage command to handle perdurance properly
       this.sim.queuedCommands.push({
         type: "damage",
         params: {
@@ -45,79 +41,63 @@ export class StrikeCommand extends Command {
           amount: damage,
           aspect: aspect,
           sourceId: attacker.id,
-          origin: attacker.pos
-        }
+          origin: attacker.pos,
+        },
       });
-      
-      // Create damage event for record-keeping/visuals only
-      if (!this.sim.queuedEvents) {
-        this.sim.queuedEvents = [];
-      }
-      this.sim.queuedEvents.push({
-        kind: "damage",
-        source: attacker.id,
-        target: target.id,
-        meta: {
-          amount: damage,
-          aspect: aspect,
-          tick: this.sim.ticks,
-          isStrike: true,
-          knockback: knockback
-        }
-      });
-      
-      // Apply knockback if specified
+
+      // Events are observational only - don't create damage events here
+      // The damage command will handle everything
+
       if (knockback > 0) {
         const dx = target.pos.x - attacker.pos.x;
         const dy = target.pos.y - attacker.pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (dist > 0) {
           const knockX = (dx / dist) * knockback;
           const knockY = (dy / dist) * knockback;
-          
+
           this.sim.queuedCommands.push({
             type: "move",
             unitId: target.id,
             params: {
               dx: Math.round(knockX),
               dy: Math.round(knockY),
-              force: true // Force movement even if pinned/stunned
-            }
+              force: true, // Force movement even if pinned/stunned
+            },
           });
         }
       }
 
-      // Set attacker state for animation
       const transform = new Transform(this.sim);
       transform.updateUnit(attacker.id, {
         state: "attack",
         meta: {
           ...attacker.meta,
-          lastStrike: this.sim.ticks
-        }
+          lastStrike: this.sim.ticks,
+        },
       });
-
-      // Damage will be applied by EventHandler processing the damage event
-      // No need to apply it here
     }
   }
 
-  private findTargetInDirection(attacker: any, direction: string, range: number): any {
+  private findTargetInDirection(
+    attacker: any,
+    direction: string,
+    range: number,
+  ): any {
     const dx = direction === "right" ? 1 : direction === "left" ? -1 : 0;
     const dy = direction === "down" ? 1 : direction === "up" ? -1 : 0;
 
-    // Look for targets in the strike direction
     for (let r = 1; r <= range; r++) {
       const checkX = attacker.pos.x + dx * r;
       const checkY = attacker.pos.y + dy * r;
 
       const target = this.sim.units.find(
-        (u) => 
+        (u) =>
           u.hp > 0 &&
           u.team !== attacker.team &&
           Math.abs(u.pos.x - checkX) < 0.5 &&
-          Math.abs(u.pos.y - checkY) < 0.5
+          Math.abs(u.pos.y - checkY) < 0.5,
       );
 
       if (target) return target;

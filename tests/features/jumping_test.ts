@@ -125,7 +125,7 @@ describe('Jumping mechanics', () => {
       hp: 10
     });
     sim.step();
-    // Check both params.unitId and unitId directly
+
     const moveCommands = sim.queuedCommands.filter(c => 
       c.type === 'move' && (c.params?.unitId === 'hunter' || c.unitId === 'hunter')
     );
@@ -148,7 +148,7 @@ describe('Jumping mechanics', () => {
       }
     });
     const zValues = [];
-    // Faster jumps complete in fewer frames
+
     for (let i = 0; i < 6; i++) {
       sim.step();
       const jumper = sim.roster['jumper'];
@@ -157,17 +157,17 @@ describe('Jumping mechanics', () => {
       }
     }
     
-    // Should have recorded some z values during jump
+
     expect(zValues.length).toBeGreaterThan(0);
     
-    // Check that we achieved some height
+
     const maxZ = Math.max(...zValues);
     expect(maxZ).toBeGreaterThan(0);
     
-    // For very short jumps, just verify we got some arc
+
     if (zValues.length > 2) {
       const midIndex = Math.floor(zValues.length / 2);
-      // Middle should be higher than start (but may not be higher than end due to fast completion)
+
       expect(zValues[midIndex]).toBeGreaterThan(0);
     }
   });
@@ -193,7 +193,7 @@ describe('Jumping mechanics', () => {
       hp: 10
     });
     sim.step();
-    // Check both params.unitId and unitId directly
+
     const behaviorCommands = sim.queuedCommands.filter(c => 
       (c.type === 'pose' || c.type === 'target') && 
       (c.params?.unitId === 'jumper' || c.unitId === 'jumper')

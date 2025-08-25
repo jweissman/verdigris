@@ -29,8 +29,7 @@ export class AICommand extends Command {
 
     for (const unit of context.getAllUnits()) {
       if (unit.state === "dead" || unit.hp <= 0) continue;
-      
-      // Skip units that are jumping - they shouldn't change behavior mid-air
+
       if (unit.meta?.jumping) continue;
 
       let posture = unit.posture || unit.meta?.posture;

@@ -6,7 +6,7 @@ import { Game } from '../../src/core/game';
 
 describe('Hero Visual Rendering', () => {
   test('hero rig sprites are loaded and can render', () => {
-    // Mock Image for headless testing
+
     global.Image = class {
       src: string = '';
       onload: (() => void) | null = null;
@@ -14,10 +14,10 @@ describe('Hero Visual Rendering', () => {
       complete: boolean = true;
     } as any;
     
-    // Load sprites
+
     const sprites = Game.loadSprites();
     
-    // Check hero part sprites are loaded
+
     const requiredSprites = [
       'hero-head',
       'hero-torso', 
@@ -30,11 +30,11 @@ describe('Hero Visual Rendering', () => {
     
     for (const spriteName of requiredSprites) {
       const sprite = sprites.get(spriteName);
-      // console.log(`${spriteName}: ${sprite ? 'loaded' : 'MISSING'}`);
+
       expect(sprite).toBeDefined();
     }
     
-    // Create a canvas-like object for testing
+
     const mockCanvas = {
       width: 320,
       height: 240,
@@ -42,7 +42,7 @@ describe('Hero Visual Rendering', () => {
         if (type === '2d') {
           return {
             drawImage: (...args: any[]) => {
-              // console.log('Drawing sprite:', args[0]?.src?.includes('hero') ? 'hero part' : 'other');
+
             },
             save: () => {},
             restore: () => {},
@@ -59,7 +59,7 @@ describe('Hero Visual Rendering', () => {
       }
     } as HTMLCanvasElement;
     
-    // Create sim with hero
+
     const sim = new Simulator(40, 40);
     sim.rulebook.push(new HeroAnimation());
     
@@ -74,20 +74,20 @@ describe('Hero Visual Rendering', () => {
       }
     });
     
-    // Step to generate rig
+
     sim.step();
     
     const riggedHero = sim.units.find(u => u.id === 'visual_hero');
-    // console.log('Hero has rig:', !!riggedHero?.meta?.rig);
-    // console.log('Rig parts:', riggedHero?.meta?.rig?.map((p: any) => p.name));
+
+
     
     expect(riggedHero?.meta?.rig).toBeDefined();
     expect(riggedHero?.meta?.rig?.length).toBe(7);
     
-    // Verify each part has correct sprite name
+
     for (const part of riggedHero?.meta?.rig || []) {
       const sprite = sprites.get(part.sprite);
-      // console.log(`Part ${part.name} uses sprite ${part.sprite}: ${sprite ? 'OK' : 'MISSING'}`);
+
       expect(sprite).toBeDefined();
     }
   });

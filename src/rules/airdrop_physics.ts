@@ -78,7 +78,6 @@ export class AirdropPhysics extends Rule {
       const impactRadius = unit.meta.huge ? 8 : 4; // Larger impact for huge units
       const impactDamage = unit.meta.huge ? 25 : 15;
 
-      // Queue AoE command for landing impact damage
       commands.push({
         type: "aoe",
         unitId: unit.id,

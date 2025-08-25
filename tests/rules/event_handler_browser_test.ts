@@ -5,7 +5,7 @@ import { Simulator } from "../../src/core/simulator";
 
 describe("EventHandler browser compatibility", () => {
   it("should not crash when process is undefined", () => {
-    // Simulate browser environment where process is undefined
+
     const originalProcess = global.process;
     // @ts-ignore
     delete global.process;
@@ -15,7 +15,7 @@ describe("EventHandler browser compatibility", () => {
       const handler = new EventHandler();
       const context = new TickContextImpl(sim, []);
       
-      // Add a test event
+
       sim.processedEvents.push({
         kind: "damage",
         target: "test-unit",
@@ -23,13 +23,13 @@ describe("EventHandler browser compatibility", () => {
         meta: { tick: 1 }
       });
       
-      // This should not throw even without process defined
+
       expect(() => {
         handler.execute(context);
       }).not.toThrow();
       
     } finally {
-      // Restore process
+
       global.process = originalProcess;
     }
   });

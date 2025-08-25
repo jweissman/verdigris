@@ -2,7 +2,7 @@ import { Command } from "../rules/command";
 
 /**
  * Hero command - applies commands to all units tagged 'hero'
- * Examples: 
+ * Examples:
  *   hero jump
  *   hero left
  *   hero right
@@ -11,385 +11,496 @@ import { Command } from "../rules/command";
 export class HeroCommand extends Command {
   execute(unitId: string | null, params: Record<string, any>): void {
     const action = params.action as string;
-    
-    // Support direct move to coordinates
-    if (action === 'move-to') {
+
+    if (action === "rotate-ability") {
+      const heroes = this.sim.units.filter((u) => u.tags?.includes("hero"));
+      for (const hero of heroes) {
+        if (!hero.meta) hero.meta = {};
+        const abilities = ["strike", "bolt", "jump", "heal"];
+        const currentIndex = abilities.indexOf(
+          hero.meta.primaryAbility || "strike",
+        );
+        const nextIndex = (currentIndex + 1) % abilities.length;
+        hero.meta.primaryAbility = abilities[nextIndex];
+        console.log(
+          `[HeroCommand] Rotated to ability: ${abilities[nextIndex]}`,
+        );
+      }
+      return;
+    }
+
+    if (action === "primary") {
+      const heroes = this.sim.units.filter((u) => u.tags?.includes("hero"));
+      for (const hero of heroes) {
+        const primaryAbility = hero.meta?.primaryAbility || "strike";
+
+        this.sim.queuedCommands.push({
+          type: "hero",
+          params: {
+            action: primaryAbility,
+            ...params, // Pass through any additional params
+          },
+        });
+        console.log(`[HeroCommand] Executing primary: ${primaryAbility}`);
+      }
+      return;
+    }
+
+    if (action === "move-to") {
       const targetX = params.x as number;
       const targetY = params.y as number;
-      const heroes = this.sim.units.filter(u => u.tags?.includes('hero'));
-      
+      const heroes = this.sim.units.filter((u) => u.tags?.includes("hero"));
+
       for (const hero of heroes) {
-        // Set move target in meta
         if (!hero.meta) hero.meta = {};
         hero.meta.moveTarget = {
           x: targetX,
           y: targetY,
           attackMove: params.attackMove || false,
-          setTick: this.sim.ticks
+          setTick: this.sim.ticks,
         };
-        console.log(`[HeroCommand] Hero ${hero.id} move-to (${targetX}, ${targetY})`);
+        console.log(
+          `[HeroCommand] Hero ${hero.id} move-to (${targetX}, ${targetY})`,
+        );
       }
       return;
     }
-    
-    // Find all hero-tagged units
-    const heroes = this.sim.units.filter(u => u.tags?.includes('hero'));
-    
+
+    const heroes = this.sim.units.filter((u) => u.tags?.includes("hero"));
+
     for (const hero of heroes) {
       switch (action) {
-        case 'jump': {
+        case "jump": {
           const jumpDistance = params.distance || 3;
           const jumpHeight = params.height || 5;
           const aoeDamage = params.damage || hero.dmg || 20; // Significant AoE damage
           const aoeRadius = params.radius || 3; // Large impact radius
-          
-          // Calculate landing position
-          const facing = hero.meta?.facing || 'right';
-          const landX = hero.pos.x + (facing === 'right' ? jumpDistance : -jumpDistance);
+
+          const facing = hero.meta?.facing || "right";
+          const landX =
+            hero.pos.x + (facing === "right" ? jumpDistance : -jumpDistance);
           const landY = hero.pos.y;
-          
-          // Highlight impact zones BEFORE jumping
-          const impactZones: Array<{x: number, y: number}> = [];
+
+          const impactZones: Array<{ x: number; y: number }> = [];
           for (let dx = -aoeRadius; dx <= aoeRadius; dx++) {
             for (let dy = -aoeRadius; dy <= aoeRadius; dy++) {
               const dist = Math.sqrt(dx * dx + dy * dy);
               if (dist <= aoeRadius) {
                 const zoneX = Math.round(landX + dx);
                 const zoneY = Math.round(landY + dy);
-                if (zoneX >= 0 && zoneX < this.sim.width && 
-                    zoneY >= 0 && zoneY < this.sim.height) {
+                if (
+                  zoneX >= 0 &&
+                  zoneX < this.sim.width &&
+                  zoneY >= 0 &&
+                  zoneY < this.sim.height
+                ) {
                   impactZones.push({ x: zoneX, y: zoneY });
-                  
-                  // Add pre-impact warning particles
+
                   this.sim.queuedCommands.push({
-                    type: 'particle',
+                    type: "particle",
                     params: {
                       pos: { x: zoneX * 8 + 4, y: zoneY * 8 + 4 },
                       vel: { x: 0, y: -0.1 },
                       lifetime: 20,
-                      type: 'warning',
+                      type: "warning",
                       color: `hsla(30, 100%, ${70 - dist * 10}%, ${0.6 - dist * 0.1})`,
                       radius: 3 - dist * 0.3,
-                      z: 1
-                    }
+                      z: 1,
+                    },
                   });
                 }
               }
             }
           }
-          
-          // Store impact zones for visualization
+
           hero.meta.impactZones = impactZones;
           hero.meta.impactZonesExpiry = this.sim.ticks + 20;
-          
+
           this.sim.queuedCommands.push({
-            type: 'jump',
+            type: "jump",
             unitId: hero.id,
             params: {
               distance: jumpDistance,
               height: jumpHeight,
               damage: aoeDamage,
-              radius: aoeRadius
-            }
+              radius: aoeRadius,
+            },
           });
           break;
         }
-          
-        case 'move': {
-          // Handle hex offset by adjusting movement based on current row
+
+        case "move": {
           const dx = params.dx || 0;
           const dy = params.dy || 0;
-          
-          // For hex grid, adjust horizontal movement on odd rows
+
           let adjustedDx = dx;
           let adjustedDy = dy;
-          
-          // If moving horizontally on odd row, also move vertically to stay aligned
+
           if (dx !== 0 && Math.floor(hero.pos.y) % 2 === 1) {
-            // Move diagonally to compensate for hex offset
             adjustedDy = dy || (dx > 0 ? -1 : 1);
           }
-          
+
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: adjustedDx, dy: adjustedDy }
+            params: { dx: adjustedDx, dy: adjustedDy },
           });
           break;
         }
-          
-        case 'left':
-          // Normal horizontal movement
+
+        case "left":
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: -1, dy: 0 }
+            params: { dx: -1, dy: 0 },
           });
           break;
-          
-        case 'right':
-          // Normal horizontal movement
+
+        case "right":
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: 1, dy: 0 }
+            params: { dx: 1, dy: 0 },
           });
           break;
-          
-        case 'up':
-          // Move 2 cells vertically to compensate for hex offset
-          console.log(`[HeroCommand] Moving hero up by 2: unit=${hero.id}, pos=${JSON.stringify(hero.pos)}`);
+
+        case "up":
+          console.log(
+            `[HeroCommand] Moving hero up by 2: unit=${hero.id}, pos=${JSON.stringify(hero.pos)}`,
+          );
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: 0, dy: -2 }
+            params: { dx: 0, dy: -2 },
           });
           break;
-          
-        case 'down':
-          // Move 2 cells vertically to compensate for hex offset
-          console.log(`[HeroCommand] Moving hero down by 2: unit=${hero.id}, pos=${JSON.stringify(hero.pos)}`);
+
+        case "down":
+          console.log(
+            `[HeroCommand] Moving hero down by 2: unit=${hero.id}, pos=${JSON.stringify(hero.pos)}`,
+          );
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: 0, dy: 2 }
+            params: { dx: 0, dy: 2 },
           });
           break;
-          
-        case 'up-left':
-          // Diagonal movement
+
+        case "up-left":
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: -1, dy: -2 }
+            params: { dx: -1, dy: -2 },
           });
           break;
-          
-        case 'up-right':
+
+        case "up-right":
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: 1, dy: -2 }
+            params: { dx: 1, dy: -2 },
           });
           break;
-          
-        case 'down-left':
+
+        case "down-left":
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: -1, dy: 2 }
+            params: { dx: -1, dy: 2 },
           });
           break;
-          
-        case 'down-right':
+
+        case "down-right":
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: 1, dy: 2 }
+            params: { dx: 1, dy: 2 },
           });
           break;
-          
-        case 'knight-left':
-          // Knight move: 2 vertical, 1 horizontal for hex grid
+
+        case "knight-left":
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: -1, dy: -2 }
+            params: { dx: -1, dy: -2 },
           });
           break;
-          
-        case 'knight-right':
+
+        case "knight-right":
           this.sim.queuedCommands.push({
-            type: 'move',
+            type: "move",
             unitId: hero.id,
-            params: { dx: 1, dy: -2 }
+            params: { dx: 1, dy: -2 },
           });
           break;
-          
-        case 'attack':
-        case 'strike': {
-          const direction = params.direction || hero.meta?.facing || 'right';
-          const range = params.range || 4; // Increased default range
+
+        case "attack":
+        case "strike": {
+          const direction = params.direction || hero.meta?.facing || "right";
+          const range = params.range || 8; // Huge range like a visor
           const damage = params.damage || hero.dmg || 25; // Increased damage
-          
-          // Calculate HUGE attack zones (5 lanes wide sweep, 4 cells deep)
-          const attackZones: Array<{x: number, y: number}> = [];
-          const attackDx = direction === 'right' ? 1 : direction === 'left' ? -1 : 0;
-          const attackDy = direction === 'down' ? 1 : direction === 'up' ? -1 : 0;
-          
-          // Create MASSIVE 5-lane attack arc that sweeps out
+
+          const attackZones: Array<{ x: number; y: number }> = [];
+          const attackDx =
+            direction === "right" ? 1 : direction === "left" ? -1 : 0;
+          const attackDy =
+            direction === "down" ? 1 : direction === "up" ? -1 : 0;
+
           for (let dist = 1; dist <= range; dist++) {
             const baseX = hero.pos.x + attackDx * dist;
             const baseY = hero.pos.y + attackDy * dist;
-            
-            // Fixed 3-lane sweep
-            const width = 3; // Always 3 lanes wide
+
+            // Width scales with range - smaller ranges have narrower width
+            const width = range <= 2 ? 3 : 7; // 3 lanes for short range, 7 for long range
             const halfWidth = Math.floor(width / 2);
-            
+
             if (attackDx !== 0) {
-              // Horizontal attack - hit vertical lanes
               for (let lane = -halfWidth; lane <= halfWidth; lane++) {
                 attackZones.push({ x: baseX, y: baseY + lane });
-                
-                // Add BIGGER visual effect for attack visor
+
                 this.sim.queuedCommands.push({
-                  type: 'particle',
+                  type: "particle",
                   params: {
                     pos: { x: baseX * 8 + 4, y: (baseY + lane) * 8 + 4 },
-                    vel: { x: attackDx * 2, y: 0 }, // Particles move outward
-                    lifetime: 12 + dist * 2, // Longer lasting at distance
-                    type: 'spark',
-                    color: `hsl(${40 + dist * 10}, 100%, ${60 - dist * 5}%)`, // Color gradient
-                    radius: 2.5 + dist * 0.3, // Bigger at distance
-                    z: 3
-                  }
+                    vel: { x: attackDx * 1.5, y: 0 }, // Particles move outward
+                    lifetime: 20 + dist * 3, // Much longer lasting
+                    type: "spark",
+                    color: `hsl(${45 + dist * 5}, 90%, ${70 - dist * 3}%)`, // Bright golden gradient
+                    radius: 4 + dist * 0.5, // Much bigger particles
+                    z: 3,
+                  },
+                });
+                
+                // Add secondary glow effect
+                this.sim.queuedCommands.push({
+                  type: "particle",
+                  params: {
+                    pos: { x: baseX * 8 + 4, y: (baseY + lane) * 8 + 4 },
+                    vel: { x: attackDx * 0.5, y: 0 },
+                    lifetime: 15 + dist * 2,
+                    type: "glow",
+                    color: `hsla(${45 + dist * 5}, 100%, 80%, 0.6)`,
+                    radius: 6 + dist * 0.8,
+                    z: 2,
+                  },
                 });
               }
             } else {
-              // Vertical attack - hit horizontal lanes
               for (let lane = -halfWidth; lane <= halfWidth; lane++) {
                 attackZones.push({ x: baseX + lane, y: baseY });
-                
-                // Add BIGGER visual effect for attack visor
+
                 this.sim.queuedCommands.push({
-                  type: 'particle',
+                  type: "particle",
                   params: {
                     pos: { x: (baseX + lane) * 8 + 4, y: baseY * 8 + 4 },
-                    vel: { x: 0, y: attackDy * 2 },
-                    lifetime: 12 + dist * 2,
-                    type: 'spark',
-                    color: `hsl(${40 + dist * 10}, 100%, ${60 - dist * 5}%)`,
-                    radius: 2.5 + dist * 0.3,
-                    z: 3
-                  }
+                    vel: { x: 0, y: attackDy * 1.5 },
+                    lifetime: 20 + dist * 3,
+                    type: "spark",
+                    color: `hsl(${45 + dist * 5}, 90%, ${70 - dist * 3}%)`,
+                    radius: 4 + dist * 0.5,
+                    z: 3,
+                  },
+                });
+                
+                // Add secondary glow effect
+                this.sim.queuedCommands.push({
+                  type: "particle",
+                  params: {
+                    pos: { x: (baseX + lane) * 8 + 4, y: baseY * 8 + 4 },
+                    vel: { x: 0, y: attackDy * 0.5 },
+                    lifetime: 15 + dist * 2,
+                    type: "glow",
+                    color: `hsla(${45 + dist * 5}, 100%, 80%, 0.6)`,
+                    radius: 6 + dist * 0.8,
+                    z: 2,
+                  },
                 });
               }
             }
           }
-          
-          // Store attack zones for visualization
+
           hero.meta.attackZones = attackZones;
-          hero.meta.attackZonesExpiry = this.sim.ticks + 15; // Show longer for bigger effect
-          
-          // Find all enemies in attack zones  
+          hero.meta.attackZonesExpiry = this.sim.ticks + 30; // Show much longer for huge visor effect
+
           const enemiesSet = new Set<string>();
-          const enemies = this.sim.units.filter(u => {
+          const enemies = this.sim.units.filter((u) => {
             if (u.team === hero.team || u.hp <= 0) return false;
-            const inZone = attackZones.some(zone => 
-              u.pos.x === zone.x && u.pos.y === zone.y
+            const inZone = attackZones.some(
+              (zone) => u.pos.x === zone.x && u.pos.y === zone.y,
             );
             if (inZone) {
               enemiesSet.add(u.id);
             }
             return inZone;
           });
-          
-          // Damage all enemies in the arc
+
           for (const enemy of enemies) {
             const strikeCommand = {
-              type: 'strike',
+              type: "strike",
               unitId: hero.id,
               params: {
                 targetId: enemy.id,
                 direction: direction,
                 range: range,
-                damage: damage
-              }
+                damage: damage,
+              },
             };
             this.sim.queuedCommands.push(strikeCommand);
           }
-          
-          // Visual swipe effect ONLY if no targets
+
           if (enemies.length === 0) {
             this.sim.queuedCommands.push({
-              type: 'strike',
+              type: "strike",
               unitId: hero.id,
               params: {
                 direction: direction,
                 range: range,
-                damage: damage
-              }
+                damage: damage,
+              },
             });
           }
-          
-          // Set attack state immediately since we're initiating the attack sequence
+
           const transform = this.sim.getTransform();
           transform.updateUnit(hero.id, {
-            state: 'attack',
+            state: "attack",
             meta: {
               ...hero.meta,
               attackStartTick: this.sim.ticks,
-              attackEndTick: this.sim.ticks + 10 // 10 tick attack animation to match new sharper rig
-            }
+              attackEndTick: this.sim.ticks + 6, // Quick punch animation
+            },
           });
           break;
         }
 
-        case 'charge_attack': {
-          // Start charging attack - increase damage over time
+        case "charge_attack": {
           const currentCharge = hero.meta?.attackCharge || 0;
           const newCharge = Math.min(currentCharge + 1, 5); // Max 5x charge
-          
-          // Update charge directly via transform
+
           const transform = this.sim.getTransform();
           transform.updateUnit(hero.id, {
-            state: 'charging',
+            state: "charging",
             meta: {
               ...hero.meta,
               attackCharge: newCharge,
-              chargingAttack: true
-            }
+              chargingAttack: true,
+            },
           });
-          
-          // Visual feedback for charging
+
           this.sim.queuedCommands.push({
-            type: 'particle',
+            type: "particle",
             params: {
               pos: { x: hero.pos.x * 8 + 4, y: hero.pos.y * 8 + 4 },
               vel: { x: 0, y: -0.5 },
               lifetime: 15,
-              type: 'energy',
+              type: "energy",
               color: `hsl(${60 + newCharge * 30}, 100%, ${50 + newCharge * 10}%)`,
               radius: 0.8 + currentCharge * 0.2,
-              z: 3
-            }
+              z: 3,
+            },
           });
           break;
         }
-          
-        case 'release_attack': {
-          // Release charged attack
+
+        case "release_attack": {
           const chargeLevel = hero.meta?.attackCharge || 1;
           const baseDamage = hero.dmg || 15;
           const chargedDamage = baseDamage * chargeLevel;
-          const direction = params.direction || hero.meta?.facing || 'right';
-          
-          // Clear charging state
+          const direction = params.direction || hero.meta?.facing || "right";
+
           const transform = this.sim.getTransform();
           transform.updateUnit(hero.id, {
-            state: 'attack',
+            state: "attack",
             meta: {
               ...hero.meta,
               attackCharge: 0,
-              chargingAttack: false
-            }
+              chargingAttack: false,
+            },
           });
-          
-          // Queue a strike with charged damage
+
           this.sim.queuedCommands.push({
-            type: 'strike',
+            type: "strike",
             unitId: hero.id,
             params: {
               direction: direction,
               damage: chargedDamage,
               range: 3, // Longer range for charged attack
               knockback: chargeLevel * 2, // More knockback with charge
-              aspect: 'charged'
-            }
+              aspect: "charged",
+            },
           });
           break;
         }
+        
+        case "bolt": {
+          // Lightning bolt attack in facing direction
+          const direction = params.direction || hero.meta?.facing || "right";
+          const range = params.range || 8; // Long range lightning
+          const damage = params.damage || 40; // High damage
           
+          // Find first enemy in line
+          const dx = direction === "right" ? 1 : direction === "left" ? -1 : 0;
+          const dy = direction === "down" ? 1 : direction === "up" ? -1 : 0;
+          
+          let target = null;
+          for (let dist = 1; dist <= range; dist++) {
+            const checkX = hero.pos.x + dx * dist;
+            const checkY = hero.pos.y + dy * dist;
+            
+            const enemy = this.sim.units.find(
+              (u) =>
+                u.pos.x === checkX &&
+                u.pos.y === checkY &&
+                u.team !== hero.team &&
+                u.hp > 0,
+            );
+            
+            if (enemy) {
+              target = enemy;
+              break;
+            }
+          }
+          
+          if (target) {
+            // Queue bolt command at target position
+            this.sim.queuedCommands.push({
+              type: "bolt",
+              params: {
+                x: target.pos.x,
+                y: target.pos.y,
+                damage: damage,
+                sourceId: hero.id,
+              },
+            });
+          } else {
+            // Visual effect at max range if no target
+            const boltX = hero.pos.x + dx * range;
+            const boltY = hero.pos.y + dy * range;
+            this.sim.queuedCommands.push({
+              type: "bolt",
+              params: {
+                x: boltX,
+                y: boltY,
+                damage: 0, // No damage, just visual
+                sourceId: hero.id,
+              },
+            });
+          }
+          break;
+        }
+        
+        case "heal": {
+          // Heal self
+          const healAmount = params.amount || 25;
+          this.sim.queuedCommands.push({
+            type: "heal",
+            params: {
+              targetId: hero.id,
+              amount: healAmount,
+            },
+          });
+          break;
+        }
+
         default:
           console.warn(`Unknown hero action: ${action}`);
       }

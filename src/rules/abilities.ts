@@ -41,8 +41,6 @@ export class Abilities extends Rule {
           ability: Ability;
         } = { ability };
 
-        // Don't compile yet - will compile with cached units during execution
-
         Abilities.precompiledAbilities.set(name, compiled);
       }
     }
@@ -51,37 +49,43 @@ export class Abilities extends Rule {
   ability = (name: string): Ability | undefined => {
     return Abilities.abilityCache.get(name);
   };
-  
+
   private compiledForTick = -1;
-  
-  private recompileAbilitiesWithCache(cachedUnits: readonly Unit[], currentTick: number): void {
-    // Only recompile once per tick
+
+  private recompileAbilitiesWithCache(
+    cachedUnits: readonly Unit[],
+    currentTick: number,
+  ): void {
     if (this.compiledForTick === currentTick) {
       return;
     }
     this.compiledForTick = currentTick;
-    
-    // Clear compiled functions to force recompilation with new cached units
+
     for (const compiled of Abilities.precompiledAbilities.values()) {
       compiled.trigger = undefined;
       compiled.target = undefined;
     }
-    
-    // Compile abilities with cached units for this tick
+
     for (const [name, compiled] of Abilities.precompiledAbilities.entries()) {
       const ability = compiled.ability;
-      
+
       if (ability.trigger) {
         try {
-          compiled.trigger = dslCompiler.compileWithCachedUnits(ability.trigger, cachedUnits);
+          compiled.trigger = dslCompiler.compileWithCachedUnits(
+            ability.trigger,
+            cachedUnits,
+          );
         } catch (err) {
           console.error(`Failed to compile trigger for ${name}:`, err);
         }
       }
-      
+
       if (ability.target) {
         try {
-          compiled.target = dslCompiler.compileWithCachedUnits(ability.target, cachedUnits);
+          compiled.target = dslCompiler.compileWithCachedUnits(
+            ability.target,
+            cachedUnits,
+          );
         } catch (err) {
           console.error(`Failed to compile target for ${name}:`, err);
         }
@@ -91,7 +95,7 @@ export class Abilities extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     const currentTick = context.getCurrentTick();
-    
+
     this.commands = [];
     const metaCommands: QueuedCommand[] = []; // Collect meta commands separately
 
@@ -100,10 +104,9 @@ export class Abilities extends Rule {
 
     const allUnits = context.getAllUnits();
     this.cachedAllUnits = allUnits; // Cache immediately for all subsequent operations
-    
-    // Recompile abilities with cached units for this tick
+
     this.recompileAbilitiesWithCache(allUnits, currentTick);
-    
+
     const relevantUnits: Unit[] = [];
 
     for (const unit of allUnits) {
@@ -127,7 +130,6 @@ export class Abilities extends Rule {
       return this.commands;
     }
 
-    // Already cached above
     (context as any).cachedUnits = allUnits;
 
     const hostileUnits = allUnits.filter(
@@ -195,7 +197,8 @@ export class Abilities extends Rule {
         continue; // Skip this unit
       }
 
-      const lastAbilityTick = unit.lastAbilityTick || unit.meta?.lastAbilityTick; // Check both locations
+      const lastAbilityTick =
+        unit.lastAbilityTick || unit.meta?.lastAbilityTick; // Check both locations
 
       for (const abilityName of abilities) {
         if (abilityName === "melee" || abilityName === "ranged") {
@@ -206,7 +209,6 @@ export class Abilities extends Rule {
         if (!ability) {
           continue;
         }
-        
 
         if (context.isAbilityForced(unit.id, abilityName)) {
           continue;
@@ -224,7 +226,7 @@ export class Abilities extends Rule {
 
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
-          // Check current uses - the meta will be updated later in this tick
+
           const currentUses = meta[usesKey] || 0;
           if (currentUses >= ability.maxUses) {
             continue; // Ability exhausted
@@ -292,32 +294,29 @@ export class Abilities extends Rule {
         if (!this.pendingEffects) {
           this.pendingEffects = [];
         }
-        // Update lastAbilityTick IMMEDIATELY to prevent double-triggering
+
         if (!unit.lastAbilityTick) {
           unit.lastAbilityTick = {};
         }
         unit.lastAbilityTick[abilityName] = currentTick;
-        
+
         for (const effect of ability.effects) {
           this.pendingEffects.push({ effect, caster: unit, target });
         }
 
-        // Build the meta update
         const metaUpdate: any = {
           lastAbilityTick: {
             ...lastAbilityTick, // Use cached value
             [abilityName]: currentTick,
           },
         };
-        
-        // Increment uses counter if ability has maxUses
+
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
           const currentUses = meta[usesKey] || 0;
           metaUpdate[usesKey] = currentUses + 1;
         }
-        
-        // Update lastAbilityTick directly as a unit property, not in meta
+
         metaCommands.push({
           type: "meta",
           params: {
@@ -526,7 +525,10 @@ export class Abilities extends Rule {
 
     if (typeof targetExpression === "string") {
       try {
-        const compiledFn = dslCompiler.compileWithCachedUnits(targetExpression, this.cachedAllUnits);
+        const compiledFn = dslCompiler.compileWithCachedUnits(
+          targetExpression,
+          this.cachedAllUnits,
+        );
         return compiledFn(caster, context);
       } catch (error) {
         console.warn(`Failed to resolve target '${targetExpression}':`, error);
@@ -545,7 +547,10 @@ export class Abilities extends Rule {
   ): any {
     if (typeof value === "string") {
       try {
-        const compiledFn = dslCompiler.compileWithCachedUnits(value, this.cachedAllUnits);
+        const compiledFn = dslCompiler.compileWithCachedUnits(
+          value,
+          this.cachedAllUnits,
+        );
         return compiledFn(caster, context);
       } catch (error) {
         console.warn(`Failed to resolve DSL value '${value}':`, error);
@@ -586,7 +591,10 @@ export class Abilities extends Rule {
             : value.$conditional.else;
         }
 
-        const compiledCondition = dslCompiler.compileWithCachedUnits(condition, this.cachedAllUnits);
+        const compiledCondition = dslCompiler.compileWithCachedUnits(
+          condition,
+          this.cachedAllUnits,
+        );
         const conditionResult = compiledCondition(caster, context);
         return conditionResult
           ? value.$conditional.then
@@ -984,7 +992,6 @@ export class Abilities extends Rule {
     caster: any,
     primaryTarget: any,
   ): void {
-    
     const target = this.resolveTarget(
       context,
       effect.target || "self.pos",
@@ -1124,14 +1131,14 @@ export class Abilities extends Rule {
   ): void {
     const offsetX = effect.offsetX || 1;
     const offsetY = effect.offsetY || 0;
-    
+
     context.queueCommand({
       type: "plant",
       params: {
         unitId: caster.id,
         offsetX: offsetX,
-        offsetY: offsetY
-      }
+        offsetY: offsetY,
+      },
     });
   }
 
@@ -1538,7 +1545,6 @@ export class Abilities extends Rule {
     const radius =
       this.resolveValue(context, effect.radius, caster, target) || 3;
 
-    // Always use cached units - they should be populated by execute()
     const allUnitsForSearch = this.cachedAllUnits;
     const unitsInArea = allUnitsForSearch.filter((u) => {
       const dist = Math.sqrt(
@@ -1548,7 +1554,6 @@ export class Abilities extends Rule {
 
       if (effect.condition && typeof effect.condition === "string") {
         try {
-          // Quick check for common conditions
           if (effect.condition === "target.tags.includes('mechanical')") {
             return u.tags?.includes("mechanical");
           }
@@ -1563,8 +1568,11 @@ export class Abilities extends Rule {
           }
 
           const safeUnit = { ...u, tags: u.tags || [] };
-          const compiledCondition = dslCompiler.compileWithCachedUnits(effect.condition, this.cachedAllUnits);
-          // cachedUnits already set above
+          const compiledCondition = dslCompiler.compileWithCachedUnits(
+            effect.condition,
+            this.cachedAllUnits,
+          );
+
           return compiledCondition(safeUnit, context);
         } catch (error) {
           console.warn(

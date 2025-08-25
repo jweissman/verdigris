@@ -6,7 +6,7 @@ import type { TickContext } from '../../src/core/tick_context';
 describe('Ao DSL Performance', () => {
   const compiler = new DSLCompiler();
   
-  // Mock unit
+
   const createUnit = (id: string, team: string): Unit => ({
     id,
     pos: { x: Math.random() * 100, y: Math.random() * 100 },
@@ -21,7 +21,7 @@ describe('Ao DSL Performance', () => {
     meta: {}
   });
   
-  // Create mock units
+
   const units: Unit[] = [];
   for (let i = 0; i < 50; i++) {
     units.push(createUnit(`unit${i}`, i % 2 === 0 ? 'friendly' : 'hostile'));
@@ -29,7 +29,7 @@ describe('Ao DSL Performance', () => {
   
   let getAllUnitsCallCount = 0;
   
-  // Mock context
+
   const mockContext: TickContext = {
     getAllUnits: () => {
       getAllUnitsCallCount++;
@@ -80,15 +80,15 @@ describe('Ao DSL Performance', () => {
   test('DSL compiler caches getAllUnits calls within a single expression', () => {
     getAllUnitsCallCount = 0;
     
-    // Complex expression that references units multiple times
+
     const expr = 'closest.enemy() && count.enemies_in_range(10) > 2';
     const fn = compiler.compile(expr);
     
-    // Evaluate for a single unit
+
     fn(units[0], mockContext);
     
-    // May call getAllUnits twice due to lazy evaluation of different helper groups
-    // But still much better than calling for each reference
+
+
     expect(getAllUnitsCallCount).toBeLessThanOrEqual(2);
   });
   
@@ -97,10 +97,10 @@ describe('Ao DSL Performance', () => {
     
     const expr = 'self.hp < 50';
     
-    // Compile once
+
     const fn1 = compiler.compile(expr);
     
-    // Should return same function
+
     const fn2 = compiler.compile(expr);
     
     expect(fn1).toBe(fn2);
@@ -117,7 +117,7 @@ describe('Ao DSL Performance', () => {
     
     const start = performance.now();
     
-    // Evaluate each expression for each unit
+
     for (const unit of units) {
       for (const expr of expressions) {
         const fn = compiler.compile(expr);
@@ -127,32 +127,32 @@ describe('Ao DSL Performance', () => {
     
     const elapsed = performance.now() - start;
     
-    // 50 units * 5 expressions = 250 evaluations
-    // Should complete in under 150ms (0.6ms per evaluation)
+
+
     expect(elapsed).toBeLessThan(150);
     
     const perEval = elapsed / 250;
-    // console.log(`Average time per DSL evaluation: ${perEval.toFixed(3)}ms`);
+
   });
   
   test('Cached units version avoids repeated getAllUnits calls', () => {
     getAllUnitsCallCount = 0;
     
-    // Simulate what abilities rule should do
+
     const cachedUnits = mockContext.getAllUnits(); // Call once
     expect(getAllUnitsCallCount).toBe(1);
     
-    // Now compile expressions with cached units
+
     const expr1 = compiler.compileWithCachedUnits('closest.enemy()', cachedUnits);
     const expr2 = compiler.compileWithCachedUnits('count.enemies_in_range(10)', cachedUnits);
     
-    // Evaluate for multiple units
+
     for (let i = 0; i < 10; i++) {
       expr1(units[i], mockContext);
       expr2(units[i], mockContext);
     }
     
-    // Should still only have called getAllUnits once (the initial cache)
+
     expect(getAllUnitsCallCount).toBe(1);
   });
   
@@ -167,7 +167,7 @@ describe('Ao DSL Performance', () => {
     
     const start = performance.now();
     
-    // Simulate evaluating triggers for all units
+
     for (const unit of units) {
       for (const trigger of abilityTriggers) {
         const fn = compiler.compile(trigger);
@@ -177,7 +177,7 @@ describe('Ao DSL Performance', () => {
     
     const elapsed = performance.now() - start;
     
-    // Should be fast even with complex expressions
+
     expect(elapsed).toBeLessThan(150);
   });
 });

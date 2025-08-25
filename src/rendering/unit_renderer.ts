@@ -1,6 +1,10 @@
 import { Unit } from "../types/Unit";
 import { Simulator } from "../core/simulator";
-import { SpriteScale, getSpriteDimensions, getUnitScale } from "../types/SpriteScale";
+import {
+  SpriteScale,
+  getSpriteDimensions,
+  getUnitScale,
+} from "../types/SpriteScale";
 
 export interface RenderContext {
   ctx: CanvasRenderingContext2D;
@@ -61,25 +65,31 @@ export class UnitRenderer {
    * Get the current animation frame for a unit
    */
   getAnimationFrame(unit: Unit, animationTime: number): number {
-    // Special handling for hero units with extended animations
     if (unit.tags?.includes("hero") || unit.meta?.scale === "hero") {
       if (unit.state === "dead") {
         return 12; // Last frame for death
       } else if (unit.state === "attack") {
         return 6; // Single attack frame (no cycling)
-      } else if (unit.state === "walk" || (unit.intendedMove && (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0))) {
+      } else if (
+        unit.state === "walk" ||
+        (unit.intendedMove &&
+          (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0))
+      ) {
         return 1; // Walking frame
       } else {
         return 0; // Idle frame (no cycling for now to prevent jitter)
       }
     }
-    
-    // Standard 4-frame units
+
     if (unit.state === "dead") {
       return 3; // Frame 4 (index 3) for death
     } else if (unit.state === "attack") {
       return 2; // Frame 3 (index 2) for attack
-    } else if (unit.state === "walk" || (unit.intendedMove && (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0))) {
+    } else if (
+      unit.state === "walk" ||
+      (unit.intendedMove &&
+        (unit.intendedMove.x !== 0 || unit.intendedMove.y !== 0))
+    ) {
       return 1; // Walking frame
     } else {
       return 0; // Idle frame (no cycling)
@@ -90,18 +100,16 @@ export class UnitRenderer {
    * Get sprite dimensions for a unit
    */
   getSpriteDimensions(unit: Unit): { width: number; height: number } {
-    // Use new scale system
     const scale = getUnitScale(unit);
     const dimensions = getSpriteDimensions(scale);
-    
-    // Allow override with explicit width/height in meta
+
     if (unit.meta?.width && unit.meta?.height) {
       return {
         width: unit.meta.width,
-        height: unit.meta.height
+        height: unit.meta.height,
       };
     }
-    
+
     return dimensions;
   }
 
@@ -139,8 +147,7 @@ export class UnitRenderer {
   ) {
     const isHuge = unit.meta.huge;
     const z = unit.meta?.z || 0;
-    
-    // Only show shadow when jumping
+
     if (z <= 0) return;
 
     ctx.save();
@@ -150,16 +157,7 @@ export class UnitRenderer {
     const shadowWidth = isHuge ? 24 : 6;
     const shadowHeight = isHuge ? 6 : 3;
 
-    // Shadow stays exactly at the ground position (screenX, screenY)
-    ctx.ellipse(
-      screenX,
-      screenY,
-      shadowWidth,
-      shadowHeight,
-      0,
-      0,
-      2 * Math.PI,
-    );
+    ctx.ellipse(screenX, screenY, shadowWidth, shadowHeight, 0, 0, 2 * Math.PI);
     ctx.fill();
     ctx.restore();
   }
@@ -211,47 +209,48 @@ export class UnitRenderer {
       scale?: number;
       showShadow?: boolean;
       flipHorizontal?: boolean;
-    }
+    },
   ) {
-    // Handle rigged units (modular body parts)
     if (unit.meta?.rig) {
-      // screenY already includes Z offset from isometric renderer
       this.renderRiggedUnit(ctx, unit, sprites, screenX, screenY, options);
       return;
     }
-    
-    // Normal sprite rendering
+
     const sprite = sprites.get(unit.sprite || unit.type);
     if (!sprite || !sprite.complete) {
-      // Fallback to colored square
       ctx.fillStyle = this.getUnitColor(unit);
       ctx.fillRect(screenX - 8, screenY - 8, 16, 16);
       return;
     }
-    
+
     const dimensions = this.getSpriteDimensions(unit);
     const frameWidth = dimensions.width;
     const frameCount = Math.floor(sprite.width / frameWidth);
-    // Use centralized frame calculation
+
     const frame = this.getAnimationFrame(unit, Date.now());
-    
+
     ctx.save();
-    
+
     if (options?.flipHorizontal) {
       ctx.scale(-1, 1);
       ctx.translate(-screenX * 2 - frameWidth, 0);
     }
-    
+
     ctx.drawImage(
       sprite,
-      frame * frameWidth, 0, frameWidth, dimensions.height,
-      screenX - frameWidth / 2, screenY - dimensions.height / 2,
-      frameWidth, dimensions.height
+      frame * frameWidth,
+      0,
+      frameWidth,
+      dimensions.height,
+      screenX - frameWidth / 2,
+      screenY - dimensions.height / 2,
+      frameWidth,
+      dimensions.height,
     );
-    
+
     ctx.restore();
   }
-  
+
   /**
    * Render unit with modular body parts
    */
@@ -261,37 +260,33 @@ export class UnitRenderer {
     sprites: Map<string, HTMLImageElement>,
     centerX: number,
     centerY: number,
-    options?: any
+    options?: any,
   ) {
     const parts = unit.meta.rig;
     if (!parts || !Array.isArray(parts)) return;
-    
-    const shouldFlip = options?.flipHorizontal || unit.meta?.facing === 'left';
-    
+
+    const shouldFlip = options?.flipHorizontal || unit.meta?.facing === "left";
+
     for (const part of parts) {
       const sprite = sprites.get(part.sprite);
       if (!sprite || !sprite.complete) {
         console.warn(`Missing sprite for ${part.name}: ${part.sprite}`);
         continue;
       }
-      
-      // Calculate position for this part
+
       const offsetX = shouldFlip ? -part.offset.x : part.offset.x;
       const pixelX = centerX + offsetX;
       const pixelY = centerY + part.offset.y;
-      
-      // Calculate frame position (3 frames at 16x16)
+
       const frameX = part.frame * 16;
-      
+
       ctx.save();
-      
-      // Apply flipping if needed
+
       if (shouldFlip) {
         ctx.scale(-1, 1);
         ctx.translate(-centerX * 2, 0);
       }
-      
-      // Apply rotation if needed
+
       if (part.rotation) {
         ctx.translate(pixelX, pixelY);
         const rotation = shouldFlip ? -part.rotation : part.rotation;
@@ -300,18 +295,23 @@ export class UnitRenderer {
       } else {
         ctx.translate(pixelX - 8, pixelY - 8);
       }
-      
-      // Draw the sprite frame with slight overlap for better layering
+
       ctx.drawImage(
         sprite,
-        frameX, 0, 16, 16, // Source: 16x16 frame
-        -1, -1, 18, 18 // Dest: slightly larger for overlap
+        frameX,
+        0,
+        16,
+        16, // Source: 16x16 frame
+        -1,
+        -1,
+        18,
+        18, // Dest: slightly larger for overlap
       );
-      
+
       ctx.restore();
     }
   }
-  
+
   /**
    * Get unit color for fallback rendering
    */

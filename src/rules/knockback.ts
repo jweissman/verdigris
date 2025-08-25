@@ -7,8 +7,7 @@ export class Knockback extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
-    
-    // Check for knockbacks
+
     const knockbackRange = 1.1;
     const knockbackRangeSq = knockbackRange * knockbackRange;
 

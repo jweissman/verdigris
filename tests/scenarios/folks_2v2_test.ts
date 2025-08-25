@@ -6,7 +6,7 @@ import { setupTest } from '../test_helper';
 describe('Folks 2v2 Matches', () => {
 
 
-  // very slow
+
   it.skip('should handle support folks', () => {
     const match = new Match2v2({
       team1: ['mechanic', 'builder'], // Support units

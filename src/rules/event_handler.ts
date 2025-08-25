@@ -17,7 +17,9 @@ export class EventHandler extends Rule {
         return `${type} from ${e.source} at (${e.target.x}, ${e.target.y}) with radius ${e.meta.radius}`;
       },
       damage: (e) => {
-        const origin = e.meta?.origin ? ` from (${e.meta.origin.x}, ${e.meta.origin.y})` : '';
+        const origin = e.meta?.origin
+          ? ` from (${e.meta.origin.x}, ${e.meta.origin.y})`
+          : "";
         return `${e.source} hit ${e.target} for ${e.meta.amount} ${e.meta.aspect} damage${origin} (now at ${targetUnit?.hp} hp)`;
       },
       heal: (e) =>
@@ -26,7 +28,7 @@ export class EventHandler extends Rule {
         `${e.source} formed ${e.meta.terrainType} at (${e.target?.x}, ${e.target?.y})`,
       particle: (e) =>
         `${e.source} created a particle effect at (${e.target?.x}, ${e.target?.y})`,
-      moisture: (e) => 
+      moisture: (e) =>
         `${e.source} changed moisture at (${e.target?.x}, ${e.target?.y}) by ${e.meta.amount}`,
       spawn: (e) =>
         `${e.source} spawned a unit at (${e.target?.x}, ${e.target?.y})`,
@@ -173,12 +175,11 @@ export class EventHandler extends Rule {
       } else {
         const friendlyFire = event.meta.friendlyFire === true; // Default to false - AOE command handles damage
         const excludeSource = event.meta.excludeSource === true;
-        
-        // Check if unit should be excluded
+
         if (excludeSource && unit.id === event.source) {
           return false; // Always exclude source if excludeSource is true
         }
-        
+
         if (!friendlyFire) {
           return inRange && sourceUnit && unit.team !== sourceUnit.team;
         } else {
@@ -230,10 +231,7 @@ export class EventHandler extends Rule {
           },
         });
       } else if (isHealing) {
-        // Healing AOE events don't create commands - handled by AoE command
       } else {
-        // Regular AOE damage events don't create damage commands - handled by AoE command
-        // Only handle knockback for visual/physics effects
         if (event.meta.force && sourceUnit) {
           const massDiff = (sourceUnit.mass || 1) - (unit.mass || 1);
           if (massDiff >= 3) {
@@ -293,7 +291,6 @@ export class EventHandler extends Rule {
     context: TickContext,
     commands: QueuedCommand[],
   ) {
-    // Events are purely observational - only create visual feedback
     if (!event.target || !event.meta?.amount) {
       return;
     }
@@ -302,8 +299,7 @@ export class EventHandler extends Rule {
     if (!targetUnit) {
       return;
     }
-    
-    // Visual feedback particles only
+
     const aspect = event.meta.aspect || "physical";
     for (let i = 0; i < 5; i++) {
       commands.push({
@@ -330,7 +326,6 @@ export class EventHandler extends Rule {
     context: TickContext,
     commands: QueuedCommand[],
   ) {
-    // Events are purely observational - only create visual feedback
     if (!event.target || !event.meta?.amount) {
       return;
     }
@@ -339,8 +334,7 @@ export class EventHandler extends Rule {
     if (!targetUnit) {
       return;
     }
-    
-    // Visual feedback particles only
+
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2;
       commands.push({

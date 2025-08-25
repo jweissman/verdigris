@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 
-// Hero rigging types
+
 interface Bone {
   name: string;
   start: { x: number; y: number };
@@ -40,7 +40,7 @@ describe.skip('Hero Rigging System', () => {
     test('should create humanoid skeleton with proper hierarchy', () => {
       const hero = createHeroRig();
       
-      // Should have core bones
+
       expect(hero.skeleton.has('torso')).toBe(true);
       expect(hero.skeleton.has('head')).toBe(true);
       expect(hero.skeleton.has('left_arm')).toBe(true);
@@ -48,7 +48,7 @@ describe.skip('Hero Rigging System', () => {
       expect(hero.skeleton.has('left_leg')).toBe(true);
       expect(hero.skeleton.has('right_leg')).toBe(true);
       
-      // Check hierarchy
+
       const torso = hero.skeleton.get('torso')!;
       expect(torso.children.length).toBeGreaterThan(0);
       
@@ -61,11 +61,11 @@ describe.skip('Hero Rigging System', () => {
       const rightArm = hero.skeleton.get('right_arm')!;
       const originalLength = rightArm.length;
       
-      // Rotate arm
+
       rotateBone(rightArm, Math.PI / 4);
       updateBonePositions(hero);
       
-      // Length should remain constant
+
       const newLength = calculateBoneLength(rightArm);
       expect(Math.abs(newLength - originalLength)).toBeLessThan(0.01);
     });
@@ -77,11 +77,11 @@ describe.skip('Hero Rigging System', () => {
       
       const originalArmPos = { ...rightArm.start };
       
-      // Move torso
+
       torso.angle += Math.PI / 6;
       updateBonePositions(hero);
       
-      // Arm should have moved
+
       expect(rightArm.start.x).not.toBe(originalArmPos.x);
       expect(rightArm.start.y).not.toBe(originalArmPos.y);
     });
@@ -91,7 +91,7 @@ describe.skip('Hero Rigging System', () => {
     test('should interpolate between animation frames', () => {
       const hero = createHeroRig();
       
-      // Create simple swing animation
+
       const swingAnimation: AnimationFrame[] = [
         {
           bones: new Map([
@@ -111,21 +111,21 @@ describe.skip('Hero Rigging System', () => {
       
       hero.animations.set('swing', swingAnimation);
       
-      // Start animation
+
       playAnimation(hero, 'swing');
       
-      // Step to middle of first frame (t = 0.5)
+
       updateAnimation(hero, 5);
       
       const rightArm = hero.skeleton.get('right_arm')!;
-      // Should be halfway between 0 and PI/2
+
       expect(rightArm.angle).toBeCloseTo(Math.PI / 4, 2);
     });
     
     test('should smoothly transition between animations', () => {
       const hero = createHeroRig();
       
-      // Set up idle and walk animations
+
       setupBasicAnimations(hero);
       
       playAnimation(hero, 'idle');
@@ -133,14 +133,14 @@ describe.skip('Hero Rigging System', () => {
       
       const idleArmAngle = hero.skeleton.get('right_arm')!.angle;
       
-      // Transition to walk
+
       transitionToAnimation(hero, 'walk', 5); // 5 frame blend
       
       updateAnimation(hero, 1);
       
       const blendedAngle = hero.skeleton.get('right_arm')!.angle;
       
-      // Should be between idle and walk positions
+
       expect(blendedAngle).not.toBe(idleArmAngle);
     });
     
@@ -161,14 +161,14 @@ describe.skip('Hero Rigging System', () => {
       hero.animations.set('jump', jumpAnimation);
       playAnimation(hero, 'jump');
       
-      // Apply ease-out curve
+
       const angles: number[] = [];
       for (let i = 0; i < 10; i++) {
         updateAnimationWithEasing(hero, 1, 'easeOut');
         angles.push(hero.skeleton.get('torso')!.angle);
       }
       
-      // Should decelerate (smaller changes near end)
+
       const earlyDelta = Math.abs(angles[1] - angles[0]);
       const lateDelta = Math.abs(angles[9] - angles[8]);
       expect(lateDelta).toBeLessThan(earlyDelta);
@@ -185,7 +185,7 @@ describe.skip('Hero Rigging System', () => {
       expect(hero.weapon).toBe(sword);
       expect(hero.weaponSocket).toBe('right_hand');
       
-      // Weapon should follow hand position
+
       const hand = hero.skeleton.get('right_hand')!;
       const weaponPos = getWeaponPosition(hero);
       
@@ -201,14 +201,14 @@ describe.skip('Hero Rigging System', () => {
       
       const initialWeaponAngle = getWeaponAngle(hero);
       
-      // Rotate the arm
+
       const rightArm = hero.skeleton.get('right_arm')!;
       rightArm.angle += Math.PI / 4;
       updateBonePositions(hero);
       
       const newWeaponAngle = getWeaponAngle(hero);
       
-      // Weapon angle should have changed
+
       expect(newWeaponAngle).not.toBe(initialWeaponAngle);
     });
     
@@ -220,7 +220,7 @@ describe.skip('Hero Rigging System', () => {
       attachWeapon(hero, sword, 'right_hand');
       expect(hero.weapon?.type).toBe('sword');
       
-      // Switch to spear
+
       attachWeapon(hero, spear, 'right_hand');
       expect(hero.weapon?.type).toBe('spear');
       expect(hero.weapon?.length).toBe(5);
@@ -232,12 +232,12 @@ describe.skip('Hero Rigging System', () => {
       const hero = createHeroRig();
       const target = { x: hero.position.x + 5, y: hero.position.y - 2 };
       
-      // Use IK to reach target with right arm
+
       const reached = reachForTarget(hero, 'right_arm', target);
       
       expect(reached).toBe(true);
       
-      // Hand should be close to target
+
       const hand = hero.skeleton.get('right_hand')!;
       const distance = Math.sqrt(
         Math.pow(hand.end.x - target.x, 2) + 
@@ -249,14 +249,14 @@ describe.skip('Hero Rigging System', () => {
     test('should respect joint limits during IK', () => {
       const hero = createHeroRig();
       
-      // Set joint limits
+
       setJointLimits(hero, 'right_elbow', -Math.PI * 0.9, 0); // Elbow can't bend backwards
       
-      // Try to reach behind
+
       const target = { x: hero.position.x - 5, y: hero.position.y };
       reachForTarget(hero, 'right_arm', target);
       
-      // Elbow should respect limits
+
       const elbow = hero.skeleton.get('right_elbow')!;
       expect(elbow.angle).toBeGreaterThanOrEqual(-Math.PI * 0.9);
       expect(elbow.angle).toBeLessThanOrEqual(0);
@@ -267,35 +267,35 @@ describe.skip('Hero Rigging System', () => {
     test('should generate walking animation based on speed', () => {
       const hero = createHeroRig();
       
-      // Generate walk cycle
+
       const walkSpeed = 2;
       const walkCycle = generateWalkCycle(hero, walkSpeed);
       
       expect(walkCycle.length).toBeGreaterThan(0);
       
-      // Legs should alternate
+
       const frame1 = walkCycle[0];
       const frame2 = walkCycle[Math.floor(walkCycle.length / 2)];
       
       const leftLeg1 = frame1.bones.get('left_leg')?.angle || 0;
       const leftLeg2 = frame2.bones.get('left_leg')?.angle || 0;
       
-      // Legs should be in opposite phases
+
       expect(Math.sign(leftLeg1)).not.toBe(Math.sign(leftLeg2));
     });
     
     test('should adjust animation for terrain slope', () => {
       const hero = createHeroRig();
       
-      // Simulate uphill
+
       const slopeAngle = Math.PI / 6; // 30 degree slope
       adjustForSlope(hero, slopeAngle);
       
-      // Torso should lean forward
+
       const torso = hero.skeleton.get('torso')!;
       expect(torso.angle).toBeLessThan(0); // Leaning into slope
       
-      // Legs should adjust
+
       const leftLeg = hero.skeleton.get('left_leg')!;
       const rightLeg = hero.skeleton.get('right_leg')!;
       expect(leftLeg.angle).not.toBe(rightLeg.angle); // Asymmetric stance
@@ -303,11 +303,11 @@ describe.skip('Hero Rigging System', () => {
   });
 });
 
-// Mock implementations for testing
+
 function createHeroRig(): RiggedHero {
   const skeleton = new Map<string, Bone>();
   
-  // Create torso (root)
+
   const torso: Bone = {
     name: 'torso',
     start: { x: 0, y: 0 },
@@ -318,7 +318,7 @@ function createHeroRig(): RiggedHero {
   };
   skeleton.set('torso', torso);
   
-  // Add head
+
   const head: Bone = {
     name: 'head',
     start: torso.end,
@@ -331,7 +331,7 @@ function createHeroRig(): RiggedHero {
   skeleton.set('head', head);
   torso.children.push(head);
   
-  // Add arms
+
   const rightArm: Bone = {
     name: 'right_arm',
     start: { x: torso.end.x, y: torso.end.y + 0.5 },
@@ -355,7 +355,7 @@ function createHeroRig(): RiggedHero {
   skeleton.set('right_hand', rightHand);
   rightArm.children.push(rightHand);
   
-  // Add left arm (mirror)
+
   const leftArm: Bone = {
     name: 'left_arm',
     start: { x: torso.end.x, y: torso.end.y + 0.5 },
@@ -367,7 +367,7 @@ function createHeroRig(): RiggedHero {
   };
   skeleton.set('left_arm', leftArm);
   
-  // Add legs
+
   const rightLeg: Bone = {
     name: 'right_leg',
     start: torso.start,
@@ -404,7 +404,7 @@ function rotateBone(bone: Bone, angle: number) {
 }
 
 function updateBonePositions(hero: RiggedHero) {
-  // Forward kinematics - update all bone positions based on angles
+
   const torso = hero.skeleton.get('torso')!;
   updateBoneFK(torso, hero.position);
 }
@@ -440,7 +440,7 @@ function updateAnimation(hero: RiggedHero, deltaFrames: number) {
   const animation = hero.animations.get(hero.currentAnimation);
   if (!animation) return;
   
-  // Simple linear interpolation for test
+
   const frameIndex = Math.floor(hero.animationFrame / 10);
   const t = (hero.animationFrame % 10) / 10;
   
@@ -448,7 +448,7 @@ function updateAnimation(hero: RiggedHero, deltaFrames: number) {
     const frame1 = animation[frameIndex];
     const frame2 = animation[frameIndex + 1];
     
-    // Interpolate bone angles
+
     for (const [boneName, target] of frame2.bones) {
       const bone = hero.skeleton.get(boneName);
       if (bone) {
@@ -460,7 +460,7 @@ function updateAnimation(hero: RiggedHero, deltaFrames: number) {
 }
 
 function updateAnimationWithEasing(hero: RiggedHero, deltaFrames: number, easing: string) {
-  // Apply easing function
+
   updateAnimation(hero, deltaFrames);
 }
 
@@ -509,11 +509,11 @@ function getWeaponAngle(hero: RiggedHero): number {
 }
 
 function reachForTarget(hero: RiggedHero, limbName: string, target: { x: number; y: number }): boolean {
-  // Simplified IK
+
   const limb = hero.skeleton.get(limbName);
   if (!limb) return false;
   
-  // Just point toward target for test
+
   const dx = target.x - limb.start.x;
   const dy = target.y - limb.start.y;
   limb.angle = Math.atan2(dy, dx);
@@ -522,7 +522,7 @@ function reachForTarget(hero: RiggedHero, limbName: string, target: { x: number;
 }
 
 function setJointLimits(hero: RiggedHero, jointName: string, minAngle: number, maxAngle: number) {
-  // Store limits in bone metadata (simplified)
+
 }
 
 function generateWalkCycle(hero: RiggedHero, speed: number): AnimationFrame[] {

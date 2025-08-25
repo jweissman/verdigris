@@ -13,19 +13,19 @@ describe('Plant Defense MWE', () => {
     const game = new PlantDefenseGame();
     game.bootstrap();
     
-    // Find the farmer
+
     const farmer = game.sim.units.find(u => u.id === 'player_farmer');
     expect(farmer).toBeDefined();
     expect(farmer?.abilities).toContain('plant');
     
-    // Initial bush count
+
     const initialBushes = game.sim.units.filter(u => u.type === 'bush').length;
     
-    // Force plant
+
     game.sim.forceAbility('player_farmer', 'plant', farmer?.pos);
     game.sim.step();
     
-    // Should have one more bush
+
     const newBushes = game.sim.units.filter(u => u.type === 'bush').length;
     expect(newBushes).toBe(initialBushes + 1);
   });
@@ -36,14 +36,14 @@ describe('Plant Defense MWE', () => {
     
     const farmer = game.sim.units.find(u => u.id === 'player_farmer');
     
-    // Plant a bush
+
     game.sim.forceAbility('player_farmer', 'plant', farmer?.pos);
     game.sim.step();
     
     const bush = game.sim.units.find(u => u.type === 'bush');
     expect(bush).toBeDefined();
     
-    // Verify defensive properties
+
     expect(bush?.hp).toBe(1);
     expect(bush?.mass).toBe(1);
     expect(bush?.team).toBe('friendly');
@@ -55,11 +55,11 @@ describe('Plant Defense MWE', () => {
     const game = new PlantDefenseGame();
     game.bootstrap();
     
-    // Wave 1 should have 4 enemies (3 + wave number)
+
     const waveEnemies = game.sim.units.filter(u => u.team === 'hostile');
     expect(waveEnemies.length).toBe(4);
     
-    // All should be soldiers or worms for wave 1
+
     for (const enemy of waveEnemies) {
       expect(['soldier', 'worm']).toContain(enemy.type || enemy.sprite);
     }
@@ -75,7 +75,7 @@ describe('Plant Defense MWE', () => {
     
     expect(rangers.length).toBe(2);
     
-    // Rangers should have ranged ability
+
     for (const ranger of rangers) {
       expect(ranger.abilities).toContain('ranged');
     }
@@ -85,21 +85,21 @@ describe('Plant Defense MWE', () => {
     const game = new PlantDefenseGame();
     game.bootstrap();
     
-    // Initially wave 1
+
     const initialEnemies = game.sim.units.filter(u => u.team === 'hostile');
     expect(initialEnemies.length).toBeGreaterThan(0);
     
-    // Kill all enemies by setting their HP through the data store
+
     const arrays = (game.sim as any).unitArrays;
     for (let i = 0; i < arrays.count; i++) {
-      if (arrays.team[i] === 1) { // hostile team
+      if (arrays.team[i] === 1) {
         arrays.hp[i] = 0;
-        arrays.state[i] = 3; // dead state
+        arrays.state[i] = 3;
       }
     }
     game.sim.step();
     
-    // Should detect wave complete
+
     const waveComplete = (game as any).checkWaveComplete();
     expect(waveComplete).toBe(true);
   });
@@ -112,17 +112,17 @@ describe('Plant Defense MWE', () => {
     const ranger = game.sim.units.find(u => u.type === 'ranger' && u.team === 'friendly');
     const enemy = game.sim.units.find(u => u.team === 'hostile');
     
-    // Plant bush
+
     game.sim.forceAbility('player_farmer', 'plant', farmer?.pos);
     game.sim.step();
     
     const bush = game.sim.units.find(u => u.type === 'bush');
     
-    // Bush should be on same team as farmer/ranger
+
     expect(bush?.team).toBe(farmer?.team);
     expect(bush?.team).toBe(ranger?.team);
     
-    // But different team from enemy
+
     expect(bush?.team).not.toBe(enemy?.team);
   });
   
@@ -133,7 +133,7 @@ describe('Plant Defense MWE', () => {
     expect(handler).toBeDefined();
     expect(typeof handler).toBe('function');
     
-    // Test controls don't crash
+
     handler({ key: 'w', type: 'keydown' });
     handler({ key: 'a', type: 'keydown' });
     handler({ key: 's', type: 'keydown' });

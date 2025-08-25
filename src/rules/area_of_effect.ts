@@ -39,7 +39,6 @@ export class AreaOfEffect extends Rule {
         const dy = unit.pos.y - explosiveUnit.pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= radius) {
-          // Queue damage command directly
           this.commands.push({
             type: "damage",
             params: {
@@ -47,21 +46,21 @@ export class AreaOfEffect extends Rule {
               amount: damage,
               aspect: "explosion",
               sourceId: explosiveUnit.id,
-              origin: explosiveUnit.pos
-            }
+              origin: explosiveUnit.pos,
+            },
           });
 
           const knockback = 6.5;
           const nx = (dx / dist || 1) * knockback;
           const ny = (dy / dist || 1) * knockback;
-          // Queue knockback command directly
+
           this.commands.push({
             type: "knockback",
             unitId: unit.id,
             params: {
               direction: { x: dx / (dist || 1), y: dy / (dist || 1) },
-              force: knockback
-            }
+              force: knockback,
+            },
           });
         }
       }
@@ -96,7 +95,6 @@ export class AreaOfEffect extends Rule {
           const damageMultiplier = 1 - dist / (radius * 2);
           const actualDamage = Math.floor(damage * damageMultiplier);
 
-          // Queue damage command directly
           this.commands.push({
             type: "damage",
             params: {
@@ -104,7 +102,7 @@ export class AreaOfEffect extends Rule {
               amount: actualDamage,
               aspect: aoe.aspect || "physical",
               sourceId: unit.id,
-              origin: targetPos
+              origin: targetPos,
             },
           });
 
@@ -112,14 +110,14 @@ export class AreaOfEffect extends Rule {
             const knockbackForce = force * (1 - dist / radius);
             const nx = (dx / dist) * knockbackForce;
             const ny = (dy / dist) * knockbackForce;
-            // Queue knockback command directly
+
             this.commands.push({
               type: "knockback",
               unitId: target.id,
               params: {
                 direction: { x: dx / dist, y: dy / dist },
-                force: knockbackForce
-              }
+                force: knockbackForce,
+              },
             });
           }
         }

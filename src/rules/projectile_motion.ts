@@ -12,10 +12,9 @@ export class ProjectileMotion extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
     const projectiles = context.getProjectiles();
-    
-    // Early exit if no projectiles
+
     if (projectiles.length === 0) return this.commands;
-    
+
     const arrays = context.getArrays();
 
     for (const projectile of projectiles) {
@@ -26,7 +25,6 @@ export class ProjectileMotion extends Rule {
         for (const idx of arrays.activeIndices) {
           if (arrays.hp[idx] <= 0) continue;
 
-          // Quick Manhattan distance check first
           const absDx = Math.abs(arrays.posX[idx] - projectile.pos.x);
           const absDy = Math.abs(arrays.posY[idx] - projectile.pos.y);
           if (absDx > radius || absDy > radius) continue;
@@ -67,7 +65,6 @@ export class ProjectileMotion extends Rule {
           if (arrays.team[idx] === projectileTeam || arrays.hp[idx] <= 0)
             continue;
 
-          // Quick Manhattan distance check first (cheaper than Euclidean)
           const absDx = Math.abs(arrays.posX[idx] - projectile.pos.x);
           const absDy = Math.abs(arrays.posY[idx] - projectile.pos.y);
           const radius = projectile.radius || 1;
@@ -117,9 +114,12 @@ export class ProjectileMotion extends Rule {
 
         for (const idx of arrays.activeIndices) {
           if (arrays.team[idx] === projectileTeam) continue;
-          
-          // Skip the unit that fired this projectile
-          if (projectile.sourceId && arrays.unitIds[idx] === projectile.sourceId) continue;
+
+          if (
+            projectile.sourceId &&
+            arrays.unitIds[idx] === projectile.sourceId
+          )
+            continue;
 
           const dx = arrays.posX[idx] - projectile.pos.x;
           const dy = arrays.posY[idx] - projectile.pos.y;
@@ -170,24 +170,29 @@ export class ProjectileMotion extends Rule {
     return this.commands;
   }
 
-  private executeWithSpatialIndex(context: TickContext, projectiles: any[]): QueuedCommand[] {
+  private executeWithSpatialIndex(
+    context: TickContext,
+    projectiles: any[],
+  ): QueuedCommand[] {
     this.commands = [];
-    
+
     for (const projectile of projectiles) {
       const radius = projectile.radius || 1;
-      
-      // Use spatial index to find nearby units
-      const nearbyUnits = context.findUnitsInRadius(projectile.pos, radius + 0.5);
-      
+
+      const nearbyUnits = context.findUnitsInRadius(
+        projectile.pos,
+        radius + 0.5,
+      );
+
       if (projectile.type === "grapple") {
         for (const unit of nearbyUnits) {
           if (unit.hp <= 0) continue;
-          
+
           const dx = unit.pos.x - projectile.pos.x;
           const dy = unit.pos.y - projectile.pos.y;
           const distSq = dx * dx + dy * dy;
           const radiusSq = radius * radius;
-          
+
           if (distSq < radiusSq) {
             this.commands.push({
               type: "meta",
@@ -200,7 +205,7 @@ export class ProjectileMotion extends Rule {
                 },
               },
             });
-            
+
             this.commands.push({
               type: "removeProjectile",
               params: { id: projectile.id },
@@ -209,16 +214,15 @@ export class ProjectileMotion extends Rule {
           }
         }
       } else {
-        // Regular projectile collision
         for (const unit of nearbyUnits) {
           if (unit.hp <= 0) continue;
           if (unit.team === projectile.team) continue;
-          
+
           const dx = unit.pos.x - projectile.pos.x;
           const dy = unit.pos.y - projectile.pos.y;
           const distSq = dx * dx + dy * dy;
           const radiusSq = radius * radius;
-          
+
           if (distSq < radiusSq) {
             this.commands.push({
               type: "damage",
@@ -229,7 +233,7 @@ export class ProjectileMotion extends Rule {
                 origin: projectile.pos,
               },
             });
-            
+
             this.commands.push({
               type: "removeProjectile",
               params: { id: projectile.id },
@@ -238,8 +242,7 @@ export class ProjectileMotion extends Rule {
           }
         }
       }
-      
-      // Handle bomb explosions
+
       if (
         projectile.type === "bomb" &&
         ((projectile.target &&
@@ -250,24 +253,26 @@ export class ProjectileMotion extends Rule {
       ) {
         const explosionRadius = projectile.explosionRadius || 3;
         const explosionDamage = projectile.damage || 20;
-        
-        // Use spatial index for explosion area
-        const affectedUnits = context.findUnitsInRadius(projectile.pos, explosionRadius);
-        
+
+        const affectedUnits = context.findUnitsInRadius(
+          projectile.pos,
+          explosionRadius,
+        );
+
         for (const unit of affectedUnits) {
           if (unit.team === projectile.team) continue;
-          
+
           const dx = unit.pos.x - projectile.pos.x;
           const dy = unit.pos.y - projectile.pos.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          
+
           if (distance <= explosionRadius) {
             const damageMultiplier = Math.max(
               0.3,
               1 - (distance / explosionRadius) * 0.5,
             );
             const damage = Math.floor(explosionDamage * damageMultiplier);
-            
+
             if (damage > 0) {
               this.commands.push({
                 type: "damage",
@@ -277,11 +282,13 @@ export class ProjectileMotion extends Rule {
                   aspect: "explosion",
                 },
               });
-              
+
               const knockbackForce = 2;
-              const knockbackX = dx !== 0 ? (dx / Math.abs(dx)) * knockbackForce : 0;
-              const knockbackY = dy !== 0 ? (dy / Math.abs(dy)) * knockbackForce : 0;
-              
+              const knockbackX =
+                dx !== 0 ? (dx / Math.abs(dx)) * knockbackForce : 0;
+              const knockbackY =
+                dy !== 0 ? (dy / Math.abs(dy)) * knockbackForce : 0;
+
               this.commands.push({
                 type: "move",
                 params: {
@@ -293,14 +300,14 @@ export class ProjectileMotion extends Rule {
             }
           }
         }
-        
+
         this.commands.push({
           type: "removeProjectile",
           params: { id: projectile.id },
         });
       }
     }
-    
+
     return this.commands;
   }
 }

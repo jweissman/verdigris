@@ -62,9 +62,7 @@ export class UnitOperations {
   }
 
   static hunt(unit: Unit, sim: any): Unit {
-    const hostiles = sim
-      .getRealUnits()
-      .filter((u: Unit) => isEnemy(unit, u));
+    const hostiles = sim.getRealUnits().filter((u: Unit) => isEnemy(unit, u));
     if (hostiles.length === 0) {
       return unit;
     }

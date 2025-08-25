@@ -99,7 +99,10 @@ export class CommandHandler {
     this.commands.set("move", new MoveCommand(sim));
     this.commands.set("moves", new MovesCommand(sim));
     this.commands.set("hero", new HeroCommand(sim));
-    this.commands.set("move_target", new MoveTargetCommand(sim, this.transform));
+    this.commands.set(
+      "move_target",
+      new MoveTargetCommand(sim, this.transform),
+    );
     this.commands.set("knockback", new KnockbackCommand(sim));
 
     this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim));
@@ -213,6 +216,9 @@ export class CommandHandler {
         }
       }
 
+      // Clear the queue now so that any commands added during processing are new
+      this.sim.queuedCommands = commandsToKeep;
+
       const commandCounts: { [key: string]: number } = {};
 
       const metaBatch: { [unitId: string]: any } = {};
@@ -277,7 +283,7 @@ export class CommandHandler {
           moveCommand.execute(unitId, params);
         }
       }
-
+      
       const commandsByType = new Map<string, QueuedCommand[]>();
       for (const queuedCommand of otherCommands) {
         if (!queuedCommand.type) continue;
@@ -296,17 +302,8 @@ export class CommandHandler {
         }
       }
 
-      const newCommands: QueuedCommand[] = [];
-      for (const cmd of this.sim.queuedCommands) {
-        if (!commandsToProcess.includes(cmd) && !commandsToKeep.includes(cmd)) {
-          newCommands.push(cmd);
-        }
-      }
-
-      if (newCommands.length > 0) {
-      }
-
-      this.sim.queuedCommands = [...commandsToKeep, ...newCommands];
+      // queuedCommands now contains commandsToKeep plus any new commands added during processing
+      // No need to do anything else
 
       if (this.transform) {
         this.transform.commit();

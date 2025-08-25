@@ -7,7 +7,7 @@ import Encyclopaedia from '../../../src/dmg/encyclopaedia';
  * Ensures every creature can be instantiated, simulated, and behaves correctly
  */
 describe("Core", () => {
-  // describe('Systematic Creature Tests', () => {
+
 
     // TODO couldn't these be the real beast names from Encyclopedia? 
 
@@ -35,7 +35,7 @@ describe("Core", () => {
     });
   
     describe('Multi-Creature Stress Tests', () => {
-      // very slow
+
       test.skip('5 of each creature type can coexist', () => {
         const sim = new Simulator(100, 100);
         let totalCreatures = 0;
@@ -124,7 +124,7 @@ describe("Core", () => {
           expect(creature.hp).toBeGreaterThan(0);
           expect(creature.maxHp).toBeGreaterThan(0);
           expect(creature.mass).toBeGreaterThan(0);
-          // Default team from bestiary may not be set - that's OK, it gets set when deployed
+
           if (creature.team) {
             expect(['friendly', 'hostile', 'neutral']).toContain(creature.team);
           }
@@ -146,5 +146,5 @@ describe("Core", () => {
         });
       });
     });
-  // });
+
 });

@@ -21,12 +21,12 @@ export class GrapplingPhysicsV2 extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
-    
+
     this.handleGrappleCollisions(context, commands);
     this.updateGrappleLines(context, commands);
     this.renderGrappleRopes(context, commands);
     this.cleanupExpiredGrapples(context, commands);
-    
+
     return commands;
   }
 
@@ -52,27 +52,26 @@ export class GrapplingPhysicsV2 extends Rule {
       const grapplerID = hitUnit.meta.grapplerID || "unknown";
       const grappler = context.findUnitById(grapplerID);
 
-      const grapplerPos = grappler?.pos || hitUnit.meta.grappleOrigin || hitUnit.pos;
+      const grapplerPos =
+        grappler?.pos || hitUnit.meta.grappleOrigin || hitUnit.pos;
 
       if (grapplerPos) {
         const lineID = `${grapplerID}_${hitUnit.id}`;
-        
-        // Create kinematic rope
+
         const rope = new GrapplingRope(
           grapplerPos,
           hitUnit.pos,
-          hitUnit.meta.grappleRange || 10
+          hitUnit.meta.grappleRange || 10,
         );
-        
+
         this.grappleLines.set(lineID, {
           grapplerID,
           targetID: hitUnit.id,
           rope,
           duration: hitUnit.meta.pinDuration || 60,
-          maxLength: hitUnit.meta.grappleRange || 10
+          maxLength: hitUnit.meta.grappleRange || 10,
         });
 
-        // Apply grapple effects
         commands.push({
           type: "meta",
           params: {
@@ -87,7 +86,6 @@ export class GrapplingPhysicsV2 extends Rule {
           },
         });
 
-        // Handle massive units differently
         const targetMass = hitUnit.mass || 1;
         if (targetMass > 30) {
           commands.push({
@@ -115,10 +113,7 @@ export class GrapplingPhysicsV2 extends Rule {
     }
   }
 
-  private updateGrappleLines(
-    context: TickContext,
-    commands: QueuedCommand[]
-  ) {
+  private updateGrappleLines(context: TickContext, commands: QueuedCommand[]) {
     for (const [lineID, grappleLine] of this.grappleLines.entries()) {
       const grappler = context.findUnitById(grappleLine.grapplerID);
       const target = context.findUnitById(grappleLine.targetID);
@@ -128,15 +123,12 @@ export class GrapplingPhysicsV2 extends Rule {
         continue;
       }
 
-      // Update rope physics
       grappleLine.rope.update(grappler.pos, target.pos);
-      
-      // Check if rope is taut
+
       if (grappleLine.rope.isTaut()) {
-        // Apply pulling force
         const pullForce = 0.3 * (target.mass || 1);
         grappleLine.rope.applyPull(pullForce);
-        
+
         commands.push({
           type: "pull",
           params: {
@@ -147,7 +139,6 @@ export class GrapplingPhysicsV2 extends Rule {
         });
       }
 
-      // Update duration
       grappleLine.duration--;
       if (grappleLine.duration <= 0) {
         this.removeGrappleLine(context, lineID, commands);
@@ -155,26 +146,21 @@ export class GrapplingPhysicsV2 extends Rule {
     }
   }
 
-  private renderGrappleRopes(
-    context: TickContext,
-    commands: QueuedCommand[]
-  ) {
+  private renderGrappleRopes(context: TickContext, commands: QueuedCommand[]) {
     for (const grappleLine of this.grappleLines.values()) {
       const ropePoints = grappleLine.rope.getRopePoints();
       const isTaut = grappleLine.rope.isTaut();
-      
-      // Render rope segments
+
       for (let i = 0; i < ropePoints.length - 1; i++) {
         const start = ropePoints[i];
         const end = ropePoints[i + 1];
-        
-        // Create particles along segment
+
         const segments = 3;
         for (let j = 0; j <= segments; j++) {
           const t = j / segments;
           const x = start.x + (end.x - start.x) * t;
           const y = start.y + (end.y - start.y) * t;
-          
+
           commands.push({
             type: "particle",
             params: {
@@ -196,7 +182,7 @@ export class GrapplingPhysicsV2 extends Rule {
   private removeGrappleLine(
     context: TickContext,
     lineID: string,
-    commands: QueuedCommand[]
+    commands: QueuedCommand[],
   ) {
     const grappleLine = this.grappleLines.get(lineID);
     if (grappleLine) {
@@ -223,7 +209,7 @@ export class GrapplingPhysicsV2 extends Rule {
 
   private cleanupExpiredGrapples(
     context: TickContext,
-    commands: QueuedCommand[]
+    commands: QueuedCommand[],
   ) {
     const expiredLines: string[] = [];
 
@@ -233,8 +219,8 @@ export class GrapplingPhysicsV2 extends Rule {
       }
     }
 
-    expiredLines.forEach((lineID) => 
-      this.removeGrappleLine(context, lineID, commands)
+    expiredLines.forEach((lineID) =>
+      this.removeGrappleLine(context, lineID, commands),
     );
   }
 }

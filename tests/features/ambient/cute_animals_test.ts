@@ -134,7 +134,7 @@ describe('Cute Animals System', () => {
     expect(sim.units.filter(u => u.meta?.isAmbient).length).toBe(2);
   });
   
-  // slow
+
   it.skip('should integrate with title screen scene', () => {
 
     

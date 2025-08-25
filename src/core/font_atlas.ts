@@ -18,33 +18,37 @@ export default class FontAtlas {
     return !!(
       this.largeFontImage?.complete &&
       this.tinyFontImage?.complete &&
-      this.largeFontImage.naturalWidth > 0 &&
-      this.tinyFontImage.naturalWidth > 0
+      this.largeFontImage?.naturalWidth > 0 &&
+      this.tinyFontImage?.naturalWidth > 0
     );
   }
 
   private loadFonts() {
-    this.largeFontImage = new Image();
-    this.largeFontImage.src = largeFont;
-    this.largeFontImage.onload = () => {
-      console.debug(
-        `Large font loaded: ${this.largeFontImage!.width}x${this.largeFontImage!.height}`,
-      );
-    };
-    this.largeFontImage.onerror = (e) => {
-      console.error("Failed to load large font:", e);
-    };
+    try {
+      this.largeFontImage = new Image();
+      this.largeFontImage.src = largeFont;
+      this.largeFontImage.onload = () => {
+        console.debug(
+          `Large font loaded: ${this.largeFontImage!.width}x${this.largeFontImage!.height}`,
+        );
+      };
+      this.largeFontImage.onerror = (e) => {
+        console.error("Failed to load large font:", e);
+      };
 
-    this.tinyFontImage = new Image();
-    this.tinyFontImage.src = tinyFont;
-    this.tinyFontImage.onload = () => {
-      console.debug(
-        `Tiny font loaded: ${this.tinyFontImage!.width}x${this.tinyFontImage!.height}`,
-      );
-    };
-    this.tinyFontImage.onerror = (e) => {
-      console.error("Failed to load tiny font:", e);
-    };
+      this.tinyFontImage = new Image();
+      this.tinyFontImage.src = tinyFont;
+      this.tinyFontImage.onload = () => {
+        console.debug(
+          `Tiny font loaded: ${this.tinyFontImage!.width}x${this.tinyFontImage!.height}`,
+        );
+      };
+      this.tinyFontImage.onerror = (e) => {
+        console.error("Failed to load tiny font:", e);
+      };
+    } catch (e) {
+      console.warn("Font loading failed (may be in test environment):", e);
+    }
   }
 
   drawTinyText(

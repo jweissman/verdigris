@@ -385,8 +385,8 @@ describe('Ao Language E2E Specification', () => {
         'self.hp < 50',
         'closest.enemy()?.hp > 0',
         'distance(target) <= 5',
-        // Skip arrow function expressions that Ao doesn't support
-        // 'units.filter(u => u.team == "hostile").length > 3',
+
+
         'self.abilities?.includes("jump")',
         'Math.random() < 0.5'
       ];

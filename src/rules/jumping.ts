@@ -5,15 +5,13 @@ import type { QueuedCommand } from "../core/command_handler";
 
 export class Jumping extends Rule {
   private commands: QueuedCommand[] = [];
-  
-  // Physics constants for better feel
-  private readonly GRAVITY = 0.5;          // Gravity strength
-  private readonly JUMP_VELOCITY = -8;     // Initial upward velocity
+
+  private readonly GRAVITY = 0.5; // Gravity strength
+  private readonly JUMP_VELOCITY = -8; // Initial upward velocity
   private readonly TERMINAL_VELOCITY = 10; // Max fall speed
-  
-  // Game feel constants
-  private readonly COYOTE_TIME = 3;        // Ticks after leaving ground where jump still works
-  private readonly JUMP_BUFFER_TIME = 5;   // Ticks to buffer jump input before landing
+
+  private readonly COYOTE_TIME = 3; // Ticks after leaving ground where jump still works
+  private readonly JUMP_BUFFER_TIME = 5; // Ticks to buffer jump input before landing
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
@@ -22,21 +20,19 @@ export class Jumping extends Rule {
       if (unit.meta?.jumping) {
         this.updateJump(context, unit);
       }
-      
-      // Handle coyote time
+
       if (unit.meta?.wasGrounded && !unit.meta?.jumping) {
         unit.meta.coyoteTimeLeft = this.COYOTE_TIME;
         unit.meta.wasGrounded = false;
       }
-      
-      // Decrement coyote time
+
       if (unit.meta?.coyoteTimeLeft > 0) {
         unit.meta.coyoteTimeLeft--;
       }
-      
-      // Handle jump buffer
+
       if (unit.meta?.jumpBuffered) {
-        const timeSinceBuffer = context.getCurrentTick() - (unit.meta.jumpBufferTick || 0);
+        const timeSinceBuffer =
+          context.getCurrentTick() - (unit.meta.jumpBufferTick || 0);
         if (timeSinceBuffer > this.JUMP_BUFFER_TIME) {
           unit.meta.jumpBuffered = false;
         }
@@ -49,30 +45,31 @@ export class Jumping extends Rule {
     const jumpTarget = unit.meta.jumpTarget;
     const jumpOrigin = unit.meta.jumpOrigin || unit.pos;
     const progress = (unit.meta.jumpProgress || 0) + 1;
-    
-    // Simple parabolic arc with good feel
+
     const jumpDuration = 8; // Very fast jump - faster than movement
     const t = progress / jumpDuration;
-    
+
     let newX = jumpOrigin.x;
     let newY = jumpOrigin.y;
-    
+
     if (jumpTarget && jumpOrigin) {
       const dx = jumpTarget.x - jumpOrigin.x;
       const dy = jumpTarget.y - jumpOrigin.y;
-      
-      // Smooth horizontal movement
+
       newX = jumpOrigin.x + dx * t;
       newY = jumpOrigin.y + dy * t;
     }
-    
-    // Parabolic height with good arc - use actual jump height from meta
+
     const peakHeight = unit.meta.jumpHeight || 6;
     const z = Math.max(0, 4 * peakHeight * t * (1 - t));
+    
+    // If doing a midair flip, add rotation
+    if (unit.meta.isFlipping) {
+      const flipProgress = progress / jumpDuration;
+      unit.meta.rotation = flipProgress * 360; // Full 360 degree flip
+    }
 
-    // Check if we should land
     if (progress >= jumpDuration) {
-      // Land exactly at target
       if (jumpTarget) {
         this.commands.push({
           type: "move",
@@ -83,26 +80,24 @@ export class Jumping extends Rule {
           },
         });
       }
-      
-      // Check for buffered jump
+
       if (unit.meta.jumpBuffered) {
-        const timeSinceBuffer = context.getCurrentTick() - (unit.meta.jumpBufferTick || 0);
+        const timeSinceBuffer =
+          context.getCurrentTick() - (unit.meta.jumpBufferTick || 0);
         if (timeSinceBuffer <= this.JUMP_BUFFER_TIME) {
-          // Execute buffered jump immediately upon landing
           this.commands.push({
             type: "jump",
             unitId: unit.id,
-            params: unit.meta.bufferedJumpParams || {}
+            params: unit.meta.bufferedJumpParams || {},
           });
         }
         unit.meta.jumpBuffered = false;
       }
-      
+
       if (unit.meta.jumpDamage && unit.meta.jumpRadius) {
         const landingPos = unit.meta.jumpTarget || unit.pos;
         const radius = unit.meta.jumpRadius;
-        
-        // Queue AOE damage command
+
         this.commands.push({
           type: "aoe",
           unitId: unit.id,
@@ -113,52 +108,48 @@ export class Jumping extends Rule {
             damage: unit.meta.jumpDamage,
             type: "kinetic",
             friendlyFire: false,
-            excludeSource: true
+            excludeSource: true,
           },
         });
-        
-        // Add MASSIVE visual impact - shockwave rings
+
         for (let ring = 0; ring < 3; ring++) {
           const ringDelay = ring * 2;
-          const ringRadius = (ring + 1) * radius / 3;
-          
-          // Create ring of particles
+          const ringRadius = ((ring + 1) * radius) / 3;
+
           for (let i = 0; i < 16; i++) {
             const angle = (Math.PI * 2 * i) / 16;
             const speed = 0.5 + ring * 0.2;
-            
+
             this.commands.push({
               type: "particle",
               params: {
                 particle: {
                   pos: {
                     x: landingPos.x * 8 + 4 + Math.cos(angle) * ringRadius * 2,
-                    y: landingPos.y * 8 + 4 + Math.sin(angle) * ringRadius * 2
+                    y: landingPos.y * 8 + 4 + Math.sin(angle) * ringRadius * 2,
                   },
                   vel: {
                     x: Math.cos(angle) * speed,
-                    y: Math.sin(angle) * speed - 0.3
+                    y: Math.sin(angle) * speed - 0.3,
                   },
                   radius: 2.5 - ring * 0.5,
                   lifetime: 20 - ring * 3,
                   color: `hsl(${45 - ring * 10}, 100%, ${70 - ring * 10}%)`,
-                  type: "shockwave"
-                }
-              }
+                  type: "shockwave",
+                },
+              },
             });
           }
         }
-        
-        // Highlight all damaged cells
-        const impactedUnits = context.getAllUnits().filter(u => {
+
+        const impactedUnits = context.getAllUnits().filter((u) => {
           if (u.id === unit.id || u.team === unit.team) return false;
           const dx = u.pos.x - landingPos.x;
           const dy = u.pos.y - landingPos.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           return dist <= radius;
         });
-        
-        // Flash particles on impacted cells
+
         for (const target of impactedUnits) {
           this.commands.push({
             type: "particle",
@@ -166,15 +157,15 @@ export class Jumping extends Rule {
               particle: {
                 pos: {
                   x: target.pos.x * 8 + 4,
-                  y: target.pos.y * 8 + 4
+                  y: target.pos.y * 8 + 4,
                 },
                 vel: { x: 0, y: -1 },
                 radius: 4,
                 lifetime: 10,
                 color: "#FF4444",
-                type: "damage_flash"
-              }
-            }
+                type: "damage_flash",
+              },
+            },
           });
         }
       }
@@ -194,13 +185,13 @@ export class Jumping extends Rule {
             jumpRadius: null,
             smoothX: null,
             smoothY: null,
+            hasDoubleJumped: false,
+            isFlipping: false,
+            rotation: 0,
           },
         },
       });
     } else {
-      // Continue jump - update position and metadata
-      // Store smooth interpolated positions in meta for rendering
-      // while still updating grid position for game logic
       this.commands.push({
         type: "move",
         params: {
@@ -218,7 +209,7 @@ export class Jumping extends Rule {
             ...unit.meta,
             jumpProgress: progress,
             z: z,
-            // Store smooth positions for interpolated rendering
+
             smoothX: newX,
             smoothY: newY,
           },

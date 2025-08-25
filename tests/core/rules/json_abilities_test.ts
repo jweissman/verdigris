@@ -52,8 +52,8 @@ describe('Abilities', () => {
     sim.step();
 
 
-    // console.log('Projectiles:', sim.projectiles.length);
-    // console.log('Commands:', sim.queuedCommands.length);
+
+
     
 
     const hasProjectile = sim.projectiles.length > 0 || 

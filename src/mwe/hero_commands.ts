@@ -5,9 +5,9 @@ import type { Unit } from "../types/Unit";
 
 /**
  * Hero Commands MWE - Testing ground for hero movement and abilities
- * 
+ *
  * Features:
- * - Triple jump mechanics  
+ * - Triple jump mechanics
  * - Ground pound ability
  * - Dash/heroic leap
  * - Auto-targeting for abilities
@@ -22,25 +22,24 @@ export class HeroCommandsGame extends Game {
   private maxCards: number = 5;
   private cardCooldown: number = 0;
   input: Input = new Input(this.sim, this.renderer);
-  
+
   bootstrap() {
     super.bootstrap();
     this.loadDesertScene();
     this.spawnHero();
     this.initCardSystem();
   }
-  
+
   private loadDesertScene() {
-    // Load a simple background scene
     this.sim.queuedCommands.push({
       type: "sceneMetadata",
       params: {
         background: "desert",
-        music: "exploration"
-      }
+        music: "exploration",
+      },
     });
   }
-  
+
   private spawnHero() {
     const heroData = Encyclopaedia.unit(this.heroType) || {};
     const hero: Unit = {
@@ -61,21 +60,21 @@ export class HeroCommandsGame extends Game {
         controlled: true,
         facing: "right" as const,
         jumpCount: 0,
-        dashAvailable: true
-      }
+        dashAvailable: true,
+      },
     };
-    
+
     this.sim.addUnit(hero);
-    
-    // Spawn some test enemies
+
     this.spawnTestEnemies();
-    
+
     console.log(`Hero spawned: ${this.heroType} at (20, 15)`);
-    console.log(`Controls: WASD=move, Space=jump, Q=ground pound, E=dash, 1-5=play cards`);
+    console.log(
+      `Controls: WASD=move, Space=jump, Q=ground pound, E=dash, 1-5=play cards`,
+    );
   }
-  
+
   private spawnTestEnemies() {
-    // Spawn a few enemies for testing abilities
     const enemyTypes = ["skeleton", "ghost", "soldier"];
     for (let i = 0; i < 3; i++) {
       const enemyData = Encyclopaedia.unit(enemyTypes[i]) || {};
@@ -92,61 +91,61 @@ export class HeroCommandsGame extends Game {
         sprite: enemyData.sprite || enemyTypes[i],
         abilities: enemyData.abilities || [],
         dmg: enemyData.dmg || 5,
-        tags: ["enemy"]
+        tags: ["enemy"],
       });
     }
   }
-  
+
   private initCardSystem() {
-    // Initialize with a few random ability cards
     const possibleCards = ["bolt", "heal", "freeze", "burn", "shield"];
     for (let i = 0; i < 3; i++) {
-      const card = possibleCards[Math.floor(Math.random() * possibleCards.length)];
+      const card =
+        possibleCards[Math.floor(Math.random() * possibleCards.length)];
       if (this.cardHand.length < this.maxCards) {
         this.cardHand.push(card);
       }
     }
     console.log(`Starting hand: ${this.cardHand.join(", ")}`);
   }
-  
+
   getInputHandler(): (e: { key: string }) => void {
     return (e) => {
-      const hero = this.sim.units.find(u => u.id === this.heroId);
+      const hero = this.sim.units.find((u) => u.id === this.heroId);
       if (!hero) return;
-      
-      switch(e.key.toLowerCase()) {
-        case 'w':
+
+      switch (e.key.toLowerCase()) {
+        case "w":
           this.moveHero(0, -1);
           break;
-        case 'a':
+        case "a":
           this.moveHero(-1, 0);
           break;
-        case 's':
+        case "s":
           this.moveHero(0, 1);
           break;
-        case 'd':
+        case "d":
           this.moveHero(1, 0);
           break;
-        case ' ':
+        case " ":
           this.performJump();
           break;
-        case 'q':
+        case "q":
           this.performGroundPound();
           break;
-        case 'e':
+        case "e":
           this.performDash();
           break;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
+        case "1":
+        case "2":
+        case "3":
+        case "4":
+        case "5":
           this.playCard(parseInt(e.key) - 1);
           break;
-        case 'r':
+        case "r":
           this.resetScene();
           break;
-        case 'h':
+        case "h":
           this.showHelp();
           break;
         default:
@@ -154,29 +153,34 @@ export class HeroCommandsGame extends Game {
       }
     };
   }
-  
+
   private moveHero(dx: number, dy: number) {
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero) return;
-    
-    // Reset jump count when touching ground
+
     if (!hero.meta?.jumping && this.jumpCount > 0) {
       this.jumpCount = 0;
       console.log("Jump count reset");
     }
-    
-    const newX = Math.max(0, Math.min(this.sim.fieldWidth - 1, hero.pos.x + dx));
-    const newY = Math.max(0, Math.min(this.sim.fieldHeight - 1, hero.pos.y + dy));
-    
+
+    const newX = Math.max(
+      0,
+      Math.min(this.sim.fieldWidth - 1, hero.pos.x + dx),
+    );
+    const newY = Math.max(
+      0,
+      Math.min(this.sim.fieldHeight - 1, hero.pos.y + dy),
+    );
+
     this.sim.queuedCommands.push({
       type: "move",
       params: {
         unitId: this.heroId,
         x: newX,
-        y: newY
-      }
+        y: newY,
+      },
     });
-    
+
     if (dx !== 0) {
       this.sim.queuedCommands.push({
         type: "meta",
@@ -184,32 +188,31 @@ export class HeroCommandsGame extends Game {
           unitId: this.heroId,
           meta: {
             ...hero.meta,
-            facing: dx > 0 ? "right" : "left"
-          }
-        }
+            facing: dx > 0 ? "right" : "left",
+          },
+        },
       });
     }
   }
-  
+
   private performJump() {
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero) return;
-    
-    // Triple jump logic
+
     if (this.jumpCount >= this.maxJumps) {
       console.log(`Max jumps (${this.maxJumps}) reached`);
       return;
     }
-    
+
     this.jumpCount++;
     const jumpPower = this.jumpCount === 3 ? 6 : 4; // Third jump is higher
     const jumpDistance = this.jumpCount === 3 ? 5 : 3;
-    
+
     const facingRight = hero.meta?.facing === "right";
-    const targetX = facingRight ? 
-      Math.min(this.sim.fieldWidth - 1, hero.pos.x + jumpDistance) :
-      Math.max(0, hero.pos.x - jumpDistance);
-    
+    const targetX = facingRight
+      ? Math.min(this.sim.fieldWidth - 1, hero.pos.x + jumpDistance)
+      : Math.max(0, hero.pos.x - jumpDistance);
+
     this.sim.queuedCommands.push({
       type: "jump",
       params: {
@@ -218,24 +221,26 @@ export class HeroCommandsGame extends Game {
         targetY: hero.pos.y,
         height: jumpPower,
         damage: this.jumpCount === 3 ? 10 : 0, // Ground pound on third jump
-        radius: this.jumpCount === 3 ? 2 : 0
-      }
+        radius: this.jumpCount === 3 ? 2 : 0,
+      },
     });
-    
-    console.log(`Jump ${this.jumpCount}/${this.maxJumps} - Height: ${jumpPower}`);
-  }
-  
-  private performGroundPound() {
-    const hero = this.sim.units.find(u => u.id === this.heroId);
-    if (!hero) return;
-    
-    // Find nearby enemies for auto-targeting
-    const enemies = this.sim.units.filter(u => 
-      u.team === "hostile" && 
-      Math.abs(u.pos.x - hero.pos.x) <= 6 &&
-      Math.abs(u.pos.y - hero.pos.y) <= 6
+
+    console.log(
+      `Jump ${this.jumpCount}/${this.maxJumps} - Height: ${jumpPower}`,
     );
-    
+  }
+
+  private performGroundPound() {
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
+    if (!hero) return;
+
+    const enemies = this.sim.units.filter(
+      (u) =>
+        u.team === "hostile" &&
+        Math.abs(u.pos.x - hero.pos.x) <= 6 &&
+        Math.abs(u.pos.y - hero.pos.y) <= 6,
+    );
+
     this.sim.queuedCommands.push({
       type: "aoe",
       params: {
@@ -244,56 +249,54 @@ export class HeroCommandsGame extends Game {
         y: hero.pos.y,
         radius: 4,
         damage: 25,
-        knockback: 8
-      }
+        knockback: 8,
+      },
     });
-    
-    // Camera shake effect
+
     this.sim.queuedCommands.push({
       type: "particle",
       params: {
         x: hero.pos.x,
         y: hero.pos.y,
         type: "explosion",
-        count: 10
-      }
+        count: 10,
+      },
     });
-    
+
     console.log(`Ground Pound! Hit ${enemies.length} enemies`);
   }
-  
+
   private performDash() {
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero || !hero.meta?.dashAvailable) {
       console.log("Dash not available");
       return;
     }
-    
-    // Auto-target nearest enemy or dash forward
-    const enemies = this.sim.units.filter(u => u.team === "hostile");
+
+    const enemies = this.sim.units.filter((u) => u.team === "hostile");
     let targetX = hero.pos.x;
     let targetY = hero.pos.y;
-    
+
     if (enemies.length > 0) {
-      // Find closest enemy
       const closest = enemies.reduce((prev, curr) => {
-        const prevDist = Math.abs(prev.pos.x - hero.pos.x) + Math.abs(prev.pos.y - hero.pos.y);
-        const currDist = Math.abs(curr.pos.x - hero.pos.x) + Math.abs(curr.pos.y - hero.pos.y);
+        const prevDist =
+          Math.abs(prev.pos.x - hero.pos.x) + Math.abs(prev.pos.y - hero.pos.y);
+        const currDist =
+          Math.abs(curr.pos.x - hero.pos.x) + Math.abs(curr.pos.y - hero.pos.y);
         return currDist < prevDist ? curr : prev;
       });
-      
+
       targetX = closest.pos.x;
       targetY = closest.pos.y;
       console.log(`Dashing to enemy at (${targetX}, ${targetY})`);
     } else {
-      // Dash forward
       const facingRight = hero.meta?.facing === "right";
-      targetX = facingRight ? 
-        Math.min(this.sim.fieldWidth - 1, hero.pos.x + 8) :
-        Math.max(0, hero.pos.x - 8);
+      targetX = facingRight
+        ? Math.min(this.sim.fieldWidth - 1, hero.pos.x + 8)
+        : Math.max(0, hero.pos.x - 8);
       console.log("Dashing forward");
     }
-    
+
     this.sim.queuedCommands.push({
       type: "jump",
       params: {
@@ -302,43 +305,41 @@ export class HeroCommandsGame extends Game {
         targetY: targetY,
         height: 6,
         damage: 20,
-        radius: 3
-      }
+        radius: 3,
+      },
     });
-    
-    // Set dash cooldown
+
     hero.meta.dashAvailable = false;
     setTimeout(() => {
-      const h = this.sim.units.find(u => u.id === this.heroId);
+      const h = this.sim.units.find((u) => u.id === this.heroId);
       if (h && h.meta) {
         h.meta.dashAvailable = true;
         console.log("Dash ready!");
       }
     }, 2000);
   }
-  
+
   private playCard(index: number) {
     if (index < 0 || index >= this.cardHand.length) {
       console.log("No card at that position");
       return;
     }
-    
+
     const card = this.cardHand[index];
-    const hero = this.sim.units.find(u => u.id === this.heroId);
+    const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero) return;
-    
+
     console.log(`Playing card: ${card}`);
-    
-    // Execute card effect
-    switch(card) {
+
+    switch (card) {
       case "bolt":
         this.sim.queuedCommands.push({
           type: "bolt",
           params: {
             unitId: this.heroId,
             damage: 30,
-            range: 10
-          }
+            range: 10,
+          },
         });
         break;
       case "heal":
@@ -346,8 +347,8 @@ export class HeroCommandsGame extends Game {
           type: "heal",
           params: {
             unitId: this.heroId,
-            amount: 30
-          }
+            amount: 30,
+          },
         });
         break;
       case "freeze":
@@ -357,8 +358,8 @@ export class HeroCommandsGame extends Game {
             unitId: this.heroId,
             effect: "frozen",
             duration: 60,
-            radius: 3
-          }
+            radius: 3,
+          },
         });
         break;
       case "burn":
@@ -368,46 +369,54 @@ export class HeroCommandsGame extends Game {
             unitId: this.heroId,
             effect: "burning",
             duration: 100,
-            radius: 4
-          }
+            radius: 4,
+          },
         });
         break;
       case "shield":
         hero.meta = { ...hero.meta, shielded: true };
         setTimeout(() => {
-          const h = this.sim.units.find(u => u.id === this.heroId);
+          const h = this.sim.units.find((u) => u.id === this.heroId);
           if (h && h.meta) {
             h.meta.shielded = false;
           }
         }, 5000);
         break;
     }
-    
-    // Remove played card and draw new one
+
     this.cardHand.splice(index, 1);
     this.drawCard();
   }
-  
+
   private drawCard() {
     if (this.cardCooldown > 0) {
       this.cardCooldown--;
       return;
     }
-    
+
     if (this.cardHand.length >= this.maxCards) {
       console.log("Hand full!");
       return;
     }
-    
-    const possibleCards = ["bolt", "heal", "freeze", "burn", "shield", "teleport", "summon"];
-    const newCard = possibleCards[Math.floor(Math.random() * possibleCards.length)];
+
+    const possibleCards = [
+      "bolt",
+      "heal",
+      "freeze",
+      "burn",
+      "shield",
+      "teleport",
+      "summon",
+    ];
+    const newCard =
+      possibleCards[Math.floor(Math.random() * possibleCards.length)];
     this.cardHand.push(newCard);
     this.cardCooldown = 30; // Cooldown before next draw
-    
+
     console.log(`Drew card: ${newCard}`);
     console.log(`Current hand: ${this.cardHand.join(", ")}`);
   }
-  
+
   private resetScene() {
     this.sim.reset();
     this.jumpCount = 0;
@@ -415,7 +424,7 @@ export class HeroCommandsGame extends Game {
     this.spawnHero();
     this.initCardSystem();
   }
-  
+
   private showHelp() {
     console.log("=== Hero Commands MWE ===");
     console.log("WASD - Move");
@@ -426,19 +435,17 @@ export class HeroCommandsGame extends Game {
     console.log("R - Reset scene");
     console.log("H - Show this help");
   }
-  
+
   update() {
     super.update();
-    
-    // Check for defeated enemies to trigger card draw
-    const enemies = this.sim.units.filter(u => u.team === "hostile");
+
+    const enemies = this.sim.units.filter((u) => u.team === "hostile");
     if (enemies.length === 0 && this.cardCooldown === 0) {
       this.drawCard();
-      // Spawn new wave
+
       this.spawnTestEnemies();
     }
-    
-    // Update card cooldown
+
     if (this.cardCooldown > 0) {
       this.cardCooldown--;
     }

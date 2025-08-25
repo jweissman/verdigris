@@ -9,44 +9,38 @@ export class Hunting extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
     const allUnits = context.getAllUnits();
-    
-    // Find all hunters
-    const hunters = allUnits.filter(u => 
-      u.meta?.hunting && 
-      u.hp > 0 && 
-      u.state !== 'dead'
+
+    const hunters = allUnits.filter(
+      (u) => u.meta?.hunting && u.hp > 0 && u.state !== "dead",
     );
-    
+
     for (const hunter of hunters) {
-      // Find closest enemy target
       let closestTarget = null;
       let minDistance = Infinity;
-      
+
       for (const target of allUnits) {
         if (target.team === hunter.team) continue;
         if (target.hp <= 0) continue;
         if (target.meta?.phantom) continue;
-        
+
         const dx = target.pos.x - hunter.pos.x;
         const dy = target.pos.y - hunter.pos.y;
         const distance = Math.abs(dx) + Math.abs(dy); // Manhattan distance
-        
+
         if (distance < minDistance) {
           minDistance = distance;
           closestTarget = target;
         }
       }
-      
+
       if (!closestTarget) continue;
-      
-      // Move towards target
+
       const dx = closestTarget.pos.x - hunter.pos.x;
       const dy = closestTarget.pos.y - hunter.pos.y;
-      
-      // Simple pathfinding - move in the direction with greatest distance
+
       let moveX = 0;
       let moveY = 0;
-      
+
       if (Math.abs(dx) > Math.abs(dy)) {
         moveX = dx > 0 ? 1 : -1;
       } else if (dy !== 0) {
@@ -54,26 +48,24 @@ export class Hunting extends Rule {
       } else if (dx !== 0) {
         moveX = dx > 0 ? 1 : -1;
       }
-      
-      // Only move if not adjacent (leave melee to MeleeCombat rule)
+
       if (minDistance > 1) {
-        // Move every few ticks based on speed
         const tick = context.getCurrentTick();
         const moveInterval = Math.floor(6 / (hunter.meta?.speed || 1)); // Slower movement
-        
+
         if (tick % moveInterval === 0) {
           commands.push({
-            type: 'move',
+            type: "move",
             unitId: hunter.id,
             params: {
               dx: moveX,
-              dy: moveY
-            }
+              dy: moveY,
+            },
           });
         }
       }
     }
-    
+
     return commands;
   }
 }
