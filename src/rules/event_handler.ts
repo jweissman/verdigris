@@ -52,6 +52,11 @@ export class EventHandler extends Rule {
       }
 
       (event as any)._processed = true;
+      
+      // Log event for debugging
+      if (typeof window !== 'undefined') {
+        console.log(`[Event] ${this.glossary(event, context)}`);
+      }
 
       switch (event.kind) {
         case "aoe":

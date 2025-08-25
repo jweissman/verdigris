@@ -8,9 +8,6 @@ describe('Hero Rig Engine Integration', () => {
     const sim = new Simulator(40, 40);
     
 
-    sim.rulebook.push(new HeroAnimation());
-    
-
     const hero = sim.addUnit({
       id: 'rigged_hero',
       pos: { x: 10, y: 10 },
@@ -44,8 +41,6 @@ describe('Hero Rig Engine Integration', () => {
   
   test('hero breathing animation updates over time', () => {
     const sim = new Simulator(40, 40);
-    sim.rulebook.push(new HeroAnimation());
-    
     const hero = sim.addUnit({
       id: 'breathing_hero',
       pos: { x: 10, y: 10 },
@@ -82,8 +77,6 @@ describe('Hero Rig Engine Integration', () => {
   
   test('hero command moves rigged hero', () => {
     const sim = new Simulator(40, 40);
-    sim.rulebook.push(new HeroAnimation());
-    
     const hero = sim.addUnit({
       id: 'commanded_hero',
       pos: { x: 10, y: 10 },
@@ -121,8 +114,6 @@ describe('Hero Rig Engine Integration', () => {
   
   test('hero jump with rig animation', () => {
     const sim = new Simulator(40, 40);
-    sim.rulebook.push(new HeroAnimation());
-    
     const hero = sim.addUnit({
       id: 'jumping_hero',
       pos: { x: 10, y: 10 },

@@ -38,6 +38,7 @@ export class Projectile extends Command {
       team: projectileTeam,
       type: projectileType,
       sourceId: unitId, // Track who fired this projectile
+      aspect: projectileType === "laser_beam" ? "laser" : "physical",
     };
 
     if (targetX !== undefined && targetY !== undefined) {

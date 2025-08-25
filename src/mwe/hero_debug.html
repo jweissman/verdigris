@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="./hero.ts" type="module"></script>
+  </head>
+  <body>
+    <canvas id="battlefield" width="320" height="200" style="image-rendering: pixelated; width: 640px; height: 400px;"></canvas>
+    <div id="debug" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-family: monospace; font-size: 12px;"></div>
+  </body>
+  <script>
+    let tickCount = 0;
+    let lastUpdate = Date.now();
+    
+    // Override the update function to add debugging
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (window.HeroGame && window.game) {
+          const originalUpdate = window.game.update.bind(window.game);
+          window.game.update = function() {
+            originalUpdate();
+            tickCount++;
+            
+            // Every 30 ticks, update debug display
+            if (tickCount % 30 === 0) {
+              const now = Date.now();
+              const fps = 30000 / (now - lastUpdate);
+              lastUpdate = now;
+              
+              const debugInfo = [];
+              debugInfo.push(`FPS: ${fps.toFixed(1)}`);
+              debugInfo.push(`Ticks: ${tickCount}`);
+              debugInfo.push(`Units: ${window.game.sim.units.length}`);
+              
+              // Find and track squirrels
+              const squirrels = window.game.sim.units.filter(u => u.id.startsWith('squirrel'));
+              squirrels.forEach(s => {
+                debugInfo.push(`${s.id}: (${s.pos.x.toFixed(1)}, ${s.pos.y.toFixed(1)})`);
+              });
+              
+              // Find and track wolves
+              const wolves = window.game.sim.units.filter(u => u.id.startsWith('wolf'));
+              wolves.forEach(w => {
+                debugInfo.push(`${w.id}: (${w.pos.x.toFixed(1)}, ${w.pos.y.toFixed(1)})`);
+              });
+              
+              document.getElementById('debug').innerHTML = debugInfo.join('<br>');
+            }
+          };
+        }
+      }, 100);
+    });
+  </script>
+</html>

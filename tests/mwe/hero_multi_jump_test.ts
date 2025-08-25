@@ -6,10 +6,8 @@ import { Jumping } from '../../src/rules/jumping';
 describe('Hero Multi-Jump', () => {
   test('hero can perform triple jump with increasing height', () => {
     const sim = new Simulator(30, 30);
-    const playerControl = new PlayerControl();
-    sim.rulebook.push(playerControl);
-    sim.rulebook.push(new Jumping());
-    
+    const playerControl: PlayerControl = sim.rules.find(r => r.constructor === PlayerControl);
+
     const hero = sim.addUnit({
       id: 'jumper',
       pos: { x: 10, y: 10 },
@@ -51,7 +49,6 @@ describe('Hero Multi-Jump', () => {
 
   test('jump resets properly on landing', () => {
     const sim = new Simulator(30, 30);
-    sim.rulebook.push(new Jumping());
     
     const hero = sim.addUnit({
       id: 'jumper',

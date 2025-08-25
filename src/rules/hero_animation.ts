@@ -32,15 +32,22 @@ export class HeroAnimation extends Rule {
 
         this.updateAnimation(unit, rig, commands);
 
-        rig.update(1);
+        // Slow down walk animation to reduce jitter
+        const isWalking = unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0;
+        const updateRate = isWalking ? 0.3 : 1; // Slower animation for walking
+        rig.update(updateRate);
 
         const facing = unit.meta?.facing || "right";
+        
+        // Get the animated rig parts as an array
+        const rigParts = rig.getParts(facing);
+        
         commands.push({
           type: "meta",
           params: {
             unitId: unit.id,
             meta: {
-              rig: rig.getParts(facing),
+              rig: rigParts,
             },
           },
         });

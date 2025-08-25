@@ -6,8 +6,7 @@ import { HeroCommand } from '../../src/commands/hero_command';
 describe('Hero Y Movement Bouncing Issue', () => {
   test('hero moves smoothly up without bouncing', () => {
     const sim = new Simulator(40, 40);
-    const playerControl = new PlayerControl();
-    sim.rulebook.push(playerControl);
+    const playerControl = sim.rules.find(r => r.constructor === PlayerControl) as PlayerControl;
     
     const hero = sim.addUnit({
       id: 'test_hero',

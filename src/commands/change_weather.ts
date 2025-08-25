@@ -99,7 +99,9 @@ export class ChangeWeather extends Command {
             id: `leaf_${Date.now()}_${i}`,
             type: "leaf",
             pos: {
-              x: Math.floor(Simulator.rng.random() * this.sim.fieldWidth) * 8 + 4, // Center of grid cells
+              x:
+                Math.floor(Simulator.rng.random() * this.sim.fieldWidth) * 8 +
+                4, // Center of grid cells
               y: -Simulator.rng.random() * 20, // Start above the field
             },
             vel: {

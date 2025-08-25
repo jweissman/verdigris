@@ -2,8 +2,6 @@
 import largeFont from "../assets/stenciled-16x16.png";
 // @ts-ignore
 import tinyFont from "../assets/teeny-4x4.png";
-import { TextReviewer } from "../mwe/TextReviewer";
-
 export default class FontAtlas {
   private ctx: CanvasRenderingContext2D;
   private largeFontImage: HTMLImageElement | null = null;
@@ -24,6 +22,12 @@ export default class FontAtlas {
   }
 
   private loadFonts() {
+    // check if window is defined
+    if (typeof window === "undefined") {
+      console.warn("Skip font load in headless env");
+      return;
+    }
+
     try {
       this.largeFontImage = new Image();
       this.largeFontImage.src = largeFont;

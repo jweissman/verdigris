@@ -76,7 +76,8 @@ export class MeleeCombat extends Rule {
           const facing = coldA?.meta?.facing || "right";
           const currentTick = context.getCurrentTick();
           const attackerLastAttack = this.lastAttacks.get(attackerId) || -100;
-          const attackCooldown = 5; // Faster attacks for hero
+          // Auto-controlled heroes have some cooldown
+          const attackCooldown = 3;
 
           if (currentTick - attackerLastAttack >= attackCooldown) {
             this.lastAttacks.set(attackerId, currentTick);
@@ -86,6 +87,10 @@ export class MeleeCombat extends Rule {
               if (idxB === idxA) continue;
               if (arrays.state[idxB] === 3 || arrays.hp[idxB] <= 0) continue;
               if (team1 === arrays.team[idxB]) continue;
+              
+              // Don't attack neutral units unless we're hostile
+              const team2 = arrays.team[idxB];
+              if (team1 !== 2 && team2 === 1) continue; // Non-hostile shouldn't attack neutral
 
               const targetId = arrays.unitIds[idxB];
               const dx = arrays.posX[idxB] - x1;
@@ -144,6 +149,11 @@ export class MeleeCombat extends Rule {
 
           if (arrays.state[idxB] === 3 || arrays.hp[idxB] <= 0) continue;
           if (team1 === arrays.team[idxB]) continue;
+          
+          // Don't attack neutral units unless we're hostile
+          const team2 = arrays.team[idxB];
+          if (team1 !== 2 && team2 === 1) continue; // Non-hostile shouldn't attack neutral
+          if (team2 !== 2 && team1 === 1) continue; // Neutral shouldn't attack non-hostile
 
           const targetId = arrays.unitIds[idxB];
           if (this.engagements.has(targetId)) continue;
@@ -164,7 +174,8 @@ export class MeleeCombat extends Rule {
           const currentTick = context.getCurrentTick();
           const attackerLastAttack = this.lastAttacks.get(attackerId) || -100;
           const targetLastAttack = this.lastAttacks.get(targetId) || -100;
-          const attackCooldown = 5; // Reduced cooldown for faster combat
+          // Regular units need some cooldown to prevent instant kills
+          const attackCooldown = 5;
 
           const attackerCanAttack =
             currentTick - attackerLastAttack >= attackCooldown;

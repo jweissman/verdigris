@@ -109,9 +109,6 @@ describe('Jumping AOE', () => {
   test.skip('jump landing should apply knockback to enemies but not allies', () => {
 
     const sim = new Simulator(20, 20);
-    sim.rulebook.push(new Jumping());
-    sim.rulebook.push(new AreaOfEffect());
-    
 
     const jumper = sim.addUnit({
       id: 'jumper',

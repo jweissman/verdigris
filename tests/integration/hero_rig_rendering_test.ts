@@ -7,9 +7,6 @@ describe('Hero Rig Rendering Integration', () => {
     const sim = new Simulator(20, 20);
     
 
-    sim.rulebook.push(new HeroAnimation());
-    
-
     const hero = sim.addUnit({
       id: 'hero_test',
       pos: { x: 10, y: 10 },
@@ -39,8 +36,6 @@ describe('Hero Rig Rendering Integration', () => {
   
   test('rig animates over time', () => {
     const sim = new Simulator(20, 20);
-    sim.rulebook.push(new HeroAnimation());
-    
     sim.addUnit({
       id: 'hero_test',
       pos: { x: 10, y: 10 },

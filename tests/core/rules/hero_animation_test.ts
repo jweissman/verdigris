@@ -66,9 +66,6 @@ describe('Hero Animation Rule', () => {
   test('rig updates on subsequent ticks', () => {
     const sim = new Simulator(20, 20);
     
-
-    sim.rulebook.push(new HeroAnimation());
-    
     sim.addUnit({
       id: 'hero1',
       pos: { x: 10, y: 10 },

@@ -1,4 +1,5 @@
 import { Command } from "../rules/command";
+import { generateAttackPattern } from "../utils/attack_patterns";
 
 /**
  * Hero command - applies commands to all units tagged 'hero'
@@ -165,9 +166,6 @@ export class HeroCommand extends Command {
           break;
 
         case "up":
-          console.log(
-            `[HeroCommand] Moving hero up by 2: unit=${hero.id}, pos=${JSON.stringify(hero.pos)}`,
-          );
           this.sim.queuedCommands.push({
             type: "move",
             unitId: hero.id,
@@ -176,9 +174,6 @@ export class HeroCommand extends Command {
           break;
 
         case "down":
-          console.log(
-            `[HeroCommand] Moving hero down by 2: unit=${hero.id}, pos=${JSON.stringify(hero.pos)}`,
-          );
           this.sim.queuedCommands.push({
             type: "move",
             unitId: hero.id,
@@ -237,86 +232,54 @@ export class HeroCommand extends Command {
         case "attack":
         case "strike": {
           const direction = params.direction || hero.meta?.facing || "right";
-          const range = params.range || 8; // Huge range like a visor
-          const damage = params.damage || hero.dmg || 25; // Increased damage
+          const range = params.range || 7; // Deeper range
+          const damage = params.damage || hero.dmg || 25;
 
-          const attackZones: Array<{ x: number; y: number }> = [];
+          // Use pattern generator for cleaner, more powerful attack
+          const attackZones = generateAttackPattern({
+            origin: hero.pos,
+            direction: direction as 'left' | 'right' | 'up' | 'down',
+            range: range,
+            pattern: 'cone',
+            width: 13, // Even wider base
+            taper: 1.2  // Gentler taper for broader reach
+          });
+
           const attackDx =
             direction === "right" ? 1 : direction === "left" ? -1 : 0;
           const attackDy =
             direction === "down" ? 1 : direction === "up" ? -1 : 0;
 
-          for (let dist = 1; dist <= range; dist++) {
-            const baseX = hero.pos.x + attackDx * dist;
-            const baseY = hero.pos.y + attackDy * dist;
+          // Generate particles for each attack zone
+          for (const zone of attackZones) {
+            const dist = Math.abs(zone.x - hero.pos.x) + Math.abs(zone.y - hero.pos.y);
+            
+            this.sim.queuedCommands.push({
+              type: "particle",
+              params: {
+                pos: { x: zone.x * 8 + 4, y: zone.y * 8 + 4 },
+                vel: { x: attackDx * 1.5, y: attackDy * 1.5 },
+                lifetime: 20 + dist * 3,
+                type: "spark",
+                color: `hsl(${45 + dist * 5}, 90%, ${70 - dist * 3}%)`,
+                radius: 4 + dist * 0.5,
+                z: 3,
+              },
+            });
 
-            // Width scales with range - smaller ranges have narrower width
-            const width = range <= 2 ? 3 : 7; // 3 lanes for short range, 7 for long range
-            const halfWidth = Math.floor(width / 2);
-
-            if (attackDx !== 0) {
-              for (let lane = -halfWidth; lane <= halfWidth; lane++) {
-                attackZones.push({ x: baseX, y: baseY + lane });
-
-                this.sim.queuedCommands.push({
-                  type: "particle",
-                  params: {
-                    pos: { x: baseX * 8 + 4, y: (baseY + lane) * 8 + 4 },
-                    vel: { x: attackDx * 1.5, y: 0 }, // Particles move outward
-                    lifetime: 20 + dist * 3, // Much longer lasting
-                    type: "spark",
-                    color: `hsl(${45 + dist * 5}, 90%, ${70 - dist * 3}%)`, // Bright golden gradient
-                    radius: 4 + dist * 0.5, // Much bigger particles
-                    z: 3,
-                  },
-                });
-                
-                // Add secondary glow effect
-                this.sim.queuedCommands.push({
-                  type: "particle",
-                  params: {
-                    pos: { x: baseX * 8 + 4, y: (baseY + lane) * 8 + 4 },
-                    vel: { x: attackDx * 0.5, y: 0 },
-                    lifetime: 15 + dist * 2,
-                    type: "glow",
-                    color: `hsla(${45 + dist * 5}, 100%, 80%, 0.6)`,
-                    radius: 6 + dist * 0.8,
-                    z: 2,
-                  },
-                });
-              }
-            } else {
-              for (let lane = -halfWidth; lane <= halfWidth; lane++) {
-                attackZones.push({ x: baseX + lane, y: baseY });
-
-                this.sim.queuedCommands.push({
-                  type: "particle",
-                  params: {
-                    pos: { x: (baseX + lane) * 8 + 4, y: baseY * 8 + 4 },
-                    vel: { x: 0, y: attackDy * 1.5 },
-                    lifetime: 20 + dist * 3,
-                    type: "spark",
-                    color: `hsl(${45 + dist * 5}, 90%, ${70 - dist * 3}%)`,
-                    radius: 4 + dist * 0.5,
-                    z: 3,
-                  },
-                });
-                
-                // Add secondary glow effect
-                this.sim.queuedCommands.push({
-                  type: "particle",
-                  params: {
-                    pos: { x: (baseX + lane) * 8 + 4, y: baseY * 8 + 4 },
-                    vel: { x: 0, y: attackDy * 0.5 },
-                    lifetime: 15 + dist * 2,
-                    type: "glow",
-                    color: `hsla(${45 + dist * 5}, 100%, 80%, 0.6)`,
-                    radius: 6 + dist * 0.8,
-                    z: 2,
-                  },
-                });
-              }
-            }
+            // Add secondary glow effect
+            this.sim.queuedCommands.push({
+              type: "particle",
+              params: {
+                pos: { x: zone.x * 8 + 4, y: zone.y * 8 + 4 },
+                vel: { x: attackDx * 0.5, y: attackDy * 0.5 },
+                lifetime: 15 + dist * 2,
+                type: "glow",
+                color: `hsla(${45 + dist * 5}, 100%, 80%, 0.6)`,
+                radius: 6 + dist * 0.8,
+                z: 2,
+              },
+            });
           }
 
           hero.meta.attackZones = attackZones;
@@ -325,7 +288,8 @@ export class HeroCommand extends Command {
           const enemiesSet = new Set<string>();
           const enemies = this.sim.units.filter((u) => {
             // Don't hit yourself or your allies, but hit neutral and hostile units
-            if (u.id === hero.id || u.team === hero.team || u.hp <= 0) return false;
+            if (u.id === hero.id || u.team === hero.team || u.hp <= 0)
+              return false;
             const inZone = attackZones.some(
               (zone) => u.pos.x === zone.x && u.pos.y === zone.y,
             );
@@ -431,64 +395,113 @@ export class HeroCommand extends Command {
           });
           break;
         }
-        
+
         case "bolt": {
           // Lightning bolt attack in facing direction
           const direction = params.direction || hero.meta?.facing || "right";
           const range = params.range || 8; // Long range lightning
           const damage = params.damage || 40; // High damage
-          
+
           // Find first enemy in line
           const dx = direction === "right" ? 1 : direction === "left" ? -1 : 0;
           const dy = direction === "down" ? 1 : direction === "up" ? -1 : 0;
-          
+
           let target = null;
+          let targetDist = 0;
           for (let dist = 1; dist <= range; dist++) {
             const checkX = hero.pos.x + dx * dist;
             const checkY = hero.pos.y + dy * dist;
-            
+
             const enemy = this.sim.units.find(
               (u) =>
                 u.pos.x === checkX &&
                 u.pos.y === checkY &&
-                u.team !== hero.team &&
+                u.id !== hero.id && // Don't hit yourself
+                u.team !== "friendly" && // Hit neutral and hostile units
                 u.hp > 0,
             );
-            
+
             if (enemy) {
               target = enemy;
+              targetDist = dist;
               break;
             }
           }
-          
-          if (target) {
-            // Queue bolt command at target position
+
+          // Create a lightning effect (no projectile sprite, just particles)
+
+          // Lightning visual effects along the path
+          for (let dist = 0; dist <= (targetDist || range); dist++) {
+            const sparkX = hero.pos.x + dx * dist;
+            const sparkY = hero.pos.y + dy * dist;
+
+            // Main bolt particle
             this.sim.queuedCommands.push({
-              type: "bolt",
+              type: "particle",
               params: {
-                x: target.pos.x,
-                y: target.pos.y,
-                damage: damage,
-                sourceId: hero.id,
+                pos: { x: sparkX * 8 + 4, y: sparkY * 8 + 4 },
+                vel: { x: 0, y: 0 },
+                lifetime: 10 + dist,
+                type: "lightning",
+                color: "#FFFFFF",
+                radius: 3,
+                z: 5,
               },
             });
-          } else {
-            // Visual effect at max range if no target
-            const boltX = hero.pos.x + dx * range;
-            const boltY = hero.pos.y + dy * range;
+
+            // Glow effect
             this.sim.queuedCommands.push({
-              type: "bolt",
+              type: "particle",
               params: {
-                x: boltX,
-                y: boltY,
-                damage: 0, // No damage, just visual
-                sourceId: hero.id,
+                pos: { x: sparkX * 8 + 4, y: sparkY * 8 + 4 },
+                vel: {
+                  x: (Math.random() - 0.5) * 0.5,
+                  y: (Math.random() - 0.5) * 0.5,
+                },
+                lifetime: 15 + dist,
+                type: "electric_spark",
+                color: "#AAAAFF",
+                radius: 4,
+                z: 4,
               },
             });
           }
+
+          // Impact effect at target
+          if (target) {
+            this.sim.queuedCommands.push({
+              type: "damage",
+              params: {
+                targetId: target.id,
+                amount: damage,
+                sourceId: hero.id,
+              },
+            });
+
+            // Thunder ring at impact
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              this.sim.queuedCommands.push({
+                type: "particle",
+                params: {
+                  pos: { x: target.pos.x * 8 + 4, y: target.pos.y * 8 + 4 },
+                  vel: {
+                    x: Math.cos(angle) * 1.5,
+                    y: Math.sin(angle) * 1.5,
+                  },
+                  lifetime: 20,
+                  type: "thunder_ring",
+                  color: "#8888FF",
+                  radius: 2,
+                  z: 3,
+                },
+              });
+            }
+          }
+
           break;
         }
-        
+
         case "heal": {
           // Heal self
           const healAmount = params.amount || 25;
@@ -499,6 +512,26 @@ export class HeroCommand extends Command {
               amount: healAmount,
             },
           });
+          break;
+        }
+
+        case "move-to": {
+          // Move hero to target position
+          const targetX = params.x;
+          const targetY = params.y;
+          const attackMove = params.attackMove || false;
+
+          if (typeof targetX === "number" && typeof targetY === "number") {
+            this.sim.queuedCommands.push({
+              type: "move_target",
+              unitId: hero.id,
+              params: {
+                x: targetX,
+                y: targetY,
+                attackMove: attackMove,
+              },
+            });
+          }
           break;
         }
 

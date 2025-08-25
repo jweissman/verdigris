@@ -6,10 +6,7 @@ import { PlayerControl } from '../../src/rules/player_control';
 describe('Hero Weapon Switching', () => {
   test('hero can switch weapons using number keys', () => {
     const sim = new Simulator(40, 40);
-    const playerControl = new PlayerControl();
-    
-    sim.rulebook.push(new HeroAnimation());
-    sim.rulebook.push(playerControl);
+    const playerControl: PlayerControl = sim.rules.find(r => r.constructor === PlayerControl);
     
     const hero = sim.addUnit({
       id: 'weapon_hero',
@@ -27,7 +24,6 @@ describe('Hero Weapon Switching', () => {
     sim.step();
     let heroUnit = sim.units.find(u => u.id === 'weapon_hero');
     expect(heroUnit?.meta?.weapon).toBeUndefined(); // Default is sword
-    
 
     playerControl.setKeyState('2', true);
     sim.step();
@@ -63,10 +59,8 @@ describe('Hero Weapon Switching', () => {
   
   test('weapon persists through movement and actions', () => {
     const sim = new Simulator(40, 40);
-    const playerControl = new PlayerControl();
-    
-    sim.rulebook.push(new HeroAnimation());
-    sim.rulebook.push(playerControl);
+    const playerControl: PlayerControl = sim.rules.find(r => r.constructor === PlayerControl);
+    //  new PlayerControl();
     
     const hero = sim.addUnit({
       id: 'persist_hero',

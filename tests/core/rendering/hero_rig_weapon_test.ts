@@ -59,7 +59,8 @@ describe('Hero Rig Weapon System', () => {
     const finalX = weaponFinal?.offset.x || 0;
     
 
-    expect(finalX).not.toBe(initialX);
+    // Sword position should change as arm moves during breathing
+    expect(Math.abs(finalX - initialX)).toBeGreaterThan(0.01);
   });
   
   test('available weapons list', () => {

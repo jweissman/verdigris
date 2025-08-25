@@ -8,14 +8,14 @@ describe('Cute Animals System', () => {
     const sim = new Simulator(20, 15);
     
 
-    (sim as any).sceneBackground = 'title-forest';
+    sim.sceneBackground = 'title-forest';
     
 
     for (let tick = 0; tick < 200; tick++) {
       sim.step();
     }
     
-    const finalAnimals = sim.units.filter(u => u.meta?.isAmbient);
+    const finalAnimals = sim.units.filter(u => u.tags?.includes('wander'));
     expect(finalAnimals.length).toBeGreaterThan(0);
     expect(finalAnimals.length).toBeLessThanOrEqual(10);
   });
@@ -34,8 +34,8 @@ describe('Cute Animals System', () => {
       hp: 8,
       maxHp: 8,
       team: 'neutral' as const,
+      tags: ['wander'],
       meta: {
-        isAmbient: true,
         spawnTick: 0,
         wanderTarget: { x: 10, y: 3 }
       }
@@ -83,8 +83,8 @@ describe('Cute Animals System', () => {
       hp: 8,
       maxHp: 8,
       team: 'neutral' as const,
+      tags: ['wander'],
       meta: {
-        isAmbient: true,
         wanderTarget: { x: 10, y: 5 }
       }
     };
@@ -97,8 +97,8 @@ describe('Cute Animals System', () => {
       hp: 8,
       maxHp: 8,
       team: 'neutral' as const,
+      tags: ['wander'],
       meta: {
-        isAmbient: true,
         wanderTarget: { x: 4, y: 7 }
       }
     };
@@ -131,7 +131,7 @@ describe('Cute Animals System', () => {
       }
     }
     
-    expect(sim.units.filter(u => u.meta?.isAmbient).length).toBe(2);
+    expect(sim.units.filter(u => u.tags?.includes('wander')).length).toBe(2);
   });
   
 
@@ -150,7 +150,7 @@ describe('Cute Animals System', () => {
       sim.step();
       
       if (tick % 100 === 0) {
-        const ambientCount = sim.units.filter(u => u.meta?.isAmbient).length;
+        const ambientCount = sim.units.filter(u => u.tags?.includes('wander')).length;
         const totalCount = sim.units.length;
 
         

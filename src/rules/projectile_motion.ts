@@ -224,11 +224,12 @@ export class ProjectileMotion extends Rule {
           const radiusSq = radius * radius;
 
           if (distSq < radiusSq) {
+            const damageAmount = projectile.damage || 10;
             this.commands.push({
               type: "damage",
               params: {
                 targetId: unit.id,
-                amount: projectile.damage || 10,
+                amount: damageAmount,
                 aspect: projectile.aspect || "physical",
                 origin: projectile.pos,
               },

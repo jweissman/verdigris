@@ -13,6 +13,8 @@ import { Tossing } from "../rules/tossing";
 import { Abilities } from "../rules/abilities";
 import { RangedCombat } from "../rules/ranged_combat";
 import { EventHandler } from "../rules/event_handler";
+import { PlayerControl } from "../rules/player_control";
+import { HeroAnimation } from "../rules/hero_animation";
 import { CommandHandler, QueuedCommand } from "./command_handler";
 import { HugeUnits } from "../rules/huge_units";
 import { SegmentedCreatures } from "../rules/segmented_creatures";
@@ -126,11 +128,15 @@ class Simulator {
   }
 
   projectiles: Projectile[];
-  rulebook: Rule[];
+  private rulebook: Rule[];
   private commandProcessor: CommandHandler;
   queuedEvents: Action[] = [];
   processedEvents: Action[] = [];
   queuedCommands: QueuedCommand[] = [];
+
+  get rules(): Readonly<Rule[]> {
+    return this.rulebook;
+  }
 
   private lastUnitPositions: Map<string, { x: number; y: number }> = new Map();
   private lastActiveCount: number = 0;
@@ -386,7 +392,14 @@ class Simulator {
       new Tossing(),
     ];
 
-    this.rulebook = [...coreRules, ...combatRules, ...specialRules];
+    const heroRules = [new PlayerControl(), new HeroAnimation()];
+
+    this.rulebook = [
+      ...coreRules,
+      ...combatRules,
+      ...specialRules,
+      ...heroRules,
+    ];
   }
 
   addUnit(unit: Partial<Unit>): Unit {
@@ -394,7 +407,9 @@ class Simulator {
     if ((unit as any).type) {
       const unitData = Encyclopaedia.unit((unit as any).type);
       if (unitData) {
-        baseUnit = { ...unitData, ...unit };
+        // Merge tags if both exist
+        const mergedTags = [...(unitData.tags || []), ...(unit.tags || [])];
+        baseUnit = { ...unitData, ...unit, tags: mergedTags };
       }
     }
 
@@ -648,39 +663,39 @@ class Simulator {
   updateParticles() {
     const arrays = this.particleArrays;
 
+    // First, apply gravity to particles that need it
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
-
       const type = arrays.type[i];
-
-      if (type === 1) {
-        arrays.velX[i] = 0; // No horizontal movement
-        arrays.velY[i] = 0.5; // Constant fall speed
-      } else if (type === 3) {
-        arrays.velX[i] = 0; // No horizontal drift
-        arrays.velY[i] = 0.15;
+      // Only apply gravity to particles we don't manually control
+      if (type !== 1 && type !== 2 && type !== 3) {
+        arrays.velY[i] += 0.1 * (1 - arrays.landed[i]);
       }
     }
 
-    arrays.updatePhysics();
-    arrays.applyGravity(0.1); // Moved from Particles rule
-
+    // Then override velocities for controlled particle types
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
 
       const type = arrays.type[i];
 
       if (type === 1) {
-        arrays.velX[i] = 0; // No horizontal movement
-        arrays.velY[i] = 0.5; // Constant fall speed
+        // Leaves - fall straight down, no horizontal movement
+        arrays.velX[i] = 0;
+        arrays.velY[i] = 0.5;
       } else if (type === 2) {
-        if (arrays.velY[i] > 1.2) arrays.velY[i] = 1.2; // Cap fall speed
-        if (arrays.velX[i] === 0) arrays.velX[i] = 0.3; // Ensure some diagonal movement
+        // Rain - slight diagonal
+        arrays.velX[i] = 0.3;
+        arrays.velY[i] = 1.2;
       } else if (type === 3) {
+        // Snow - very slow drift
         arrays.velX[i] = 0;
         arrays.velY[i] = 0.15;
       }
     }
+
+    // Finally update positions based on velocities
+    arrays.updatePhysics();
 
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;

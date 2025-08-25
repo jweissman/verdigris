@@ -54,7 +54,7 @@ export default class Isometric extends View {
     this.renderParticles();
 
     this.renderOverlays();
-    
+
     this.renderHeroUI();
   }
 
@@ -88,7 +88,7 @@ export default class Isometric extends View {
         scaledHeight,
       );
     } else {
-      console.warn(`No background image found for type: ${backgroundType}`);
+      // console.warn(`No background image found for type: ${backgroundType}`);
     }
 
     this.ctx.restore();
@@ -167,8 +167,8 @@ export default class Isometric extends View {
   }
 
   private renderHoverCell() {
-    // Check for hover cell from renderer or sim
-    const hoverCell = (this as any).hoverCell || (this.ctx as any).canvas?.parentElement?.hoverCell;
+    // Check for hover cell from renderer
+    const hoverCell = (this as any).hoverCell;
     if (hoverCell) {
       const { x, y } = hoverCell;
 
@@ -334,25 +334,39 @@ export default class Isometric extends View {
         );
       }
     }
-    
-    // Draw unit ID label
-    if (this.fontAtlas.fontsReady) {
-      const labelX = pixelX + spriteWidth / 2 - 10; // Center the label
-      const labelY = realPixelY + 8; // Below the unit
-      
-      // Draw background for better visibility
-      const labelText = unit.id;
-      const labelWidth = labelText.length * 4 + 4;
-      this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-      this.ctx.fillRect(labelX - 2, labelY - 2, labelWidth, 8);
-      
-      // Draw the label
-      this.fontAtlas.drawTinyText(labelText, labelX, labelY, "#FFFFFF", 1);
-      
-      // Also show sprite name if it's different from ID
-      if (unit.sprite && unit.sprite !== unit.id) {
-        const spriteLabel = `[${unit.sprite}]`;
-        this.fontAtlas.drawTinyText(spriteLabel, labelX, labelY + 8, "#FFFF00", 1);
+
+    // Draw unit ID label only if near hover cell
+    const hoverCell = (this as any).hoverCell;
+    if (this.fontAtlas.fontsReady && hoverCell) {
+      // Check if unit is near hover cell (within 3 tiles)
+      const dx = Math.abs(unit.pos.x - hoverCell.x);
+      const dy = Math.abs(unit.pos.y - hoverCell.y);
+      const distance = Math.max(dx, dy);
+
+      if (distance <= 3) {
+        const labelX = pixelX + spriteWidth / 2 - 10; // Center the label
+        const labelY = realPixelY + 8; // Below the unit
+
+        // Draw background for better visibility
+        const labelText = unit.id;
+        const labelWidth = labelText.length * 4 + 4;
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        this.ctx.fillRect(labelX - 2, labelY - 2, labelWidth, 8);
+
+        // Draw the label
+        this.fontAtlas.drawTinyText(labelText, labelX, labelY, "#FFFFFF", 1);
+
+        // Also show sprite name if it's different from ID
+        if (unit.sprite && unit.sprite !== unit.id) {
+          const spriteLabel = `[${unit.sprite}]`;
+          this.fontAtlas.drawTinyText(
+            spriteLabel,
+            labelX,
+            labelY + 8,
+            "#FFFF00",
+            1,
+          );
+        }
       }
     }
   }
@@ -926,43 +940,74 @@ export default class Isometric extends View {
     const barHeight = 8;
     const barX = 10;
     const barY = 10;
-    
+
     // Background
     this.ctx.fillStyle = "#000000";
     this.ctx.fillRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
-    
+
     // Health bar
     const healthPercent = hero.hp / (hero.maxHp || 100);
-    this.ctx.fillStyle = healthPercent > 0.5 ? "#00FF00" : healthPercent > 0.25 ? "#FFFF00" : "#FF0000";
+    this.ctx.fillStyle =
+      healthPercent > 0.5
+        ? "#00FF00"
+        : healthPercent > 0.25
+          ? "#FFFF00"
+          : "#FF0000";
     this.ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
-    
+
     // HP text
-    this.fontAtlas.drawTinyText(`${hero.hp}/${hero.maxHp || 100}`, barX + barWidth + 5, barY + 2, "#FFFFFF", 1);
+    this.fontAtlas.drawTinyText(
+      `${hero.hp}/${hero.maxHp || 100}`,
+      barX + barWidth + 5,
+      barY + 2,
+      "#FFFFFF",
+      1,
+    );
 
     // Draw current weapon at top right
     const weapon = hero.meta?.weapon || "sword";
     const weaponText = weapon.charAt(0).toUpperCase() + weapon.slice(1);
-    this.fontAtlas.drawTinyText(`Weapon: ${weaponText}`, this.width - 80, barY + 2, "#FFFFFF", 1);
-    
+    this.fontAtlas.drawTinyText(
+      `Weapon: ${weaponText}`,
+      this.width - 80,
+      barY + 2,
+      "#FFFFFF",
+      1,
+    );
+
     // Draw current primary action
     const primaryAction = hero.meta?.primaryAction || "strike";
-    const actionText = primaryAction.charAt(0).toUpperCase() + primaryAction.slice(1);
-    this.fontAtlas.drawTinyText(`Action: ${actionText}`, this.width - 80, barY + 10, "#00FFFF", 1);
+    const actionText =
+      primaryAction.charAt(0).toUpperCase() + primaryAction.slice(1);
+    this.fontAtlas.drawTinyText(
+      `Action: ${actionText}`,
+      this.width - 80,
+      barY + 10,
+      "#00FFFF",
+      1,
+    );
 
     // Draw abilities list at bottom left - higher up to be more visible
     const abilities = hero.abilities || [];
     let abilityY = this.height - 60; // Move higher up
-    
+
     this.fontAtlas.drawTinyText("Abilities:", 10, abilityY, "#FFFF00", 1);
     abilityY += 6;
-    
+
     if (abilities.length === 0) {
       this.fontAtlas.drawTinyText("- None", 15, abilityY, "#888888", 1);
     } else {
-      for (let i = 0; i < abilities.length && i < 5; i++) { // Limit to 5 for space
+      for (let i = 0; i < abilities.length && i < 5; i++) {
+        // Limit to 5 for space
         const ability = abilities[i];
-        const abilityName = ability.replace(/([A-Z])/g, ' $1').trim();
-        this.fontAtlas.drawTinyText(`- ${abilityName}`, 15, abilityY, "#FFFFFF", 1);
+        const abilityName = ability.replace(/([A-Z])/g, " $1").trim();
+        this.fontAtlas.drawTinyText(
+          `- ${abilityName}`,
+          15,
+          abilityY,
+          "#FFFFFF",
+          1,
+        );
         abilityY += 6;
       }
     }
@@ -970,12 +1015,12 @@ export default class Isometric extends View {
     // Draw controls hint at bottom right
     const hints = [
       "WASD: Move",
-      "Space: Jump", 
+      "Space: Jump",
       "Q: Action",
       ",/.: Switch",
-      "1-6: Weapons"
+      "1-6: Weapons",
     ];
-    
+
     let hintY = this.height - 30;
     for (const hint of hints) {
       this.fontAtlas.drawTinyText(hint, this.width - 70, hintY, "#888888", 1);

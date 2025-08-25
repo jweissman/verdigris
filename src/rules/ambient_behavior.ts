@@ -8,7 +8,7 @@ export class AmbientBehavior extends Rule {
     const commands: QueuedCommand[] = [];
     const ambientCreatures = context
       .getAllUnits()
-      .filter((u) => u.meta?.isAmbient && u.hp > 0 && u.team === "neutral");
+      .filter((u) => u.tags?.includes("wander") && u.hp > 0 && u.team === "neutral");
 
     for (const creature of ambientCreatures) {
       this.updateAmbientBehavior(context, creature, commands);
@@ -104,7 +104,7 @@ export class AmbientBehavior extends Rule {
       .filter(
         (other) =>
           other.id !== creature.id &&
-          other.meta?.isAmbient &&
+          other.tags?.includes("wander") &&
           other.hp > 0 &&
           this.getDistance(creature.pos, other.pos) < 3,
       );
@@ -120,7 +120,7 @@ export class AmbientBehavior extends Rule {
       }
     }
 
-    if (creature.type.includes("squirrel") && context.getRandom() < 0.01) {
+    if (creature.type && creature.type.includes("squirrel") && context.getRandom() < 0.01) {
       const treeSpot = this.findNearestTreeSpot(context, creature.pos);
       if (treeSpot) {
         creature.meta.wanderTarget = treeSpot;

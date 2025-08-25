@@ -62,7 +62,7 @@ export class Jumping extends Rule {
 
     const peakHeight = unit.meta.jumpHeight || 6;
     const z = Math.max(0, 4 * peakHeight * t * (1 - t));
-    
+
     // If doing a midair flip, add rotation
     if (unit.meta.isFlipping) {
       const flipProgress = progress / jumpDuration;

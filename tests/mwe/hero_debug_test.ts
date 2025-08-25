@@ -2,18 +2,11 @@ import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { HeroAnimation } from '../../src/rules/hero_animation';
 import { Jumping } from '../../src/rules/jumping';
-import { Hunting } from '../../src/rules/hunting';
 import { MeleeCombat } from '../../src/rules/melee_combat';
 
 describe('Hero MWE Debug', () => {
   test('check initial state for unexpected units', () => {
     const sim = new Simulator(40, 25);
-    
-    // Add rules like Hero MWE
-    sim.rulebook.push(new HeroAnimation());
-    sim.rulebook.push(new Jumping());
-    sim.rulebook.push(new Hunting());
-    sim.rulebook.push(new MeleeCombat());
     
     // Add hero
     sim.addUnit({

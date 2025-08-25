@@ -89,8 +89,6 @@ describe('Mechatronist Deployment System', () => {
 
   it('should handle full Mechatronist to Mechatron deployment sequence', () => {
     const sim = new Simulator();
-    
-
     const mechatronist = { ...Encyclopaedia.unit('mechatronist'), pos: { x: 3, y: 3 } };
     const ally1 = { ...Encyclopaedia.unit('soldier'), pos: { x: 2, y: 3 } };
     const ally2 = { ...Encyclopaedia.unit('soldier'), pos: { x: 4, y: 3 } };
@@ -99,19 +97,15 @@ describe('Mechatronist Deployment System', () => {
     sim.addUnit(ally1);
     sim.addUnit(ally2);
     sim.addUnit(enemy);
-    
     let deploymentPhase = 'waiting';
     let mechatron = null;
-    
     for (let tick = 0; tick < 200; tick++) {
       sim.step();
-
       if (deploymentPhase === 'waiting') {
         const mechatronInAir = sim.units.find(u => u.sprite === 'mechatron');
         if (mechatronInAir) {
           deploymentPhase = 'called';
           mechatron = mechatronInAir;
-          console.log(`Tick ${tick}: Mechatron deployed with HP ${mechatron.hp}`);
         }
       }
       
@@ -121,10 +115,6 @@ describe('Mechatronist Deployment System', () => {
           deploymentPhase = 'dropping';
         }
 
-        const currentMechatron = sim.units.find(u => u.sprite === 'mechatron');
-        if (currentMechatron && currentMechatron.hp < 200) {
-          console.log(`Tick ${tick}: Mechatron damaged while dropping - HP: ${currentMechatron.hp}`);
-        }
       }
       
 
@@ -133,7 +123,6 @@ describe('Mechatronist Deployment System', () => {
         if (currentMechatron && !currentMechatron.meta?.dropping) {
           deploymentPhase = 'landed';
           mechatron = currentMechatron;
-          console.log(`Tick ${tick}: Mechatron landed with HP ${mechatron.hp}`);
           break;
         }
       }

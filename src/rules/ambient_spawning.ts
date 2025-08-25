@@ -69,7 +69,7 @@ export class AmbientSpawning extends Rule {
   private getCuteAnimalsForBiome(biome: string): string[] {
     switch (biome) {
       case "forest":
-        return ["squirrel", "forest-squirrel", "bird"];
+        return ["squirrel", "forest-squirrel"];
       case "desert":
         return ["sand-ant"];
       case "arctic":
@@ -77,7 +77,7 @@ export class AmbientSpawning extends Rule {
       case "none":
         return []; // No spawning for test/battle scenes
       default:
-        return ["squirrel", "bird"];
+        return ["squirrel"];
     }
   }
 
@@ -101,6 +101,7 @@ export class AmbientSpawning extends Rule {
         id: `${animalType}_${context.getCurrentTick()}_${Math.floor(context.getRandom() * 1000)}`,
         pos: spawnPos,
         team: "neutral",
+        tags: [...(animalData.tags || []), "wander"],
         meta: {
           ...animalData.meta,
           isAmbient: true,

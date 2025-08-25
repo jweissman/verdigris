@@ -1,7 +1,5 @@
 import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import { HeroAnimation } from '../../src/rules/hero_animation';
-import { createScaledRenderer } from '../../src/core/renderer';
 import { Game } from '../../src/core/game';
 
 describe('Hero Visual Rendering', () => {
@@ -61,8 +59,6 @@ describe('Hero Visual Rendering', () => {
     
 
     const sim = new Simulator(40, 40);
-    sim.rulebook.push(new HeroAnimation());
-    
     const hero = sim.addUnit({
       id: 'visual_hero',
       pos: { x: 10, y: 10 },

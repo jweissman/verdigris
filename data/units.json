@@ -351,7 +351,7 @@
       "y": 0
     },
     "team": "neutral",
-    "sprite": "leaf",
+    "sprite": "bird",
     "state": "idle",
     "hp": 5,
     "maxHp": 5,

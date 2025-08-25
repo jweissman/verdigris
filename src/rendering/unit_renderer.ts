@@ -262,8 +262,16 @@ export class UnitRenderer {
     centerY: number,
     options?: any,
   ) {
-    const parts = unit.meta.rig;
-    if (!parts || !Array.isArray(parts)) return;
+    const rig = unit.meta.rig;
+    if (!rig) return;
+    
+    // Convert object to array if needed
+    let parts = rig;
+    if (!Array.isArray(rig)) {
+      // It's an object with named parts - convert to array in drawing order
+      const drawOrder = ['larm', 'lleg', 'rleg', 'torso', 'rarm', 'head', 'sword'];
+      parts = drawOrder.map(name => rig[name]).filter(p => p);
+    }
 
     const shouldFlip = options?.flipHorizontal || unit.meta?.facing === "left";
 
@@ -278,7 +286,7 @@ export class UnitRenderer {
       const pixelX = centerX + offsetX;
       const pixelY = centerY + part.offset.y;
 
-      const frameX = part.frame * 16;
+      const frameX = (part.frame || 0) * 16;
 
       ctx.save();
 
@@ -302,10 +310,10 @@ export class UnitRenderer {
         0,
         16,
         16, // Source: 16x16 frame
-        -1,
-        -1,
-        18,
-        18, // Dest: slightly larger for overlap
+        0,
+        0,
+        16,
+        16, // Dest: exact size
       );
 
       ctx.restore();

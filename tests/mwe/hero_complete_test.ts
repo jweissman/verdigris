@@ -1,16 +1,12 @@
 import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { PlayerControl } from '../../src/rules/player_control';
-import { HeroAnimation } from '../../src/rules/hero_animation';
 
 describe('Complete Hero Test', () => {
   test('test all hero functionality like in MWE', () => {
     const sim = new Simulator(40, 40);
     
-
-    const playerControl = new PlayerControl();
-    sim.rulebook.push(playerControl);
-    sim.rulebook.push(new HeroAnimation());
+    const playerControl = sim.rules.find(r => r.constructor === PlayerControl);
     
 
     const hero = sim.addUnit({

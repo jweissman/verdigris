@@ -6,8 +6,6 @@ describe('Hero Jump Z-axis', () => {
   test('hero jump sets z coordinate', () => {
     const sim = new Simulator(40, 40);
     
-
-    sim.rulebook.push(new Jumping());
     
     const hero = sim.addUnit({
       id: 'jumping_hero',

@@ -342,6 +342,7 @@
         "duration": "max(4, floor(distance_to_target / 3))",
         "z": 0,
         "radius": 2,
+        "damage": 15,
         "color": "#FF0000"
       },
       {

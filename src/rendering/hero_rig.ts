@@ -142,11 +142,11 @@ export class HeroRig {
     this.parts.set("sword", {
       name: "sword",
       sprite: "hero-sword",
-      offset: { x: 14, y: -2 }, // More visible position
-      rotation: -Math.PI / 6, // Less diagonal, more forward
-      scale: 1.4, // Bigger and more visible
+      offset: { x: 12, y: 2 }, // Start at right hand position
+      rotation: -0.4, // Slight downward angle
+      scale: 1.0,
       frame: 0,
-      zIndex: 6,
+      zIndex: 6, // Render on top
     });
   }
 
@@ -381,8 +381,8 @@ export class HeroRig {
         {
           tick: 0,
           parts: {
-            torso: { offset: { x: 0, y: -5 }, rotation: 0.05, frame: 1 },
-            head: { offset: { x: 0, y: -13 }, rotation: 0.02, frame: 1 },
+            torso: { offset: { x: 0, y: -2 }, rotation: 0.05, frame: 1 }, // Less vertical movement
+            head: { offset: { x: 0, y: -10 }, rotation: 0.02, frame: 1 }, // Much less head bob
             lleg: { offset: { x: -2, y: 9 }, rotation: -0.2, frame: 0 }, // Left leg back
             rleg: { offset: { x: 2, y: 7 }, rotation: 0.3, frame: 1 }, // Right leg forward
             larm: { offset: { x: -7, y: -3 }, rotation: 0.2, frame: 1 }, // Left arm forward
@@ -392,8 +392,8 @@ export class HeroRig {
         {
           tick: 6,
           parts: {
-            torso: { offset: { x: 0, y: -5 }, rotation: -0.05, frame: 2 },
-            head: { offset: { x: 0, y: -13 }, rotation: -0.02, frame: 2 },
+            torso: { offset: { x: 0, y: -2 }, rotation: -0.05, frame: 2 }, // Less vertical movement
+            head: { offset: { x: 0, y: -10 }, rotation: -0.02, frame: 2 }, // Much less head bob
             lleg: { offset: { x: -2, y: 7 }, rotation: 0.3, frame: 1 }, // Left leg forward
             rleg: { offset: { x: 2, y: 9 }, rotation: -0.2, frame: 0 }, // Right leg back
             larm: { offset: { x: -9, y: -1 }, rotation: -0.2, frame: 0 }, // Left arm back
@@ -699,7 +699,10 @@ export class HeroRig {
     }
   }
 
-  getParts(facing: "left" | "right" = "right", rotation: number = 0): BodyPart[] {
+  getParts(
+    facing: "left" | "right" = "right",
+    rotation: number = 0,
+  ): BodyPart[] {
     const partsArray = Array.from(this.parts.values());
 
     partsArray.forEach((part) => {
@@ -710,22 +713,22 @@ export class HeroRig {
         if (part.name === "larm") part.zIndex = 2;
         else if (part.name === "rarm") part.zIndex = 4;
       }
-      
+
       // Apply flip rotation if provided
       if (rotation > 0) {
         // Adjust positions for rotation effect
         const rad = (rotation * Math.PI) / 180;
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
-        
+
         // Rotate offsets around center
         const cx = part.offset.x;
         const cy = part.offset.y;
         part.offset = {
           x: cx * cos - cy * sin,
-          y: cx * sin + cy * cos
+          y: cx * sin + cy * cos,
         };
-        
+
         // Add rotation to part
         part.rotation = (part.rotation || 0) + rad;
       }
@@ -767,9 +770,6 @@ export class HeroRig {
     const config = this.weaponConfigs.get(this.currentWeapon);
     if (!config) return;
 
-    const handAnchor = this.anchors.get("hand_r");
-    if (!handAnchor) return;
-
     const swordPart = this.parts.get("sword");
     if (swordPart) {
       if (config.type === "none") {
@@ -778,20 +778,24 @@ export class HeroRig {
       } else {
         swordPart.sprite = config.sprite;
 
-        const isAttacking = this.currentAnimation === "attack";
-        const attachmentScale = isAttacking ? 1.2 : 1.0;
-
-        swordPart.offset = {
-          x: handAnchor.position.x + config.offset.x * attachmentScale,
-          y: handAnchor.position.y + config.offset.y * attachmentScale,
-        };
-
+        // Attach sword to the right hand
+        const handAnchor = this.anchors.get("hand_r");
         const armPart = this.parts.get("rarm");
-        const baseRotation = armPart ? armPart.rotation : 0;
-        swordPart.rotation = baseRotation + config.rotation;
-
-        if (!isAttacking) {
-          swordPart.scale = config.scale;
+        
+        if (handAnchor && armPart) {
+          // Sword follows right arm position
+          // does nothing??
+          swordPart.offset = {
+            x: armPart.offset.x + 4, // Offset from arm position
+            y: armPart.offset.y - 2,  // Down from shoulder
+          };
+          
+          // Sword maintains a fixed angle relative to the arm
+          const armRotation = armPart.rotation || 0;
+          swordPart.rotation = armRotation - 0.4; // Fixed angle relative to arm
+          
+          swordPart.scale = 1.0;
+          swordPart.frame = 0; // Always use first frame
         }
       }
     }

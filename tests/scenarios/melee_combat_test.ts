@@ -44,7 +44,9 @@ describe('Melee Combat Mechanics', () => {
 
     
 
-    for (let i = 0; i < 6; i++) {
+    // With 1-tick cooldown, attacks happen very fast
+    // But need at least a few ticks to register engagement and attack
+    for (let i = 0; i < 10; i++) {
       sim.step();
     }
     

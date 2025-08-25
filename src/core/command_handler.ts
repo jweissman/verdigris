@@ -283,7 +283,7 @@ export class CommandHandler {
           moveCommand.execute(unitId, params);
         }
       }
-      
+
       const commandsByType = new Map<string, QueuedCommand[]>();
       for (const queuedCommand of otherCommands) {
         if (!queuedCommand.type) continue;

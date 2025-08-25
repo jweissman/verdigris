@@ -51,7 +51,7 @@ export class PlayerControl extends Rule {
         this.jumpCooldowns.set(unitId, cooldown - 1);
       }
     }
-    
+
     // Decrement ability switch cooldown
     if (this.abilitySwitchCooldown > 0) {
       this.abilitySwitchCooldown--;
@@ -240,35 +240,48 @@ export class PlayerControl extends Rule {
         }
 
         // Primary action (Q key or E key)
-        if (this.keysHeld.has("q") || this.keysHeld.has("e") || this.keysHeld.has("enter")) {
+        if (
+          this.keysHeld.has("q") ||
+          this.keysHeld.has("e") ||
+          this.keysHeld.has("enter")
+        ) {
           const actionCooldown = unit.meta?.lastAction
             ? context.getCurrentTick() - unit.meta.lastAction
             : 999;
           if (actionCooldown > 8) {
             const primaryAction = unit.meta?.primaryAction || "strike";
-            
+
             if (primaryAction === "strike") {
+              // Send strike command with direction
+              const facing = unit.meta?.facing || "right";
+              
               commands.push({
-                type: "hero",
+                type: "strike",
+                unitId: unit.id,
                 params: {
-                  action: "strike",
-                  direction: unit.meta?.facing || "right",
+                  direction: facing,
+                  // Don't set range - let strike command use its default for heroes
+                  damage: unit.dmg || 15,
                 },
               });
             } else if (primaryAction === "bolt") {
               // Find nearest enemy
-              const enemies = context.getAllUnits().filter(u => 
-                u.team !== unit.team && u.hp > 0
-              );
-              
+              const enemies = context
+                .getAllUnits()
+                .filter((u) => u.team !== unit.team && u.hp > 0);
+
               if (enemies.length > 0) {
                 // Sort by distance
                 enemies.sort((a, b) => {
-                  const distA = Math.abs(a.pos.x - unit.pos.x) + Math.abs(a.pos.y - unit.pos.y);
-                  const distB = Math.abs(b.pos.x - unit.pos.x) + Math.abs(b.pos.y - unit.pos.y);
+                  const distA =
+                    Math.abs(a.pos.x - unit.pos.x) +
+                    Math.abs(a.pos.y - unit.pos.y);
+                  const distB =
+                    Math.abs(b.pos.x - unit.pos.x) +
+                    Math.abs(b.pos.y - unit.pos.y);
                   return distA - distB;
                 });
-                
+
                 const target = enemies[0];
                 commands.push({
                   type: "bolt",
@@ -297,9 +310,12 @@ export class PlayerControl extends Rule {
         if (this.abilitySwitchCooldown <= 0) {
           if (this.keysHeld.has(",") || this.keysHeld.has("<")) {
             const actions = ["strike", "bolt", "heal"];
-            const currentIndex = actions.indexOf(unit.meta?.primaryAction || "strike");
-            const prevIndex = (currentIndex - 1 + actions.length) % actions.length;
-            
+            const currentIndex = actions.indexOf(
+              unit.meta?.primaryAction || "strike",
+            );
+            const prevIndex =
+              (currentIndex - 1 + actions.length) % actions.length;
+
             commands.push({
               type: "meta",
               params: {
@@ -310,15 +326,45 @@ export class PlayerControl extends Rule {
                 },
               },
             });
-            console.log(`[PlayerControl] Primary action: ${actions[prevIndex]}`);
+
+            // Visual feedback for ability switch
+            const colors: Record<string, string> = {
+              strike: "#FFD700", // Gold for sword
+              bolt: "#87CEEB", // Sky blue for lightning
+              heal: "#00FF00", // Green for heal
+            };
+
+            for (let i = 0; i < 5; i++) {
+              commands.push({
+                type: "particle",
+                params: {
+                  pos: {
+                    x: unit.pos.x * 8 + 4 + (Math.random() - 0.5) * 12,
+                    y: unit.pos.y * 8 + 4,
+                  },
+                  vel: { x: 0, y: -1 },
+                  lifetime: 15,
+                  type: "energy",
+                  color: colors[actions[prevIndex]] || "#FFFFFF",
+                  radius: 3,
+                  z: 5,
+                },
+              });
+            }
+
+            console.log(
+              `[PlayerControl] Primary action: ${actions[prevIndex]}`,
+            );
             this.abilitySwitchCooldown = this.ABILITY_SWITCH_COOLDOWN;
           }
-          
+
           if (this.keysHeld.has(".") || this.keysHeld.has(">")) {
             const actions = ["strike", "bolt", "heal"];
-            const currentIndex = actions.indexOf(unit.meta?.primaryAction || "strike");
+            const currentIndex = actions.indexOf(
+              unit.meta?.primaryAction || "strike",
+            );
             const nextIndex = (currentIndex + 1) % actions.length;
-            
+
             commands.push({
               type: "meta",
               params: {
@@ -329,7 +375,35 @@ export class PlayerControl extends Rule {
                 },
               },
             });
-            console.log(`[PlayerControl] Primary action: ${actions[nextIndex]}`);
+
+            // Visual feedback for ability switch
+            const colors: Record<string, string> = {
+              strike: "#FFD700", // Gold for sword
+              bolt: "#87CEEB", // Sky blue for lightning
+              heal: "#00FF00", // Green for heal
+            };
+
+            for (let i = 0; i < 5; i++) {
+              commands.push({
+                type: "particle",
+                params: {
+                  pos: {
+                    x: unit.pos.x * 8 + 4 + (Math.random() - 0.5) * 12,
+                    y: unit.pos.y * 8 + 4,
+                  },
+                  vel: { x: 0, y: -1 },
+                  lifetime: 15,
+                  type: "energy",
+                  color: colors[actions[nextIndex]] || "#FFFFFF",
+                  radius: 3,
+                  z: 5,
+                },
+              });
+            }
+
+            console.log(
+              `[PlayerControl] Primary action: ${actions[nextIndex]}`,
+            );
             this.abilitySwitchCooldown = this.ABILITY_SWITCH_COOLDOWN;
           }
         }

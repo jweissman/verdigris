@@ -1,18 +1,11 @@
 import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
 import { PlayerControl } from '../../src/rules/player_control';
-import { HeroAnimation } from '../../src/rules/hero_animation';
-import { Jumping } from '../../src/rules/jumping';
 
 describe('Hero Jump Visual Issue', () => {
   test('hero jump should show Z movement', () => {
     const sim = new Simulator(40, 40);
-    
-    const playerControl = new PlayerControl();
-    sim.rulebook.push(playerControl);
-    sim.rulebook.push(new HeroAnimation());
-    sim.rulebook.push(new Jumping()); // Add Jumping rule!
-    
+    const playerControl: PlayerControl = sim.rules.find(r => r.constructor === PlayerControl); 
     const hero = sim.addUnit({
       id: "jump_hero",
       pos: { x: 10, y: 10 },
@@ -27,10 +20,6 @@ describe('Hero Jump Visual Issue', () => {
       }
     });
     
-
-
-    
-
 
     playerControl.setKeyState(' ', true);
     sim.step(); // One step with space pressed

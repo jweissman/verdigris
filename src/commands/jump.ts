@@ -24,10 +24,10 @@ export class JumpCommand extends Command {
     // Allow multi-jumps up to 3 times
     const jumpCount = unit.meta?.jumpCount || 0;
     if (unit.meta?.jumping && jumpCount < 3) {
-      // This is a multi-jump! 
+      // This is a multi-jump!
       unit.meta.jumpCount = jumpCount + 1;
       unit.meta.jumpProgress = 0; // Reset progress for new arc
-      
+
       // Do a flip on double and triple jumps
       if (jumpCount === 1) {
         unit.meta.isFlipping = true; // Single flip for double jump
@@ -36,23 +36,23 @@ export class JumpCommand extends Command {
         unit.meta.isDoubleFlipping = true; // Double flip for triple jump!
         unit.meta.flipStartTick = this.sim.ticks;
       }
-      
+
       // Update jump target for multi-jump
       let targetX = params.targetX as number;
       let targetY = params.targetY as number;
-      
+
       if (targetX === undefined || targetY === undefined) {
-        const distance = (params.distance as number) || (3 + jumpCount); // Increasing distance
+        const distance = (params.distance as number) || 3 + jumpCount; // Increasing distance
         const facing = unit.meta?.facing || "right";
-        
+
         targetX = unit.pos.x + (facing === "right" ? distance : -distance);
         targetY = unit.pos.y;
         targetX = Math.max(0, Math.min(this.sim.width - 1, targetX));
       }
-      
+
       unit.meta.jumpOrigin = { x: unit.pos.x, y: unit.pos.y };
       unit.meta.jumpTarget = { x: targetX, y: targetY };
-      unit.meta.jumpHeight = (params.height as number) || (5 + jumpCount * 2); // Higher each jump
+      unit.meta.jumpHeight = (params.height as number) || 5 + jumpCount * 2; // Higher each jump
       return;
     } else if (unit.meta?.jumping) {
       // Already at max jumps, buffer this for landing

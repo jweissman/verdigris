@@ -2,6 +2,7 @@ import { Simulator } from "./simulator";
 import Orthographic from "../views/orthographic";
 import Cinematic from "../views/cinematic";
 import Isometric from "../views/isometric";
+import { InventoryView } from "../views/inventory";
 
 interface CanvasLike {
   width: number;
@@ -149,12 +150,14 @@ class ScaledDisplay {
   }
 }
 
-type ViewMode = "grid" | "cinematic" | "iso";
+type ViewMode = "grid" | "cinematic" | "iso" | "inventory";
 export default class Renderer extends Display {
   private viewMode: ViewMode = "iso";
   private battle: Orthographic | null = null;
   private cinematic: Cinematic | null = null;
   private isometric: Isometric | null = null;
+  private inventory: InventoryView | null = null;
+  public hoverCell: { x: number; y: number } | null = null;
 
   constructor(
     width: number,
@@ -220,8 +223,15 @@ export default class Renderer extends Display {
     } else if (this.viewMode === "iso") {
       if (this.isometric) {
         this.isometric.sim = this.sim;
+        // Pass hover cell to isometric view
+        (this.isometric as any).hoverCell = this.hoverCell;
         this.isometric.show();
       }
+    } else if (this.viewMode === "inventory") {
+      if (!this.inventory) {
+        this.inventory = new InventoryView(this.sim, this.ctx, this.width, this.height, this.sprites);
+      }
+      this.inventory.render();
     }
   }
 }

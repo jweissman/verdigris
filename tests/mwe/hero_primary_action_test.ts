@@ -5,9 +5,8 @@ import { PlayerControl } from '../../src/rules/player_control';
 describe('Hero Primary Action System', () => {
   test('can rotate primary actions with comma and period keys', () => {
     const sim = new Simulator(30, 30);
-    const playerControl = new PlayerControl();
-    sim.rulebook.push(playerControl);
-    
+    const playerControl: PlayerControl = sim.rules.find(r => r.constructor === PlayerControl);
+
     const hero = sim.addUnit({
       id: 'action_hero',
       pos: { x: 10, y: 10 },
@@ -60,9 +59,8 @@ describe('Hero Primary Action System', () => {
 
   test('bolt action queues bolt command', () => {
     const sim = new Simulator(30, 30);
-    const playerControl = new PlayerControl();
-    sim.rulebook.push(playerControl);
-    
+    const playerControl: PlayerControl = sim.rules.find(r => r.constructor === PlayerControl);
+
     const hero = sim.addUnit({
       id: 'bolt_hero',
       pos: { x: 10, y: 10 },
@@ -100,8 +98,7 @@ describe('Hero Primary Action System', () => {
 
   test('heal action heals the hero', () => {
     const sim = new Simulator(30, 30);
-    const playerControl = new PlayerControl();
-    sim.rulebook.push(playerControl);
+    const playerControl = sim.rules.find(r => r.constructor === PlayerControl) as PlayerControl;
     
     const hero = sim.addUnit({
       id: 'heal_hero',

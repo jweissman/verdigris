@@ -82,6 +82,19 @@ export class Damage extends Command {
       },
     });
 
+    // Create damage event for visual effects
+    this.sim.queuedEvents.push({
+      kind: "damage",
+      source: params.sourceId as string || "unknown",
+      target: targetId,
+      meta: {
+        amount: finalDamage,
+        aspect: aspect,
+        origin: params.origin as { x: number; y: number },
+        tick: this.sim.ticks,
+      },
+    });
+
     if (params.sourceId) {
       const sourceId = params.sourceId as string;
       const source = this.sim.units.find((u) => u.id === sourceId);
