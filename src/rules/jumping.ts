@@ -67,6 +67,9 @@ export class Jumping extends Rule {
     if (unit.meta.isFlipping) {
       const flipProgress = progress / jumpDuration;
       unit.meta.rotation = flipProgress * 360; // Full 360 degree flip
+    } else if (unit.meta.isDoubleFlipping) {
+      const flipProgress = progress / jumpDuration;
+      unit.meta.rotation = flipProgress * 720; // Double flip for triple jump!
     }
 
     if (progress >= jumpDuration) {
@@ -185,8 +188,9 @@ export class Jumping extends Rule {
             jumpRadius: null,
             smoothX: null,
             smoothY: null,
-            hasDoubleJumped: false,
+            jumpCount: 0,
             isFlipping: false,
+            isDoubleFlipping: false,
             rotation: 0,
           },
         },

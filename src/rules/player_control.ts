@@ -6,13 +6,13 @@ export class PlayerControl extends Rule {
   private keysHeld: Set<string> = new Set();
   private moveCooldowns: Map<string, number> = new Map();
   private jumpCooldowns: Map<string, number> = new Map();
+  private abilitySwitchCooldown: number = 0;
   private commandBuffer: Map<string, QueuedCommand[]> = new Map();
-  private readonly MOVE_COOLDOWN = 1; // No cooldown for smoothest movement
-  private readonly JUMP_COOLDOWN = 15; // Reasonable jump cooldown
-  private readonly HERO_MOVE_DELAY = 3; // Hero moves every 3 ticks for slower speed
+  private readonly MOVE_COOLDOWN = 2; // Slight cooldown for slower movement
+  private readonly JUMP_COOLDOWN = 5; // Faster jump cooldown for multi-jumps
+  private readonly ABILITY_SWITCH_COOLDOWN = 10; // Cooldown for switching abilities
   private moveTarget: { x: number; y: number } | null = null;
   private attackMoveTarget: { x: number; y: number } | null = null;
-  private heroMoveCounter: number = 0;
 
   constructor() {
     super();
@@ -50,6 +50,11 @@ export class PlayerControl extends Rule {
       if (cooldown > 0) {
         this.jumpCooldowns.set(unitId, cooldown - 1);
       }
+    }
+    
+    // Decrement ability switch cooldown
+    if (this.abilitySwitchCooldown > 0) {
+      this.abilitySwitchCooldown--;
     }
 
     for (const unit of allUnits) {
@@ -147,28 +152,22 @@ export class PlayerControl extends Rule {
           else if (dx > 0 && dy > 0) action = "down-right";
 
           if (action) {
-            // Increment hero move counter and only move every HERO_MOVE_DELAY ticks
-            this.heroMoveCounter++;
-            if (this.heroMoveCounter >= this.HERO_MOVE_DELAY) {
-              this.heroMoveCounter = 0;
-              
-              const bufferedCommands = this.commandBuffer.get(unit.id) || [];
-              if (bufferedCommands.length < 2) {
-                const command = {
-                  type: "hero" as const,
-                  params: { action },
-                };
+            const bufferedCommands = this.commandBuffer.get(unit.id) || [];
+            if (bufferedCommands.length < 2) {
+              const command = {
+                type: "hero" as const,
+                params: { action },
+              };
 
-                if (bufferedCommands.length === 0) {
-                  console.log(
-                    `[PlayerControl] Sending hero ${action} command, unit at ${JSON.stringify(unit.pos)}`,
-                  );
-                  commands.push(command);
-                  this.moveCooldowns.set(unit.id, this.MOVE_COOLDOWN);
-                } else {
-                  bufferedCommands.push(command);
-                  this.commandBuffer.set(unit.id, bufferedCommands);
-                }
+              if (bufferedCommands.length === 0) {
+                console.log(
+                  `[PlayerControl] Sending hero ${action} command, unit at ${JSON.stringify(unit.pos)}`,
+                );
+                commands.push(command);
+                this.moveCooldowns.set(unit.id, this.MOVE_COOLDOWN);
+              } else {
+                bufferedCommands.push(command);
+                this.commandBuffer.set(unit.id, bufferedCommands);
               }
             }
           }
@@ -240,32 +239,99 @@ export class PlayerControl extends Rule {
           this.jumpCooldowns.set(unit.id, this.JUMP_COOLDOWN);
         }
 
-        if (this.keysHeld.has("e") || this.keysHeld.has("enter")) {
-          const strikeCooldown = unit.meta?.lastStrike
-            ? context.getCurrentTick() - unit.meta.lastStrike
+        // Primary action (Q key or E key)
+        if (this.keysHeld.has("q") || this.keysHeld.has("e") || this.keysHeld.has("enter")) {
+          const actionCooldown = unit.meta?.lastAction
+            ? context.getCurrentTick() - unit.meta.lastAction
             : 999;
-          if (strikeCooldown > 8) {
-            commands.push({
-              type: "hero",
-              params: {
-                action: "strike", // Use strike directly for immediate response
-                direction: unit.meta?.facing || "right",
-              },
-            });
+          if (actionCooldown > 8) {
+            const primaryAction = unit.meta?.primaryAction || "strike";
+            
+            if (primaryAction === "strike") {
+              commands.push({
+                type: "hero",
+                params: {
+                  action: "strike",
+                  direction: unit.meta?.facing || "right",
+                },
+              });
+            } else if (primaryAction === "bolt") {
+              // Find nearest enemy
+              const enemies = context.getAllUnits().filter(u => 
+                u.team !== unit.team && u.hp > 0
+              );
+              
+              if (enemies.length > 0) {
+                // Sort by distance
+                enemies.sort((a, b) => {
+                  const distA = Math.abs(a.pos.x - unit.pos.x) + Math.abs(a.pos.y - unit.pos.y);
+                  const distB = Math.abs(b.pos.x - unit.pos.x) + Math.abs(b.pos.y - unit.pos.y);
+                  return distA - distB;
+                });
+                
+                const target = enemies[0];
+                commands.push({
+                  type: "bolt",
+                  params: {
+                    x: target.pos.x,
+                    y: target.pos.y,
+                  },
+                });
+              }
+            } else if (primaryAction === "heal") {
+              commands.push({
+                type: "heal",
+                params: {
+                  targetId: unit.id,
+                  amount: 25,
+                },
+              });
+            }
 
             unit.meta = unit.meta || {};
-            unit.meta.lastStrike = context.getCurrentTick();
+            unit.meta.lastAction = context.getCurrentTick();
           }
         }
 
-        // Add ability rotation with comma/period keys
-        if (this.keysHeld.has(",") || this.keysHeld.has("<")) {
-          commands.push({
-            type: "hero",
-            params: {
-              action: "rotate-ability",
-            },
-          });
+        // Rotate primary action with comma/period keys (with cooldown)
+        if (this.abilitySwitchCooldown <= 0) {
+          if (this.keysHeld.has(",") || this.keysHeld.has("<")) {
+            const actions = ["strike", "bolt", "heal"];
+            const currentIndex = actions.indexOf(unit.meta?.primaryAction || "strike");
+            const prevIndex = (currentIndex - 1 + actions.length) % actions.length;
+            
+            commands.push({
+              type: "meta",
+              params: {
+                unitId: unit.id,
+                meta: {
+                  ...unit.meta,
+                  primaryAction: actions[prevIndex],
+                },
+              },
+            });
+            console.log(`[PlayerControl] Primary action: ${actions[prevIndex]}`);
+            this.abilitySwitchCooldown = this.ABILITY_SWITCH_COOLDOWN;
+          }
+          
+          if (this.keysHeld.has(".") || this.keysHeld.has(">")) {
+            const actions = ["strike", "bolt", "heal"];
+            const currentIndex = actions.indexOf(unit.meta?.primaryAction || "strike");
+            const nextIndex = (currentIndex + 1) % actions.length;
+            
+            commands.push({
+              type: "meta",
+              params: {
+                unitId: unit.id,
+                meta: {
+                  ...unit.meta,
+                  primaryAction: actions[nextIndex],
+                },
+              },
+            });
+            console.log(`[PlayerControl] Primary action: ${actions[nextIndex]}`);
+            this.abilitySwitchCooldown = this.ABILITY_SWITCH_COOLDOWN;
+          }
         }
 
         const weaponTypes = ["sword", "spear", "axe", "bow", "shield", "staff"];

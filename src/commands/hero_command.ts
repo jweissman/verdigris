@@ -324,7 +324,8 @@ export class HeroCommand extends Command {
 
           const enemiesSet = new Set<string>();
           const enemies = this.sim.units.filter((u) => {
-            if (u.team === hero.team || u.hp <= 0) return false;
+            // Don't hit yourself or your allies, but hit neutral and hostile units
+            if (u.id === hero.id || u.team === hero.team || u.hp <= 0) return false;
             const inZone = attackZones.some(
               (zone) => u.pos.x === zone.x && u.pos.y === zone.y,
             );

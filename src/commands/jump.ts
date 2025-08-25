@@ -21,20 +21,28 @@ export class JumpCommand extends Command {
     const unit = units.find((u) => u.id === unitId);
     if (!unit) return;
 
-    // Allow double jump if already jumping and haven't used it yet
-    if (unit.meta?.jumping && !unit.meta?.hasDoubleJumped) {
-      // This is a double jump! Do a midair flip
-      unit.meta.hasDoubleJumped = true;
+    // Allow multi-jumps up to 3 times
+    const jumpCount = unit.meta?.jumpCount || 0;
+    if (unit.meta?.jumping && jumpCount < 3) {
+      // This is a multi-jump! 
+      unit.meta.jumpCount = jumpCount + 1;
       unit.meta.jumpProgress = 0; // Reset progress for new arc
-      unit.meta.isFlipping = true; // Flag for animation
-      unit.meta.flipStartTick = this.sim.ticks;
       
-      // Update jump target for double jump
+      // Do a flip on double and triple jumps
+      if (jumpCount === 1) {
+        unit.meta.isFlipping = true; // Single flip for double jump
+        unit.meta.flipStartTick = this.sim.ticks;
+      } else if (jumpCount === 2) {
+        unit.meta.isDoubleFlipping = true; // Double flip for triple jump!
+        unit.meta.flipStartTick = this.sim.ticks;
+      }
+      
+      // Update jump target for multi-jump
       let targetX = params.targetX as number;
       let targetY = params.targetY as number;
       
       if (targetX === undefined || targetY === undefined) {
-        const distance = (params.distance as number) || 4; // Longer distance for double jump
+        const distance = (params.distance as number) || (3 + jumpCount); // Increasing distance
         const facing = unit.meta?.facing || "right";
         
         targetX = unit.pos.x + (facing === "right" ? distance : -distance);
@@ -44,10 +52,10 @@ export class JumpCommand extends Command {
       
       unit.meta.jumpOrigin = { x: unit.pos.x, y: unit.pos.y };
       unit.meta.jumpTarget = { x: targetX, y: targetY };
-      unit.meta.jumpHeight = (params.height as number) || 6; // Higher for double jump
+      unit.meta.jumpHeight = (params.height as number) || (5 + jumpCount * 2); // Higher each jump
       return;
     } else if (unit.meta?.jumping) {
-      // Already jumping and used double jump, buffer this for landing
+      // Already at max jumps, buffer this for landing
       unit.meta.jumpBuffered = true;
       unit.meta.jumpBufferTick = this.sim.ticks || 0;
       unit.meta.bufferedJumpParams = params;
@@ -113,8 +121,9 @@ export class JumpCommand extends Command {
         jumpDamage: damage,
         jumpRadius: radius,
         z: 0,
-        hasDoubleJumped: false, // Reset double jump flag
+        jumpCount: 1, // First jump
         isFlipping: false, // Not flipping on first jump
+        isDoubleFlipping: false,
       },
     });
   }

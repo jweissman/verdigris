@@ -90,8 +90,8 @@ describe('Hero Weapon Switching', () => {
     
 
     playerControl.setKeyState('d', true);
-    // Need more steps due to movement delay (moves every 3 ticks)
-    for (let i = 0; i < 6; i++) {
+    // Need a few steps for movement with cooldown
+    for (let i = 0; i < 4; i++) {
       sim.step();
     }
     playerControl.setKeyState('d', false);

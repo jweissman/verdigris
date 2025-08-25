@@ -7,7 +7,7 @@ import { MeleeCombat } from "../rules/melee_combat";
 
 export class HeroGame extends Game {
   private playerControl: PlayerControl;
-  private cursorWorldPos: { x: number; y: number } | null = null;
+  public cursorWorldPos: { x: number; y: number } | null = null;
 
   constructor(canvas: HTMLCanvasElement, opts?: any) {
     super(canvas, opts);
@@ -18,6 +18,14 @@ export class HeroGame extends Game {
   }
 
   // TODO create a spawning pool object!! what is this
+
+  update() {
+    // Pass hover cell to renderer through a temporary property
+    if (this.cursorWorldPos && this.renderer) {
+      (this.renderer as any).hoverCell = this.cursorWorldPos;
+    }
+    super.update();
+  }
 
   bootstrap() {
     super.bootstrap();
@@ -54,20 +62,20 @@ export class HeroGame extends Game {
       },
     });
 
-    // Add some ambient creatures to test attacks
+    // Add some ambient creatures to test attacks - make them hostile so they attack
     for (let i = 0; i < 5; i++) {
       this.sim.addUnit({
         id: `squirrel_${i}`,
         pos: { x: 12 + i * 2, y: 8 + (i % 2) * 3 },
-        team: "neutral",
+        team: "hostile", // Make them hostile so they attack
         hp: 20,
         maxHp: 20,
         dmg: 2,
         sprite: "squirrel",
-        tags: ["ambient", "creature"],
+        tags: ["ambient", "creature", "hunter"],
         meta: {
-          wander: true,
-          wanderRadius: 3,
+          sightRange: 5,
+          attackRange: 1,
         },
       });
     }
@@ -82,8 +90,11 @@ export class HeroGame extends Game {
         maxHp: 30,
         dmg: 5,
         sprite: "goblin",
-        tags: ["enemy"],
-        meta: {},
+        tags: ["enemy", "hunter"], // Add hunter tag for AI
+        meta: {
+          sightRange: 8,
+          attackRange: 1,
+        },
       });
     }
   }
@@ -147,8 +158,8 @@ export class HeroGame extends Game {
           const worldX = adjustedX;
           const worldY = adjustedY;
 
-          if (!game.sim.meta) game.sim.meta = {};
-          game.sim.meta.hoverCell = { x: worldX, y: worldY };
+          // Store hover cell in the hero game instance instead
+          game.cursorWorldPos = { x: worldX, y: worldY };
         }
       });
 

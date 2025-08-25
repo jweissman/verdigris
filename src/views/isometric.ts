@@ -167,8 +167,10 @@ export default class Isometric extends View {
   }
 
   private renderHoverCell() {
-    if (this.sim.meta?.hoverCell) {
-      const { x, y } = this.sim.meta.hoverCell;
+    // Check for hover cell from renderer or sim
+    const hoverCell = (this as any).hoverCell || (this.ctx as any).canvas?.parentElement?.hoverCell;
+    if (hoverCell) {
+      const { x, y } = hoverCell;
 
       if (
         x >= 0 &&
@@ -330,6 +332,27 @@ export default class Isometric extends View {
           progressRatio,
           "#ace",
         );
+      }
+    }
+    
+    // Draw unit ID label
+    if (this.fontAtlas.fontsReady) {
+      const labelX = pixelX + spriteWidth / 2 - 10; // Center the label
+      const labelY = realPixelY + 8; // Below the unit
+      
+      // Draw background for better visibility
+      const labelText = unit.id;
+      const labelWidth = labelText.length * 4 + 4;
+      this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+      this.ctx.fillRect(labelX - 2, labelY - 2, labelWidth, 8);
+      
+      // Draw the label
+      this.fontAtlas.drawTinyText(labelText, labelX, labelY, "#FFFFFF", 1);
+      
+      // Also show sprite name if it's different from ID
+      if (unit.sprite && unit.sprite !== unit.id) {
+        const spriteLabel = `[${unit.sprite}]`;
+        this.fontAtlas.drawTinyText(spriteLabel, labelX, labelY + 8, "#FFFF00", 1);
       }
     }
   }
@@ -920,26 +943,36 @@ export default class Isometric extends View {
     const weapon = hero.meta?.weapon || "sword";
     const weaponText = weapon.charAt(0).toUpperCase() + weapon.slice(1);
     this.fontAtlas.drawTinyText(`Weapon: ${weaponText}`, this.width - 80, barY + 2, "#FFFFFF", 1);
+    
+    // Draw current primary action
+    const primaryAction = hero.meta?.primaryAction || "strike";
+    const actionText = primaryAction.charAt(0).toUpperCase() + primaryAction.slice(1);
+    this.fontAtlas.drawTinyText(`Action: ${actionText}`, this.width - 80, barY + 10, "#00FFFF", 1);
 
-    // Draw abilities list at bottom left
+    // Draw abilities list at bottom left - higher up to be more visible
     const abilities = hero.abilities || [];
-    let abilityY = this.height - 30;
+    let abilityY = this.height - 60; // Move higher up
     
     this.fontAtlas.drawTinyText("Abilities:", 10, abilityY, "#FFFF00", 1);
     abilityY += 6;
     
-    for (let i = 0; i < abilities.length; i++) {
-      const ability = abilities[i];
-      const abilityName = ability.replace(/([A-Z])/g, ' $1').trim();
-      this.fontAtlas.drawTinyText(`- ${abilityName}`, 15, abilityY, "#FFFFFF", 1);
-      abilityY += 6;
+    if (abilities.length === 0) {
+      this.fontAtlas.drawTinyText("- None", 15, abilityY, "#888888", 1);
+    } else {
+      for (let i = 0; i < abilities.length && i < 5; i++) { // Limit to 5 for space
+        const ability = abilities[i];
+        const abilityName = ability.replace(/([A-Z])/g, ' $1').trim();
+        this.fontAtlas.drawTinyText(`- ${abilityName}`, 15, abilityY, "#FFFFFF", 1);
+        abilityY += 6;
+      }
     }
 
     // Draw controls hint at bottom right
     const hints = [
       "WASD: Move",
       "Space: Jump", 
-      "Q: Attack",
+      "Q: Action",
+      ",/.: Switch",
       "1-6: Weapons"
     ];
     

@@ -18,6 +18,8 @@ import squirrel from "../assets/sprites/squirrel.png";
 // @ts-ignore
 import megasquirrel from "../assets/sprites/megasquirrel.png";
 // @ts-ignore
+import goblin from "../assets/sprites/goblin.png";
+// @ts-ignore
 import leaf from "../assets/sprites/leaf.png";
 // @ts-ignore
 import rainmaker from "../assets/sprites/rainmaker.png";
@@ -220,6 +222,7 @@ class Game {
     { name: "tamer", src: tamer },
     { name: "squirrel", src: squirrel },
     { name: "megasquirrel", src: megasquirrel },
+    { name: "goblin", src: goblin },
     { name: "leaf", src: leaf },
     { name: "rainmaker", src: rainmaker },
     { name: "demon", src: demon },

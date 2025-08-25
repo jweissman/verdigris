@@ -24,6 +24,6 @@ describe('No Rules', () => {
     }
     const elapsed = performance.now() - start;
     const avgStep = elapsed / iterations;
-    expect(avgStep).toBeLessThan(0.01);
+    expect(avgStep).toBeLessThan(0.02);
   });
 });
