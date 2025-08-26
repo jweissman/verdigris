@@ -289,7 +289,10 @@ export default class Isometric extends View {
     const facing = unit.meta?.facing || "right";
     const shouldFlip = facing === "left";
 
-    this.unitRenderer.drawShadow(this.ctx, unit, screenX, screenY);
+    // Skip shadow for units with nodraw_shadow tag (like lightning bolts)
+    if (!unit.tags?.includes("nodraw_shadow")) {
+      this.unitRenderer.drawShadow(this.ctx, unit, screenX, screenY);
+    }
 
     const isHero = unit.tags?.includes("hero");
     const spriteOffset = 8; // Use consistent offset for all units

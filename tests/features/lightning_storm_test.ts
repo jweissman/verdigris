@@ -59,8 +59,13 @@ describe('Lightning Storm Environmental System', () => {
     if (lightningRule) {
       const context = sim.getTickContext();
       lightningRule.generateLightningStrike(context, { x: 6, y: 5 });
+      // The generateLightningStrike adds commands to the context
+      // We need to process those commands
+      const commands = lightningRule.execute(context);
+      commands.forEach(cmd => sim.queuedCommands.push(cmd));
     }
-    sim.step();
+    sim.step(); // Process the queued commands
+    
     const stunnedUnits = sim.units.filter(u => u.meta.stunned);
     expect(stunnedUnits.length).toBeGreaterThan(0); // Some units should be stunned
     const empSparks = sim.particles.filter(p => p.type === 'electric_spark' && p.color === '#FFFF88');

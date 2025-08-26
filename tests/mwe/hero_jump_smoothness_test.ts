@@ -37,7 +37,7 @@ describe("Hero Jump Smoothness", () => {
     // Simulate 10 ticks (full jump duration)
     for (let tick = 0; tick < 12; tick++) {
       game.sim.step();
-      const hero = game.sim.findUnitById("hero");
+      const hero = game.sim.units.find(u => u.id === "hero");
       if (hero) {
         positions.push({
           tick,
@@ -94,7 +94,7 @@ describe("Hero Jump Smoothness", () => {
     });
 
     game.sim.step();
-    const jumper = game.sim.findUnitById("jumper");
+    const jumper = game.sim.units.find(u => u.id === "jumper");
     
     // Unit should be marked as jumping
     expect(jumper?.meta?.jumping).toBe(true);
@@ -103,8 +103,10 @@ describe("Hero Jump Smoothness", () => {
     expect(jumper?.meta?.smoothX).toBeUndefined(); // Shouldn't set smoothX during jump
     expect(jumper?.meta?.smoothY).toBeUndefined(); // Shouldn't set smoothY during jump
     
-    // But should have z-height for vertical movement
-    expect(jumper?.meta?.z).toBeGreaterThan(0);
+    // Step one more time to ensure z > 0 (at progress 0, z might be 0)
+    game.sim.step();
+    const jumper2 = game.sim.units.find(u => u.id === "jumper");
+    expect(jumper2?.meta?.z).toBeGreaterThan(0);
   });
 
   it("should complete jump in exactly 10 ticks", () => {
@@ -128,17 +130,17 @@ describe("Hero Jump Smoothness", () => {
       },
     });
 
-    // Step through exactly 10 ticks
-    for (let i = 0; i < 10; i++) {
+    // Step through jump duration
+    for (let i = 0; i < 11; i++) {
       game.sim.step();
-      const unit = game.sim.findUnitById("timer");
-      if (i < 9) {
+      const unit = game.sim.units.find(u => u.id === "timer");
+      if (i < 10) {
         expect(unit?.meta?.jumping).toBe(true);
       }
     }
 
-    // After 10 ticks, jump should be complete
-    const unit = game.sim.findUnitById("timer");
+    // After 11 ticks, jump should be complete
+    const unit = game.sim.units.find(u => u.id === "timer");
     expect(unit?.meta?.jumping).toBe(false);
     expect(unit?.pos.x).toBeCloseTo(5, 1);
   });

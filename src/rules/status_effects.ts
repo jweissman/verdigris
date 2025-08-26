@@ -25,6 +25,33 @@ export class StatusEffects extends Rule {
         this.applyChillFromTrigger(context, unit);
       }
 
+      // Handle old-style stunDuration countdown
+      if (unit.meta.stunned && unit.meta.stunDuration !== undefined) {
+        const newDuration = unit.meta.stunDuration - 1;
+        if (newDuration <= 0) {
+          this.commands.push({
+            type: "meta",
+            params: {
+              unitId: unit.id,
+              meta: {
+                stunned: undefined,
+                stunDuration: undefined,
+              }
+            }
+          });
+        } else {
+          this.commands.push({
+            type: "meta",
+            params: {
+              unitId: unit.id,
+              meta: {
+                stunDuration: newDuration,
+              }
+            }
+          });
+        }
+      }
+
       if (unit.meta.statusEffects && unit.meta.statusEffects.length > 0) {
         this.updateStatusEffects(context, unit);
         this.applyStatusEffectMechanics(context, unit);

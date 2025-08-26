@@ -64,6 +64,23 @@ export class AoE extends Command {
       const dy = unit.pos.y - center.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
+      // Handle force/toss based on mass difference
+      if (params.force && sourceUnit) {
+        const massDiff = (sourceUnit.mass || 1) - (unit.mass || 1);
+        if (massDiff >= 3 && distance > 0) {
+          const direction = { x: dx / distance, y: dy / distance };
+          this.sim.queuedCommands.push({
+            type: "toss",
+            unitId: unit.id,
+            params: {
+              direction: direction,
+              force: params.force as number,
+              distance: Math.min(3, (params.force as number) / 2),
+            },
+          });
+        }
+      }
+
       if (isEmp) {
         this.sim.queuedCommands.push({
           type: "meta",

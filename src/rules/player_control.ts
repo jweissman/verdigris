@@ -252,6 +252,7 @@ export class PlayerControl extends Rule {
                 const target = enemies[0];
                 commands.push({
                   type: "bolt",
+                  unitId: unit.id,
                   params: {
                     x: target.pos.x,
                     y: target.pos.y,

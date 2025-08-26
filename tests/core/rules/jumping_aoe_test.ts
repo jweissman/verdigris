@@ -39,7 +39,8 @@ describe('Jumping AOE', () => {
     });
     
 
-    for (let i = 0; i < 9; i++) {
+    // Jump duration is 10 ticks, so step through full jump
+    for (let i = 0; i < 11; i++) {
       sim.step();
     }
     
@@ -93,7 +94,8 @@ describe('Jumping AOE', () => {
     });
     
 
-    for (let i = 0; i < 9; i++) { // Jump duration is 8 ticks
+    // Jump duration is 10 ticks, so step through full jump
+    for (let i = 0; i < 11; i++) {
       sim.step();
     }
     
@@ -143,7 +145,8 @@ describe('Jumping AOE', () => {
     });
     
 
-    for (let i = 0; i < 9; i++) { // Jump duration is 8 ticks
+    // Jump duration is 10 ticks, so step through full jump
+    for (let i = 0; i < 11; i++) {
       sim.step();
     }
     

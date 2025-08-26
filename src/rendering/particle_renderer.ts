@@ -164,9 +164,10 @@ export class ParticleRenderer {
   ): void {
     const lightningSprite = this.sprites.get("lightning");
     if (lightningSprite) {
-      const frame = Math.floor((particle.lifetime / 3) % 4); // Fast animation
+      // Lightning sprite is 128x48 - 8 frames of 16x48 tall sprites
+      const frame = Math.floor((particle.lifetime / 3) % 8); // 8 frames
       const frameWidth = 16;
-      const frameHeight = 16;
+      const frameHeight = 48; // Tall sprite!
 
       const drawWidth = frameWidth * scale;
       const drawHeight = frameHeight * scale;
@@ -178,7 +179,7 @@ export class ParticleRenderer {
         frameWidth,
         frameHeight,
         x - drawWidth / 2,
-        y - drawHeight / 2,
+        y - drawHeight, // Anchor at bottom since it strikes the ground
         drawWidth,
         drawHeight,
       );

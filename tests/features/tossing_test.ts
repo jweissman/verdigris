@@ -298,18 +298,20 @@ describe('Tossing mechanics', () => {
     sim.addUnit(lightUnit);
 
 
-    sim.queuedEvents.push({
-      kind: 'aoe',
-      source: 'heavy',
-      target: { x: 5, y: 5 },
-      meta: {
+    // Use AoE command instead of event (events are now purely informational)
+    sim.queuedCommands.push({
+      type: 'aoe',
+      unitId: 'heavy',
+      params: {
+        x: 5,
+        y: 5,
         radius: 2,
-        amount: 5,
+        damage: 5,
         force: 8  // Add force to trigger toss based on mass difference
       }
     });
 
-    sim.tick(); // Process AoE event (and any resulting toss commands due to fixpoint)
+    sim.tick(); // Process AoE command (and any resulting toss commands due to fixpoint)
 
 
 

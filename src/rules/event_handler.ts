@@ -143,122 +143,19 @@ export class EventHandler extends Rule {
     context: TickContext,
     commands: QueuedCommand[],
   ) {
+    // Events are purely informational - only create visual particles, not gameplay effects
     if (
       !event.target ||
       typeof event.target !== "object" ||
       !("x" in event.target && "y" in event.target)
     ) {
-      console.warn(`Invalid target for AoE event: ${event.target}`);
       return;
     }
-    let target = event.target as Vec2;
-    target.x = Math.round(target.x);
-    target.y = Math.round(target.y);
-
-    let sourceUnit = context.findUnitById(event.source as string);
-
-    const isHealing = event.meta.aspect === "heal";
-    const isEmp = event.meta.aspect === "emp";
-    const isChill = event.meta.aspect === "chill";
-
-    const affectedUnits = context.getAllUnits().filter((unit) => {
-      const dx = unit.pos.x - target.x;
-      const dy = unit.pos.y - target.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const inRange = distance <= (event.meta.radius || 5);
-
-      if (isHealing) {
-        return (
-          inRange && unit.team === sourceUnit?.team && unit.hp < unit.maxHp
-        );
-      } else if (isEmp) {
-        const mechanicalImmune =
-          event.meta.mechanicalImmune && unit.tags?.includes("mechanical");
-        return inRange && !mechanicalImmune;
-      } else if (isChill) {
-        return inRange && unit.team !== sourceUnit?.team; // Chill affects enemies
-      } else {
-        const friendlyFire = event.meta.friendlyFire === true; // Default to false - AOE command handles damage
-        const excludeSource = event.meta.excludeSource === true;
-
-        if (excludeSource && unit.id === event.source) {
-          return false; // Always exclude source if excludeSource is true
-        }
-
-        if (!friendlyFire) {
-          return inRange && sourceUnit && unit.team !== sourceUnit.team;
-        } else {
-          return inRange;
-        }
-      }
-    });
-
-    for (const unit of affectedUnits) {
-      const distance = Math.sqrt(
-        Math.pow(unit.pos.x - target.x, 2) + Math.pow(unit.pos.y - target.y, 2),
-      );
-
-      if (isEmp) {
-        commands.push({
-          type: "meta",
-          params: {
-            unitId: unit.id,
-            meta: {
-              stunned: true,
-              stunDuration: event.meta.stunDuration || 20,
-            },
-          },
-        });
-
-        commands.push({
-          type: "particle",
-          params: {
-            particle: {
-              pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
-              vel: { x: 0, y: -0.3 },
-              radius: 2,
-              color: "#FFFF88",
-              lifetime: 25,
-              type: "electric_spark",
-            },
-          },
-        });
-      } else if (isChill) {
-        commands.push({
-          type: "meta",
-          params: {
-            unitId: unit.id,
-            meta: {
-              chilled: true,
-              chillIntensity: 0.5, // 50% slow
-              chillDuration: event.meta.duration || 30,
-            },
-          },
-        });
-      } else if (isHealing) {
-      } else {
-        if (event.meta.force && sourceUnit) {
-          const massDiff = (sourceUnit.mass || 1) - (unit.mass || 1);
-          if (massDiff >= 3) {
-            const dx = unit.pos.x - target.x;
-            const dy = unit.pos.y - target.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 0) {
-              const direction = { x: dx / dist, y: dy / dist };
-              commands.push({
-                type: "toss",
-                unitId: unit.id,
-                params: {
-                  direction: direction,
-                  force: event.meta.force,
-                  distance: Math.min(3, event.meta.force / 2),
-                },
-              });
-            }
-          }
-        }
-      }
-    }
+    
+    const target = event.target as Vec2;
+    const isHealing = event.meta?.aspect === "heal";
+    const isEmp = event.meta?.aspect === "emp";
+    const isChill = event.meta?.aspect === "chill";
 
     const particleCount = isHealing ? 12 : 20;
     const particleColor = isHealing

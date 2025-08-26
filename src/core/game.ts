@@ -133,12 +133,13 @@ import towerGateBg from "../assets/bg/tower-gate.png";
 // @ts-ignore
 import cellEffects from "../assets/cell-effects.png";
 
+import config from "../../data/config/core.json";
 import Renderer, { createScaledRenderer } from "./renderer";
 
 class Game {
   public sim: Simulator;
   private lastSimTime: number = 0;
-  protected simTickRate: number = 60; // Increased to 60fps for smoother gameplay
+  protected simTickRate: number = config.simulation.tickRate || 30; // Increased to 60fps for smoother gameplay
 
   renderer: Renderer;
   private _handleResize: () => void;

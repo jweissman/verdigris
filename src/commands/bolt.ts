@@ -22,15 +22,32 @@ export class BoltCommand extends Command {
     const pixelX = strikePos.x * 8 + 4;
     const pixelY = strikePos.y * 8 + 4;
     
-    // Create a tall lightning bolt sprite effect
-    this.sim.queuedEvents.push({
-      kind: "lightning_strike",
-      source: unitId || "lightning",
-      target: strikePos,
-      meta: {
-        tick: this.sim.ticks,
-        duration: 10,
-      },
+    // Queue a spawn command for the lightning bolt effect unit
+    const boltId = `bolt_${this.sim.ticks}_${Math.random().toString(36).substr(2, 5)}`;
+    this.sim.queuedCommands.push({
+      type: "spawn",
+      params: {
+        unit: {
+          id: boltId,
+          type: "effect", // Add type field
+          pos: { x: strikePos.x, y: strikePos.y },
+          hp: 1,
+          maxHp: 1,
+          team: "neutral",
+          kind: "lightning_bolt",
+          sprite: "lightning",
+          tags: ["effect", "nodraw_shadow"],
+          state: "idle", // Add state field
+          meta: {
+            lifetime: 8, // Lives for 8 ticks to show full animation
+            frameCount: 8,
+            frameSpeed: 1,
+            tall: true, // Indicates this is a tall sprite
+            height: 48,
+            immobile: true, // Can't be pushed around
+          }
+        }
+      }
     });
 
     for (let i = 0; i < 8; i++) {
@@ -92,9 +109,10 @@ export class BoltCommand extends Command {
       });
     }
 
-    // Deal damage to units at strike position
+    // Deal damage to units at strike position (but not the caster)
     const unitsAtPos = this.sim.units.filter(
       (u) =>
+        u.id !== unitId && // Don't damage the caster
         Math.abs(u.pos.x - strikePos.x) <= 1 &&
         Math.abs(u.pos.y - strikePos.y) <= 1 &&
         u.hp > 0
@@ -111,6 +129,33 @@ export class BoltCommand extends Command {
       });
     }
 
+    // Heat up cells around strike point to trigger fires naturally
+    this.sim.queuedCommands.push({
+      type: "temperature",
+      params: {
+        x: strikePos.x,
+        y: strikePos.y,
+        amount: 50, // Hot enough to ignite
+        radius: 2
+      }
+    });
+
+    // Use AOE command for EMP stun (events are informational only)
+    this.sim.queuedCommands.push({
+      type: "aoe",
+      unitId: unitId,
+      params: {
+        x: strikePos.x,
+        y: strikePos.y,
+        radius: 3,
+        damage: 0, // No damage from EMP
+        type: "emp",
+        stunDuration: 20,
+        excludeSource: true, // Don't stun the caster!
+      },
+    });
+    
+    // Still queue event for informational purposes
     this.sim.queuedEvents.push({
       kind: "aoe",
       source: unitId || "lightning",
@@ -121,6 +166,7 @@ export class BoltCommand extends Command {
         stunDuration: 20,
         amount: 25,
         mechanicalImmune: true,
+        excludeSource: true,
       },
     });
 

@@ -61,8 +61,6 @@ export class Jumping extends Rule {
       const newX = jumpOrigin.x + dx * t;
       const newY = jumpOrigin.y + dy * t;
       
-      // Debug: log the interpolation EVERY frame
-      console.log(`[Jump] Progress ${progress}/${jumpDuration}, t=${t.toFixed(2)}, pos=(${newX.toFixed(2)},${newY.toFixed(2)}), z=${z.toFixed(2)}`);
       
       // Move the unit along the ground path
       this.commands.push({

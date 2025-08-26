@@ -65,6 +65,14 @@ export class UnitRenderer {
    * Get the current animation frame for a unit
    */
   getAnimationFrame(unit: Unit, animationTime: number): number {
+    // Handle effect units with frameCount animation
+    if (unit.meta?.frameCount && unit.meta?.lifetime !== undefined) {
+      const totalLifetime = unit.meta.frameCount * (unit.meta.frameSpeed || 1);
+      const elapsedTicks = totalLifetime - unit.meta.lifetime;
+      const frame = Math.floor(elapsedTicks / (unit.meta.frameSpeed || 1));
+      return Math.min(frame, unit.meta.frameCount - 1);
+    }
+    
     if (unit.tags?.includes("hero") || unit.meta?.scale === "hero") {
       if (unit.state === "dead") {
         return 12; // Last frame for death
@@ -100,6 +108,14 @@ export class UnitRenderer {
    * Get sprite dimensions for a unit
    */
   getSpriteDimensions(unit: Unit): { width: number; height: number } {
+    // Check for tall sprites (like lightning bolt)
+    if (unit.meta?.tall && unit.meta?.height) {
+      return {
+        width: 16, // Standard width
+        height: unit.meta.height, // Custom height from meta
+      };
+    }
+    
     const scale = getUnitScale(unit);
     const dimensions = getSpriteDimensions(scale);
 
@@ -236,6 +252,11 @@ export class UnitRenderer {
       ctx.translate(-screenX * 2 - frameWidth, 0);
     }
 
+    // For tall sprites (like lightning), anchor at bottom
+    const yOffset = unit.meta?.tall 
+      ? screenY - dimensions.height  // Anchor at bottom for tall sprites
+      : screenY - dimensions.height / 2; // Center for normal sprites
+    
     ctx.drawImage(
       sprite,
       frame * frameWidth,
@@ -243,7 +264,7 @@ export class UnitRenderer {
       frameWidth,
       dimensions.height,
       screenX - frameWidth / 2,
-      screenY - dimensions.height / 2,
+      yOffset,
       frameWidth,
       dimensions.height,
     );

@@ -115,16 +115,58 @@ export class LightningStorm extends Rule {
   }
 
   private createEmpBurst(context: TickContext, pos: Vec2): void {
+    // Apply stun to units in radius
+    const radius = 3;
+    const stunDuration = 20;
+    
+    const affectedUnits = context.getAllUnits().filter((unit) => {
+      const dx = unit.pos.x - pos.x;
+      const dy = unit.pos.y - pos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const inRange = distance <= radius;
+      const mechanicalImmune = unit.tags?.includes("mechanical");
+      return inRange && !mechanicalImmune && unit.hp > 0;
+    });
+    
+    for (const unit of affectedUnits) {
+      this.commands.push({
+        type: "meta",
+        params: {
+          unitId: unit.id,
+          meta: {
+            stunned: true,
+            stunDuration: stunDuration,
+          },
+        },
+      });
+      
+      // Visual particle effect
+      this.commands.push({
+        type: "particle",
+        params: {
+          particle: {
+            pos: { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 },
+            vel: { x: 0, y: -0.3 },
+            radius: 2,
+            color: "#FFFF88",
+            lifetime: 25,
+            type: "electric_spark",
+          },
+        },
+      });
+    }
+    
+    // Still queue the event for informational purposes
     context.queueEvent({
       kind: "aoe",
       source: "lightning",
       target: pos,
       meta: {
         aspect: "emp",
-        radius: 3,
-        stunDuration: 20, // 2.5 seconds of stun
+        radius: radius,
+        stunDuration: stunDuration,
         amount: 0, // No damage, just stun effect
-        mechanicalImmune: true, // Mechanical units are immune
+        mechanicalImmune: true,
       },
     });
   }
