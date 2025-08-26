@@ -352,9 +352,16 @@ class Game {
 
     const simTickInterval = 1000 / this.simTickRate;
     if (now - this.lastSimTime >= simTickInterval) {
+      // Store unit positions before stepping
+      this.sim.storeUnitPositions();
       this.sim.step();
       this.lastSimTime = now;
     }
+
+    // Calculate interpolation factor (0 to 1) for smooth animation
+    const timeSinceLastSim = now - this.lastSimTime;
+    const interpolationFactor = Math.min(1, timeSinceLastSim / simTickInterval);
+    this.sim.interpolationFactor = interpolationFactor;
 
     this.drawFrame();
   }

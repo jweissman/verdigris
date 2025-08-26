@@ -1,140 +1,164 @@
 import { Rule } from "./rule";
 import type { TickContext } from "../core/tick_context";
 import type { QueuedCommand } from "../core/command_handler";
+import type { ProjectileArrays } from "../sim/projectile_arrays";
 
 /**
  * ProjectileMotion - handles collision detection and damage events for projectiles
- * The actual movement is handled by ForcesCommand for performance
+ * Uses SoA arrays for better performance
  */
 export class ProjectileMotion extends Rule {
   private commands: QueuedCommand[] = [];
+  private frameCounter = 0;
 
   execute(context: TickContext): QueuedCommand[] {
-    const projectiles = context.getProjectiles();
-    if (projectiles.length === 0) return [];
-    
     this.commands = [];
-    const arrays = context.getArrays();
     
-    // Process each projectile
-    for (const projectile of projectiles) {
-      if (this.processProjectile(projectile, arrays)) {
-        // Projectile hit something and was removed
-        continue;
+    const projectileArrays = context.getProjectileArrays();
+    if (!projectileArrays || projectileArrays.activeCount === 0) {
+      return this.commands;
+    }
+    
+    const unitArrays = context.getArrays();
+    if (!unitArrays.activeIndices || unitArrays.activeIndices.length === 0) {
+      return this.commands;
+    }
+    
+    const toRemove: number[] = [];
+    
+    // Process only a subset of projectiles each frame when there are many
+    const maxChecksPerFrame = 20;
+    this.frameCounter++;
+    
+    // Cache active unit positions for faster access
+    const activeUnits = unitArrays.activeIndices;
+    const unitCount = activeUnits.length;
+    
+    // Separate arrays by type for better cache locality
+    const bullets: number[] = [];
+    const bombs: number[] = [];
+    const grapples: number[] = [];
+    
+    for (let pIdx = 0; pIdx < projectileArrays.capacity; pIdx++) {
+      if (projectileArrays.active[pIdx] === 0) continue;
+      const projType = projectileArrays.type[pIdx];
+      if (projType === 0) bullets.push(pIdx);
+      else if (projType === 1) bombs.push(pIdx);
+      else if (projType === 2) grapples.push(pIdx);
+    }
+    
+    // If we have too many projectiles, only process a subset per frame
+    let bulletsToProcess = bullets;
+    if (bullets.length > maxChecksPerFrame) {
+      const startIdx = (this.frameCounter * maxChecksPerFrame) % bullets.length;
+      const endIdx = Math.min(startIdx + maxChecksPerFrame, bullets.length);
+      bulletsToProcess = bullets.slice(startIdx, endIdx);
+      // Also check wrapped around portion if needed
+      if (endIdx < startIdx + maxChecksPerFrame) {
+        bulletsToProcess.push(...bullets.slice(0, maxChecksPerFrame - (endIdx - startIdx)));
       }
+    }
+    
+    // Process bombs first (they explode and don't need collision checks)
+    for (const pIdx of bombs) {
+      const shouldExplode = (projectileArrays.duration[pIdx] > 0 && 
+                            projectileArrays.progress[pIdx] >= projectileArrays.duration[pIdx]) ||
+                           (projectileArrays.lifetime[pIdx] >= 30);
+      if (shouldExplode) {
+        this.processBombExplosion(projectileArrays, pIdx, unitArrays);
+        toRemove.push(pIdx);
+      }
+    }
+    
+    // Process bullets and grapples with collision detection
+    for (const pIdx of [...bulletsToProcess, ...grapples]) {
+      const projX = projectileArrays.posX[pIdx];
+      const projY = projectileArrays.posY[pIdx];
+      const radius = projectileArrays.radius[pIdx];
+      const radiusSq = radius * radius;
+      const projTeam = projectileArrays.team[pIdx];
+      const projType = projectileArrays.type[pIdx];
+      
+      // Check collisions with units - optimized inner loop
+      for (let i = 0; i < unitCount; i++) {
+        const unitIdx = activeUnits[i];
+        
+        // Skip dead units
+        if (unitArrays.hp[unitIdx] <= 0) continue;
+        
+        // Skip friendly fire (except grapples)
+        if (projType !== 2 && unitArrays.team[unitIdx] === projTeam) continue;
+        
+        // Inline distance check for performance
+        const dx = unitArrays.posX[unitIdx] - projX;
+        if (dx > radius || dx < -radius) continue;
+        
+        const dy = unitArrays.posY[unitIdx] - projY;
+        if (dy > radius || dy < -radius) continue;
+        
+        const distSq = dx * dx + dy * dy;
+        if (distSq >= radiusSq) continue;
+        
+        // Hit detected
+        if (projType === 2) { // grapple
+          this.commands.push({
+            type: "meta",
+            params: {
+              unitId: unitArrays.unitIds[unitIdx],
+              meta: {
+                grappleHit: true,
+                grapplerID: projectileArrays.sourceIds[pIdx] || "unknown",
+                grappleOrigin: { x: projX, y: projY },
+              },
+            },
+          });
+        } else {
+          this.commands.push({
+            type: "damage",
+            params: {
+              targetId: unitArrays.unitIds[unitIdx],
+              amount: projectileArrays.damage[pIdx],
+              aspect: projectileArrays.aspect[pIdx],
+              origin: { x: projX, y: projY },
+            },
+          });
+        }
+        
+        toRemove.push(pIdx);
+        break; // Only hit one unit per projectile
+      }
+    }
+    
+    // Remove hit projectiles
+    for (const idx of toRemove) {
+      this.commands.push({
+        type: "removeProjectile",
+        params: { id: projectileArrays.projectileIds[idx] },
+      });
     }
     
     return this.commands;
   }
   
-  private processProjectile(projectile: any, arrays: any): boolean {
-    const radius = projectile.radius || 1;
-    const radiusSq = radius * radius;
-    
-    if (projectile.type === "grapple") {
-      return this.processGrapple(projectile, arrays, radius, radiusSq);
-    } else if (projectile.type === "bomb" && this.shouldExplode(projectile)) {
-      this.processBombExplosion(projectile, arrays);
-      return true;
-    } else {
-      return this.processStandardProjectile(projectile, arrays, radius, radiusSq);
-    }
-  }
-  
-  private shouldExplode(projectile: any): boolean {
-    return (projectile.target &&
-      projectile.progress !== undefined &&
-      projectile.duration !== undefined &&
-      projectile.progress >= projectile.duration) ||
-      (projectile.lifetime && projectile.lifetime >= 30);
-  }
-  
-  private processGrapple(projectile: any, arrays: any, radius: number, radiusSq: number): boolean {
-    for (const idx of arrays.activeIndices) {
-      if (arrays.hp[idx] <= 0) continue;
-      
-      const absDx = Math.abs(arrays.posX[idx] - projectile.pos.x);
-      if (absDx > radius) continue;
-      
-      const absDy = Math.abs(arrays.posY[idx] - projectile.pos.y);
-      if (absDy > radius) continue;
-      
-      const dx = arrays.posX[idx] - projectile.pos.x;
-      const dy = arrays.posY[idx] - projectile.pos.y;
-      const distSq = dx * dx + dy * dy;
-      
-      if (distSq < radiusSq) {
-        this.commands.push({
-          type: "meta",
-          params: {
-            unitId: arrays.unitIds[idx],
-            meta: {
-              grappleHit: true,
-              grapplerID: projectile.sourceId || "unknown",
-              grappleOrigin: { ...projectile.pos },
-            },
-          },
-        });
-        
-        this.commands.push({
-          type: "removeProjectile",
-          params: { id: projectile.id },
-        });
-        return true;
-      }
-    }
-    return false;
-  }
-  
-  private processStandardProjectile(projectile: any, arrays: any, radius: number, radiusSq: number): boolean {
-    const projectileTeam = projectile.team === "friendly" ? 1 : projectile.team === "hostile" ? 2 : 0;
-    
-    for (const idx of arrays.activeIndices) {
-      if (arrays.team[idx] === projectileTeam || arrays.hp[idx] <= 0) continue;
-      
-      const absDx = Math.abs(arrays.posX[idx] - projectile.pos.x);
-      if (absDx > radius) continue;
-      
-      const absDy = Math.abs(arrays.posY[idx] - projectile.pos.y);
-      if (absDy > radius) continue;
-      
-      const dx = arrays.posX[idx] - projectile.pos.x;
-      const dy = arrays.posY[idx] - projectile.pos.y;
-      const distSq = dx * dx + dy * dy;
-      
-      if (distSq < radiusSq) {
-        this.commands.push({
-          type: "damage",
-          params: {
-            targetId: arrays.unitIds[idx],
-            amount: projectile.damage || 10,
-            aspect: projectile.aspect || "physical",
-            origin: projectile.pos,
-          },
-        });
-        
-        this.commands.push({
-          type: "removeProjectile",
-          params: { id: projectile.id },
-        });
-        return true;
-      }
-    }
-    return false;
-  }
-  
-  private processBombExplosion(projectile: any, arrays: any): void {
-    const explosionRadius = projectile.explosionRadius || 3;
+  private processBombExplosion(
+    projectileArrays: ProjectileArrays,
+    pIdx: number,
+    unitArrays: any
+  ): void {
+    const bombX = projectileArrays.posX[pIdx];
+    const bombY = projectileArrays.posY[pIdx];
+    const explosionRadius = projectileArrays.explosionRadius[pIdx];
     const explosionRadiusSq = explosionRadius * explosionRadius;
-    const explosionDamage = projectile.damage || 20;
-    const projectileTeam = projectile.team === "friendly" ? 1 : projectile.team === "hostile" ? 2 : 0;
+    const explosionDamage = projectileArrays.damage[pIdx];
+    const bombTeam = projectileArrays.team[pIdx];
+    const sourceId = projectileArrays.sourceIds[pIdx];
     
-    for (const idx of arrays.activeIndices) {
-      if (arrays.team[idx] === projectileTeam) continue;
-      if (projectile.sourceId && arrays.unitIds[idx] === projectile.sourceId) continue;
+    for (const unitIdx of unitArrays.activeIndices) {
+      if (unitArrays.team[unitIdx] === bombTeam) continue;
+      if (sourceId && unitArrays.unitIds[unitIdx] === sourceId) continue;
       
-      const dx = arrays.posX[idx] - projectile.pos.x;
-      const dy = arrays.posY[idx] - projectile.pos.y;
+      const dx = unitArrays.posX[unitIdx] - bombX;
+      const dy = unitArrays.posY[unitIdx] - bombY;
       const distSq = dx * dx + dy * dy;
       
       if (distSq <= explosionRadiusSq) {
@@ -146,7 +170,7 @@ export class ProjectileMotion extends Rule {
           this.commands.push({
             type: "damage",
             params: {
-              targetId: arrays.unitIds[idx],
+              targetId: unitArrays.unitIds[unitIdx],
               amount: damage,
               aspect: "explosion",
             },
@@ -159,19 +183,13 @@ export class ProjectileMotion extends Rule {
           this.commands.push({
             type: "move",
             params: {
-              unitId: arrays.unitIds[idx],
-              x: arrays.posX[idx] + knockbackX,
-              y: arrays.posY[idx] + knockbackY,
+              unitId: unitArrays.unitIds[unitIdx],
+              x: unitArrays.posX[unitIdx] + knockbackX,
+              y: unitArrays.posY[unitIdx] + knockbackY,
             },
           });
         }
       }
     }
-    
-    this.commands.push({
-      type: "removeProjectile",
-      params: { id: projectile.id },
-    });
   }
-
 }

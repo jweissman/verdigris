@@ -133,11 +133,28 @@ export class AoE extends Command {
       }
     }
 
+    // Generate zones for visualization (like strike command)
+    const zones = [];
+    for (let dx = -Math.ceil(radius); dx <= Math.ceil(radius); dx++) {
+      for (let dy = -Math.ceil(radius); dy <= Math.ceil(radius); dy++) {
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= radius) {
+          zones.push({
+            x: Math.round(center.x + dx),
+            y: Math.round(center.y + dy)
+          });
+        }
+      }
+    }
+
     const eventMeta: any = {
       aspect: type,
       amount: damage,
       radius: radius,
       origin: center,
+      zones: zones, // Add zones for rendering
+      duration: 30, // Visual duration
+      tick: this.sim.ticks,
     };
 
     if (isEmp && stunDuration) {

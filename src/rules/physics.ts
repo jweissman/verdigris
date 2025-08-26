@@ -20,39 +20,56 @@ export class Physics extends Rule {
   }
 
   private updateProjectiles(): void {
-    if (!this.sim.projectiles) return;
+    const projectileArrays = this.sim.projectileArrays;
+    if (!projectileArrays || projectileArrays.activeCount === 0) return;
 
     const toRemove: number[] = [];
+    const maxLifetime = 60; // Bullets live for max 60 ticks
 
-    for (let i = 0; i < this.sim.projectiles.length; i++) {
-      const p = this.sim.projectiles[i];
+    for (let i = 0; i < projectileArrays.capacity; i++) {
+      if (projectileArrays.active[i] === 0) continue;
 
-      p.pos.x += p.vel.x;
-      p.pos.y += p.vel.y;
+      // Update position
+      projectileArrays.posX[i] += projectileArrays.velX[i];
+      projectileArrays.posY[i] += projectileArrays.velY[i];
 
-      if (p.type === "bomb") {
-        if (!p.target) {
-          p.vel.y += 0.2;
+      // Update lifetime
+      projectileArrays.lifetime[i]++;
+
+      // Type-specific updates
+      const projType = projectileArrays.type[i];
+      if (projType === 1) { // bomb
+        if (!projectileArrays.targetIds[i]) {
+          projectileArrays.velY[i] += 0.2; // gravity
         }
-        p.lifetime = (p.lifetime || 0) + 1;
-
-        if (p.duration !== undefined) {
-          p.progress = (p.progress || 0) + 1;
+        if (projectileArrays.duration[i] > 0) {
+          projectileArrays.progress[i]++;
         }
       }
 
-      if (
-        p.pos.x < 0 ||
-        p.pos.x >= this.sim.fieldWidth ||
-        p.pos.y < 0 ||
-        p.pos.y >= this.sim.fieldHeight
-      ) {
+      // Check for removal conditions
+      const shouldRemove = 
+        // Out of bounds
+        projectileArrays.posX[i] < 0 ||
+        projectileArrays.posX[i] >= this.sim.fieldWidth ||
+        projectileArrays.posY[i] < 0 ||
+        projectileArrays.posY[i] >= this.sim.fieldHeight ||
+        // Lifetime exceeded (bullets only, bombs handled in ProjectileMotion)
+        (projType === 0 && projectileArrays.lifetime[i] >= maxLifetime);
+
+      if (shouldRemove) {
         toRemove.push(i);
       }
     }
 
-    for (let i = toRemove.length - 1; i >= 0; i--) {
-      this.sim.projectiles.splice(toRemove[i], 1);
+    // Remove projectiles
+    for (const idx of toRemove) {
+      projectileArrays.removeProjectile(idx);
+    }
+    
+    // Invalidate cache if we removed anything
+    if (toRemove.length > 0) {
+      this.sim.invalidateProjectilesCache();
     }
   }
 }

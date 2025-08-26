@@ -4,11 +4,10 @@ export class RemoveProjectileCommand extends Command {
   execute(unitId: string | null, params: any): void {
     const { id } = params;
 
-    if (!this.sim.projectiles) return;
-
-    const index = this.sim.projectiles.findIndex((p) => p.id === id);
-    if (index >= 0) {
-      this.sim.projectiles.splice(index, 1);
+    // Remove from SoA arrays
+    if (this.sim.projectileArrays) {
+      this.sim.invalidateProjectilesCache();
+      this.sim.projectileArrays.removeProjectileById(id);
     }
   }
 }

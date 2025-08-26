@@ -138,7 +138,7 @@ export class Transform {
    * Add a projectile
    */
   addProjectile(projectile: Projectile): void {
-    this.sim.projectiles.push(projectile);
+    this.sim.projectileArrays.addProjectile(projectile);
   }
 
   /**

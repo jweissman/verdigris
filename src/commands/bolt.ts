@@ -144,6 +144,30 @@ export class BoltCommand extends Command {
       },
     });
     
+    // Add fire effects in a smaller radius around the strike
+    const fireRadius = 2;
+    for (let dx = -fireRadius; dx <= fireRadius; dx++) {
+      for (let dy = -fireRadius; dy <= fireRadius; dy++) {
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= fireRadius && Math.random() < 0.3) { // 30% chance per cell
+          const fireX = strikePos.x + dx;
+          const fireY = strikePos.y + dy;
+          if (fireX >= 0 && fireX < this.sim.fieldWidth && 
+              fireY >= 0 && fireY < this.sim.fieldHeight) {
+            // Set high temperature to ignite fires
+            this.sim.queuedCommands.push({
+              type: "temperature",
+              params: {
+                x: fireX,
+                y: fireY,
+                delta: 800, // High temperature spike to ignite
+              },
+            });
+          }
+        }
+      }
+    }
+    
     // Still queue event for informational purposes
     this.sim.queuedEvents.push({
       kind: "aoe",

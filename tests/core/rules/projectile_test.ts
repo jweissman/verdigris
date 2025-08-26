@@ -27,7 +27,7 @@ describe('Projectile simulation', () => {
   it('should allow adding projectiles dynamically', () => {
     const sim = new Simulator();
     expect(sim.projectiles.length).toBe(0);
-    sim.projectiles.push({ id: 'p3', pos: { x: 1, y: 1 }, vel: { x: 0, y: 1 }, radius: 1, damage: 1, team: 'friendly', type: 'bullet' });
+    sim.projectiles = [...sim.projectiles, { id: 'p3', pos: { x: 1, y: 1 }, vel: { x: 0, y: 1 }, radius: 1, damage: 1, team: 'friendly', type: 'bullet' }];
     expect(sim.projectiles.length).toBe(1);
     sim.step();
     expect(sim.projectiles[0].pos.x).toBe(1);

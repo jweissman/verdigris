@@ -7,10 +7,10 @@ describe('AOE and Knockback', () => {
     sim.addUnit({ id: 'worm1', pos: { x: 3, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'walk', hp: 10, maxHp: 10, mass: 1 });
     sim.addUnit({ id: 'worm2', pos: { x: 5, y: 0 }, intendedMove: { x: 0, y: 0 }, team: 'hostile', sprite: 'worm', state: 'walk', hp: 10, maxHp: 10, mass: 1 });
 
-    sim.projectiles.push({
+    sim.projectiles = [...sim.projectiles, {
       id: 'p1', pos: { x: 4, y: 0 }, vel: { x: 0, y: 0 }, radius: 1, damage: 5, team: 'friendly',
       type: 'bomb', lifetime: 31, explosionRadius: 2  // Make it a bomb that will explode
-    });
+    }];
 
     sim.step();
     sim.step(); // Additional step to process queued damage events

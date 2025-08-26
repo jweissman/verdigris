@@ -62,6 +62,28 @@ export class Projectile extends Command {
       projectile.vel = { x: 1, y: 0 };
     }
 
-    this.sim.projectiles.push(projectile);
+    // Only use SoA arrays
+    if (this.sim.projectileArrays) {
+      this.sim.invalidateProjectilesCache();
+      this.sim.projectileArrays.addProjectile({
+        id: projectile.id,
+        pos: projectile.pos,
+        vel: projectile.vel,
+        radius: projectile.radius,
+        damage: projectile.damage,
+        team: projectile.team as "friendly" | "hostile" | "neutral",
+        type: projectile.type as "bullet" | "bomb" | "grapple" | "laser_beam",
+        sourceId: projectile.sourceId,
+        target: projectile.target,
+        progress: projectile.progress,
+        duration: projectile.duration,
+        origin: projectile.origin,
+        z: projectile.z,
+        lifetime: projectile.lifetime,
+        aoeRadius: projectile.aoeRadius,
+        explosionRadius: projectile.explosionRadius || 3,
+        aspect: projectile.aspect,
+      });
+    }
   }
 }

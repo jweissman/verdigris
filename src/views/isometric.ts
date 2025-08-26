@@ -248,8 +248,23 @@ export default class Isometric extends View {
       return;
     }
 
-    let renderX = unit.meta?.smoothX ?? unit.pos.x;
-    let renderY = unit.meta?.smoothY ?? unit.pos.y;
+    // Use interpolation for smooth movement
+    let renderX = unit.pos.x;
+    let renderY = unit.pos.y;
+    
+    // Check if we have a previous position for interpolation
+    const lastPos = this.sim.lastUnitPositions.get(unit.id);
+    if (lastPos && this.sim.interpolationFactor !== undefined && this.sim.interpolationFactor < 1) {
+      // Interpolate between last and current position
+      const t = this.sim.interpolationFactor;
+      renderX = lastPos.x + (unit.pos.x - lastPos.x) * t;
+      renderY = lastPos.y + (unit.pos.y - lastPos.y) * t;
+    }
+    
+    // Override with smoothX/Y if jumping (special case)
+    if (unit.meta?.smoothX !== undefined) renderX = unit.meta.smoothX;
+    if (unit.meta?.smoothY !== undefined) renderY = unit.meta.smoothY;
+    
     let renderZ = unit.meta?.z || 0;
 
     const dimensions = this.unitRenderer.getSpriteDimensions(unit);

@@ -28,6 +28,7 @@ import { RNG } from "./rng";
 import { TickContext, TickContextImpl } from "./tick_context";
 import { LightningStorm } from "../rules/lightning_storm";
 import { Projectile } from "../types/Projectile";
+import { ProjectileArrays } from "../sim/projectile_arrays";
 import { Unit } from "../types/Unit";
 import { Vec2 } from "../types/Vec2";
 import { Particle } from "../types/Particle";
@@ -127,7 +128,65 @@ class Simulator {
     }
   }
 
-  projectiles: Projectile[];
+  projectileArrays: ProjectileArrays;
+  private _projectilesCache: Projectile[] = [];
+  private _projectilesCacheDirty: boolean = true;
+  
+  get projectiles(): Projectile[] {
+    if (this._projectilesCacheDirty) {
+      this._projectilesCache = [];
+      const arrays = this.projectileArrays;
+      if (arrays) {
+        for (let i = 0; i < arrays.capacity; i++) {
+          if (arrays.active[i] === 0) continue;
+          const proj: any = {
+            id: arrays.projectileIds[i],
+            pos: { x: arrays.posX[i], y: arrays.posY[i] },
+            vel: { x: arrays.velX[i], y: arrays.velY[i] },
+            radius: arrays.radius[i],
+            damage: arrays.damage[i],
+            team: arrays.team[i] === 1 ? "friendly" : arrays.team[i] === 2 ? "hostile" : "neutral",
+            type: ["bullet", "bomb", "grapple", "laser_beam"][arrays.type[i]] as any,
+            sourceId: arrays.sourceIds[i] || undefined,
+          };
+          
+          // Add optional fields based on projectile type
+          if (arrays.type[i] === 1 || arrays.type[i] === 2) { // bomb or grapple have targets
+            proj.target = { x: arrays.targetX[i], y: arrays.targetY[i] };
+          }
+          if (arrays.type[i] === 1) { // bomb has origin
+            proj.origin = { x: arrays.originX[i], y: arrays.originY[i] };
+          }
+          if (arrays.progress[i] > 0) proj.progress = arrays.progress[i];
+          if (arrays.duration[i] > 0) proj.duration = arrays.duration[i];
+          if (arrays.type[i] === 1) { // bombs have these fields
+            proj.z = arrays.z[i];
+            proj.aoeRadius = arrays.aoeRadius[i] || 3; // Default for bombs
+          }
+          if (arrays.lifetime[i] > 0) proj.lifetime = arrays.lifetime[i];
+          if (arrays.explosionRadius[i] !== 3) proj.explosionRadius = arrays.explosionRadius[i];
+          if (arrays.aspect[i] && arrays.aspect[i] !== "physical") proj.aspect = arrays.aspect[i];
+          
+          this._projectilesCache.push(proj);
+        }
+      }
+      this._projectilesCacheDirty = false;
+    }
+    return this._projectilesCache;
+  }
+  
+  set projectiles(projectiles: Projectile[]) {
+    // Clear and repopulate SoA arrays
+    this.projectileArrays.clear();
+    for (const p of projectiles) {
+      this.projectileArrays.addProjectile(p);
+    }
+    this._projectilesCacheDirty = true;
+  }
+  
+  invalidateProjectilesCache(): void {
+    this._projectilesCacheDirty = true;
+  }
   private rulebook: Rule[];
   private commandProcessor: CommandHandler;
   queuedEvents: Action[] = [];
@@ -138,8 +197,9 @@ class Simulator {
     return this.rulebook;
   }
 
-  private lastUnitPositions: Map<string, { x: number; y: number }> = new Map();
+  public lastUnitPositions: Map<string, { x: number; y: number }> = new Map();
   private lastActiveCount: number = 0;
+  public interpolationFactor: number = 0;
   private hasHugeUnitsRule?: boolean;
   public particleArrays: ParticleArrays = new ParticleArrays(5000); // SoA storage for performance
 
@@ -359,7 +419,7 @@ class Simulator {
 
     this.proxyManager.clearCache();
 
-    this.projectiles = [];
+    this.projectileArrays = new ProjectileArrays(500);
     this.processedEvents = [];
     this.queuedCommands = [];
 
@@ -531,6 +591,14 @@ class Simulator {
 
   private stepDepth = 0;
 
+  storeUnitPositions(): void {
+    // Store current positions for interpolation
+    this.lastUnitPositions.clear();
+    for (const unit of this.units) {
+      this.lastUnitPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y });
+    }
+  }
+
   step(force = false) {
     this.stepDepth++;
     if (this.stepDepth > 1) {
@@ -632,33 +700,19 @@ class Simulator {
   }
 
   updateProjectilePhysics() {
-    if (!this.projectiles) return;
-
-    const toRemove: number[] = [];
-
-    for (let i = 0; i < this.projectiles.length; i++) {
-      const p = this.projectiles[i];
-
-      p.pos.x += p.vel.x;
-      p.pos.y += p.vel.y;
-
-      if (p.type === "bomb") {
-        p.vel.y += 0.2;
-        p.lifetime = (p.lifetime || 0) + 1;
+    if (this.projectileArrays && this.projectileArrays.activeCount > 0) {
+      this.invalidateProjectilesCache(); // Physics changes positions
+      const outOfBounds = this.projectileArrays.updatePhysics(
+        this.fieldWidth, 
+        this.fieldHeight
+      );
+      
+      // Remove out-of-bounds projectiles
+      if (outOfBounds.length > 0) {
+        for (const idx of outOfBounds) {
+          this.projectileArrays.removeProjectile(idx);
+        }
       }
-
-      if (
-        p.pos.x < 0 ||
-        p.pos.x >= this.fieldWidth ||
-        p.pos.y < 0 ||
-        p.pos.y >= this.fieldHeight
-      ) {
-        toRemove.push(i);
-      }
-    }
-
-    for (let i = toRemove.length - 1; i >= 0; i--) {
-      this.projectiles.splice(toRemove[i], 1);
     }
   }
 
@@ -1738,7 +1792,7 @@ class Simulator {
               const projX = unit.pos.x + (dx / mag) * offset;
               const projY = unit.pos.y + (dy / mag) * offset;
 
-              this.projectiles.push({
+              const projectile = {
                 id: `proj_${unit.id}_${Date.now()}`,
                 pos: { x: projX, y: projY },
                 vel,
@@ -1746,7 +1800,9 @@ class Simulator {
                 damage: 5,
                 team: unit.team,
                 type: "bullet" as const,
-              });
+              };
+              this.invalidateProjectilesCache();
+              this.projectileArrays.addProjectile(projectile);
             }
           }
         }

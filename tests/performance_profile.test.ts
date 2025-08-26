@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { Simulator } from '../src/core/simulator';
 import { SceneLoader } from '../src/core/scene_loader';
 
-test.skip('profile squirrel scenario bottlenecks', () => {
+test('profile squirrel scenario bottlenecks', () => {
   const sim = new Simulator(32, 32);
 
   const loader = new SceneLoader(sim);

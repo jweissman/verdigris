@@ -3,6 +3,7 @@ import type { Vec2 } from "../types/Vec2";
 import type { Projectile } from "../types/Projectile";
 import type { Particle } from "../types/Particle";
 import type { Simulator } from "./simulator";
+import type { ProjectileArrays } from "../sim/projectile_arrays";
 
 /**
  * TickContext - Clean API boundary for rules
@@ -30,6 +31,7 @@ export interface TickContext {
   getFieldWidth(): number;
   getFieldHeight(): number;
   getProjectiles(): readonly Projectile[];
+  getProjectileArrays(): ProjectileArrays;
   getParticles(): readonly Particle[];
   getTemperatureAt(x: number, y: number): number;
   getSceneBackground(): string;
@@ -172,7 +174,38 @@ export class TickContextImpl implements TickContext {
   }
 
   getProjectiles(): readonly Projectile[] {
-    return this.sim.projectiles || [];
+    // Convert SoA projectiles back to objects for compatibility
+    const projectiles: Projectile[] = [];
+    const arrays = this.sim.projectileArrays;
+    if (!arrays) return [];
+    
+    for (let i = 0; i < arrays.capacity; i++) {
+      if (arrays.active[i] === 0) continue;
+      projectiles.push({
+        id: arrays.projectileIds[i],
+        pos: { x: arrays.posX[i], y: arrays.posY[i] },
+        vel: { x: arrays.velX[i], y: arrays.velY[i] },
+        radius: arrays.radius[i],
+        damage: arrays.damage[i],
+        team: arrays.team[i] === 1 ? "friendly" : arrays.team[i] === 2 ? "hostile" : "neutral",
+        type: ["bullet", "bomb", "grapple", "laser_beam"][arrays.type[i]] as any,
+        sourceId: arrays.sourceIds[i] || undefined,
+        target: arrays.targetX[i] ? { x: arrays.targetX[i], y: arrays.targetY[i] } : undefined,
+        progress: arrays.progress[i] || undefined,
+        duration: arrays.duration[i] || undefined,
+        origin: arrays.originX[i] ? { x: arrays.originX[i], y: arrays.originY[i] } : undefined,
+        z: arrays.z[i] || undefined,
+        lifetime: arrays.lifetime[i] || undefined,
+        aoeRadius: arrays.aoeRadius[i] || undefined,
+        explosionRadius: arrays.explosionRadius[i] || undefined,
+        aspect: arrays.aspect[i] || undefined,
+      });
+    }
+    return projectiles;
+  }
+  
+  getProjectileArrays(): ProjectileArrays {
+    return this.sim.projectileArrays;
   }
 
   getParticles(): readonly Particle[] {
