@@ -65,6 +65,7 @@ describe('Lightning Storm Environmental System', () => {
       commands.forEach(cmd => sim.queuedCommands.push(cmd));
     }
     sim.step(); // Process the queued commands
+    sim.step(); // Process meta commands that apply stun
     
     const stunnedUnits = sim.units.filter(u => u.meta.stunned);
     expect(stunnedUnits.length).toBeGreaterThan(0); // Some units should be stunned

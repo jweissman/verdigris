@@ -181,9 +181,10 @@ describe("Bolt Command", () => {
     const enemyStunned = sim.units.find(u => u.id === "enemy");
     expect(enemyStunned?.meta?.stunned).toBe(true);
     const stunDuration = enemyStunned?.meta?.stunDuration || 0;
+    expect(stunDuration).toBeGreaterThan(0);
     
-    // Step through stun duration
-    for (let i = 0; i < stunDuration + 2; i++) {
+    // Step through full stun duration plus one more to ensure it clears
+    for (let i = 0; i <= stunDuration; i++) {
       sim.step();
     }
     

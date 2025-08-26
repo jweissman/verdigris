@@ -197,13 +197,8 @@ export class UnitRenderer {
     ctx.fillRect(screenX - barWidth / 2, barY, barWidth, barHeight);
 
     const healthPercent = Math.max(0, unit.hp / unit.maxHp);
-    const healthColor =
-      healthPercent > 0.5
-        ? "#00ff00"
-        : healthPercent > 0.25
-          ? "#ffff00"
-          : "#ff0000";
-    ctx.fillStyle = healthColor;
+    // Monochrome display - always white
+    ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(
       screenX - barWidth / 2,
       barY,

@@ -129,17 +129,6 @@ export class BoltCommand extends Command {
       });
     }
 
-    // Heat up cells around strike point to trigger fires naturally
-    this.sim.queuedCommands.push({
-      type: "temperature",
-      params: {
-        x: strikePos.x,
-        y: strikePos.y,
-        amount: 50, // Hot enough to ignite
-        radius: 2
-      }
-    });
-
     // Use AOE command for EMP stun (events are informational only)
     this.sim.queuedCommands.push({
       type: "aoe",
