@@ -154,7 +154,8 @@ export default class Isometric extends View {
 
   private grid() {
     this.ctx.save();
-    this.ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
+    this.ctx.fillStyle = "#FFFFFF";
+    this.ctx.globalAlpha = 0.3;
 
     for (let y = 0; y < this.sim.fieldHeight; y++) {
       for (let x = 0; x < this.sim.fieldWidth; x++) {
@@ -181,7 +182,8 @@ export default class Isometric extends View {
         const isoPos = this.toIsometric(x, y);
 
         this.ctx.save();
-        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+        this.ctx.strokeStyle = "#FFFFFF";
+        this.ctx.globalAlpha = 0.6;
         this.ctx.lineWidth = 2;
 
         this.ctx.beginPath();
@@ -202,8 +204,9 @@ export default class Isometric extends View {
       if (unit.meta?.attackZones && unit.meta?.attackZonesExpiry) {
         if (this.sim.ticks < unit.meta.attackZonesExpiry) {
           this.ctx.save();
-          this.ctx.fillStyle = "rgba(255, 100, 100, 0.4)";
-          this.ctx.strokeStyle = "rgba(255, 50, 50, 0.8)";
+          this.ctx.fillStyle = "#FFFFFF";
+          this.ctx.globalAlpha = 0.4;
+          this.ctx.strokeStyle = "#FFFFFF";
           this.ctx.lineWidth = 2;
 
           for (const zone of unit.meta.attackZones) {
@@ -256,7 +259,8 @@ export default class Isometric extends View {
     let screenX: number;
     let screenY: number;
 
-    const interp = this.unitInterpolations.get(unit.id);
+    // Don't use interpolation for jumping units - they handle their own smooth movement
+    const interp = unit.meta?.jumping ? null : this.unitInterpolations.get(unit.id);
     if (interp) {
       const easeProgress = this.easeInOutQuad(interp.progress);
 
@@ -330,7 +334,7 @@ export default class Isometric extends View {
           spriteWidth,
           2,
           progressRatio,
-          "#ace",
+          "#FFFFFF",
         );
       }
     }
@@ -350,7 +354,8 @@ export default class Isometric extends View {
         // Draw background for better visibility
         const labelText = unit.id;
         const labelWidth = labelText.length * 4 + 4;
-        this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        this.ctx.fillStyle = "#000000";
+        this.ctx.globalAlpha = 0.7;
         this.ctx.fillRect(labelX - 2, labelY - 2, labelWidth, 8);
 
         // Draw the label
@@ -363,7 +368,7 @@ export default class Isometric extends View {
             spriteLabel,
             labelX,
             labelY + 8,
-            "#FFFF00",
+            "#FFFFFF",
             1,
           );
         }
@@ -384,9 +389,9 @@ export default class Isometric extends View {
     const barHeight = height;
     const barX = pixelX;
     const barY = pixelY - 4;
-    this.ctx.fillStyle = "#333";
+    this.ctx.fillStyle = "#000000";
     this.ctx.fillRect(barX, barY, barWidth, barHeight);
-    this.ctx.fillStyle = ratio > 0.5 ? "#0f0" : ratio > 0.2 ? "#ff0" : "#f00";
+    this.ctx.fillStyle = "#FFFFFF";
     if (colorOverride) {
       this.ctx.fillStyle = colorOverride;
     }
@@ -429,8 +434,8 @@ export default class Isometric extends View {
         this.drawBombArcTrail(projectile);
       }
 
-      this.ctx.fillStyle = "#000";
-      this.ctx.strokeStyle = "#fff";
+      this.ctx.fillStyle = "#000000";
+      this.ctx.strokeStyle = "#FFFFFF";
       this.ctx.lineWidth = 1;
       this.ctx.beginPath();
       this.ctx.arc(
@@ -444,7 +449,8 @@ export default class Isometric extends View {
       this.ctx.stroke();
 
       if (renderZ > 0) {
-        this.ctx.fillStyle = "#00000040";
+        this.ctx.fillStyle = "#000000";
+        this.ctx.globalAlpha = 0.25;
         this.ctx.beginPath();
         this.ctx.arc(
           screenX,
@@ -456,7 +462,7 @@ export default class Isometric extends View {
         this.ctx.fill();
       }
     } else {
-      this.ctx.fillStyle = "#000";
+      this.ctx.fillStyle = "#000000";
       this.ctx.beginPath();
       this.ctx.arc(
         screenX,
@@ -494,7 +500,8 @@ export default class Isometric extends View {
     const height = baseHeight * distanceMultiplier;
 
     this.ctx.save();
-    this.ctx.fillStyle = "#666";
+    this.ctx.fillStyle = "#FFFFFF";
+    this.ctx.globalAlpha = 0.4;
     this.ctx.globalAlpha = 0.4;
 
     const numPoints = Math.max(8, Math.floor(distance * 2));
@@ -551,7 +558,7 @@ export default class Isometric extends View {
     );
 
     this.ctx.save();
-    this.ctx.strokeStyle = unit.team === "friendly" ? "#00ff00" : "#ff4444";
+    this.ctx.strokeStyle = "#FFFFFF";
     this.ctx.lineWidth = 1;
     this.ctx.globalAlpha = 0.8;
 
@@ -593,7 +600,7 @@ export default class Isometric extends View {
     );
 
     this.ctx.save();
-    this.ctx.fillStyle = "#4444ff";
+    this.ctx.fillStyle = "#FFFFFF";
     this.ctx.globalAlpha = 0.4;
     this.ctx.beginPath();
     this.ctx.ellipse(screenX, screenY, 8, 4, 0, 0, 2 * Math.PI);
@@ -630,41 +637,67 @@ export default class Isometric extends View {
       (event) =>
         event.kind === "aoe" &&
         event.meta.tick &&
-        this.sim.ticks - event.meta.tick < 10,
+        this.sim.ticks - event.meta.tick < 30, // Show for longer
     );
 
     for (const event of recentAoEEvents) {
-      if (typeof event.target !== "object" || !("x" in event.target)) continue;
+      // Check if we have zones array (from strike command)
+      if (event.meta.zones && Array.isArray(event.meta.zones)) {
+        const age = event.meta.tick ? this.sim.ticks - event.meta.tick : 0;
+        const maxAge = 30;
+        const alpha = Math.max(0, 1 - age / maxAge);
+        
+        // Draw each cell in the strike zone
+        this.ctx.save();
+        this.ctx.globalAlpha = alpha * 0.6;
+        this.ctx.fillStyle = "#ff0000"; // Red for strike zones
+        
+        for (const zone of event.meta.zones) {
+          const cellScreen = this.toIsometric(zone.x, zone.y);
+          
+          // Draw diamond shape for each affected cell
+          this.ctx.beginPath();
+          this.ctx.moveTo(cellScreen.x, cellScreen.y - 4);
+          this.ctx.lineTo(cellScreen.x + 8, cellScreen.y);
+          this.ctx.lineTo(cellScreen.x, cellScreen.y + 4);
+          this.ctx.lineTo(cellScreen.x - 8, cellScreen.y);
+          this.ctx.closePath();
+          this.ctx.fill();
+        }
+        
+        this.ctx.restore();
+      } else if (typeof event.target === "object" && "x" in event.target) {
+        // Fallback for old-style AOE (circular)
+        const pos = event.target as { x: number; y: number };
+        const radius = event.meta.radius || 3;
+        const age = event.meta.tick ? this.sim.ticks - event.meta.tick : 0;
+        const maxAge = 10;
 
-      const pos = event.target as { x: number; y: number };
-      const radius = event.meta.radius || 3;
-      const age = event.meta.tick ? this.sim.ticks - event.meta.tick : 0;
-      const maxAge = 10;
+        const alpha = Math.max(0, 1 - age / maxAge);
 
-      const alpha = Math.max(0, 1 - age / maxAge);
+        const centerScreen = this.toIsometric(pos.x, pos.y);
 
-      const centerScreen = this.toIsometric(pos.x, pos.y);
+        this.ctx.save();
+        this.ctx.globalAlpha = alpha * 0.4;
+        this.ctx.fillStyle = "#ffaa00"; // Gold/orange for explosions
 
-      this.ctx.save();
-      this.ctx.globalAlpha = alpha * 0.4;
-      this.ctx.fillStyle = "#ffaa00";
+        const pixelRadiusX = radius * 8;
+        const pixelRadiusY = radius * 4;
 
-      const pixelRadiusX = radius * 8;
-      const pixelRadiusY = radius * 4;
+        this.ctx.beginPath();
+        this.ctx.ellipse(
+          centerScreen.x,
+          centerScreen.y,
+          pixelRadiusX,
+          pixelRadiusY,
+          0,
+          0,
+          2 * Math.PI,
+        );
+        this.ctx.fill();
 
-      this.ctx.beginPath();
-      this.ctx.ellipse(
-        centerScreen.x,
-        centerScreen.y,
-        pixelRadiusX,
-        pixelRadiusY,
-        0,
-        0,
-        2 * Math.PI,
-      );
-      this.ctx.fill();
-
-      this.ctx.restore();
+        this.ctx.restore();
+      }
     }
   }
 
@@ -835,7 +868,7 @@ export default class Isometric extends View {
         this.ctx.quadraticCurveTo(midX, midY, endPos.x, endPos.y);
         this.ctx.stroke();
 
-        this.ctx.fillStyle = "#000";
+        this.ctx.fillStyle = "#000000";
         this.ctx.beginPath();
         this.ctx.arc(startPos.x, startPos.y, 1, 0, 2 * Math.PI);
         this.ctx.fill();

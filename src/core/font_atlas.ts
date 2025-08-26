@@ -165,7 +165,7 @@ export default class FontAtlas {
     const bubbleHeight = charWidth * scale + 8;
 
     this.ctx.save();
-    this.ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+    this.ctx.fillStyle = "#000000";
     this.ctx.strokeStyle = "#FFFFFF";
     this.ctx.lineWidth = 1;
 

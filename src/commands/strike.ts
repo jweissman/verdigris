@@ -25,122 +25,58 @@ export class StrikeCommand extends Command {
     const aspect = (params.aspect as string) || "kinetic";
     const range = (params.range as number) || (attacker.tags?.includes("hero") ? 7 : 1);
 
-    // If attacker is a hero, do area attack with tapered pattern
-    if (attacker.tags?.includes("hero")) {
-      
-      // Use pattern generator for consistent attack shape
-      const attackZones = generateAttackPattern({
-        origin: attacker.pos,
-        direction: direction as 'left' | 'right' | 'up' | 'down',
-        range: range,
-        pattern: 'cone',
-        width: 13,  // Wide powerful attack
-        taper: 1.2   // Gentle taper
-      });
-      
-      // Store attack zones on attacker for visualization and trigger animation
-      const transform = new Transform(this.sim);
-      transform.updateUnit(attacker.id, {
+    // Generate attack pattern based on unit type
+    const attackZones = generateAttackPattern({
+      origin: attacker.pos,
+      direction: direction as 'left' | 'right' | 'up' | 'down',
+      range: range,
+      pattern: attacker.tags?.includes("hero") ? 'cone' : 'line',
+      width: attacker.tags?.includes("hero") ? 13 : 1,
+      taper: attacker.tags?.includes("hero") ? 1.2 : 0
+    });
+    
+    // Store attack zones in sim for ALL units (not just hero)
+    const transform = new Transform(this.sim);
+    transform.updateUnit(attacker.id, {
+      meta: {
+        ...attacker.meta,
+        attackStartTick: this.sim.ticks,
+        attackEndTick: this.sim.ticks + 10,
+      }
+    });
+    
+    // Queue AOE event for visualization through sim
+    if (attackZones.length > 0) {
+      this.sim.queuedEvents.push({
+        kind: "aoe",
+        source: attacker.id,
+        target: attacker.pos,
         meta: {
-          ...attacker.meta,
-          attackZones: attackZones,
-          attackZonesExpiry: this.sim.ticks + 30, // Show for 30 ticks
-          attackStartTick: this.sim.ticks,
-          attackEndTick: this.sim.ticks + 10, // Attack animation duration
-        }
+          zones: attackZones, // Pass zones for rendering
+          duration: 30,
+          aspect: aspect,
+          tick: this.sim.ticks,
+        },
       });
+    }
+    
+    // Hit all enemies in attack zones
+    const enemies = this.sim.units.filter((u) => {
+      if (u.id === attacker.id || u.team === attacker.team || u.hp <= 0) return false;
+      return attackZones.some(zone => 
+        Math.abs(u.pos.x - zone.x) < 0.5 && Math.abs(u.pos.y - zone.y) < 0.5
+      );
+    });
 
-      // Hit all enemies in attack zones
-      const enemies = this.sim.units.filter((u) => {
-        if (u.id === attacker.id || u.team === attacker.team || u.hp <= 0) return false;
-        return attackZones.some(zone => 
-          Math.abs(u.pos.x - zone.x) < 0.5 && Math.abs(u.pos.y - zone.y) < 0.5
-        );
-      });
-
-      for (const enemy of enemies) {
-        this.sim.queuedCommands.push({
-          type: "damage",
-          params: {
-            targetId: enemy.id,
-            amount: damage,
-            aspect: aspect,
-            sourceId: attacker.id,
-            origin: attacker.pos,
-          },
-        });
-      }
-
-      // Create AOE event for visual effect
-      if (attackZones.length > 0) {
-        const centerZone = attackZones[0];
-        this.sim.queuedEvents.push({
-          kind: "aoe",
-          source: attacker.id,
-          target: centerZone,
-          meta: {
-            radius: 1.5,
-            amount: damage,
-            aspect: aspect,
-            tick: this.sim.ticks,
-          },
-        });
-      }
-    } else {
-      // Non-hero strike - single target
-      let target: any = null;
-
-      if (targetId) {
-        target = this.sim.units.find((u) => u.id === targetId && u.hp > 0);
-      } else {
-        target = this.findTargetInDirection(attacker, direction, range);
-      }
-
-      if (target && (targetId || this.isInRange(attacker, target, range))) {
-        this.sim.queuedCommands.push({
-          type: "damage",
-          params: {
-            targetId: target.id,
-            amount: damage,
-            aspect: aspect,
-            sourceId: attacker.id,
-            origin: attacker.pos,
-          },
-        });
-      }
-
-      // Events are observational only - don't create damage events here
-      // The damage command will handle everything
-
-      if (knockback > 0) {
-        const dx = target.pos.x - attacker.pos.x;
-        const dy = target.pos.y - attacker.pos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist > 0) {
-          const knockX = (dx / dist) * knockback;
-          const knockY = (dy / dist) * knockback;
-
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: target.id,
-            params: {
-              dx: Math.round(knockX),
-              dy: Math.round(knockY),
-              force: true, // Force movement even if pinned/stunned
-            },
-          });
-        }
-      }
-
-      const transform = new Transform(this.sim);
-      transform.updateUnit(attacker.id, {
-        state: "attack",
-        meta: {
-          ...attacker.meta,
-          lastStrike: this.sim.ticks,
-          attackStartTick: this.sim.ticks,
-          attackEndTick: this.sim.ticks + 6, // Attack animation duration
+    for (const enemy of enemies) {
+      this.sim.queuedCommands.push({
+        type: "damage",
+        params: {
+          targetId: enemy.id,
+          amount: damage,
+          aspect: aspect,
+          sourceId: attacker.id,
+          origin: attacker.pos,
         },
       });
     }

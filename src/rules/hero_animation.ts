@@ -32,9 +32,9 @@ export class HeroAnimation extends Rule {
 
         this.updateAnimation(unit, rig, commands);
 
-        // Slow down walk animation to reduce jitter
+        // Slow down walk animation to match movement speed
         const isWalking = unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0;
-        const updateRate = isWalking ? 0.3 : 1; // Slower animation for walking
+        const updateRate = isWalking ? 0.5 : 1; // Match slower movement
         rig.update(updateRate);
 
         const facing = unit.meta?.facing || "right";

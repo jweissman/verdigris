@@ -9,7 +9,7 @@ export class PlayerControl extends Rule {
   private abilitySwitchCooldown: number = 0;
   
   // Store cooldowns directly on units via meta, not in this rule
-  private readonly MOVE_COOLDOWN = 1;
+  private readonly MOVE_COOLDOWN = 1;  // Keep it smooth
   private readonly JUMP_COOLDOWN = 5;
   private readonly ABILITY_SWITCH_COOLDOWN = 10;
 
@@ -190,52 +190,20 @@ export class PlayerControl extends Rule {
           });
         }
 
-        const lastJump = unit.meta?.lastJumpTime;
-        const canJump = lastJump === undefined || currentTick - lastJump >= this.JUMP_COOLDOWN;
+        // Simple jump - no multi-jump complexity
         if (
           this.keysHeld.has(" ") &&
-          !unit.meta?.jumping &&
-          canJump
+          !unit.meta?.jumping
         ) {
-          const isHero = unit.tags?.includes("hero");
-          const jumpCount = unit.meta?.jumpCount || 0;
-          const maxJumps = isHero ? 3 : 1; // Heroes can triple jump!
-
-          if (jumpCount < maxJumps) {
-            const jumpPower = 1 + jumpCount * 0.5; // Each jump is more powerful
-            const jumpDistance = Math.min(12, 6 + jumpCount * 3); // Further jumps - 6, 9, 12 tiles
-
-            commands.push({
-              type: "jump",
-              unitId: unit.id,
-              params: {
-                direction: unit.meta?.facing || "right",
-                distance: jumpDistance,
-                height: isHero ? Math.floor(6 * jumpPower) : 5,
-                damage: isHero ? Math.floor(15 * jumpPower) : 0, // More damage per jump
-                radius: isHero ? 2 + jumpCount : 0, // Bigger AOE for multi-jumps
-              },
-            });
-
-            commands.push({
-              type: "meta",
-              params: {
-                unitId: unit.id,
-                meta: {
-                  jumpCount: jumpCount + 1,
-                  jumpResetTime: context.getCurrentTick() + 30, // Reset after 30 ticks on ground
-                },
-              },
-            });
-            
-            commands.push({
-              type: "meta",
-              params: {
-                unitId: unit.id,
-                meta: { lastJumpTime: currentTick }
-              }
-            });
-          }
+          commands.push({
+            type: "jump",
+            unitId: unit.id,
+            params: {
+              direction: unit.meta?.facing || "right",
+              distance: 6,
+              height: 6,
+            },
+          });
         }
 
         // Primary action (Q key or E key)

@@ -46,22 +46,46 @@ export class Jumping extends Rule {
     const jumpOrigin = unit.meta.jumpOrigin || unit.pos;
     const progress = (unit.meta.jumpProgress || 0) + 1;
 
-    const jumpDuration = 8; // Very fast jump - faster than movement
+    const jumpDuration = 10; // Standard jump duration
     const t = progress / jumpDuration;
-
-    let newX = jumpOrigin.x;
-    let newY = jumpOrigin.y;
-
-    if (jumpTarget && jumpOrigin) {
-      const dx = jumpTarget.x - jumpOrigin.x;
-      const dy = jumpTarget.y - jumpOrigin.y;
-
-      newX = jumpOrigin.x + dx * t;
-      newY = jumpOrigin.y + dy * t;
-    }
 
     const peakHeight = unit.meta.jumpHeight || 6;
     const z = Math.max(0, 4 * peakHeight * t * (1 - t));
+    
+    // Calculate interpolated position for smooth visual
+    if (jumpTarget && jumpOrigin) {
+      const dx = jumpTarget.x - jumpOrigin.x;
+      const dy = jumpTarget.y - jumpOrigin.y;
+      
+      // Update actual ground position during jump
+      const newX = jumpOrigin.x + dx * t;
+      const newY = jumpOrigin.y + dy * t;
+      
+      // Debug: log the interpolation EVERY frame
+      console.log(`[Jump] Progress ${progress}/${jumpDuration}, t=${t.toFixed(2)}, pos=(${newX.toFixed(2)},${newY.toFixed(2)}), z=${z.toFixed(2)}`);
+      
+      // Move the unit along the ground path
+      this.commands.push({
+        type: "move",
+        params: {
+          unitId: unit.id,
+          x: newX,
+          y: newY
+        }
+      });
+    }
+    
+    // Store jump progress and height
+    this.commands.push({
+      type: "meta",
+      params: {
+        unitId: unit.id,
+        meta: { 
+          z: z, 
+          jumpProgress: progress
+        }
+      }
+    });
 
     // If doing a midair flip, add rotation
     if (unit.meta.isFlipping) {
@@ -73,16 +97,7 @@ export class Jumping extends Rule {
     }
 
     if (progress >= jumpDuration) {
-      if (jumpTarget) {
-        this.commands.push({
-          type: "move",
-          params: {
-            unitId: unit.id,
-            x: jumpTarget.x,
-            y: jumpTarget.y,
-          },
-        });
-      }
+      // Position already updated smoothly during jump, no final move needed
 
       if (unit.meta.jumpBuffered) {
         const timeSinceBuffer =
@@ -196,29 +211,8 @@ export class Jumping extends Rule {
         },
       });
     } else {
-      this.commands.push({
-        type: "move",
-        params: {
-          unitId: unit.id,
-          x: Math.round(newX),
-          y: Math.round(newY),
-        },
-      });
-
-      this.commands.push({
-        type: "meta",
-        params: {
-          unitId: unit.id,
-          meta: {
-            ...unit.meta,
-            jumpProgress: progress,
-            z: z,
-
-            smoothX: newX,
-            smoothY: newY,
-          },
-        },
-      });
+      // This else block shouldn't be here - it's for non-jumping units in a jumping rule
+      // Remove it entirely
     }
   }
 }

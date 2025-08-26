@@ -25,7 +25,7 @@ export class InventoryView {
   }
 
   render(): void {
-    // Clear with black background for monochrome theme
+    // Clear with black background
     this.ctx.fillStyle = "#000000";
     this.ctx.fillRect(0, 0, this.width, this.height);
     
@@ -48,19 +48,19 @@ export class InventoryView {
       x: 5,
       y: 5,
       width: 310,
-      height: 190,
+      height: 25,
       style: "double",
       children: [
-        { type: "text", x: 155, y: 15, text: "HERO RIG", align: "center", scale: 2 }
+        { type: "text", x: 155, y: 8, text: "HERO INVENTORY", align: "center", scale: 1.5 }
       ]
     });
     
-    // Always show the slot grid
+    // Always show the slot grid - 4 columns x 2 rows
     const parts = ['head', 'torso', 'larm', 'rarm', 'lleg', 'rleg', 'sword'];
     const x = 15;  
     const y = 35; 
-    const boxSize = 30;
-    const padding = 5;
+    const boxSize = 35;  // Slightly larger
+    const padding = 8;   // More spacing
     
     // Get or create rig data
     let rig = hero.meta?.rig || [
@@ -73,10 +73,10 @@ export class InventoryView {
       { name: "sword", sprite: hero.meta?.weapon === "axe" ? "hero-axe" : "hero-sword", frame: 0, offset: { x: 4, y: -2 } }
     ];
     
-    // Create slots for rig parts
+    // Create slots for rig parts - 4 columns, 2 rows
     parts.forEach((partName, index) => {
-      const row = Math.floor(index / 3);
-      const col = index % 3;
+      const row = Math.floor(index / 4);  // 4 columns now
+      const col = index % 4;
       const px = x + col * (boxSize + padding);
       const py = y + row * (boxSize + padding);
       
@@ -103,21 +103,21 @@ export class InventoryView {
       elements.push(slotElement);
     });
 
-    // Stats panel
-    const statsY = 120;
+    // Stats panel - position below the 2 rows of slots
+    const statsY = y + (2 * (boxSize + padding)) + 10;  // After 2 rows
     elements.push({
       type: "frame",
       x: 15,
       y: statsY,
       width: 140,
-      height: 65,
+      height: 55,
       style: "single",
       children: [
-        { type: "text", x: 5, y: 8, text: `HP: ${hero.hp}/${hero.maxHp}`, scale: 1 },
-        { type: "text", x: 5, y: 18, text: `STATE: ${hero.state || 'idle'}`, scale: 1 },
-        { type: "text", x: 5, y: 28, text: `FACING: ${hero.meta?.facing || 'unknown'}`, scale: 1 },
-        { type: "text", x: 5, y: 38, text: `POS: ${hero.pos.x.toFixed(1)},${hero.pos.y.toFixed(1)}`, scale: 1 },
-        { type: "text", x: 5, y: 48, text: hero.intendedMove ? `MOVE: ${hero.intendedMove.x},${hero.intendedMove.y}` : "MOVE: none", scale: 1 }
+        { type: "text", x: 5, y: 6, text: `HP: ${hero.hp}/${hero.maxHp}`, scale: 0.9 },
+        { type: "text", x: 5, y: 14, text: `STATE: ${hero.state || 'idle'}`, scale: 0.9 },
+        { type: "text", x: 5, y: 22, text: `FACING: ${hero.meta?.facing || 'unknown'}`, scale: 0.9 },
+        { type: "text", x: 5, y: 30, text: `POS: ${hero.pos.x.toFixed(1)},${hero.pos.y.toFixed(1)}`, scale: 0.9 },
+        { type: "text", x: 5, y: 38, text: hero.intendedMove ? `MOVE: ${hero.intendedMove.x},${hero.intendedMove.y}` : "MOVE: none", scale: 0.9 }
       ]
     });
     
@@ -128,11 +128,11 @@ export class InventoryView {
       x: 165,
       y: statsY,
       width: 140,
-      height: 65,
+      height: 55,
       style: "single",
       children: [
-        { type: "text", x: 5, y: 8, text: "HP HISTORY", scale: 1 },
-        { type: "graph", x: 10, y: 20, width: 120, height: 35, data: hpHistory, min: 0, max: hero.maxHp }
+        { type: "text", x: 5, y: 6, text: "HP HISTORY", scale: 0.9 },
+        { type: "graph", x: 10, y: 18, width: 120, height: 30, data: hpHistory, min: 0, max: hero.maxHp }
       ]
     });
     
@@ -154,17 +154,8 @@ export class InventoryView {
       const partSprite = spriteName ? this.sprites.get(spriteName) : null;
       
       if (!partSprite || !partSprite.complete) {
-        // Fallback - draw colored box
-        const colors: Record<string, string> = {
-          head: "#FFB6C1",
-          torso: "#87CEEB", 
-          larm: "#98FB98",
-          rarm: "#98FB98",
-          lleg: "#DDA0DD",
-          rleg: "#DDA0DD",
-          sword: "#FFD700"
-        };
-        this.ctx.fillStyle = colors[partName] || "#666";
+        // Fallback - draw white box
+        this.ctx.fillStyle = "#FFFFFF";
         const x = centerX + (baseX + (part.offset?.x || 0)) * scale;
         const y = centerY + (baseY + (part.offset?.y || 0)) * scale;
         this.ctx.fillRect(x - 8, y - 8, 16, 16);
@@ -209,7 +200,7 @@ export class InventoryView {
     drawPart('head', 0, -8);
     drawPart('sword', 4, -2);
     
-    // Label
+    // Label - pure white
     if (this.fontAtlas.fontsReady) {
       this.fontAtlas.drawTinyText("Assembled", centerX - 20, centerY + 40, "#FFFFFF", 2);
     }

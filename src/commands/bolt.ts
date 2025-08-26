@@ -21,6 +21,17 @@ export class BoltCommand extends Command {
 
     const pixelX = strikePos.x * 8 + 4;
     const pixelY = strikePos.y * 8 + 4;
+    
+    // Create a tall lightning bolt sprite effect
+    this.sim.queuedEvents.push({
+      kind: "lightning_strike",
+      source: unitId || "lightning",
+      target: strikePos,
+      meta: {
+        tick: this.sim.ticks,
+        duration: 10,
+      },
+    });
 
     for (let i = 0; i < 8; i++) {
       this.sim.queuedCommands.push({
@@ -30,7 +41,7 @@ export class BoltCommand extends Command {
             pos: { x: pixelX + (Math.random() - 0.5) * 3, y: pixelY - i * 4 },
             vel: { x: 0, y: 0 },
             radius: 1 + Math.random() * 2,
-            color: i < 2 ? "#FFFFFF" : i < 4 ? "#CCCCFF" : "#8888FF",
+            color: "#FFFFFF",
             lifetime: 8 + Math.random() * 4,
             type: "lightning",
           },
@@ -81,15 +92,34 @@ export class BoltCommand extends Command {
       });
     }
 
+    // Deal damage to units at strike position
+    const unitsAtPos = this.sim.units.filter(
+      (u) =>
+        Math.abs(u.pos.x - strikePos.x) <= 1 &&
+        Math.abs(u.pos.y - strikePos.y) <= 1 &&
+        u.hp > 0
+    );
+
+    for (const unit of unitsAtPos) {
+      this.sim.queuedCommands.push({
+        type: "damage",
+        params: {
+          targetId: unit.id,
+          amount: 25,
+          source: unitId || "lightning",
+        },
+      });
+    }
+
     this.sim.queuedEvents.push({
       kind: "aoe",
-      source: "lightning",
+      source: unitId || "lightning",
       target: strikePos,
       meta: {
         aspect: "emp",
         radius: 3,
         stunDuration: 20,
-        amount: 0,
+        amount: 25,
         mechanicalImmune: true,
       },
     });
