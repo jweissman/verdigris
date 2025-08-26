@@ -183,7 +183,9 @@ describe("Bolt Command", () => {
     const stunDuration = enemyStunned?.meta?.stunDuration || 0;
     expect(stunDuration).toBeGreaterThan(0);
     
-    // Step through full stun duration plus one more to ensure it clears
+    // Step through stun duration (duration decrements each step)  
+    // When it hits 0, a clear command is queued
+    // That command is processed on the NEXT step
     for (let i = 0; i <= stunDuration; i++) {
       sim.step();
     }

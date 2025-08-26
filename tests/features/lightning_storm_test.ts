@@ -58,10 +58,11 @@ describe('Lightning Storm Environmental System', () => {
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     if (lightningRule) {
       const context = sim.getTickContext();
+      // Clear commands and generate a lightning strike
+      (lightningRule as any).commands = [];
       lightningRule.generateLightningStrike(context, { x: 6, y: 5 });
-      // The generateLightningStrike adds commands to the context
-      // We need to process those commands
-      const commands = lightningRule.execute(context);
+      // Get the generated commands
+      const commands = (lightningRule as any).commands;
       commands.forEach(cmd => sim.queuedCommands.push(cmd));
     }
     sim.step(); // Process the queued commands

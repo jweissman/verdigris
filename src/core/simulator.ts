@@ -585,8 +585,10 @@ class Simulator {
 
       const commands = rule.execute(context);
       if (commands && commands.length > 0) {
+        // if (ruleName === "StatusEffects") console.log(`${ruleName} returned ${commands.length} commands`);
         for (let i = 0; i < commands.length; i++) {
           this.queuedCommands.push(commands[i]);
+          // if (ruleName === "StatusEffects") console.log(`  Pushed command: ${commands[i].type}`);
         }
       }
     }
@@ -1348,6 +1350,15 @@ class Simulator {
       const id = arrays.unitIds[i];
       const data = coldData.get(id);
       if (data?.meta?.statusEffects && data.meta.statusEffects.length > 0)
+        return true;
+      // Also check for old-style stun system
+      if (data?.meta?.stunned || data?.meta?.stunDuration !== undefined)
+        return true;
+      // Check for chill
+      if (data?.meta?.chilled || data?.meta?.chillIntensity !== undefined)
+        return true;
+      // Check for chill triggers  
+      if (data?.meta?.chillTrigger)
         return true;
     }
     return false;
