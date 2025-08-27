@@ -15,7 +15,6 @@ export class ProjectileMotion extends Rule {
   private bombs: number[] = [];
   private grapples: number[] = [];
   private toRemove: number[] = [];
-
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
     
@@ -39,19 +38,31 @@ export class ProjectileMotion extends Rule {
     const activeUnits = unitArrays.activeIndices;
     const unitCount = activeUnits.length;
     
-    // Build list of active projectile indices more efficiently
-    this.activeProjectileIndices.length = 0;
-    
-    // Only check active projectiles by tracking activeCount
-    let foundActive = 0;
-    for (let pIdx = 0; pIdx < projectileArrays.capacity && foundActive < projectileArrays.activeCount; pIdx++) {
-      if (projectileArrays.active[pIdx] === 0) continue;
-      foundActive++;
-      this.activeProjectileIndices.push(pIdx);
-      const projType = projectileArrays.type[pIdx];
-      if (projType === 0) this.bullets.push(pIdx);
-      else if (projType === 1) this.bombs.push(pIdx);
-      else if (projType === 2) this.grapples.push(pIdx);
+    // Efficiently categorize active projectiles
+    // ProjectileArrays should maintain an activeIndices list like UnitArrays
+    if (projectileArrays.activeIndices) {
+      for (const pIdx of projectileArrays.activeIndices) {
+        const projType = projectileArrays.type[pIdx];
+        switch (projType) {
+          case 0: this.bullets.push(pIdx); break;
+          case 1: this.bombs.push(pIdx); break;
+          case 2: this.grapples.push(pIdx); break;
+        }
+      }
+    } else {
+      // Fallback if activeIndices not available
+      let found = 0;
+      const target = projectileArrays.activeCount;
+      for (let pIdx = 0; pIdx < projectileArrays.capacity && found < target; pIdx++) {
+        if (projectileArrays.active[pIdx] === 0) continue;
+        found++;
+        const projType = projectileArrays.type[pIdx];
+        switch (projType) {
+          case 0: this.bullets.push(pIdx); break;
+          case 1: this.bombs.push(pIdx); break;
+          case 2: this.grapples.push(pIdx); break;
+        }
+      }
     }
     
     // Process bombs first (they explode and don't need collision checks)
@@ -71,10 +82,8 @@ export class ProjectileMotion extends Rule {
       return this.commands;
     }
     
-    // Process projectiles
-    const collisionProjectiles = this.bullets.length + this.grapples.length;
-    for (let p = 0; p < collisionProjectiles; p++) {
-      const pIdx = p < this.bullets.length ? this.bullets[p] : this.grapples[p - this.bullets.length];
+    // Process bullets and grapples without creating new array
+    const processBulletOrGrapple = (pIdx: number) => {
       const projX = projectileArrays.posX[pIdx];
       const projY = projectileArrays.posY[pIdx];
       const radius = projectileArrays.radius[pIdx];
@@ -82,37 +91,39 @@ export class ProjectileMotion extends Rule {
       const projTeam = projectileArrays.team[pIdx];
       const projType = projectileArrays.type[pIdx];
       
-      // Simple early exit optimization - check bounds
-      const minX = projX - radius;
-      const maxX = projX + radius;
-      const minY = projY - radius;
-      const maxY = projY + radius;
+      // Check collision with units - limit checks for performance
+      let checksPerformed = 0;
+      const maxChecks = 50; // Limit checks per projectile
       
-      // Check collisions with active units
       for (const unitIdx of activeUnits) {
-        // Quick bounds check first
-        const unitX = unitArrays.posX[unitIdx];
-        if (unitX < minX || unitX > maxX) continue;
-        const unitY = unitArrays.posY[unitIdx];
-        if (unitY < minY || unitY > maxY) continue;
+        if (checksPerformed++ > maxChecks) break;
         
-        // Team and health checks
+        // Team check first (cheapest)
         if (projType !== 2 && unitArrays.team[unitIdx] === projTeam) continue;
+        
+        // Health check
         if (unitArrays.hp[unitIdx] <= 0) continue;
         
-        // Precise distance check
-        const dx = unitX - projX;
-        const dy = unitY - projY;
+        // Bounding box check (cheaper than distance)
+        const unitX = unitArrays.posX[unitIdx];
+        const dx = Math.abs(unitX - projX);
+        if (dx > radius) continue;
+        
+        const unitY = unitArrays.posY[unitIdx];
+        const dy = Math.abs(unitY - projY);
+        if (dy > radius) continue;
+        
+        // Precise distance check only if within bounding box
         const distSq = dx * dx + dy * dy;
         if (distSq >= radiusSq) continue;
         
         // Hit detected
         if (projType === 2) { // grapple
           this.commands.push({
-            type: "grappleState",
+            type: "grapple",
             params: {
+              operation: "hit",
               unitId: unitArrays.unitIds[unitIdx],
-              hit: true,
               grapplerID: projectileArrays.sourceIds[pIdx] || "unknown",
               origin: { x: projX, y: projY },
             },
@@ -130,8 +141,18 @@ export class ProjectileMotion extends Rule {
         }
         
         this.toRemove.push(pIdx);
-        break; // Only hit one unit per projectile
+        return; // Exit early when hit detected
       }
+    };
+    
+    // Process bullets
+    for (const pIdx of this.bullets) {
+      processBulletOrGrapple(pIdx);
+    }
+    
+    // Process grapples
+    for (const pIdx of this.grapples) {
+      processBulletOrGrapple(pIdx);
     }
     
     // Remove hit projectiles

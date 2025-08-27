@@ -64,6 +64,7 @@ export interface TickContext {
   getUnitIndicesWithAbilities(): number[];
   getUnitProxyByIndex?(index: number): Unit | undefined;
   getPairwiseBatcher(): PairwiseBatcher;
+  getUnitIndicesNearPoint(x: number, y: number, radius: number): number[];
 }
 
 /**
@@ -386,5 +387,26 @@ export class TickContextImpl implements TickContext {
 
   getUnitProxyByIndex(index: number): Unit | undefined {
     return (this.sim as any).proxyManager?.getProxy(index);
+  }
+
+  getUnitIndicesNearPoint(x: number, y: number, radius: number): number[] {
+    // Use GridPartition for efficient spatial lookup
+    if (this.sim.gridPartition) {
+      const nearbyUnits = this.sim.gridPartition.getNearby(x, y, radius);
+      const indices: number[] = [];
+      
+      // Convert units to indices
+      for (const unit of nearbyUnits) {
+        const idx = this.getUnitIndex(unit.id);
+        if (idx !== undefined) {
+          indices.push(idx);
+        }
+      }
+      
+      return indices;
+    }
+    
+    // Fallback to brute force if no grid
+    return this.findUnitIndicesInRadius({ x, y }, radius);
   }
 }

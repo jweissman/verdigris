@@ -18,18 +18,34 @@ export class Airdrop extends Command {
     this.transform = transform;
   }
   execute(unitId: string | null, params: CommandParams): void {
-    const unitType = params.unitType as string;
+    // Default to dropping a crate if no unit type specified
+    const unitType = (params.unitType as string) || "crate";
     const x = params.x as number | undefined;
     const y = params.y as number | undefined;
 
     let dropX: number, dropY: number;
 
-    if (x !== undefined && y !== undefined) {
+    // If called by hero without position, drop near hero
+    if (x === undefined || y === undefined) {
+      if (unitId) {
+        const hero = this.sim.units.find(u => u.id === unitId);
+        if (hero) {
+          // Drop 2-3 tiles away from hero in a random direction
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 2 + Math.random();
+          dropX = hero.pos.x + Math.cos(angle) * distance;
+          dropY = hero.pos.y + Math.sin(angle) * distance;
+        } else {
+          dropX = Math.floor(this.sim.fieldWidth / 2);
+          dropY = Math.floor(this.sim.fieldHeight / 2);
+        }
+      } else {
+        dropX = Math.floor(this.sim.fieldWidth / 2);
+        dropY = Math.floor(this.sim.fieldHeight / 2);
+      }
+    } else {
       dropX = x;
       dropY = y;
-    } else {
-      dropX = Math.floor(this.sim.fieldWidth / 2);
-      dropY = Math.floor(this.sim.fieldHeight / 2);
     }
 
     dropX = Math.max(0, Math.min(this.sim.fieldWidth - 1, dropX));

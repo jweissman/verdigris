@@ -811,8 +811,8 @@ class Simulator {
       "heal",
       "thunder_ring",
       "explosion",
-      "heal_particle",
-      "freeze_impact",
+      "fire",
+      "bubble",
       "pain",
     ];
     return types[typeId] || undefined;

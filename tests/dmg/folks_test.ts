@@ -11,7 +11,7 @@ describe('Folks Module', () => {
   it('should load folk units from folks.json', () => {
     const folks = Folks.all;
     
-    expect(folks.size).toBe(26); // We have 26 folks now
+    expect(folks.size).toBe(30); // We have 30 folks now (including 4 new mages)
     expect(folks.has('farmer')).toBe(true);
     expect(folks.has('soldier')).toBe(true);
     expect(folks.has('priest')).toBe(true);

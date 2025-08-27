@@ -48,7 +48,8 @@ import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
 import { HumidityCommand } from "../commands/humidity";
 import { MovesCommand } from "../commands/moves";
-import { GrappleState } from "../commands/grapple_state";
+import { FireCommand } from "../commands/fire";
+import { BgCommand } from "../commands/bg";
 import { EffectsCommand } from "../commands/effects";
 import { AbilityEffectsCommand } from "../commands/ability_effects";
 import { MoveTargetCommand } from "../commands/move_target";
@@ -83,6 +84,8 @@ export class CommandHandler {
     this.commands.set("pin", new Pin(sim, this.transform));
     this.commands.set("temperature", new Temperature(sim, this.transform));
     this.commands.set("temp", new Temperature(sim, this.transform)); // Alias
+    this.commands.set("fire", new FireCommand(sim));
+    this.commands.set("bg", new BgCommand(sim));
     this.commands.set("wander", new Wander(sim, this.transform));
 
     this.commands.set("damage", new Damage(sim, this.transform));
@@ -113,7 +116,6 @@ export class CommandHandler {
     this.commands.set("markDead", new Kill(sim));
     this.commands.set("halt", new HaltCommand(sim, this.transform));
     this.commands.set("meta", new MetaCommand(sim, this.transform));
-    this.commands.set("grappleState", new GrappleState(sim, this.transform));
     this.commands.set("pull", new PullCommand(sim, this.transform));
     this.commands.set("burrow", new BurrowCommand(sim, this.transform));
     this.commands.set("charm", new CharmCommand(sim, this.transform));

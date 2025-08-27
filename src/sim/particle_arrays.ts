@@ -164,6 +164,8 @@ export class ParticleArrays {
       heal: 21,
       thunder_ring: 22,
       explosion: 23,
+      fire: 24,
+      bubble: 25,
       heal_particle: 24,
       freeze_impact: 25,
       pain: 26,

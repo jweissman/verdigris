@@ -466,6 +466,20 @@ export class BiomeEffects extends Rule {
             },
           },
         });
+      } else if (temp > 100) {
+        // Apply heat damage if temperature is very high
+        const heatDamage = Math.floor((temp - 100) / 50); // 1 damage per 50 degrees above 100
+        if (heatDamage > 0 && context.getCurrentTick() % 10 === 0) { // Apply damage every 10 ticks
+          this.commands.push({
+            type: "damage",
+            params: {
+              targetId: unit.id,
+              amount: heatDamage,
+              source: "heat",
+              aspect: "fire",
+            },
+          });
+        }
       }
     });
   }

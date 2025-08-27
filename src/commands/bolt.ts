@@ -110,20 +110,28 @@ export class BoltCommand extends Command {
     }
 
     // Deal damage to units at strike position (but not the caster)
+    // Lightning strike has a 2-tile damage radius
+    const damageRadius = 2;
     const unitsAtPos = this.sim.units.filter(
       (u) =>
         u.id !== unitId && // Don't damage the caster
-        Math.abs(u.pos.x - strikePos.x) <= 1 &&
-        Math.abs(u.pos.y - strikePos.y) <= 1 &&
+        Math.abs(u.pos.x - strikePos.x) <= damageRadius &&
+        Math.abs(u.pos.y - strikePos.y) <= damageRadius &&
         u.hp > 0
     );
 
     for (const unit of unitsAtPos) {
+      // Damage falls off with distance
+      const dx = Math.abs(unit.pos.x - strikePos.x);
+      const dy = Math.abs(unit.pos.y - strikePos.y);
+      const dist = Math.max(dx, dy);
+      const damage = dist === 0 ? 50 : dist === 1 ? 30 : 20;
+      
       this.sim.queuedCommands.push({
         type: "damage",
         params: {
           targetId: unit.id,
-          amount: 25,
+          amount: damage,
           source: unitId || "lightning",
         },
       });

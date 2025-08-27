@@ -29,7 +29,16 @@ export class ForcesCommand extends Command {
     const moveX = arrays.intendedMoveX;
     const moveY = arrays.intendedMoveY;
 
+    // Apply movement, but skip frozen or stunned units
     for (let i = 0; i < capacity; i++) {
+      // Check if unit is frozen or stunned in cold data
+      const unitId = arrays.unitIds[i];
+      const coldData = this.sim.unitColdData.get(unitId);
+      if (coldData?.meta?.frozen || coldData?.meta?.stunned) {
+        // Don't apply movement for frozen/stunned units
+        continue;
+      }
+      
       posX[i] += moveX[i];
       posY[i] += moveY[i];
     }

@@ -12,6 +12,11 @@ export class MoveCommand extends Command {
     if (!unit) return;
 
     if (params.x !== undefined && params.y !== undefined) {
+      // Don't move if frozen or stunned
+      if (unit.meta.frozen || unit.meta.stunned) {
+        return;
+      }
+      
       const newX = params.x as number;
       const newY = params.y as number;
       const dx = newX - unit.pos.x;
@@ -40,7 +45,7 @@ export class MoveCommand extends Command {
         effectiveDy *= slowFactor;
       }
 
-      if (unit.meta.stunned) {
+      if (unit.meta.stunned || unit.meta.frozen) {
         effectiveDx = 0;
         effectiveDy = 0;
       }

@@ -606,5 +606,77 @@
       "forestAdapted": true,
       "beastAffinity": true
     }
+  },
+  "philosopher": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "philosopher",
+    "state": "idle",
+    "hp": 40,
+    "maxHp": 40,
+    "dmg": 12,
+    "mass": 1,
+    "abilities": ["bolt"],
+    "tags": ["mage", "coastal", "lightning"],
+    "meta": {
+      "description": "Master of lightning and storms"
+    }
+  },
+  "rhetorician": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "rhetorician",
+    "state": "idle",
+    "hp": 35,
+    "maxHp": 35,
+    "dmg": 10,
+    "mass": 1,
+    "abilities": ["fire"],
+    "tags": ["mage", "coastal", "fire"],
+    "meta": {
+      "description": "Orator who wields flames"
+    }
+  },
+  "logician": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "logician",
+    "state": "idle",
+    "hp": 45,
+    "maxHp": 45,
+    "dmg": 8,
+    "mass": 1,
+    "abilities": ["freeze"],
+    "tags": ["mage", "coastal", "ice"],
+    "meta": {
+      "description": "Cold logic and ice magic"
+    }
+  },
+  "geometer": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "geometer",
+    "state": "idle",
+    "hp": 50,
+    "maxHp": 50,
+    "dmg": 6,
+    "mass": 1,
+    "abilities": ["drop_rock"],
+    "tags": ["mage", "coastal", "earth"],
+    "meta": {
+      "description": "Shapes earth and stone"
+    }
   }
 }

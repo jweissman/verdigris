@@ -5,6 +5,7 @@
 export class ProjectileArrays {
   public readonly capacity: number;
   public activeCount: number = 0;
+  public activeIndices: number[] = []; // Track active projectile indices
   
   // Core projectile data
   public readonly projectileIds: string[];
@@ -134,6 +135,7 @@ export class ProjectileArrays {
     this.aspect[index] = projectile.aspect || "physical";
     
     this.activeCount++;
+    this.activeIndices.push(index);
     return index;
   }
   
@@ -149,6 +151,12 @@ export class ProjectileArrays {
     this.aspect[index] = "physical";
     this.freeIndices.push(index);
     this.activeCount--;
+    
+    // Remove from activeIndices
+    const activeIdx = this.activeIndices.indexOf(index);
+    if (activeIdx !== -1) {
+      this.activeIndices.splice(activeIdx, 1);
+    }
   }
   
   /**
@@ -256,6 +264,7 @@ export class ProjectileArrays {
   clear(): void {
     this.active.fill(0);
     this.activeCount = 0;
+    this.activeIndices = [];
     this.freeIndices = [];
     for (let i = this.capacity - 1; i >= 0; i--) {
       this.freeIndices.push(i);

@@ -4,7 +4,7 @@ import type { TickContext } from "../core/tick_context";
 import type { QueuedCommand } from "../core/command_handler";
 
 export interface StatusEffect {
-  type: "chill" | "stun" | "burn" | "poison";
+  type: "chill" | "stun" | "burn" | "poison" | "freeze";
   duration: number;
   intensity: number;
   source?: string;
@@ -24,6 +24,42 @@ export class StatusEffects extends Rule {
     for (const unit of context.getAllUnits()) {
       if (unit.meta.chillTrigger) {
         this.applyChillFromTrigger(context, unit);
+      }
+
+      // Handle frozen status countdown
+      if (unit.meta.frozen && unit.meta.frozenDuration !== undefined && unit.meta.frozenDuration > 0) {
+        const newDuration = unit.meta.frozenDuration - 1;
+        if (newDuration <= 0) {
+          this.commands.push({
+            type: "meta",
+            params: {
+              unitId: unit.id,
+              meta: {
+                frozen: undefined,
+                frozenDuration: undefined,
+                stunned: undefined,
+              }
+            }
+          });
+        } else {
+          this.commands.push({
+            type: "meta",
+            params: {
+              unitId: unit.id,
+              meta: {
+                frozenDuration: newDuration,
+              }
+            }
+          });
+        }
+        
+        // Prevent movement when frozen
+        if (unit.intendedMove) {
+          this.commands.push({
+            type: "halt",
+            params: { unitId: unit.id }
+          });
+        }
       }
 
       // Handle old-style stunDuration countdown
