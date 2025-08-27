@@ -121,13 +121,7 @@ describe('Grappling Mechanics - Core Physics', () => {
       ...Encyclopaedia.unit('grappler'),
       id: 'grappler-1',
       pos: { x: 5, y: 5 },
-      abilities: {
-        grapplingHook: {
-          ...Encyclopaedia.abilities.grapplingHook,
-          config: { range: 10, maxGrapples: 2 },
-          cooldown: 1 // Very short cooldown for testing
-        }
-      },
+      abilities: ['grapplingHook'], // Abilities should be an array
       lastAbilityTick: {}
     };
     
@@ -145,9 +139,10 @@ describe('Grappling Mechanics - Core Physics', () => {
     }
     
 
-    for (let i = 0; i < 10; i++) {
-
-      (grappler.lastAbilityTick as any).grapplingHook = -100;
+    // Force the grappler to fire at multiple targets
+    const targets = sim.units.filter(u => u.id.startsWith('target-'));
+    for (let i = 0; i < Math.min(3, targets.length); i++) {
+      sim.forceAbility('grappler-1', 'grapplingHook', targets[i]);
       sim.step();
     }
     

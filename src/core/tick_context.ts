@@ -4,6 +4,7 @@ import type { Projectile } from "../types/Projectile";
 import type { Particle } from "../types/Particle";
 import type { Simulator } from "./simulator";
 import type { ProjectileArrays } from "../sim/projectile_arrays";
+import type { PairwiseBatcher } from "./pairwise_batcher";
 
 /**
  * TickContext - Clean API boundary for rules
@@ -62,6 +63,7 @@ export interface TickContext {
   getActiveUnitIndices(): number[];
   getUnitIndicesWithAbilities(): number[];
   getUnitProxyByIndex?(index: number): Unit | undefined;
+  getPairwiseBatcher(): PairwiseBatcher;
 }
 
 /**
@@ -241,6 +243,10 @@ export class TickContextImpl implements TickContext {
 
   getQueuedEvents(): readonly any[] {
     return this.sim.queuedEvents || [];
+  }
+
+  getPairwiseBatcher(): PairwiseBatcher {
+    return (this.sim as any).pairwiseBatcher;
   }
 
   getUnitIndex(unitId: string): number | undefined {

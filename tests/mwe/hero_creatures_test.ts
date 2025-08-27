@@ -43,7 +43,7 @@ describe("Hero MWE Creatures", () => {
   it("should make wolves hunt", () => {
     const sim = new Simulator();
     
-    // Add hero
+    // Add hero (controlled so it doesn't auto-attack)
     sim.addUnit({
       id: "hero",
       pos: { x: 10, y: 10 },
@@ -52,6 +52,7 @@ describe("Hero MWE Creatures", () => {
       maxHp: 100,
       sprite: "hero",
       tags: ["hero"],
+      meta: { controlled: true }, // Prevent auto-attacks
     });
     
     // Add wolf exactly as hero MWE does

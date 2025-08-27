@@ -1,51 +1,33 @@
 import { describe, it, expect } from 'bun:test';
 import { Simulator } from '../../../src/core/simulator';
 import Encyclopaedia from '../../../src/dmg/encyclopaedia';
-import { HugeUnits } from '../../../src/rules/huge_units';
-import { Knockback } from '../../../src/rules/knockback';
 
 describe('Megasquirrel Spacing', () => {
   it('should push other units away from phantom feet cells', () => {
     const sim = new Simulator(20, 20);
-
-    
-
     const mega = {
       ...Encyclopaedia.unit('megasquirrel'),
       id: 'mega1',
       pos: { x: 10, y: 5 }
     };
-
     mega.tags = mega.tags.filter(t => t !== 'hunt');
     mega.posture = 'wait'; // Explicitly set wait posture
     mega.intendedMove = { x: 0, y: 0 }; // Explicitly set no movement
     sim.addUnit(mega);
-    
-
     const wormUnit = {
       ...Encyclopaedia.unit('worm'),
       id: 'worm1', 
       pos: { x: 11, y: 5 } // Right next to megasquirrel head
     };
-
     wormUnit.tags = wormUnit.tags.filter(t => t !== 'hunt' && t !== 'swarm');
     wormUnit.posture = 'wait';
     wormUnit.intendedMove = { x: 0, y: 0 };
     sim.addUnit(wormUnit);
-    
-    const originalWormPos = { ...sim.creatureById('worm1').pos };
-    
-
     sim.step();
-    
     const worm = sim.creatureById('worm1');
     const megaAfter = sim.creatureById('mega1');
-    
-
     const distance = Math.abs(worm.pos.x - megaAfter.pos.x) + Math.abs(worm.pos.y - megaAfter.pos.y);
     expect(distance).toBeGreaterThan(1); // Should be pushed away from direct adjacency
-    
-
     expect(megaAfter.pos.x).toBe(10);
     expect(megaAfter.pos.y).toBe(5);
   });

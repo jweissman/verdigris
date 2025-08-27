@@ -1,4 +1,5 @@
 import { MeleeCombat } from "../rules/melee_combat";
+import { PairwiseBatcherRule } from "../rules/pairwise_batcher_rule";
 import { Knockback } from "../rules/knockback";
 import { ProjectileMotion } from "../rules/projectile_motion";
 import { UnitMovement } from "../rules/unit_movement";
@@ -428,13 +429,14 @@ class Simulator {
     const coreRules = [new UnitBehavior(), new UnitMovement(), new Cleanup()];
 
     const combatRules = [
-      new MeleeCombat(), // Handles melee combat directly
-      new RangedCombat(), // Handles ranged combat directly
+      new MeleeCombat(), // Registers intents with batcher
+      new Knockback(), // Registers intents with batcher  
+      new RangedCombat(), // Registers intents with batcher
       new Abilities(), // Handles all other abilities
-      new Knockback(),
       new StatusEffects(),
       new Perdurance(),
       new ChargeAccumulator(), // Handles charge accumulation for charging attacks
+      new PairwiseBatcherRule(), // Processes all pairwise intents at the end
     ];
 
     const specialRules = [
@@ -648,6 +650,12 @@ class Simulator {
     const context = new TickContextImpl(this);
     context.clearCache(); // Clear any cached data from previous tick
 
+    // Clear pairwise intents
+    if (this.pairwiseBatcher) {
+      this.pairwiseBatcher.intents = [];
+    }
+
+    // Execute all rules - they will register pairwise intents
     for (const rule of this.rulebook) {
       const ruleName = rule.constructor.name;
 
@@ -662,12 +670,6 @@ class Simulator {
     }
 
     this.commandProcessor.execute(context);
-
-    if (this.pairwiseBatcher) {
-      this.pairwiseBatcher.process(this.units as Unit[], this);
-
-      this.targetCache = this.pairwiseBatcher.targetCache;
-    }
 
     this.updateChangedUnits();
 

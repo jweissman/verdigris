@@ -6,24 +6,27 @@ export interface PairwiseIntent {
   ruleId: string;
   maxDistance?: number; // If specified, only consider pairs within this distance
   filter?: (a: Unit, b: Unit) => boolean;
-  callback: (a: Unit, b: Unit) => void;
+  callback: (a: Unit, b: Unit) => any[]; // Returns commands
 }
 
 export class PairwiseBatcher {
-  private intents: PairwiseIntent[] = [];
+  public intents: PairwiseIntent[] = [];
   public targetCache: TargetCache = new TargetCache();
   private spatialAdjacency?: SpatialAdjacency;
 
+  private collectedCommands: any[] = [];
+  
   register(
     ruleId: string,
-    callback: (a: Unit, b: Unit) => void,
+    callback: (a: Unit, b: Unit) => any[],
     maxDistance?: number,
     filter?: (a: Unit, b: Unit) => boolean,
   ): void {
     this.intents.push({ ruleId, callback, maxDistance, filter });
   }
 
-  process(units: Unit[], sim?: any): void {
+  process(units: Unit[], sim?: any): any[] {
+    this.collectedCommands = [];
     const arrays = sim?.unitArrays;
 
     if (arrays && sim) {
@@ -31,6 +34,8 @@ export class PairwiseBatcher {
     } else {
       this.processLegacy(units);
     }
+    
+    return this.collectedCommands;
   }
 
   private processVectorized(arrays: any, sim: any): void {
@@ -75,8 +80,15 @@ export class PairwiseBatcher {
 
           if (intent.filter && !intent.filter(proxyA, proxyB)) continue;
 
-          intent.callback(proxyA, proxyB);
-          intent.callback(proxyB, proxyA);
+          // Call callback for both directions to match legacy behavior
+          const commandsAB = intent.callback(proxyA, proxyB);
+          if (commandsAB && commandsAB.length > 0) {
+            this.collectedCommands.push(...commandsAB);
+          }
+          const commandsBA = intent.callback(proxyB, proxyA);
+          if (commandsBA && commandsBA.length > 0) {
+            this.collectedCommands.push(...commandsBA);
+          }
         }
       }
     }

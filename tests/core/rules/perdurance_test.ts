@@ -118,7 +118,7 @@ describe("Perdurance System", () => {
     sim.addUnit(demon);
     
     const soldier = Encyclopaedia.unit('soldier');
-    soldier.pos = { x: 6, y: 5 };
+    soldier.pos = { x: 8, y: 8 }; // Far from demon to avoid melee combat
     sim.addUnit(soldier);
     
     const initialHp = demon.hp;
