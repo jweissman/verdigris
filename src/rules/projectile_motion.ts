@@ -66,7 +66,22 @@ export class ProjectileMotion extends Rule {
     }
     
     // Process bullets and grapples with collision detection
-    // Combine bullets and grapples to avoid array allocation
+    // Skip if no valid targets
+    if (unitCount === 0) {
+      return this.commands;
+    }
+    
+    // Pre-filter units by team for bullets (most common projectile type)
+    const friendlyUnits: number[] = [];
+    const hostileUnits: number[] = [];
+    for (let i = 0; i < unitCount; i++) {
+      const unitIdx = activeUnits[i];
+      if (unitArrays.hp[unitIdx] <= 0) continue;
+      if (unitArrays.team[unitIdx] === 1) friendlyUnits.push(unitIdx);
+      else if (unitArrays.team[unitIdx] === 2) hostileUnits.push(unitIdx);
+    }
+    
+    // Process projectiles
     const collisionProjectiles = this.bullets.length + this.grapples.length;
     for (let p = 0; p < collisionProjectiles; p++) {
       const pIdx = p < this.bullets.length ? this.bullets[p] : this.grapples[p - this.bullets.length];
@@ -83,15 +98,23 @@ export class ProjectileMotion extends Rule {
       const minY = projY - radius;
       const maxY = projY + radius;
       
-      // Check collisions with units - optimized inner loop
-      for (let i = 0; i < unitCount; i++) {
-        const unitIdx = activeUnits[i];
-        
-        // Skip dead units
-        if (unitArrays.hp[unitIdx] <= 0) continue;
-        
-        // Skip friendly fire (except grapples)
+      // Select target list based on projectile team
+      let targetUnits: number[];
+      if (projType === 2) { // Grapples can hit anyone
+        targetUnits = activeUnits;
+      } else if (projTeam === 1) { // Friendly projectile hits hostile
+        targetUnits = hostileUnits;
+      } else if (projTeam === 2) { // Hostile projectile hits friendly
+        targetUnits = friendlyUnits;
+      } else { // Neutral hits everyone except same team
+        targetUnits = activeUnits;
+      }
+      
+      // Check collisions with valid targets only
+      for (const unitIdx of targetUnits) {
+        // For non-grapples, skip same team
         if (projType !== 2 && unitArrays.team[unitIdx] === projTeam) continue;
+        if (unitArrays.hp[unitIdx] <= 0) continue;
         
         // Spatial bounds check first
         const unitX = unitArrays.posX[unitIdx];
