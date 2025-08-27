@@ -10,6 +10,7 @@ import type { ProjectileArrays } from "../sim/projectile_arrays";
 export class ProjectileMotion extends Rule {
   private commands: QueuedCommand[] = [];
   private frameCounter = 0;
+  private activeProjectileIndices: number[] = [];
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
@@ -26,37 +27,26 @@ export class ProjectileMotion extends Rule {
     
     const toRemove: number[] = [];
     
-    // Process only a subset of projectiles each frame when there are many
-    const maxChecksPerFrame = 20;
-    this.frameCounter++;
-    
     // Cache active unit positions for faster access
     const activeUnits = unitArrays.activeIndices;
     const unitCount = activeUnits.length;
     
-    // Separate arrays by type for better cache locality
+    // Build list of active projectile indices more efficiently
+    this.activeProjectileIndices.length = 0;
     const bullets: number[] = [];
     const bombs: number[] = [];
     const grapples: number[] = [];
     
-    for (let pIdx = 0; pIdx < projectileArrays.capacity; pIdx++) {
+    // Only check active projectiles by tracking activeCount
+    let foundActive = 0;
+    for (let pIdx = 0; pIdx < projectileArrays.capacity && foundActive < projectileArrays.activeCount; pIdx++) {
       if (projectileArrays.active[pIdx] === 0) continue;
+      foundActive++;
+      this.activeProjectileIndices.push(pIdx);
       const projType = projectileArrays.type[pIdx];
       if (projType === 0) bullets.push(pIdx);
       else if (projType === 1) bombs.push(pIdx);
       else if (projType === 2) grapples.push(pIdx);
-    }
-    
-    // If we have too many projectiles, only process a subset per frame
-    let bulletsToProcess = bullets;
-    if (bullets.length > maxChecksPerFrame) {
-      const startIdx = (this.frameCounter * maxChecksPerFrame) % bullets.length;
-      const endIdx = Math.min(startIdx + maxChecksPerFrame, bullets.length);
-      bulletsToProcess = bullets.slice(startIdx, endIdx);
-      // Also check wrapped around portion if needed
-      if (endIdx < startIdx + maxChecksPerFrame) {
-        bulletsToProcess.push(...bullets.slice(0, maxChecksPerFrame - (endIdx - startIdx)));
-      }
     }
     
     // Process bombs first (they explode and don't need collision checks)
@@ -71,13 +61,22 @@ export class ProjectileMotion extends Rule {
     }
     
     // Process bullets and grapples with collision detection
-    for (const pIdx of [...bulletsToProcess, ...grapples]) {
+    // Combine bullets and grapples to avoid array allocation
+    const collisionProjectiles = bullets.length + grapples.length;
+    for (let p = 0; p < collisionProjectiles; p++) {
+      const pIdx = p < bullets.length ? bullets[p] : grapples[p - bullets.length];
       const projX = projectileArrays.posX[pIdx];
       const projY = projectileArrays.posY[pIdx];
       const radius = projectileArrays.radius[pIdx];
       const radiusSq = radius * radius;
       const projTeam = projectileArrays.team[pIdx];
       const projType = projectileArrays.type[pIdx];
+      
+      // Early spatial bounds check to skip distant units
+      const minX = projX - radius;
+      const maxX = projX + radius;
+      const minY = projY - radius;
+      const maxY = projY + radius;
       
       // Check collisions with units - optimized inner loop
       for (let i = 0; i < unitCount; i++) {
@@ -89,13 +88,16 @@ export class ProjectileMotion extends Rule {
         // Skip friendly fire (except grapples)
         if (projType !== 2 && unitArrays.team[unitIdx] === projTeam) continue;
         
-        // Inline distance check for performance
-        const dx = unitArrays.posX[unitIdx] - projX;
-        if (dx > radius || dx < -radius) continue;
+        // Spatial bounds check first
+        const unitX = unitArrays.posX[unitIdx];
+        if (unitX < minX || unitX > maxX) continue;
         
-        const dy = unitArrays.posY[unitIdx] - projY;
-        if (dy > radius || dy < -radius) continue;
+        const unitY = unitArrays.posY[unitIdx];
+        if (unitY < minY || unitY > maxY) continue;
         
+        // Precise distance check
+        const dx = unitX - projX;
+        const dy = unitY - projY;
         const distSq = dx * dx + dy * dy;
         if (distSq >= radiusSq) continue;
         
