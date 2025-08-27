@@ -1,6 +1,6 @@
 import { Vec2 } from "./Vec2";
 
-export type UnitState = "idle" | "walk" | "attack" | "dead" | "charging";
+export type UnitState = "idle" | "walk" | "attack" | "dead";
 
 export type UnitPosture =
   | "wait"

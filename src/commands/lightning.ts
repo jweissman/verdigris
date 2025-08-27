@@ -10,7 +10,7 @@ import { TickContextImpl } from "../core/tick_context";
  */
 export class Lightning extends Command {
   execute(unitId: string | null, params: CommandParams): void {
-    const lightningRule = this.sim.rulebook.find(
+    const lightningRule = this.sim.rules.find(
       (r) => r instanceof LightningStorm,
     ) as LightningStorm;
 

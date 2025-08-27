@@ -93,8 +93,6 @@ export class MeleeCombat extends Rule {
       let inCone = false;
       if (facing === "right" && dx >= -1) inCone = true;
       else if (facing === "left" && dx <= 1) inCone = true;
-      else if (facing === "up" && dy <= 1) inCone = true;
-      else if (facing === "down" && dy >= -1) inCone = true;
       
       if (inCone) {
         const lastAttack = this.lastAttacks.get(unitA.id) || -100;
@@ -136,8 +134,6 @@ export class MeleeCombat extends Rule {
       let inCone = false;
       if (facing === "right" && dxRev >= -1) inCone = true;
       else if (facing === "left" && dxRev <= 1) inCone = true;
-      else if (facing === "up" && dyRev <= 1) inCone = true;
-      else if (facing === "down" && dyRev >= -1) inCone = true;
       
       if (inCone && !this.engagements.has(unitB.id)) {
         const lastAttack = this.lastAttacks.get(unitB.id) || -100;

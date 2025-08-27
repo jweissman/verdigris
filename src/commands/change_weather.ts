@@ -79,7 +79,7 @@ export class ChangeWeather extends Command {
           });
         }
 
-        let biomeRule = this.sim.rulebook?.find(
+        let biomeRule = this.sim.rules?.find(
           (r) => r.constructor.name === "BiomeEffects",
         );
         if (biomeRule && (biomeRule as any).triggerSandstorm) {

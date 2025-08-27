@@ -11,6 +11,10 @@ export class ProjectileMotion extends Rule {
   private commands: QueuedCommand[] = [];
   private frameCounter = 0;
   private activeProjectileIndices: number[] = [];
+  private bullets: number[] = [];
+  private bombs: number[] = [];
+  private grapples: number[] = [];
+  private toRemove: number[] = [];
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
@@ -25,7 +29,11 @@ export class ProjectileMotion extends Rule {
       return this.commands;
     }
     
-    const toRemove: number[] = [];
+    // Reset reusable arrays
+    this.toRemove.length = 0;
+    this.bullets.length = 0;
+    this.bombs.length = 0;
+    this.grapples.length = 0;
     
     // Cache active unit positions for faster access
     const activeUnits = unitArrays.activeIndices;
@@ -33,9 +41,6 @@ export class ProjectileMotion extends Rule {
     
     // Build list of active projectile indices more efficiently
     this.activeProjectileIndices.length = 0;
-    const bullets: number[] = [];
-    const bombs: number[] = [];
-    const grapples: number[] = [];
     
     // Only check active projectiles by tracking activeCount
     let foundActive = 0;
@@ -44,27 +49,27 @@ export class ProjectileMotion extends Rule {
       foundActive++;
       this.activeProjectileIndices.push(pIdx);
       const projType = projectileArrays.type[pIdx];
-      if (projType === 0) bullets.push(pIdx);
-      else if (projType === 1) bombs.push(pIdx);
-      else if (projType === 2) grapples.push(pIdx);
+      if (projType === 0) this.bullets.push(pIdx);
+      else if (projType === 1) this.bombs.push(pIdx);
+      else if (projType === 2) this.grapples.push(pIdx);
     }
     
     // Process bombs first (they explode and don't need collision checks)
-    for (const pIdx of bombs) {
+    for (const pIdx of this.bombs) {
       const shouldExplode = (projectileArrays.duration[pIdx] > 0 && 
                             projectileArrays.progress[pIdx] >= projectileArrays.duration[pIdx]) ||
                            (projectileArrays.lifetime[pIdx] >= 30);
       if (shouldExplode) {
         this.processBombExplosion(projectileArrays, pIdx, unitArrays);
-        toRemove.push(pIdx);
+        this.toRemove.push(pIdx);
       }
     }
     
     // Process bullets and grapples with collision detection
     // Combine bullets and grapples to avoid array allocation
-    const collisionProjectiles = bullets.length + grapples.length;
+    const collisionProjectiles = this.bullets.length + this.grapples.length;
     for (let p = 0; p < collisionProjectiles; p++) {
-      const pIdx = p < bullets.length ? bullets[p] : grapples[p - bullets.length];
+      const pIdx = p < this.bullets.length ? this.bullets[p] : this.grapples[p - this.bullets.length];
       const projX = projectileArrays.posX[pIdx];
       const projY = projectileArrays.posY[pIdx];
       const radius = projectileArrays.radius[pIdx];
@@ -126,13 +131,13 @@ export class ProjectileMotion extends Rule {
           });
         }
         
-        toRemove.push(pIdx);
+        this.toRemove.push(pIdx);
         break; // Only hit one unit per projectile
       }
     }
     
     // Remove hit projectiles
-    for (const idx of toRemove) {
+    for (const idx of this.toRemove) {
       this.commands.push({
         type: "removeProjectile",
         params: { id: projectileArrays.projectileIds[idx] },

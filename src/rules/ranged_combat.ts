@@ -72,7 +72,7 @@ export class RangedCombat extends Rule {
       firingUnits.push(idx);
     }
     
-    if (firingUnits.length === 0) return commands;
+    if (firingUnits.length === 0) return this.commands;
 
     // Build target cache once
     const validTargets: number[] = [];
@@ -128,7 +128,7 @@ export class RangedCombat extends Rule {
       const vx = (dx / norm) * 2; // Speed = 2
       const vy = (dy / norm) * 2;
 
-      commands.push({
+      this.commands.push({
         type: "projectile",
         params: {
           x: unitX,
@@ -150,7 +150,7 @@ export class RangedCombat extends Rule {
       });
 
       const coldData = context.getUnitColdData(unitIds[idx]);
-      commands.push({
+      this.commands.push({
         type: "meta",
         params: {
           unitId: unitIds[idx],
@@ -164,7 +164,7 @@ export class RangedCombat extends Rule {
       });
     }
 
-    return commands;
+    return this.commands;
   }
 
   private processRangedPair(unitA: Unit, unitB: Unit, context: TickContext): QueuedCommand[] {
@@ -248,7 +248,7 @@ export class RangedCombat extends Rule {
       const dy = closestEnemy.pos.y - unit.pos.y;
       const norm = Math.sqrt(dx * dx + dy * dy);
 
-      commands.push({
+      this.commands.push({
         type: "projectile",
         params: {
           x: unit.pos.x,
@@ -263,7 +263,7 @@ export class RangedCombat extends Rule {
         unitId: unit.id,
       });
 
-      commands.push({
+      this.commands.push({
         type: "meta",
         params: {
           unitId: unit.id,
