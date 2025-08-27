@@ -19,17 +19,27 @@ import { Simulator } from "../core/simulator";
  */
 export class Projectile extends Command {
   execute(unitId: string | null, params: CommandParams): void {
-    // Handle remove operation (for backwards compatibility with removeProjectile command)
-    if (params.operation === "remove" || params.id) {
-      const id = params.id as string;
-      if (id && this.sim.projectileArrays) {
-        this.sim.invalidateProjectilesCache();
-        this.sim.projectileArrays.removeProjectileById(id);
-      }
-      return;
-    }
+    const operation = params.operation as string | undefined;
     
-    // Default: create projectile
+    // Handle different operations
+    switch (operation) {
+      case "remove":
+      case "rm":
+        return this.removeProjectile(params);
+        
+      case "update":
+      case "up":
+        return this.updateProjectile(params);
+        
+      case "batch":
+        return this.batchProjectiles(unitId, params);
+        
+      default:
+        // Backwards compat: if id provided without operation, assume remove
+        if (params.id && !params.x) {
+          return this.removeProjectile(params);
+        }
+        // Otherwise create
     const x = params.x as number;
     const y = params.y as number;
     const projectileType = (params.projectileType as string) || "bullet";
@@ -99,6 +109,54 @@ export class Projectile extends Command {
         explosionRadius: projectile.explosionRadius || 3,
         aspect: projectile.aspect,
       });
+    }
+    }
+  }
+  
+  private removeProjectile(params: CommandParams): void {
+    const id = params.id as string;
+    if (!id) {
+      console.warn("projectile rm: missing id");
+      return;
+    }
+    
+    if (this.sim.projectileArrays) {
+      this.sim.invalidateProjectilesCache();
+      this.sim.projectileArrays.removeProjectileById(id);
+    }
+  }
+  
+  private updateProjectile(params: CommandParams): void {
+    const id = params.id as string;
+    if (!id) {
+      console.warn("projectile up: missing id");
+      return;
+    }
+    
+    if (this.sim.projectileArrays) {
+      const arrays = this.sim.projectileArrays;
+      for (let i = 0; i < arrays.capacity; i++) {
+        if (arrays.projectileIds[i] === id && arrays.active[i] === 1) {
+          if (params.x !== undefined) arrays.posX[i] = params.x as number;
+          if (params.y !== undefined) arrays.posY[i] = params.y as number;
+          if (params.vx !== undefined) arrays.velX[i] = params.vx as number;
+          if (params.vy !== undefined) arrays.velY[i] = params.vy as number;
+          this.sim.invalidateProjectilesCache();
+          break;
+        }
+      }
+    }
+  }
+  
+  private batchProjectiles(unitId: string | null, params: CommandParams): void {
+    const projectiles = params.projectiles as any[];
+    if (!projectiles || !Array.isArray(projectiles)) {
+      console.warn("projectile batch: invalid array");
+      return;
+    }
+    
+    for (const proj of projectiles) {
+      this.execute(unitId, proj);
     }
   }
 }

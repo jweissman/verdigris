@@ -12,7 +12,7 @@ describe('Lightning Storm Environmental System', () => {
   });
 
   it('should create lightning storm and generate periodic strikes', () => {
-    sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
+    sim.queuedCommands.push({ type: 'weather', params: { weatherType: 'storm', action: 'start' } });
     sim.step();
     expect(sim.lightningActive).toBe(true);
     const stormClouds = sim.particles.filter(p => p.type === 'storm_cloud');
@@ -100,7 +100,7 @@ describe('Lightning Storm Environmental System', () => {
   });
 
   it('should create diverse lightning visual effects', () => {
-    sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
+    sim.queuedCommands.push({ type: 'weather', params: { weatherType: 'storm', action: 'start' } });
     sim.step();
     const lightningRule = sim.rulebook.find(r => r instanceof LightningStorm) as LightningStorm;
     if (lightningRule) {
@@ -132,7 +132,7 @@ describe('Lightning Storm Environmental System', () => {
   });
 
   it('should end lightning storm and clean up effects', () => {
-    sim.queuedCommands.push({ type: 'storm', params: { action: 'start' } });
+    sim.queuedCommands.push({ type: 'weather', params: { weatherType: 'storm', action: 'start' } });
     sim.step(); // Process the command
     expect(sim.lightningActive).toBe(true);
     let strikeCount = 0;
@@ -145,7 +145,7 @@ describe('Lightning Storm Environmental System', () => {
       }
     }
     expect(strikeCount).toBeGreaterThan(0); // Some strikes occurred during storm
-    sim.queuedCommands.push({ type: 'storm', params: { action: 'stop' } });
+    sim.queuedCommands.push({ type: 'weather', params: { weatherType: 'storm', action: 'stop' } });
     sim.step(); // Process the command
     expect(sim.lightningActive).toBe(false);
     let newStrikesAfterEnd = 0;

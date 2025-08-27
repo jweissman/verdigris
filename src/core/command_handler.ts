@@ -7,7 +7,7 @@ import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
 import { Airdrop } from "../commands/airdrop";
 import { BoltCommand } from "../commands/bolt";
-import { StormCommand } from "../commands/storm";
+// StormCommand merged into ChangeWeather
 import { Grapple } from "../commands/grapple";
 import { Pin } from "../commands/pin";
 import { Temperature } from "../commands/temperature";
@@ -48,6 +48,7 @@ import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
 import { HumidityCommand } from "../commands/humidity";
 import { MovesCommand } from "../commands/moves";
+import { GrappleState } from "../commands/grapple_state";
 import { EffectsCommand } from "../commands/effects";
 import { AbilityEffectsCommand } from "../commands/ability_effects";
 import { MoveTargetCommand } from "../commands/move_target";
@@ -76,7 +77,7 @@ export class CommandHandler {
     this.commands.set("drop", new Airdrop(sim, this.transform)); // Alias for airdrop
     this.commands.set("bolt", new BoltCommand(sim));
     this.commands.set("lightning", new BoltCommand(sim)); // Alias for compatibility
-    this.commands.set("storm", new StormCommand(sim));
+    // Storm is now handled as weather with weatherType: "storm"
     this.commands.set("grapple", new Grapple(sim, this.transform));
     this.commands.set("hook", new Grapple(sim, this.transform)); // Alias for grapple
     this.commands.set("pin", new Pin(sim, this.transform));
@@ -112,6 +113,7 @@ export class CommandHandler {
     this.commands.set("markDead", new Kill(sim));
     this.commands.set("halt", new HaltCommand(sim, this.transform));
     this.commands.set("meta", new MetaCommand(sim, this.transform));
+    this.commands.set("grappleState", new GrappleState(sim, this.transform));
     this.commands.set("pull", new PullCommand(sim, this.transform));
     this.commands.set("burrow", new BurrowCommand(sim, this.transform));
     this.commands.set("charm", new CharmCommand(sim, this.transform));

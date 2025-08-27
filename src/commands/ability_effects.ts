@@ -189,8 +189,10 @@ export class AbilityEffectsCommand extends Command {
 
       case "storm":
         this.sim.queuedCommands.push({
-          type: "storm",
+          type: "weather",
           params: {
+            weatherType: "storm",
+            action: "start",
             target: targetPos,
             radius: effect.radius || 10,
             damage: effect.damage || 5,

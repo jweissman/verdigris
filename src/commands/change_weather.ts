@@ -4,9 +4,10 @@ import { Simulator } from "../core/simulator";
 /**
  * ChangeWeather command - changes weather conditions
  * Params:
- *   weatherType: string - Type of weather (rain, snow, winter, clear, etc.)
+ *   weatherType: string - Type of weather (rain, snow, winter, clear, storm, etc.)
  *   duration?: number - Duration in ticks (default 80)
  *   intensity?: number - Intensity 0-1 (default 0.8)
+ *   action?: 'start' | 'stop' - For storm weather type
  */
 export class ChangeWeather extends Command {
   execute(_unitId: string | null, params: CommandParams): void {
@@ -134,6 +135,30 @@ export class ChangeWeather extends Command {
             }
           }
           this.sim.weather.current = "clear";
+        }
+        break;
+
+      case "storm":
+      case "lightning":
+        const action = (params.action as "start" | "stop") || "start";
+        if (action === "start") {
+          this.sim.lightningActive = true;
+          
+          for (let i = 0; i < 8; i++) {
+            this.sim.particleArrays.addParticle({
+              pos: {
+                x: Math.random() * this.sim.fieldWidth * 8,
+                y: 100 + Math.random() * (this.sim.fieldHeight * 8 - 200),
+              },
+              vel: { x: (Math.random() - 0.5) * 0.2, y: 0 },
+              radius: 0.5,
+              color: "#333366",
+              lifetime: 120 + Math.random() * 60,
+              type: "storm_cloud",
+            });
+          }
+        } else if (action === "stop") {
+          this.sim.lightningActive = false;
         }
         break;
 

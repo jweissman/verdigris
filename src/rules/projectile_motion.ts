@@ -71,16 +71,6 @@ export class ProjectileMotion extends Rule {
       return this.commands;
     }
     
-    // Pre-filter units by team for bullets (most common projectile type)
-    const friendlyUnits: number[] = [];
-    const hostileUnits: number[] = [];
-    for (let i = 0; i < unitCount; i++) {
-      const unitIdx = activeUnits[i];
-      if (unitArrays.hp[unitIdx] <= 0) continue;
-      if (unitArrays.team[unitIdx] === 1) friendlyUnits.push(unitIdx);
-      else if (unitArrays.team[unitIdx] === 2) hostileUnits.push(unitIdx);
-    }
-    
     // Process projectiles
     const collisionProjectiles = this.bullets.length + this.grapples.length;
     for (let p = 0; p < collisionProjectiles; p++) {
@@ -92,36 +82,23 @@ export class ProjectileMotion extends Rule {
       const projTeam = projectileArrays.team[pIdx];
       const projType = projectileArrays.type[pIdx];
       
-      // Early spatial bounds check to skip distant units
+      // Simple early exit optimization - check bounds
       const minX = projX - radius;
       const maxX = projX + radius;
       const minY = projY - radius;
       const maxY = projY + radius;
       
-      // Select target list based on projectile team
-      let targetUnits: number[];
-      if (projType === 2) { // Grapples can hit anyone
-        targetUnits = activeUnits;
-      } else if (projTeam === 1) { // Friendly projectile hits hostile
-        targetUnits = hostileUnits;
-      } else if (projTeam === 2) { // Hostile projectile hits friendly
-        targetUnits = friendlyUnits;
-      } else { // Neutral hits everyone except same team
-        targetUnits = activeUnits;
-      }
-      
-      // Check collisions with valid targets only
-      for (const unitIdx of targetUnits) {
-        // For non-grapples, skip same team
-        if (projType !== 2 && unitArrays.team[unitIdx] === projTeam) continue;
-        if (unitArrays.hp[unitIdx] <= 0) continue;
-        
-        // Spatial bounds check first
+      // Check collisions with active units
+      for (const unitIdx of activeUnits) {
+        // Quick bounds check first
         const unitX = unitArrays.posX[unitIdx];
         if (unitX < minX || unitX > maxX) continue;
-        
         const unitY = unitArrays.posY[unitIdx];
         if (unitY < minY || unitY > maxY) continue;
+        
+        // Team and health checks
+        if (projType !== 2 && unitArrays.team[unitIdx] === projTeam) continue;
+        if (unitArrays.hp[unitIdx] <= 0) continue;
         
         // Precise distance check
         const dx = unitX - projX;
@@ -132,14 +109,12 @@ export class ProjectileMotion extends Rule {
         // Hit detected
         if (projType === 2) { // grapple
           this.commands.push({
-            type: "meta",
+            type: "grappleState",
             params: {
               unitId: unitArrays.unitIds[unitIdx],
-              meta: {
-                grappleHit: true,
-                grapplerID: projectileArrays.sourceIds[pIdx] || "unknown",
-                grappleOrigin: { x: projX, y: projY },
-              },
+              hit: true,
+              grapplerID: projectileArrays.sourceIds[pIdx] || "unknown",
+              origin: { x: projX, y: projY },
             },
           });
         } else {

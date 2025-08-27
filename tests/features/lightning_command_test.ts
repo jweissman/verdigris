@@ -4,7 +4,7 @@ import { Simulator } from '../../src/core/simulator';
 describe('Lightning Command', () => {
   it('should trigger lightning strikes via command', () => {
     const sim = new Simulator();
-    sim.queuedCommands = [{ type: 'storm', params: { action: 'start' } }];
+    sim.queuedCommands = [{ type: 'weather', params: { weatherType: 'storm', action: 'start' } }];
     sim.step();
     expect(sim.lightningActive).toBe(true);
     sim.queuedCommands = [{ type: 'lightning', params: {} }];
