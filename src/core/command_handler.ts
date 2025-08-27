@@ -43,7 +43,7 @@ import { ForcesCommand } from "../commands/forces";
 import { AICommand } from "../commands/ai";
 import { SimulateCommand } from "../commands/simulate";
 import { Wander } from "../commands/wander";
-import { RemoveProjectileCommand } from "../commands/update_projectile";
+// RemoveProjectileCommand merged into Projectile command
 import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
 import { HumidityCommand } from "../commands/humidity";
@@ -72,7 +72,6 @@ export class CommandHandler {
     this.commands.set("toss", new Toss(sim, this.transform));
     this.commands.set("weather", new ChangeWeather(sim));
     this.commands.set("deploy", new Deploy(sim));
-    this.commands.set("spawn", new Deploy(sim, this.transform)); // Alias for deploy
     this.commands.set("airdrop", new Airdrop(sim, this.transform));
     this.commands.set("drop", new Airdrop(sim, this.transform)); // Alias for airdrop
     this.commands.set("bolt", new BoltCommand(sim));
@@ -129,10 +128,8 @@ export class CommandHandler {
     this.commands.set("ai", new AICommand(sim, this.transform));
     this.commands.set("simulate", new SimulateCommand(sim, this.transform));
 
-    this.commands.set(
-      "removeProjectile",
-      new RemoveProjectileCommand(sim, this.transform),
-    );
+    // removeProjectile is now an alias to projectile command
+    this.commands.set("removeProjectile", new Projectile(sim, this.transform));
 
     this.commands.set("particle", new ParticleCommand(sim, this.transform));
     this.commands.set(
@@ -140,7 +137,6 @@ export class CommandHandler {
       new ParticlesBatchCommand(sim, this.transform),
     );
 
-    this.commands.set("toss", new Toss(sim, this.transform));
     this.commands.set("humidity", new HumidityCommand(sim, this.transform));
     this.commands.set("effects", new EffectsCommand(sim, this.transform));
     this.commands.set(

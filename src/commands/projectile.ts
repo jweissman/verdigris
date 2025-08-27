@@ -2,8 +2,8 @@ import { Command, CommandParams } from "../rules/command";
 import { Simulator } from "../core/simulator";
 
 /**
- * Projectile command - creates a projectile
- * Params:
+ * Projectile command - creates or removes projectiles
+ * Params for create (default):
  *   x: number - Starting X position
  *   y: number - Starting Y position
  *   projectileType: string - Type of projectile (bullet, bomb, etc.)
@@ -12,9 +12,24 @@ import { Simulator } from "../core/simulator";
  *   targetY?: number - Target Y position
  *   radius?: number - Projectile radius
  *   team?: string - Team affiliation
+ * 
+ * Params for remove:
+ *   operation: "remove"
+ *   id: string - Projectile ID to remove
  */
 export class Projectile extends Command {
   execute(unitId: string | null, params: CommandParams): void {
+    // Handle remove operation (for backwards compatibility with removeProjectile command)
+    if (params.operation === "remove" || params.id) {
+      const id = params.id as string;
+      if (id && this.sim.projectileArrays) {
+        this.sim.invalidateProjectilesCache();
+        this.sim.projectileArrays.removeProjectileById(id);
+      }
+      return;
+    }
+    
+    // Default: create projectile
     const x = params.x as number;
     const y = params.y as number;
     const projectileType = (params.projectileType as string) || "bullet";
