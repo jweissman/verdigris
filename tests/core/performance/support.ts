@@ -51,16 +51,23 @@ export function createTestSimulator(unitCount: number = 50): Simulator {
 
 export function profileRules(sim: Simulator, iterations: number = 100): Map<string, TimingResult> {
   const results = new Map<string, TimingResult>();
-  const context = sim.getTickContext();
   
+  // More realistic: advance simulation between measurements
   for (const rule of sim.rulebook) {
     const ruleName = rule.constructor.name;
     const times: number[] = [];
     
     for (let i = 0; i < iterations; i++) {
+      const context = sim.getTickContext();
       const start = performance.now();
       rule.execute(context);
       times.push(performance.now() - start);
+      
+      // Advance simulation state slightly to be more realistic
+      // This simulates projectiles moving, units changing, etc.
+      if (i % 10 === 0) {
+        sim.step(); // Step every 10 iterations to get varied states
+      }
     }
     
     times.sort((a, b) => a - b);

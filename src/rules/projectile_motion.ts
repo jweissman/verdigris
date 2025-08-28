@@ -24,6 +24,7 @@ export class ProjectileMotion extends Rule {
       return this.commands;
     }
     
+    
     const unitArrays = context.getArrays();
     if (!unitArrays.activeIndices || unitArrays.activeIndices.length === 0) {
       return this.commands;
@@ -94,26 +95,10 @@ export class ProjectileMotion extends Rule {
       return this.commands;
     }
     
-    // Compute bounding box of all units for broad-phase culling
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    
+    // Cache array refs
     const unitPosX = unitArrays.posX;
     const unitPosY = unitArrays.posY;
-    
-    for (const idx of activeUnits) {
-      const x = unitPosX[idx];
-      const y = unitPosY[idx];
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-    
-    // Add max projectile radius as padding
-    const maxRadius = 5; // reasonable max for projectiles
-    minX -= maxRadius;
-    maxX += maxRadius;
-    minY -= maxRadius;
-    maxY += maxRadius;
     
     // Process all projectiles with optimized collision detection
     // Cache array references for faster access
@@ -136,11 +121,6 @@ export class ProjectileMotion extends Rule {
       const projX = projPosX[pIdx];
       const projY = projPosY[pIdx];
       
-      // Broad-phase: skip projectiles outside unit bounding box
-      if (projX < minX || projX > maxX || projY < minY || projY > maxY) {
-        continue;
-      }
-      
       const radius = projRadius[pIdx];
       const radiusSq = radius * radius;
       const pTeam = projTeam[pIdx];
@@ -149,24 +129,23 @@ export class ProjectileMotion extends Rule {
       // Inline the spatial query for better performance
       let hit = false;
       
-      // Direct iteration with early exit
-      for (const unitIdx of activeUnits) {
-        // Quick bounds check first
-        const unitX = unitPosX[unitIdx];
-        const dx = unitX - projX;
-        if (dx > radius || dx < -radius) continue;
+      // Optimized inner loop
+      for (let i = 0; i < unitCount; i++) {
+        const unitIdx = activeUnits[i];
         
-        const unitY = unitPosY[unitIdx];
-        const dy = unitY - projY;
-        if (dy > radius || dy < -radius) continue;
-        
-        // Team and health checks
+        // Team check first (cheapest)
         if (pType !== 2 && unitTeam[unitIdx] === pTeam) continue;
         if (unitHp[unitIdx] <= 0) continue;
         
-        // Precise distance check
-        const distSq = dx * dx + dy * dy;
-        if (distSq >= radiusSq) continue;
+        // Spatial checks
+        const dx = unitPosX[unitIdx] - projX;
+        if (dx > radius || dx < -radius) continue;
+        
+        const dy = unitPosY[unitIdx] - projY;  
+        if (dy > radius || dy < -radius) continue;
+        
+        // Distance check
+        if ((dx * dx + dy * dy) >= radiusSq) continue;
         
         // Hit detected!
         if (pType === 2) { // grapple
