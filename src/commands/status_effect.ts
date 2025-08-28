@@ -35,11 +35,8 @@ export class ApplyStatusEffectCommand extends Command {
 }
 
 export class UpdateStatusEffectsCommand extends Command {
-  private transform: Transform;
-
-  constructor(sim: any) {
-    super(sim);
-    this.transform = sim.getTransform();
+  constructor(sim: any, transform: Transform) {
+    super(sim, transform);
   }
 
   execute(unitId: string | null, params: Record<string, any>): void {

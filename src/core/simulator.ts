@@ -1,33 +1,10 @@
-import { MeleeCombat } from "../rules/melee_combat";
-import { PairwiseBatcherRule } from "../rules/pairwise_batcher_rule";
-import { Knockback } from "../rules/knockback";
-import { ProjectileMotion } from "../rules/projectile_motion";
-import { UnitMovement } from "../rules/unit_movement";
-import { ChargeAccumulator } from "../rules/charge_accumulator";
-import { AreaOfEffect } from "../rules/area_of_effect";
 import { Rule } from "../rules/rule";
-import { UnitBehavior } from "../rules/unit_behavior";
-import Cleanup from "../rules/cleanup";
-import { Jumping } from "../rules/jumping";
-import { AirdropPhysics } from "../rules/airdrop_physics";
-import { Tossing } from "../rules/tossing";
-import { Abilities } from "../rules/abilities";
-import { RangedCombat } from "../rules/ranged_combat";
 import { EventHandler } from "../rules/event_handler";
-import { PlayerControl } from "../rules/player_control";
-import { HeroAnimation } from "../rules/hero_animation";
 import { CommandHandler, QueuedCommand } from "./command_handler";
-import { HugeUnits } from "../rules/huge_units";
-import { SegmentedCreatures } from "../rules/segmented_creatures";
-import { GrapplingPhysics } from "../rules/grappling_physics";
-import { BiomeEffects } from "../rules/biome_effects";
-import { Perdurance } from "../rules/perdurance";
-import { AmbientBehavior } from "../rules/ambient_behavior";
-import { AmbientSpawning } from "../rules/ambient_spawning";
-import { StatusEffects } from "../rules/status_effects";
+import { RulesetFactory } from "./ruleset_factory";
+import { Abilities } from "../rules/abilities";
 import { RNG } from "./rng";
 import { TickContext, TickContextImpl } from "./tick_context";
-import { LightningStorm } from "../rules/lightning_storm";
 import { Projectile } from "../types/Projectile";
 import { ProjectileArrays } from "../sim/projectile_arrays";
 import { Unit } from "../types/Unit";
@@ -192,7 +169,7 @@ class Simulator {
   invalidateProjectilesCache(): void {
     this._projectilesCacheDirty = true;
   }
-  private rulebook: Rule[];
+  public rulebook: Rule[];
   private commandProcessor: CommandHandler;
   queuedEvents: Action[] = [];
   processedEvents: Action[] = [];
@@ -349,6 +326,7 @@ class Simulator {
     return Simulator.rng?.random() || Math.random();
   }
 
+
   // Scene metadata setters
   public setBackground(value: string): void {
     this.sceneBackground = value;
@@ -365,7 +343,7 @@ class Simulator {
   }
 
   public getCurrentWeather(): string {
-    return this.currentWeather?.type || "clear";
+    return this.weather?.current || "clear";
   }
 
   private setupDeterministicRandomness(): void {
@@ -421,49 +399,7 @@ class Simulator {
   private tickContext?: TickContext;
 
   parseCommand(inputString: string) {
-    const parts = inputString.split(" ");
-    let type = parts[0];
-    const params: Record<string, any> = {};
-
-    switch (type) {
-      case "bg":
-        params.type = "bg";
-        params.value = parts[1];
-        type = "sceneMetadata";
-        break;
-      case "weather":
-        params.weatherType = parts[1];
-        if (parts[2]) params.duration = parseInt(parts[2]);
-        if (parts[3]) params.intensity = parseFloat(parts[3]);
-        break;
-      case "deploy":
-      case "spawn":
-        params.unitType = parts[1];
-        if (parts[2]) params.x = parseFloat(parts[2]);
-        if (parts[3]) params.y = parseFloat(parts[3]);
-        break;
-      case "airdrop":
-      case "drop":
-        params.unitType = parts[1];
-        params.x = parseFloat(parts[2]);
-        params.y = parseFloat(parts[3]);
-        break;
-      case "lightning":
-      case "bolt":
-        if (parts[1]) params.x = parseFloat(parts[1]);
-        if (parts[2]) params.y = parseFloat(parts[2]);
-        break;
-      case "temperature":
-      case "temp":
-        params.amount = parts[1] ? parseFloat(parts[1]) : 20;
-        break;
-      case "wander":
-        params.team = parts[1] || "all";
-        params.chance = parts[2] ? parseFloat(parts[2]) : 0.1;
-        break;
-    }
-
-    const command = { type, params };
+    const command = CommandHandler.parseCommand(inputString, this);
     this.queuedCommands.push(command);
     return command;
   }
@@ -486,43 +422,7 @@ class Simulator {
     this.queuedCommands = [];
 
     this.commandProcessor = new CommandHandler(this, this.transform);
-
-    const coreRules = [new UnitBehavior(), new UnitMovement(), new Cleanup()];
-
-    const combatRules = [
-      new MeleeCombat(), // Registers intents with batcher
-      new Knockback(), // Registers intents with batcher  
-      new RangedCombat(), // Registers intents with batcher
-      new Abilities(), // Handles all other abilities
-      new StatusEffects(),
-      new Perdurance(),
-      new ChargeAccumulator(), // Handles charge accumulation for charging attacks
-      new PairwiseBatcherRule(), // Processes all pairwise intents at the end
-    ];
-
-    const specialRules = [
-      new HugeUnits(),
-      new SegmentedCreatures(),
-      new GrapplingPhysics(),
-      new AirdropPhysics(),
-      new BiomeEffects(),
-      new AmbientSpawning(),
-      new AmbientBehavior(),
-      new LightningStorm(),
-      new AreaOfEffect(),
-      new ProjectileMotion(),
-      new Jumping(),
-      new Tossing(),
-    ];
-
-    const heroRules = [new PlayerControl(), new HeroAnimation()];
-
-    this.rulebook = [
-      ...coreRules,
-      ...combatRules,
-      ...specialRules,
-      ...heroRules,
-    ];
+    this.rulebook = RulesetFactory.createDefaultRulebook();
   }
 
   addUnit(unit: Partial<Unit>): Unit {

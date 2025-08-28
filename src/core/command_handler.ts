@@ -7,7 +7,7 @@ import { ChangeWeather } from "../commands/change_weather";
 import { Deploy } from "../commands/deploy";
 import { Airdrop } from "../commands/airdrop";
 import { BoltCommand } from "../commands/bolt";
-// StormCommand merged into ChangeWeather
+// Storm functionality merged into ChangeWeather
 import { Grapple } from "../commands/grapple";
 import { Pin } from "../commands/pin";
 import { Temperature } from "../commands/temperature";
@@ -63,6 +63,52 @@ export type QueuedCommand = {
 };
 
 export class CommandHandler {
+  static parseCommand(inputString: string, sim: any): QueuedCommand {
+    const parts = inputString.split(" ");
+    let type = parts[0];
+    const params: Record<string, any> = {};
+
+    switch (type) {
+      case "bg":
+        params.type = "bg";
+        params.value = parts[1];
+        type = "sceneMetadata";
+        break;
+      case "weather":
+        params.weatherType = parts[1];
+        if (parts[2]) params.duration = parseInt(parts[2]);
+        if (parts[3]) params.intensity = parseFloat(parts[3]);
+        break;
+      case "deploy":
+      case "spawn":
+        params.unitType = parts[1];
+        if (parts[2]) params.x = parseFloat(parts[2]);
+        if (parts[3]) params.y = parseFloat(parts[3]);
+        break;
+      case "airdrop":
+      case "drop":
+        params.unitType = parts[1];
+        params.x = parseFloat(parts[2]);
+        params.y = parseFloat(parts[3]);
+        break;
+      case "lightning":
+      case "bolt":
+        if (parts[1]) params.x = parseFloat(parts[1]);
+        if (parts[2]) params.y = parseFloat(parts[2]);
+        break;
+      case "temperature":
+      case "temp":
+        params.amount = parts[1] ? parseFloat(parts[1]) : 20;
+        break;
+      case "wander":
+        params.team = parts[1] || "all";
+        params.chance = parts[2] ? parseFloat(parts[2]) : 0.1;
+        break;
+    }
+
+    return { type, params };
+  }
+
   private commands: Map<string, Command> = new Map();
   private transform: any; // Transform object for mutations
   private sim: any;
@@ -72,20 +118,24 @@ export class CommandHandler {
     this.transform = transform || sim.getTransform();
 
     this.commands.set("toss", new Toss(sim, this.transform));
-    this.commands.set("weather", new ChangeWeather(sim));
-    this.commands.set("deploy", new Deploy(sim));
-    this.commands.set("airdrop", new Airdrop(sim, this.transform));
-    this.commands.set("drop", new Airdrop(sim, this.transform)); // Alias for airdrop
-    this.commands.set("bolt", new BoltCommand(sim));
-    this.commands.set("lightning", new BoltCommand(sim)); // Alias for compatibility
-    // Storm is now handled as weather with weatherType: "storm"
-    this.commands.set("grapple", new Grapple(sim, this.transform));
-    this.commands.set("hook", new Grapple(sim, this.transform)); // Alias for grapple
+    this.commands.set("weather", new ChangeWeather(sim, this.transform));
+    this.commands.set("deploy", new Deploy(sim, this.transform));
+    const airdropCmd = new Airdrop(sim, this.transform);
+    this.commands.set("airdrop", airdropCmd);
+    this.commands.set("drop", airdropCmd); // Alias
+    const boltCmd = new BoltCommand(sim, this.transform);
+    this.commands.set("bolt", boltCmd);
+    this.commands.set("lightning", boltCmd); // Alias
+    // Storm handled by weather command with weatherType: "storm"
+    const grappleCmd = new Grapple(sim, this.transform);
+    this.commands.set("grapple", grappleCmd);
+    this.commands.set("hook", grappleCmd); // Alias
     this.commands.set("pin", new Pin(sim, this.transform));
-    this.commands.set("temperature", new Temperature(sim, this.transform));
-    this.commands.set("temp", new Temperature(sim, this.transform)); // Alias
-    this.commands.set("fire", new FireCommand(sim));
-    this.commands.set("bg", new BgCommand(sim));
+    const tempCmd = new Temperature(sim, this.transform);
+    this.commands.set("temperature", tempCmd);
+    this.commands.set("temp", tempCmd); // Alias
+    this.commands.set("fire", new FireCommand(sim, this.transform));
+    this.commands.set("bg", new BgCommand(sim, this.transform));
     this.commands.set("wander", new Wander(sim, this.transform));
 
     this.commands.set("damage", new Damage(sim, this.transform));
@@ -93,35 +143,38 @@ export class CommandHandler {
     this.commands.set("aoe", new AoE(sim, this.transform));
     this.commands.set("projectile", new Projectile(sim, this.transform));
     this.commands.set("jump", new JumpCommand(sim, this.transform));
-    this.commands.set("strike", new StrikeCommand(sim, this.transform));
-    this.commands.set("attack", new StrikeCommand(sim, this.transform)); // Alias
-    this.commands.set("plant", new PlantCommand(sim));
+    const strikeCmd = new StrikeCommand(sim, this.transform);
+    this.commands.set("strike", strikeCmd);
+    this.commands.set("attack", strikeCmd); // Alias
+    this.commands.set("plant", new PlantCommand(sim, this.transform));
 
-    this.commands.set("cleanup", new CleanupCommand(sim));
-    this.commands.set("remove", new RemoveCommand(sim));
-    this.commands.set("move", new MoveCommand(sim));
-    this.commands.set("moves", new MovesCommand(sim));
-    this.commands.set("hero", new HeroCommand(sim));
+    this.commands.set("cleanup", new CleanupCommand(sim, this.transform));
+    this.commands.set("remove", new RemoveCommand(sim, this.transform));
+    this.commands.set("move", new MoveCommand(sim, this.transform));
+    this.commands.set("moves", new MovesCommand(sim, this.transform));
+    this.commands.set("hero", new HeroCommand(sim, this.transform));
     this.commands.set(
       "move_target",
       new MoveTargetCommand(sim, this.transform),
     );
-    this.commands.set("knockback", new KnockbackCommand(sim));
+    this.commands.set("knockback", new KnockbackCommand(sim, this.transform));
 
-    this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim));
+    this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim, this.transform));
     this.commands.set(
       "updateStatusEffects",
-      new UpdateStatusEffectsCommand(sim),
+      new UpdateStatusEffectsCommand(sim, this.transform),
     );
-    this.commands.set("markDead", new Kill(sim));
+    this.commands.set("markDead", new Kill(sim, this.transform));
     this.commands.set("halt", new HaltCommand(sim, this.transform));
     this.commands.set("meta", new MetaCommand(sim, this.transform));
     this.commands.set("pull", new PullCommand(sim, this.transform));
     this.commands.set("burrow", new BurrowCommand(sim, this.transform));
-    this.commands.set("charm", new CharmCommand(sim, this.transform));
-    this.commands.set("changeTeam", new CharmCommand(sim, this.transform)); // Alias
-    this.commands.set("spawn", new SpawnCommand(sim, this.transform));
-    this.commands.set("add", new SpawnCommand(sim, this.transform)); // Alias for backwards compatibility
+    const charmCmd = new CharmCommand(sim, this.transform);
+    this.commands.set("charm", charmCmd);
+    this.commands.set("changeTeam", charmCmd); // Alias
+    const spawnCmd = new SpawnCommand(sim, this.transform);
+    this.commands.set("spawn", spawnCmd);
+    this.commands.set("add", spawnCmd); // Alias
 
     this.commands.set("pose", new PoseCommand(sim, this.transform));
     this.commands.set("target", new TargetCommand(sim, this.transform));
@@ -392,10 +445,6 @@ export class CommandHandler {
           y: args[1] ? parseFloat(args[1]) : undefined,
         };
 
-      case "storm":
-        return {
-          action: args[0] || "start",
-        };
 
       case "particle":
         if (typeof args === "object" && !Array.isArray(args)) {

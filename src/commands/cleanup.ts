@@ -2,16 +2,13 @@ import { Command } from "../rules/command";
 import { Transform } from "../core/transform";
 
 export class CleanupCommand extends Command {
-  private transform: Transform;
-
-  constructor(sim: any) {
-    super(sim);
-    this.transform = sim.getTransform();
+  constructor(sim: any, transform: Transform) {
+    super(sim, transform);
   }
 
   execute(unitId: string | null, params: Record<string, any>): void {
     if (!params.unitId) return;
 
-    this.transform.filterUnits((unit) => unit.id !== params.unitId);
+    this.tx.filterUnits((unit) => unit.id !== params.unitId);
   }
 }

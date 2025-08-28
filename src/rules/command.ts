@@ -8,7 +8,7 @@ export interface CommandParams {
 export abstract class Command {
   protected sim: Simulator;
 
-  private tx: Transform;
+  protected tx: Transform;
 
   constructor(
     sim: Simulator,

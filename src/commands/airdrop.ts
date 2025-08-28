@@ -11,11 +11,8 @@ import { Transform } from "../core/transform";
  *   y?: number - Y position (defaults to center)
  */
 export class Airdrop extends Command {
-  private transform: Transform;
-
   constructor(sim: Simulator, transform: Transform) {
-    super(sim);
-    this.transform = transform;
+    super(sim, transform);
   }
   execute(unitId: string | null, params: CommandParams): void {
     // Default to dropping a crate if no unit type specified
@@ -67,11 +64,7 @@ export class Airdrop extends Command {
         },
       };
 
-      if (this.transform) {
-        this.transform.addUnit(droppedUnit);
-      } else {
-        this.sim.addUnit(droppedUnit);
-      }
+      this.tx.addUnit(droppedUnit);
 
       this.createAtmosphericEntry(dropX, dropY);
     } catch (error) {

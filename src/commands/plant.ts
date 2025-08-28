@@ -1,9 +1,10 @@
 import { Command, CommandParams } from "../rules/command";
 import type { Simulator } from "../core/simulator";
+import type { Transform } from "../core/transform";
 
 export class PlantCommand extends Command {
-  constructor(sim: Simulator) {
-    super(sim);
+  constructor(sim: Simulator, transform: Transform) {
+    super(sim, transform);
   }
 
   execute(unitId: string | null, params: CommandParams): void {
@@ -53,6 +54,6 @@ export class PlantCommand extends Command {
       },
     };
 
-    this.sim.addUnit(bush);
+    this.tx.addUnit(bush);
   }
 }

@@ -1,5 +1,6 @@
 import { Command, CommandParams } from "../rules/command";
 import { Simulator } from "../core/simulator";
+import { Transform } from "../core/transform";
 
 /**
  * ChangeWeather command - changes weather conditions
@@ -10,6 +11,10 @@ import { Simulator } from "../core/simulator";
  *   action?: 'start' | 'stop' - For storm weather type
  */
 export class ChangeWeather extends Command {
+  constructor(sim: Simulator, transform: Transform) {
+    super(sim, transform);
+  }
+
   execute(_unitId: string | null, params: CommandParams): void {
     const weatherType = params.weatherType as string;
     const duration = params.duration as number | undefined;
@@ -19,8 +24,8 @@ export class ChangeWeather extends Command {
 
     switch (weatherType) {
       case "rain":
-        if (this.sim.setWeather) {
-          this.sim.setWeather("rain", durationValue, intensityValue);
+        if (this.tx) {
+          this.tx.setWeather("rain", durationValue, intensityValue);
         }
 
         for (let i = 0; i < Math.min(durationValue, 100); i++) {
@@ -58,8 +63,8 @@ export class ChangeWeather extends Command {
 
       case "sand":
       case "sandstorm":
-        if (this.sim.setWeather) {
-          this.sim.setWeather("sandstorm", durationValue, intensityValue);
+        if (this.tx) {
+          this.tx.setWeather("sandstorm", durationValue, intensityValue);
         }
 
         for (let i = 0; i < Math.min(durationValue, 200); i++) {
@@ -90,8 +95,8 @@ export class ChangeWeather extends Command {
 
       case "leaves":
       case "leaf":
-        if (this.sim.setWeather) {
-          this.sim.setWeather("leaves", durationValue, intensityValue);
+        if (this.tx) {
+          this.tx.setWeather("leaves", durationValue, intensityValue);
         }
 
         const particleCount = Math.min(durationValue * 2, 30); // Reasonable number of leaves
@@ -119,8 +124,8 @@ export class ChangeWeather extends Command {
         break;
 
       case "clear":
-        if (this.sim.setWeather) {
-          this.sim.setWeather("clear", 1, 0);
+        if (this.tx) {
+          this.tx.setWeather("clear", 1, 0);
         }
 
         if (this.sim.temperatureField) {

@@ -5,11 +5,8 @@ import { Unit } from "../types/Unit";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
 export class SpawnCommand extends Command {
-  private transform: Transform;
-
   constructor(sim: Simulator, transform: Transform) {
-    super(sim);
-    this.transform = transform;
+    super(sim, transform);
   }
 
   execute(unitId: string | null, params: CommandParams): void {
@@ -62,10 +59,6 @@ export class SpawnCommand extends Command {
       return;
     }
 
-    if (this.transform) {
-      this.transform.addUnit(unit);
-    } else {
-      this.sim.addUnit(unit);
-    }
+    this.tx.addUnit(unit);
   }
 }

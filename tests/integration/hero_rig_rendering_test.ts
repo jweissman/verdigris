@@ -1,10 +1,11 @@
 import { describe, test, expect } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import { HeroAnimation } from '../../src/rules/hero_animation';
+import { HeroAnimationManager } from '../../src/rendering/hero_animation_manager';
 
 describe('Hero Rig Rendering Integration', () => {
-  test('hero with useRig gets rig parts in meta', () => {
+  test('hero with useRig gets rig parts from animation manager', () => {
     const sim = new Simulator(20, 20);
+    const animationManager = new HeroAnimationManager();
     
 
     const hero = sim.addUnit({
@@ -21,14 +22,15 @@ describe('Hero Rig Rendering Integration', () => {
     
 
     sim.step();
+    animationManager.update(sim.units, sim.ticks);
     
 
-    const updatedHero = sim.units.find(u => u.id === 'hero_test');
-    expect(updatedHero?.meta?.rig).toBeDefined();
-    expect(updatedHero?.meta?.rig?.length).toBe(7);
+    const rigData = animationManager.getRigData('hero_test');
+    expect(rigData).toBeDefined();
+    expect(rigData?.length).toBe(7);
     
 
-    const firstPart = updatedHero?.meta?.rig?.[0];
+    const firstPart = rigData?.[0];
     expect(firstPart?.sprite).toBeDefined();
     expect(firstPart?.offset).toBeDefined();
     expect(firstPart?.frame).toBeLessThanOrEqual(2); // 0-2 for 3 frames
@@ -36,6 +38,7 @@ describe('Hero Rig Rendering Integration', () => {
   
   test('rig animates over time', () => {
     const sim = new Simulator(20, 20);
+    const animationManager = new HeroAnimationManager();
     sim.addUnit({
       id: 'hero_test',
       pos: { x: 10, y: 10 },
@@ -46,17 +49,20 @@ describe('Hero Rig Rendering Integration', () => {
     
 
     sim.step();
-    const hero1 = sim.units.find(u => u.id === 'hero_test');
-    const torso1 = hero1?.meta?.rig?.find((p: any) => p.name === 'torso');
+    animationManager.update(sim.units, sim.ticks);
+    
+    const rigData1 = animationManager.getRigData('hero_test');
+    const torso1 = rigData1?.find((p: any) => p.name === 'torso');
     const initialY = torso1?.offset?.y;
     
 
     for (let i = 0; i < 30; i++) {
       sim.step();
+      animationManager.update(sim.units, sim.ticks);
     }
     
-    const hero2 = sim.units.find(u => u.id === 'hero_test');
-    const torso2 = hero2?.meta?.rig?.find((p: any) => p.name === 'torso');
+    const rigData2 = animationManager.getRigData('hero_test');
+    const torso2 = rigData2?.find((p: any) => p.name === 'torso');
     const finalY = torso2?.offset?.y;
     
 

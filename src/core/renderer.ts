@@ -3,6 +3,7 @@ import Orthographic from "../views/orthographic";
 import Cinematic from "../views/cinematic";
 import Isometric from "../views/isometric";
 import { InventoryView } from "../views/inventory";
+import { HeroAnimationManager } from "../rendering/hero_animation_manager";
 
 interface CanvasLike {
   width: number;
@@ -158,6 +159,7 @@ export default class Renderer extends Display {
   private isometric: Isometric | null = null;
   private inventory: InventoryView | null = null;
   public hoverCell: { x: number; y: number } | null = null;
+  private animationManager: HeroAnimationManager;
 
   constructor(
     width: number,
@@ -168,6 +170,9 @@ export default class Renderer extends Display {
     private backgrounds: Map<string, HTMLImageElement> = new Map(),
   ) {
     super(width, height, canvas);
+    
+    // Renderer owns animation management
+    this.animationManager = new HeroAnimationManager();
 
     this.battle = new Orthographic(
       this.ctx,
@@ -199,6 +204,15 @@ export default class Renderer extends Display {
     this.viewMode = mode;
   }
 
+  private updateAnimations() {
+    // Update hero animations based on current sim state
+    this.animationManager.update(this.sim.units, this.sim.ticks);
+  }
+  
+  getAnimationManager(): HeroAnimationManager {
+    return this.animationManager;
+  }
+
   get cinematicView() {
     return this.viewMode === "cinematic";
   }
@@ -210,6 +224,9 @@ export default class Renderer extends Display {
   }
 
   render() {
+    // Update animations based on sim state
+    this.updateAnimations();
+    
     if (this.viewMode === "cinematic") {
       if (this.cinematic) {
         this.cinematic.sim = this.sim;

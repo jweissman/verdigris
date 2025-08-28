@@ -2,11 +2,8 @@ import { Command } from "../rules/command";
 import { Transform } from "../core/transform";
 
 export class Kill extends Command {
-  private transform: Transform;
-
-  constructor(sim: any) {
-    super(sim);
-    this.transform = sim.getTransform();
+  constructor(sim: any, transform: Transform) {
+    super(sim, transform);
   }
 
   execute(unitId: string | null, params: Record<string, any>): void {
@@ -14,6 +11,6 @@ export class Kill extends Command {
 
     if (!targetId) return;
 
-    this.transform.updateUnit(targetId, { state: "dead" });
+    this.tx.updateUnit(targetId, { state: "dead" });
   }
 }

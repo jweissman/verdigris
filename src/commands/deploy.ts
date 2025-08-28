@@ -1,5 +1,6 @@
 import { Command, CommandParams } from "../rules/command";
 import { Simulator } from "../core/simulator";
+import { Transform } from "../core/transform";
 import Encyclopaedia from "../dmg/encyclopaedia";
 
 /**
@@ -11,6 +12,9 @@ import Encyclopaedia from "../dmg/encyclopaedia";
  *   team?: string - Team affiliation (optional)
  */
 export class Deploy extends Command {
+  constructor(sim: Simulator, transform: Transform) {
+    super(sim, transform);
+  }
   execute(unitId: string | null, params: CommandParams): void {
     const unitType = params.unitType as string;
     const x = params.x as number | undefined;

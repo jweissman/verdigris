@@ -2,6 +2,7 @@ import { Unit } from "../types/Unit";
 import { Simulator } from "./simulator";
 import { Action } from "../types/Action";
 import { Projectile } from "../types/Projectile";
+import Encyclopaedia from "../dmg/encyclopaedia";
 
 /**
  * Transform object that provides controlled mutation access
@@ -55,8 +56,8 @@ export class Transform {
   /**
    * Add a unit
    */
-  addUnit(unit: Unit): void {
-    this.sim.addUnit(unit);
+  addUnit(unit: Partial<Unit>): Unit {
+    return this.sim.addUnit(unit);
   }
 
   /**
@@ -185,5 +186,12 @@ export class Transform {
    */
   filterProjectiles(fn: (projectile: Projectile) => boolean): void {
     this.sim.projectiles = this.sim.projectiles.filter(fn);
+  }
+
+  /**
+   * Set weather conditions
+   */
+  setWeather(type: string, duration: number, intensity: number): void {
+    this.sim.setWeather(type, duration, intensity);
   }
 }
