@@ -1319,5 +1319,121 @@
         "spread": 2
       }
     ]
+  },
+  "levitate": {
+    "name": "Levitate",
+    "cooldown": 20,
+    "config": {
+      "duration": 100,
+      "height": 3
+    },
+    "target": "self",
+    "effects": [
+      {
+        "type": "buff",
+        "target": "self",
+        "buff": {
+          "flying": true,
+          "flyingHeight": 3,
+          "flyingDuration": 100
+        }
+      },
+      {
+        "type": "particles",
+        "particleType": "energy",
+        "count": 3,
+        "target": "self.pos",
+        "color": "#8800FF",
+        "spread": 1
+      }
+    ]
+  },
+  "blink": {
+    "name": "Blink",
+    "cooldown": 15,
+    "config": {
+      "range": 8
+    },
+    "trigger": "distance(closest.enemy()?.pos) <= 3 || self.hp < self.maxHp * 0.5",
+    "effects": [
+      {
+        "type": "particles",
+        "particleType": "smoke",
+        "count": 5,
+        "target": "self.pos",
+        "spread": 1
+      },
+      {
+        "type": "move",
+        "target": "self",
+        "destination": "random.safe_position(8)",
+        "teleport": true
+      },
+      {
+        "type": "particles",
+        "particleType": "smoke",
+        "count": 5,
+        "target": "self.pos",
+        "spread": 1
+      }
+    ]
+  },
+  "mind_control": {
+    "name": "Mind Control",
+    "cooldown": 40,
+    "config": {
+      "range": 10,
+      "duration": 50
+    },
+    "target": "closest.enemy()",
+    "trigger": "distance(closest.enemy()?.pos) <= 10",
+    "effects": [
+      {
+        "type": "debuff",
+        "target": "target",
+        "debuff": {
+          "charmed": true,
+          "charmedDuration": 50,
+          "originalTeam": "target.team",
+          "team": "friendly"
+        }
+      },
+      {
+        "type": "particles",
+        "particleType": "energy",
+        "count": 4,
+        "target": "target.pos",
+        "color": "#FF00FF",
+        "spread": 2
+      }
+    ]
+  },
+  "confuse": {
+    "name": "Confuse",
+    "cooldown": 10,
+    "config": {
+      "range": 12,
+      "duration": 30
+    },
+    "target": "closest.enemy()",
+    "trigger": "distance(closest.enemy()?.pos) <= 12",
+    "effects": [
+      {
+        "type": "debuff",
+        "target": "target",
+        "debuff": {
+          "confused": true,
+          "confusedDuration": 30
+        }
+      },
+      {
+        "type": "particles",
+        "particleType": "question",
+        "count": 3,
+        "target": "target.pos",
+        "spread": 1,
+        "color": "#FFFF00"
+      }
+    ]
   }
 }

@@ -678,5 +678,45 @@
     "meta": {
       "description": "Shapes earth and stone"
     }
+  },
+  "mentalist": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "mentalist",
+    "state": "idle",
+    "hp": 22,
+    "maxHp": 22,
+    "dmg": 2,
+    "mass": 0.8,
+    "abilities": ["levitate", "mind_control"],
+    "tags": ["mage", "coastal", "psychic", "flying"],
+    "meta": {
+      "description": "Master of minds and levitation",
+      "canFly": true,
+      "flyingHeight": 3
+    }
+  },
+  "trickster": {
+    "intendedMove": {
+      "x": 0,
+      "y": 0
+    },
+    "team": "friendly",
+    "sprite": "trickster",
+    "state": "idle", 
+    "hp": 20,
+    "maxHp": 20,
+    "dmg": 4,
+    "mass": 0.9,
+    "abilities": ["blink", "confuse"],
+    "tags": ["mage", "coastal", "illusion", "agile"],
+    "meta": {
+      "description": "Illusionist and escape artist",
+      "dodgeChance": 0.3,
+      "blinkRange": 8
+    }
   }
 }
