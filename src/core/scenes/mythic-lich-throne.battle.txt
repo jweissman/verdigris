@@ -20,6 +20,14 @@
 ..ç.α.β.γ.p.........................
 ....................................
 ---
+L: demon
+k: skeleton
+ç: champion
+α: acrobat
+β: berserker
+γ: guardian
+p: priest
+
 # Legend:
 # L = Lich King (placeholder for massive necromancer boss)
 # k = skeleton (undead minions)

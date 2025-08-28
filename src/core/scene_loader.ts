@@ -28,6 +28,7 @@ import mythicKrakenDepths from "./scenes/mythic-kraken-depths.battle.txt";
 import dragonEncounter from "./scenes/dragon-encounter.battle.txt";
 import mageBattle from "./scenes/mage-battle.battle.txt";
 import coastalMages from "./scenes/coastal-mages.battle.txt";
+import coastalAgora from "./scenes/coastal-agora.battle.txt";
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { CommandHandler } from "./command_handler";
 
@@ -62,8 +63,10 @@ export class SceneLoader {
     dragonEncounter,
     mageBattle,
     coastalMages,
+    coastalAgora,
   };
   private unitCreationIndex: number = 0;
+  private customLegend: { [key: string]: string } = {};
 
   constructor(private sim: Simulator) {}
 
@@ -140,45 +143,80 @@ export class SceneLoader {
     Z: "zapper",
     z: "rainmaker",
 
+    // TODO i don't love these either??
     ç: "champion",
     α: "acrobat",
     β: "berserker",
     γ: "guardian",
     σ: "shadowBlade",
     dragon: "dragon",
+
+    // todo use builtin index
     // Adding mage mappings using extended ASCII
-    "1": "philosopher",
-    "2": "rhetorician", 
-    "3": "logician",
-    "4": "geometer",
+    // "1": "philosopher",
+    // "2": "rhetorician", 
+    // "3": "logician",
+    // "4": "geometer",
+    // "5": "mentalist",
+    // "6": "trickster",
   };
 
   loadSimpleFormat(sceneText: string): void {
     this.sim.reset();
+    this.customLegend = {}; // Reset custom legend for each scene
     const lines = sceneText.trim().split("\n");
-    let inMetadata = false;
+    
+    // First pass: find and parse metadata (including legend)
+    let metadataStartIndex = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i] === "---") {
+        metadataStartIndex = i + 1;
+        break;
+      }
+    }
+    
+    if (metadataStartIndex >= 0) {
+      for (let i = metadataStartIndex; i < lines.length; i++) {
+        this.parseMetadata(lines[i]);
+      }
+    }
+    
+    // Second pass: parse the grid using the legend
     for (let y = 0; y < lines.length; y++) {
       const line = lines[y];
       if (!line.trim()) continue;
-
+      
       if (line === "---") {
-        inMetadata = true;
-        continue;
+        break; // Stop at metadata marker
       }
 
-      if (inMetadata) {
-        this.parseMetadata(line);
-        continue;
-      }
-
-      for (let x = 0; x < line.length; x++) {
+      let x = 0;
+      while (x < line.length) {
         const char = line[x];
 
-        if (char === " " || char === ".") continue;
+        if (char === " " || char === ".") {
+          x++;
+          continue;
+        }
 
-        const template = SceneLoader.defaultLegend[char];
-        if (template) {
-          this.createUnit(template, x, y);
+        // Check for multi-character legends (like "dragon")
+        let matched = false;
+        for (const [legend, unitType] of Object.entries(this.customLegend)) {
+          if (legend.length > 1 && line.substring(x, x + legend.length) === legend) {
+            this.createUnit(unitType, x, y);
+            x += legend.length;
+            matched = true;
+            break;
+          }
+        }
+
+        if (!matched) {
+          // Check single character legend
+          const template = this.customLegend[char] || SceneLoader.defaultLegend[char];
+          if (template) {
+            this.createUnit(template, x, y);
+          }
+          x++;
         }
       }
     }
@@ -194,6 +232,19 @@ export class SceneLoader {
   private parseMetadata(line: string): void {
     const trimmed = line.trim();
     if (!trimmed) return;
+
+    // Check for legend definition (e.g., "1: philosopher" or "a: skeleton" or "dragon: dragon")
+    if (trimmed.includes(":") && !trimmed.startsWith("#")) {
+      const colonIndex = trimmed.indexOf(":");
+      const char = trimmed.substring(0, colonIndex).trim();
+      const unitType = trimmed.substring(colonIndex + 1).trim().split(" ")[0]; // Take first word after colon
+      
+      // Support both single character and multi-character legends
+      if (char.length > 0) {
+        this.customLegend[char] = unitType;
+        return;
+      }
+    }
 
     const parts = trimmed.split(" ");
     const command = parts[0];

@@ -566,7 +566,11 @@ export class UnitProxyManager implements DataQuery {
    * Find closest enemies and allies for all units - vectorized
    * Returns maps of unitId -> targetId for efficient AI processing
    */
-  batchFindTargets(searchRadius: number = 15): {
+  batchFindTargets(
+    searchRadius: number = 15,
+    fieldWidth: number = 100,
+    fieldHeight: number = 100,
+  ): {
     enemies: Map<string, string | null>;
     allies: Map<string, string | null>;
   } {
@@ -580,7 +584,7 @@ export class UnitProxyManager implements DataQuery {
     if (activeCount <= 75) {
       return this.batchFindTargetsSimple(radiusSq, enemies, allies);
     } else {
-      return this.batchFindTargetsGrid(searchRadius, radiusSq, enemies, allies);
+      return this.batchFindTargetsGrid(searchRadius, radiusSq, enemies, allies, fieldWidth, fieldHeight);
     }
   }
 
@@ -644,6 +648,8 @@ export class UnitProxyManager implements DataQuery {
     radiusSq: number,
     enemies: Map<string, string | null>,
     allies: Map<string, string | null>,
+    fieldWidth: number = 100,
+    fieldHeight: number = 100,
   ): {
     enemies: Map<string, string | null>;
     allies: Map<string, string | null>;
@@ -651,8 +657,8 @@ export class UnitProxyManager implements DataQuery {
     const capacity = this.arrays.capacity;
 
     const gridSize = Math.ceil(searchRadius / 2);
-    const gridWidth = Math.ceil(100 / gridSize);
-    const gridHeight = Math.ceil(100 / gridSize);
+    const gridWidth = Math.ceil(fieldWidth / gridSize);
+    const gridHeight = Math.ceil(fieldHeight / gridSize);
     const grid: number[][] = Array(gridWidth * gridHeight)
       .fill(null)
       .map(() => []);
@@ -702,6 +708,7 @@ export class UnitProxyManager implements DataQuery {
             continue;
 
           const gridIdx = checkGy * gridWidth + checkGx;
+          if (gridIdx < 0 || gridIdx >= grid.length || !grid[gridIdx]) continue;
           const cellUnits = grid[gridIdx];
 
           for (const j of cellUnits) {
@@ -740,8 +747,10 @@ export class UnitProxyManager implements DataQuery {
    */
   batchProcessAI(
     postures: Map<string, string>,
+    fieldWidth: number = 100,
+    fieldHeight: number = 100,
   ): Map<string, { dx: number; dy: number }> {
-    const targets = this.batchFindTargets();
+    const targets = this.batchFindTargets(15, fieldWidth, fieldHeight);
     const moves = new Map<string, { dx: number; dy: number }>();
 
     for (const i of this.arrays.activeIndices) {

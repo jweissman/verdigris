@@ -40,6 +40,24 @@ export class Abilities extends Rule {
           target?: Function;
           ability: Ability;
         } = { ability };
+        
+        // Compile trigger if present
+        if (ability.trigger) {
+          try {
+            compiled.trigger = dslCompiler.compile(ability.trigger);
+          } catch (err) {
+            console.error(`Failed to compile trigger for ${name}:`, err);
+          }
+        }
+        
+        // Compile target if present  
+        if (ability.target) {
+          try {
+            compiled.target = dslCompiler.compile(ability.target);
+          } catch (err) {
+            console.error(`Failed to compile target for ${name}:`, err);
+          }
+        }
 
         Abilities.precompiledAbilities.set(name, compiled);
       }

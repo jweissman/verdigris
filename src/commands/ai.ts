@@ -53,7 +53,9 @@ export class AICommand extends Command {
     }
 
     const proxyManager = this.sim.getProxyManager();
-    const moves = proxyManager.batchProcessAI(postures);
+    const fieldWidth = context.getFieldWidth();
+    const fieldHeight = context.getFieldHeight();
+    const moves = proxyManager.batchProcessAI(postures, fieldWidth, fieldHeight);
 
     const nonZeroMoves = new Map<string, { dx: number; dy: number }>();
     for (const [unitId, move] of moves) {

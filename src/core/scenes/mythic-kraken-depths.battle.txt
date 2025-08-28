@@ -17,6 +17,13 @@
 ..α.β.γ.p...........................
 ....................................
 ---
+K: demon
+x: mesoworm
+α: acrobat
+β: berserker
+γ: guardian
+p: priest
+
 # Legend:
 # K = Kraken core (placeholder for boss)
 # x = Tentacles (mesoworm segments)

@@ -17,6 +17,16 @@
 .ç.α.β.γ.p.s.r.b....................
 ....................................
 ---
+dragon: dragon
+ç: champion
+α: acrobat
+β: berserker
+γ: guardian
+p: priest
+s: soldier
+r: ranger
+b: bombardier
+
 # Legend:
 # dragon = Ancient Dragon (400 HP boss)
 # ç = champion (tank)

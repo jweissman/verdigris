@@ -21,3 +21,8 @@
 ---
 bg city coastal
 weather storm
+1: philosopher
+2: rhetorician
+3: logician
+4: geometer
+k: skeleton
