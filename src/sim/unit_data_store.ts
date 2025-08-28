@@ -107,7 +107,7 @@ export class UnitDataStore {
   getState(unitId: string): UnitState {
     const idx = this.getIndex(unitId);
     const stateId = this.arrays.state[idx];
-    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead"];
+    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead", "charging"];
     return stateMap[stateId] || "idle";
   }
 
@@ -118,6 +118,7 @@ export class UnitDataStore {
       walk: 1,
       attack: 2,
       dead: 3,
+      charging: 4,
     };
     this.arrays.state[idx] = stateMap[state] || 0;
   }

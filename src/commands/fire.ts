@@ -32,13 +32,10 @@ export class FireCommand extends Command {
             x = hero.pos.x - distance;
             y = hero.pos.y;
             break;
-          case 'up':
-            x = hero.pos.x;
-            y = hero.pos.y - distance;
-            break;
-          case 'down':
-            x = hero.pos.x;
-            y = hero.pos.y + distance;
+          default:
+            // Default to right if facing is undefined
+            x = hero.pos.x + distance;
+            y = hero.pos.y;
             break;
         }
       }

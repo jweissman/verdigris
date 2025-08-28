@@ -1182,13 +1182,13 @@
   },
   "bolt": {
     "name": "Lightning Bolt",
-    "cooldown": 10,
+    "cooldown": 1,
     "config": {
-      "damage": 40,
-      "range": 12
+      "damage": 250,
+      "range": 30
     },
     "target": "closest.enemy()",
-    "trigger": "distance(closest.enemy()?.pos) <= 12",
+    "trigger": "distance(closest.enemy()?.pos) <= 30",
     "effects": [
       {
         "type": "lightning",
@@ -1198,7 +1198,7 @@
         "type": "damage",
         "target": "target",
         "aspect": "shock",
-        "amount": 40,
+        "amount": 250,
         "origin": "self.pos"
       },
       {
@@ -1212,28 +1212,28 @@
   },
   "fire": {
     "name": "Fire Blast",
-    "cooldown": 12,
+    "cooldown": 1,
     "config": {
-      "range": 10,
-      "damage": 30,
-      "radius": 5
+      "range": 30,
+      "damage": 220,
+      "radius": 4
     },
     "target": "closest.enemy()",
-    "trigger": "distance(closest.enemy()?.pos) <= 10",
+    "trigger": "distance(closest.enemy()?.pos) <= 30",
     "effects": [
       {
         "type": "aoe",
         "target": "target.pos",
         "aspect": "heat",
-        "amount": 30,
-        "radius": 5,
+        "amount": 220,
+        "radius": 4,
         "origin": "self.pos"
       },
       {
         "type": "heat",
         "target": "target.pos",
-        "amount": 1000,
-        "radius": 5
+        "amount": 5000,
+        "radius": 4
       },
       {
         "type": "setOnFire",
@@ -1250,20 +1250,20 @@
   },
   "freeze": {
     "name": "Freeze",
-    "cooldown": 15,
+    "cooldown": 3,
     "config": {
-      "range": 9,
-      "damage": 25,
-      "duration": 40
+      "range": 20,
+      "damage": 100,
+      "duration": 80
     },
     "target": "closest.enemy()",
-    "trigger": "distance(closest.enemy()?.pos) <= 9",
+    "trigger": "distance(closest.enemy()?.pos) <= 20",
     "effects": [
       {
         "type": "damage",
         "target": "target",
         "aspect": "cold",
-        "amount": 25,
+        "amount": 15,
         "origin": "self.pos"
       },
       {
@@ -1271,7 +1271,7 @@
         "target": "target",
         "debuff": {
           "frozen": true,
-          "frozenDuration": 40,
+          "frozenDuration": 80,
           "stunned": true
         }
       },
@@ -1286,28 +1286,28 @@
   },
   "drop_rock": {
     "name": "Drop Rock",
-    "cooldown": 12,
+    "cooldown": 1,
     "config": {
-      "range": 11,
-      "damage": 35,
+      "range": 30,
+      "damage": 230,
       "impactRadius": 4,
-      "duration": 2
+      "duration": 1
     },
     "target": "closest.enemy()",
-    "trigger": "distance(closest.enemy()?.pos) <= 11",
+    "trigger": "distance(closest.enemy()?.pos) <= 30",
     "effects": [
       {
         "type": "projectile",
         "id": "rock",
         "pos": "self.pos",
         "radius": 3,
-        "damage": 35,
+        "damage": 230,
         "team": "self.team",
         "projectileType": "bomb",
         "target": "target.pos",
         "origin": "self.pos",
         "progress": 0,
-        "duration": 2,
+        "duration": 1,
         "z": 10,
         "aoeRadius": 4
       },

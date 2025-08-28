@@ -53,6 +53,8 @@ class Simulator {
   public fieldWidth: number;
   public fieldHeight: number;
   public enableEnvironmentalEffects: boolean = false;
+  public sceneMetadata: Record<string, any> = {};
+  public currentBiome?: string;
 
   get width() {
     return this.fieldWidth;

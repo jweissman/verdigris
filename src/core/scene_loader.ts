@@ -26,6 +26,8 @@ import mythicTitanColossus from "./scenes/mythic-titan-colossus.battle.txt";
 import mythicLichThrone from "./scenes/mythic-lich-throne.battle.txt";
 import mythicKrakenDepths from "./scenes/mythic-kraken-depths.battle.txt";
 import dragonEncounter from "./scenes/dragon-encounter.battle.txt";
+import mageBattle from "./scenes/mage-battle.battle.txt";
+import coastalMages from "./scenes/coastal-mages.battle.txt";
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { CommandHandler } from "./command_handler";
 
@@ -58,6 +60,8 @@ export class SceneLoader {
     mythicLichThrone,
     mythicKrakenDepths,
     dragonEncounter,
+    mageBattle,
+    coastalMages,
   };
   private unitCreationIndex: number = 0;
 
@@ -142,6 +146,11 @@ export class SceneLoader {
     γ: "guardian",
     σ: "shadowBlade",
     dragon: "dragon",
+    // Adding mage mappings using extended ASCII
+    "1": "philosopher",
+    "2": "rhetorician", 
+    "3": "logician",
+    "4": "geometer",
   };
 
   loadSimpleFormat(sceneText: string): void {

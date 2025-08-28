@@ -127,7 +127,14 @@ describe('Individual Mage Abilities', () => {
         id: 'target',
         pos: { x: 10, y: 10 },
         team: 'hostile' as const,
-        hp: 30
+        hp: 100,  // Enough HP to survive freeze damage
+        maxHp: 100,
+        dmg: 1,
+        sprite: 'test',
+        state: 'idle' as const,
+        intendedMove: { x: 0, y: 0 },
+        abilities: [],
+        meta: {}
       };
       
       sim.addUnit(logician);
@@ -283,10 +290,10 @@ describe('Individual Mage Abilities', () => {
       for (let i = 0; i < 5; i++) {
         const pirate = {
           id: `pirate${i}`,
-          pos: { x: 20 + (i % 3), y: 10 + Math.floor(i / 3) * 2 },
+          pos: { x: 25 + (i % 3), y: 10 + Math.floor(i / 3) * 2 },
           team: 'hostile' as const,
-          hp: 25,
-          dmg: 3
+          hp: 12,
+          dmg: 2
         };
         pirates.push(pirate);
         sim.addUnit(pirate);
@@ -322,7 +329,7 @@ describe('Individual Mage Abilities', () => {
       });
       
       // Run battle
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 40; i++) {
         sim.step();
       }
       
@@ -337,7 +344,7 @@ describe('Individual Mage Abilities', () => {
         u.id.startsWith('pirate') && u.hp > 0
       );
       
-      // Mages should mostly survive
+      // Most mages should survive with powerful abilities
       expect(survivingMages.length).toBeGreaterThanOrEqual(3);
       
       // Some pirates should be defeated

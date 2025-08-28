@@ -38,7 +38,10 @@ export interface Particle {
     | "pain"
     | "freeze_impact"
     | "reinforce"
-    | "hack"; // Different particle types
+    | "hack"
+    | "fire"
+    | "ice"
+    | "dust"; // Different particle types
   landed?: boolean; // Has the particle landed on the ground
   targetCell?: Vec2; // Target cell for precise positioning
 }

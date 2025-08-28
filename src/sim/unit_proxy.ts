@@ -242,7 +242,7 @@ export class UnitProxyManager implements DataQuery {
 
   getStateByIndex(index: number): UnitState {
     const stateId = this.arrays.state[index];
-    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead"];
+    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead", "charging"];
     return stateMap[stateId] || "idle";
   }
 
@@ -329,7 +329,7 @@ export class UnitProxyManager implements DataQuery {
   getState(unitId: string): UnitState {
     const idx = this.getIndex(unitId);
     const stateId = this.arrays.state[idx];
-    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead"];
+    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead", "charging"];
     return stateMap[stateId] || "idle";
   }
 
@@ -340,6 +340,7 @@ export class UnitProxyManager implements DataQuery {
       walk: 1,
       attack: 2,
       dead: 3,
+      charging: 4,
     };
     this.arrays.state[idx] = stateMap[state] || 0;
   }

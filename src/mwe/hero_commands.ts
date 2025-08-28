@@ -41,7 +41,7 @@ export class HeroCommandsGame extends Game {
   }
 
   private spawnHero() {
-    const heroData = Encyclopaedia.unit(this.heroType) || {};
+    const heroData = Encyclopaedia.unit(this.heroType);
     const hero: Unit = {
       id: this.heroId,
       type: this.heroType,
@@ -49,12 +49,12 @@ export class HeroCommandsGame extends Game {
       intendedMove: { x: 0, y: 0 },
       team: "friendly" as const,
       state: "idle" as const,
-      hp: heroData.hp || 150,
-      maxHp: heroData.maxHp || 150,
-      mass: heroData.mass || 10,
-      sprite: heroData.sprite || "champion",
+      hp: heroData?.hp || 150,
+      maxHp: heroData?.maxHp || 150,
+      mass: heroData?.mass || 10,
+      sprite: heroData?.sprite || "champion",
       abilities: ["groundPound", "heroicLeap", "tripleJump"],
-      dmg: heroData.dmg || 15,
+      dmg: heroData?.dmg || 15,
       tags: ["hero", "controlled"],
       meta: {
         controlled: true,
@@ -77,7 +77,7 @@ export class HeroCommandsGame extends Game {
   private spawnTestEnemies() {
     const enemyTypes = ["skeleton", "ghost", "soldier"];
     for (let i = 0; i < 3; i++) {
-      const enemyData = Encyclopaedia.unit(enemyTypes[i]) || {};
+      const enemyData = Encyclopaedia.unit(enemyTypes[i]);
       this.sim.addUnit({
         id: `enemy_${i}`,
         type: enemyTypes[i],
@@ -85,12 +85,12 @@ export class HeroCommandsGame extends Game {
         intendedMove: { x: 0, y: 0 },
         team: "hostile" as const,
         state: "idle" as const,
-        hp: enemyData.hp || 30,
-        maxHp: enemyData.maxHp || 30,
-        mass: enemyData.mass || 5,
-        sprite: enemyData.sprite || enemyTypes[i],
-        abilities: enemyData.abilities || [],
-        dmg: enemyData.dmg || 5,
+        hp: enemyData?.hp || 30,
+        maxHp: enemyData?.maxHp || 30,
+        mass: enemyData?.mass || 5,
+        sprite: enemyData?.sprite || enemyTypes[i],
+        abilities: enemyData?.abilities || [],
+        dmg: enemyData?.dmg || 5,
         tags: ["enemy"],
       });
     }

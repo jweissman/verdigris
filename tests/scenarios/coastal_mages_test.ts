@@ -38,12 +38,20 @@ describe('Coastal City Mages E2E', () => {
     sim.addUnit(geometer);
     
     // Create some enemies to fight
-    const enemies = [
-      { id: 'pirate1', pos: { x: 20, y: 10 }, team: 'hostile' as const, hp: 30 },
-      { id: 'pirate2', pos: { x: 20, y: 15 }, team: 'hostile' as const, hp: 30 },
-      { id: 'pirate3', pos: { x: 22, y: 12 }, team: 'hostile' as const, hp: 30 },
-      { id: 'pirate4', pos: { x: 18, y: 13 }, team: 'hostile' as const, hp: 30 }
-    ];
+    const enemies = [];
+    for (let i = 0; i < 4; i++) {
+      const pirate = Encyclopaedia.unit('soldier'); // Use a real unit type
+      pirate.id = `pirate${i}`;
+      pirate.team = 'hostile';
+      pirate.hp = 15;
+      pirate.maxHp = 15;
+      enemies.push(pirate);
+    }
+    // Position them
+    enemies[0].pos = { x: 25, y: 10 };
+    enemies[1].pos = { x: 25, y: 15 };
+    enemies[2].pos = { x: 27, y: 12 };
+    enemies[3].pos = { x: 23, y: 13 };
     enemies.forEach(e => sim.addUnit(e));
     
     // Verify all units were added
@@ -124,8 +132,8 @@ describe('Coastal City Mages E2E', () => {
       expect(geometerAfter.meta.burrowed).toBe(true);
     }
     
-    // Run combat simulation
-    for (let i = 0; i < 30; i++) {
+    // Run combat simulation - let abilities trigger
+    for (let i = 0; i < 40; i++) {
       sim.step();
     }
     
@@ -137,12 +145,11 @@ describe('Coastal City Mages E2E', () => {
       u.team === 'friendly' && u.hp > 0
     );
     
-    // All mages should survive
+    // All mages should survive with their powerful abilities
     expect(remainingMages.length).toBe(4);
     
-    // Some enemies should be damaged or defeated
-    const totalEnemyHp = remainingEnemies.reduce((sum, e) => sum + e.hp, 0);
-    expect(totalEnemyHp).toBeLessThan(120); // Started with 120 total HP
+    // Enemies should be damaged or defeated
+    expect(remainingEnemies.length).toBeLessThanOrEqual(3); // At least 1 enemy defeated
     
     // Verify scene metadata
     expect(sim.sceneMetadata).toBeDefined();

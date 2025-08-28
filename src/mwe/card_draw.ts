@@ -44,7 +44,7 @@ export class CardDrawGame extends Game {
   bootstrap() {
     super.bootstrap();
 
-    this.renderer.setViewMode("top");
+    this.renderer.setViewMode("grid");
 
     this.drawInitialHand();
 

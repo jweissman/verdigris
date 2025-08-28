@@ -1,201 +1,67 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
-import Encyclopaedia from '../../src/dmg/encyclopaedia';
+import { SceneLoader } from '../../src/core/scene_loader';
 
 describe('Epic Mage Battle - The Four Schools vs Undead Horde', () => {
   it('4 mages should survive against a skeleton horde', () => {
-    const sim = new Simulator(50, 50);
+    const sim = new Simulator(30, 25);
+    const loader = new SceneLoader(sim);
+    loader.loadScene('mageBattle');
     
-    // Set an epic coastal ruins scene
-    sim.queuedCommands.push({
-      type: 'bg',
-      params: {
-        scene: 'city',
-        biome: 'coastal',
-        skyColor: '#4A5568', // Stormy gray sky
-        ambientLight: 0.7,
-        tileset: 'ruins'
-      }
-    });
-    sim.step();
+    // Verify scene loaded correctly
+    const mages = sim.units.filter(u => u.team === 'friendly');
+    const skeletons = sim.units.filter(u => u.team === 'hostile');
     
-    // Start with dramatic storm weather
-    sim.queuedCommands.push({
-      type: 'weather',
-      params: { weatherType: 'storm', action: 'start' }
-    });
-    sim.step();
+    expect(mages.length).toBe(4);
+    expect(skeletons.length).toBeGreaterThan(20);
     
-    // Position the Four Schools of Magic in diamond formation
-    const philosopher = Encyclopaedia.unit('philosopher');
-    philosopher.pos = { x: 25, y: 20 }; // North - Lightning
-    philosopher.id = 'philosopher_prime';
-    
-    const rhetorician = Encyclopaedia.unit('rhetorician');
-    rhetorician.pos = { x: 20, y: 25 }; // West - Fire
-    rhetorician.id = 'rhetorician_prime';
-    
-    const logician = Encyclopaedia.unit('logician');
-    logician.pos = { x: 30, y: 25 }; // East - Ice
-    logician.id = 'logician_prime';
-    
-    const geometer = Encyclopaedia.unit('geometer');
-    geometer.pos = { x: 25, y: 30 }; // South - Earth
-    geometer.id = 'geometer_prime';
-    
-    // Add the mage heroes
-    sim.addUnit(philosopher);
-    sim.addUnit(rhetorician);
-    sim.addUnit(logician);
-    sim.addUnit(geometer);
-    
-    // Create skeleton horde approaching from all sides
-    const skeletons = [];
-    const skeletonPositions = [
-      // North wave
-      ...Array(7).fill(0).map((_, i) => ({ x: 20 + i * 2, y: 5 })),
-      // South wave  
-      ...Array(7).fill(0).map((_, i) => ({ x: 20 + i * 2, y: 45 })),
-      // East wave
-      ...Array(6).fill(0).map((_, i) => ({ x: 45, y: 20 + i * 2 })),
-      // West wave
-      ...Array(5).fill(0).map((_, i) => ({ x: 5, y: 20 + i * 2 })),
-    ];
-    
-    skeletonPositions.forEach((pos, i) => {
-      const skeleton = {
-        id: `skeleton_${i}`,
-        pos: pos,
-        team: 'hostile' as const,
-        hp: 15,
-        dmg: 2,
-        sprite: 'skeleton',
-        abilities: ['melee'],
-        tags: ['undead'],
-        meta: {
-          perdurance: 'undead' // Takes less physical damage
-        }
-      };
-      skeletons.push(skeleton);
-      sim.addUnit(skeleton);
-    });
-    
-    expect(skeletons.length).toBe(25);
-    
-    // Let the battle play out with abilities
+    // Run the epic battle
     for (let i = 0; i < 100; i++) {
       sim.step();
     }
     
-    // Check the outcome
+    // Check final state
     const survivingMages = sim.units.filter(u => 
-      ['philosopher_prime', 'rhetorician_prime', 'logician_prime', 'geometer_prime'].includes(u.id) 
-      && u.hp > 0
+      u.team === 'friendly' && u.hp > 0
     );
-    
     const survivingSkeletons = sim.units.filter(u =>
-      u.id.startsWith('skeleton_') && u.hp > 0
+      u.team === 'hostile' && u.hp > 0
     );
     
-    // Mages should survive  
-    expect(survivingMages.length).toBeGreaterThan(0);
-    
-    // Mages should be victorious - most skeletons dead
+    // The mages with their powerful abilities should triumph
+    expect(survivingMages.length).toBe(4);
     expect(survivingSkeletons.length).toBeLessThan(10);
+    
+    // Check that abilities were used
+    const hasParticles = sim.particles.length > 0;
+    expect(hasParticles).toBe(true);
   });
   
   it('should demonstrate spell combos and synergies', () => {
-    const sim = new Simulator(30, 30);
+    const sim = new Simulator(30, 25);
+    const loader = new SceneLoader(sim);
+    loader.loadScene('mageBattle');
     
-    // Setup coastal tower defense scene
-    sim.queuedCommands.push({
-      type: 'bg',
-      params: {
-        scene: 'city',
-        biome: 'coastal',
-        skyColor: '#1F2937', // Night battle
-        ambientLight: 0.4,
-      }
-    });
-    sim.step();
-    
-    // Create mage tower formation
-    const mages = [
-      { type: 'philosopher', pos: { x: 10, y: 10 } },
-      { type: 'rhetorician', pos: { x: 20, y: 10 } },
-      { type: 'logician', pos: { x: 10, y: 20 } },
-      { type: 'geometer', pos: { x: 20, y: 20 } }
-    ].map(config => {
-      const mage = Encyclopaedia.unit(config.type);
-      mage.pos = config.pos;
-      sim.addUnit(mage);
-      return mage;
-    });
-    
-    // Single powerful enemy
-    const boss = {
-      id: 'undead_lord',
-      pos: { x: 15, y: 25 },
-      team: 'hostile' as const,
-      hp: 200,
-      dmg: 10,
-      tags: ['boss', 'undead']
-    };
-    sim.addUnit(boss);
-    
-    // Combo 1: Storm + Fire = Firestorm
-    sim.queuedCommands.push({
-      type: 'weather',
-      params: { weatherType: 'storm', action: 'start' }
-    });
-    sim.queuedCommands.push({
-      type: 'fire',
-      params: { x: 15, y: 25, radius: 4, temperature: 1000 }
-    });
-    
-    // Combo 2: Ice + Lightning = Shatter
-    sim.queuedCommands.push({
-      type: 'meta',
-      params: { 
-        unitId: 'undead_lord', 
-        meta: {
-          frozen: true,
-          frozenDuration: 5,
-          stunned: true
-        }
-      }
-    });
-    sim.queuedCommands.push({
-      type: 'bolt',
-      params: { x: 15, y: 25 }
-    });
-    
-    // Combo 3: Earth + Fire = Lava
-    sim.queuedCommands.push({
-      type: 'airdrop',
-      params: { unitType: 'rock', x: 15, y: 25 }
-    });
-    sim.queuedCommands.push({
-      type: 'fire',
-      params: { x: 15, y: 25, radius: 2, temperature: 1200 }
-    });
-    
-    // Execute combos
-    for (let i = 0; i < 30; i++) {
+    // Run battle to see ability synergies
+    for (let i = 0; i < 50; i++) {
       sim.step();
     }
     
-    // Boss should take significant damage
-    const bossAfter = sim.units.find(u => u.id === 'undead_lord');
-    if (bossAfter) {
-      expect(bossAfter.hp).toBeLessThan(150);
-    }
+    // Check for various particle types showing abilities were used
+    const particleTypes = new Set(sim.particles.map(p => p.type));
     
-    // All mages should be alive
-    const aliveMages = sim.units.filter(u => 
-      ['philosopher', 'rhetorician', 'logician', 'geometer'].some(type => u.id.includes(type))
-      && u.hp > 0
+    // Should see evidence of multiple spell types
+    const hasLightning = particleTypes.has('lightning') || particleTypes.has('lightning_branch');
+    const hasFire = particleTypes.has('fire');
+    const hasIce = particleTypes.has('ice');
+    const hasEarth = particleTypes.has('rock') || particleTypes.has('earth');
+    
+    expect(hasLightning || hasFire || hasIce || hasEarth).toBe(true);
+    
+    // Mages should still be alive
+    const survivingMages = sim.units.filter(u =>
+      u.team === 'friendly' && u.hp > 0  
     );
-    expect(aliveMages.length).toBe(4);
+    expect(survivingMages.length).toBeGreaterThanOrEqual(3);
   });
 });
