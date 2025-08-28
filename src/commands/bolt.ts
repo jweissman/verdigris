@@ -110,8 +110,8 @@ export class BoltCommand extends Command {
     }
 
     // Deal damage to units at strike position (but not the caster)
-    // Lightning strike has a 2-tile damage radius
-    const damageRadius = 2;
+    // Lightning strike has a 3-tile damage radius for better AoE
+    const damageRadius = 3;
     const unitsAtPos = this.sim.units.filter(
       (u) =>
         u.id !== unitId && // Don't damage the caster
@@ -133,6 +133,7 @@ export class BoltCommand extends Command {
           targetId: unit.id,
           amount: damage,
           source: unitId || "lightning",
+          aspect: "lightning"
         },
       });
     }

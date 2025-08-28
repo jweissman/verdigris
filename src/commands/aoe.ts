@@ -53,7 +53,8 @@ export class AoE extends Command {
         return (
           sourceUnit && unit.team === sourceUnit.team && unit.hp < unit.maxHp
         );
-      } else if (!friendlyFire && sourceUnit) {
+      } else if (!friendlyFire && sourceUnit && !isEmp) {
+        // EMP should affect all units in range (except source if excludeSource)
         return unit.team !== sourceUnit.team;
       }
       return true;

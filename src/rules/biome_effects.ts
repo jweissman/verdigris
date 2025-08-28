@@ -405,7 +405,7 @@ export class BiomeEffects extends Rule {
       if (temp <= 0 && !unit.meta.frozen) {
         const metaUpdate = {
           frozen: true,
-          frozenDuration: 40,
+          frozenDuration: 1,  // Renewed each tick while cold
           brittle: true,
           stunned: true,
         };
@@ -454,13 +454,15 @@ export class BiomeEffects extends Rule {
             },
           },
         });
-      } else if (temp > 0 && unit.meta.frozen) {
+      } else if (temp > 0 && unit.meta.frozen && unit.meta.frozenDuration <= 1) {
+        // Thaw when warm and short duration (environmental freeze)
         this.commands.push({
           type: "meta",
           params: {
             unitId: unit.id,
             meta: {
               frozen: false,
+              frozenDuration: undefined,
               brittle: false,
               stunned: false,
             },

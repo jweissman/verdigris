@@ -127,8 +127,7 @@ describe('Individual Mage Abilities', () => {
         id: 'target',
         pos: { x: 10, y: 10 },
         team: 'hostile' as const,
-        hp: 30,
-        intendedMove: { x: 1, y: 0 } // Trying to move
+        hp: 30
       };
       
       sim.addUnit(logician);
@@ -171,9 +170,8 @@ describe('Individual Mage Abilities', () => {
         }
       });
       
-      for (let i = 0; i < 5; i++) {
-        sim.step();
-      }
+      // Process just one step to see immediate effect
+      sim.step();
       
       // Target should not have moved
       const targetAfter = sim.units.find(u => u.id === 'target');

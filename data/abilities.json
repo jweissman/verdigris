@@ -1179,5 +1179,145 @@
         "target": "self"
       }
     ]
+  },
+  "bolt": {
+    "name": "Lightning Bolt",
+    "cooldown": 10,
+    "config": {
+      "damage": 40,
+      "range": 12
+    },
+    "target": "closest.enemy()",
+    "trigger": "distance(closest.enemy()?.pos) <= 12",
+    "effects": [
+      {
+        "type": "lightning",
+        "target": "target.pos"
+      },
+      {
+        "type": "damage",
+        "target": "target",
+        "aspect": "shock",
+        "amount": 40,
+        "origin": "self.pos"
+      },
+      {
+        "type": "particles",
+        "particleType": "lightning",
+        "count": 3,
+        "target": "target.pos",
+        "spread": 2
+      }
+    ]
+  },
+  "fire": {
+    "name": "Fire Blast",
+    "cooldown": 12,
+    "config": {
+      "range": 10,
+      "damage": 30,
+      "radius": 5
+    },
+    "target": "closest.enemy()",
+    "trigger": "distance(closest.enemy()?.pos) <= 10",
+    "effects": [
+      {
+        "type": "aoe",
+        "target": "target.pos",
+        "aspect": "heat",
+        "amount": 30,
+        "radius": 5,
+        "origin": "self.pos"
+      },
+      {
+        "type": "heat",
+        "target": "target.pos",
+        "amount": 1000,
+        "radius": 5
+      },
+      {
+        "type": "setOnFire",
+        "target": "target"
+      },
+      {
+        "type": "particles",
+        "particleType": "fire",
+        "count": 8,
+        "target": "target.pos",
+        "spread": 3
+      }
+    ]
+  },
+  "freeze": {
+    "name": "Freeze",
+    "cooldown": 15,
+    "config": {
+      "range": 9,
+      "damage": 25,
+      "duration": 40
+    },
+    "target": "closest.enemy()",
+    "trigger": "distance(closest.enemy()?.pos) <= 9",
+    "effects": [
+      {
+        "type": "damage",
+        "target": "target",
+        "aspect": "cold",
+        "amount": 25,
+        "origin": "self.pos"
+      },
+      {
+        "type": "debuff",
+        "target": "target",
+        "debuff": {
+          "frozen": true,
+          "frozenDuration": 40,
+          "stunned": true
+        }
+      },
+      {
+        "type": "particles",
+        "particleType": "ice",
+        "count": 5,
+        "target": "target.pos",
+        "spread": 2
+      }
+    ]
+  },
+  "drop_rock": {
+    "name": "Drop Rock",
+    "cooldown": 12,
+    "config": {
+      "range": 11,
+      "damage": 35,
+      "impactRadius": 4,
+      "duration": 2
+    },
+    "target": "closest.enemy()",
+    "trigger": "distance(closest.enemy()?.pos) <= 11",
+    "effects": [
+      {
+        "type": "projectile",
+        "id": "rock",
+        "pos": "self.pos",
+        "radius": 3,
+        "damage": 35,
+        "team": "self.team",
+        "projectileType": "bomb",
+        "target": "target.pos",
+        "origin": "self.pos",
+        "progress": 0,
+        "duration": 2,
+        "z": 10,
+        "aoeRadius": 4
+      },
+      {
+        "type": "particles",
+        "particleType": "dust",
+        "count": 6,
+        "target": "target.pos",
+        "spread": 2
+      }
+    ]
   }
 }

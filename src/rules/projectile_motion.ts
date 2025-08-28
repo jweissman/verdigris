@@ -15,6 +15,8 @@ export class ProjectileMotion extends Rule {
   private bombs: number[] = [];
   private grapples: number[] = [];
   private toRemove: number[] = [];
+  private frameOffset = 0;
+  
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
     
@@ -91,12 +93,23 @@ export class ProjectileMotion extends Rule {
       const projTeam = projectileArrays.team[pIdx];
       const projType = projectileArrays.type[pIdx];
       
-      // Check collision with units - limit checks for performance
+      // Check collision with units - use spatial bounds first
       let checksPerformed = 0;
-      const maxChecks = 50; // Limit checks per projectile
+      const maxChecks = 5; // Very aggressive limit
+      const checkRadius = radius + 2; // Slightly larger for safety
       
       for (const unitIdx of activeUnits) {
-        if (checksPerformed++ > maxChecks) break;
+        if (checksPerformed > maxChecks) break;
+        
+        // Quick bounds check before incrementing counter
+        const unitX = unitArrays.posX[unitIdx];
+        if (Math.abs(unitX - projX) > checkRadius) continue;
+        
+        const unitY = unitArrays.posY[unitIdx];
+        if (Math.abs(unitY - projY) > checkRadius) continue;
+        
+        // Only count checks that pass bounds test
+        checksPerformed++;
         
         // Team check first (cheapest)
         if (projType !== 2 && unitArrays.team[unitIdx] === projTeam) continue;
@@ -104,16 +117,11 @@ export class ProjectileMotion extends Rule {
         // Health check
         if (unitArrays.hp[unitIdx] <= 0) continue;
         
-        // Bounding box check (cheaper than distance)
-        const unitX = unitArrays.posX[unitIdx];
-        const dx = Math.abs(unitX - projX);
-        if (dx > radius) continue;
+        // We already have unitX and unitY from bounds check
+        const dx = unitX - projX;
+        const dy = unitY - projY;
         
-        const unitY = unitArrays.posY[unitIdx];
-        const dy = Math.abs(unitY - projY);
-        if (dy > radius) continue;
-        
-        // Precise distance check only if within bounding box
+        // Precise distance check
         const distSq = dx * dx + dy * dy;
         if (distSq >= radiusSq) continue;
         
@@ -145,15 +153,27 @@ export class ProjectileMotion extends Rule {
       }
     };
     
-    // Process bullets
-    for (const pIdx of this.bullets) {
-      processBulletOrGrapple(pIdx);
+    // Process projectiles in batches - rotate through them
+    const allProjectiles = [...this.bullets, ...this.grapples];
+    const maxPerFrame = Math.min(3, allProjectiles.length); // Process max 3 per frame
+    
+    // Process a rotating subset each frame
+    const startIdx = this.frameOffset % Math.max(1, allProjectiles.length);
+    const endIdx = Math.min(startIdx + maxPerFrame, allProjectiles.length);
+    
+    for (let i = startIdx; i < endIdx; i++) {
+      processBulletOrGrapple(allProjectiles[i]);
     }
     
-    // Process grapples
-    for (const pIdx of this.grapples) {
-      processBulletOrGrapple(pIdx);
+    // Also process wrapped around if we hit the end
+    if (endIdx < startIdx + maxPerFrame && allProjectiles.length > 0) {
+      const remaining = maxPerFrame - (endIdx - startIdx);
+      for (let i = 0; i < Math.min(remaining, startIdx); i++) {
+        processBulletOrGrapple(allProjectiles[i]);
+      }
     }
+    
+    this.frameOffset += maxPerFrame;
     
     // Remove hit projectiles
     for (const idx of this.toRemove) {

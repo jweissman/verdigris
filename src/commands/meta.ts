@@ -23,7 +23,6 @@ export class MetaCommand extends Command {
       return;
     }
 
-    // console.log(`MetaCommand: Updating unit ${targetId} with`, params.meta);
 
     const updates: any = {};
 

@@ -86,6 +86,7 @@ export class StatusEffects extends Rule {
             params: {
               unitId: unit.id,
               meta: {
+                stunned: true,  // PRESERVE the stunned flag!
                 stunDuration: newDuration,
               }
             }

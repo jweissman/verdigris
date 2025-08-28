@@ -81,6 +81,39 @@ export class FireCommand extends Command {
       }
     }
     
+    // Deal immediate AoE damage to units in the fire area
+    const unitsInFire = this.sim.units.filter(
+      u => Math.abs(u.pos.x - x) <= radius && 
+           Math.abs(u.pos.y - y) <= radius &&
+           u.hp > 0
+    );
+    
+    for (const unit of unitsInFire) {
+      const dx = Math.abs(unit.pos.x - x);
+      const dy = Math.abs(unit.pos.y - y);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist <= radius) {
+        // Synergy: Stunned/frozen units take extra damage
+        // Undead are weak to fire
+        const isStunned = unit.meta?.stunned || unit.meta?.frozen;
+        const isUndead = unit.tags?.includes('undead') || unit.meta?.perdurance === 'undead';
+        const baseDamage = 30;
+        let damage = isStunned ? baseDamage * 2 : baseDamage;
+        if (isUndead) damage *= 2; // Double damage vs undead
+        
+        this.sim.queuedCommands.push({
+          type: "damage",
+          params: {
+            targetId: unit.id,
+            amount: damage,
+            source: unitId || "fire",
+            aspect: "fire"
+          }
+        });
+      }
+    }
+    
     // Add visual fire particles
     for (let i = 0; i < 10; i++) {
       const angle = (Math.PI * 2 * i) / 10;

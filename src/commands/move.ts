@@ -12,15 +12,24 @@ export class MoveCommand extends Command {
     if (!unit) return;
 
     if (params.x !== undefined && params.y !== undefined) {
-      // Don't move if frozen or stunned
-      if (unit.meta.frozen || unit.meta.stunned) {
-        return;
-      }
-      
       const newX = params.x as number;
       const newY = params.y as number;
       const dx = newX - unit.pos.x;
       const dy = newY - unit.pos.y;
+
+      // Don't move if frozen or stunned (check cold data through proxyManager)
+      const proxyManager = this.sim.getProxyManager();
+      const meta = proxyManager.getMeta(targetId);
+      const isFrozen = meta?.frozen;
+      const isStunned = meta?.stunned;
+      
+      if (isFrozen || isStunned) {
+        // Set intended move to 0 to ensure no movement
+        transform.updateUnit(targetId, {
+          intendedMove: { x: 0, y: 0 },
+        });
+        return;
+      }
 
       const updates: any = {
         intendedMove: { x: dx, y: dy },
@@ -45,7 +54,13 @@ export class MoveCommand extends Command {
         effectiveDy *= slowFactor;
       }
 
-      if (unit.meta.stunned || unit.meta.frozen) {
+      // Check cold data for frozen/stunned status through proxyManager
+      const proxyManager = this.sim.getProxyManager();
+      const meta = proxyManager.getMeta(targetId);
+      const isFrozen = meta?.frozen;
+      const isStunned = meta?.stunned;
+      
+      if (isStunned || isFrozen) {
         effectiveDx = 0;
         effectiveDy = 0;
       }
