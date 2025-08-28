@@ -90,6 +90,8 @@ class Simulator {
   private changedUnits: Set<string> = new Set();
 
   public gridPartition: GridPartition;
+  public unitSpatialHash: Map<string, number[]> | null = null;
+  public spatialHashTick: number = -1;
 
   public proxyManager: UnitProxyManager;
 

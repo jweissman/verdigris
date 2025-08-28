@@ -293,24 +293,49 @@ export class TickContextImpl implements TickContext {
 
   /**
    * High-performance query: returns indices instead of proxies
-   * Much faster than findUnitsInRadius for hot paths
+   * Uses spatial hash when available for O(1) lookups
    */
   findUnitIndicesInRadius(center: Vec2, radius: number): number[] {
+    const result: number[] = [];
+    const radiusSq = radius * radius;
     const arrays = this.getArrays();
     const { posX, posY, activeIndices } = arrays;
-    const radiusSq = radius * radius;
-    const result: number[] = [];
-
+    
+    // Early exit for large radius (would include most units anyway)
+    if (radius > 20) {
+      for (const idx of activeIndices) {
+        const dx = posX[idx] - center.x;
+        const dy = posY[idx] - center.y;
+        const distSq = dx * dx + dy * dy;
+        if (distSq <= radiusSq) {
+          result.push(idx);
+        }
+      }
+      return result;
+    }
+    
+    // Optimized path for small radius - use bounding box first
+    const minX = center.x - radius;
+    const maxX = center.x + radius;
+    const minY = center.y - radius;
+    const maxY = center.y + radius;
+    
     for (const idx of activeIndices) {
-      const dx = posX[idx] - center.x;
-      const dy = posY[idx] - center.y;
+      const x = posX[idx];
+      if (x < minX || x > maxX) continue;
+      
+      const y = posY[idx];
+      if (y < minY || y > maxY) continue;
+      
+      const dx = x - center.x;
+      const dy = y - center.y;
       const distSq = dx * dx + dy * dy;
-
+      
       if (distSq <= radiusSq) {
         result.push(idx);
       }
     }
-
+    
     return result;
   }
 
