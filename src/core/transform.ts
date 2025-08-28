@@ -191,7 +191,7 @@ export class Transform {
   /**
    * Set weather conditions
    */
-  setWeather(type: string, duration: number, intensity: number): void {
+  setWeather(type: "rain" | "clear" | "storm" | "sandstorm" | "leaves" | "snow", duration: number, intensity: number): void {
     this.sim.setWeather(type, duration, intensity);
   }
 }

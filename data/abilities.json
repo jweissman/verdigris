@@ -1435,5 +1435,31 @@
         "color": "#FFFF00"
       }
     ]
+  },
+  "dash": {
+    "name": "Dash",
+    "cooldown": 8,
+    "config": {
+      "distance": 5,
+      "speed": 2
+    },
+    "trigger": "distance(closest.enemy()?.pos) > 2 && distance(closest.enemy()?.pos) <= 8",
+    "effects": [
+      {
+        "type": "move",
+        "target": "self",
+        "direction": "toward.enemy",
+        "distance": 5,
+        "speed": 2
+      },
+      {
+        "type": "particles",
+        "particleType": "dust",
+        "count": 8,
+        "target": "self.trail",
+        "color": "#CCAA66",
+        "spread": 0.5
+      }
+    ]
   }
 }

@@ -177,7 +177,8 @@
       "duelist"
     ],
     "abilities": [
-      "dualKnifeDance"
+      "dualKnifeDance",
+      "dash"
     ],
     "meta": {
       "facing": "right",

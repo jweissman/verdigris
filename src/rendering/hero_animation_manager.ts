@@ -90,7 +90,7 @@ export class HeroAnimationManager {
 
     const isJumping = unit.meta?.isJumping || unit.meta?.z > 0;
     const isWalking = unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0;
-    const inCombat = unit.state === "combat" || inAttackWindow;
+    const inCombat = inAttackWindow; // Remove invalid state comparison
     const isOnRooftop = unit.meta?.onRooftop;
 
     if (isJumping) {

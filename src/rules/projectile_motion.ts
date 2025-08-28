@@ -126,25 +126,22 @@ export class ProjectileMotion extends Rule {
       const pTeam = projTeam[pIdx];
       const pType = projType[pIdx];
       
-      // Inline the spatial query for better performance
+      // Use spatial partitioning to only check nearby units
+      const nearbyUnitIndices = context.getUnitIndicesNearPoint(projX, projY, radius);
+      
+      if (nearbyUnitIndices.length === 0) continue;
+      
       let hit = false;
       
-      // Optimized inner loop
-      for (let i = 0; i < unitCount; i++) {
-        const unitIdx = activeUnits[i];
-        
+      // Only check units that are actually nearby
+      for (const unitIdx of nearbyUnitIndices) {
         // Team check first (cheapest)
         if (pType !== 2 && unitTeam[unitIdx] === pTeam) continue;
         if (unitHp[unitIdx] <= 0) continue;
         
-        // Spatial checks
+        // Precise distance check
         const dx = unitPosX[unitIdx] - projX;
-        if (dx > radius || dx < -radius) continue;
-        
-        const dy = unitPosY[unitIdx] - projY;  
-        if (dy > radius || dy < -radius) continue;
-        
-        // Distance check
+        const dy = unitPosY[unitIdx] - projY;
         if ((dx * dx + dy * dy) >= radiusSq) continue;
         
         // Hit detected!

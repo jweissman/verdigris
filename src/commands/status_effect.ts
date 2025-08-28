@@ -2,11 +2,8 @@ import { Command } from "../rules/command";
 import { Transform } from "../core/transform";
 
 export class ApplyStatusEffectCommand extends Command {
-  private transform: Transform;
-
-  constructor(sim: any) {
-    super(sim);
-    this.transform = sim.getTransform();
+  constructor(sim: any, transform: Transform) {
+    super(sim, transform);
   }
 
   execute(unitId: string | null, params: Record<string, any>): void {
