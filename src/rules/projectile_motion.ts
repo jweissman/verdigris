@@ -24,6 +24,10 @@ export class ProjectileMotion extends Rule {
       return this.commands;
     }
     
+    // Exit early if no projectiles
+    if (!projectileArrays.activeIndices || projectileArrays.activeIndices.length === 0) {
+      return this.commands;
+    }
     
     const unitArrays = context.getArrays();
     if (!unitArrays.activeIndices || unitArrays.activeIndices.length === 0) {
@@ -126,15 +130,16 @@ export class ProjectileMotion extends Rule {
       const pTeam = projTeam[pIdx];
       const pType = projType[pIdx];
       
-      // Use spatial partitioning to only check nearby units
-      const nearbyUnitIndices = context.getUnitIndicesNearPoint(projX, projY, radius);
-      
-      if (nearbyUnitIndices.length === 0) continue;
+      // Early exit for projectiles out of bounds
+      if (projX < 0 || projY < 0 || projX > 1000 || projY > 1000) {
+        this.toRemove.push(pIdx);
+        continue;
+      }
       
       let hit = false;
       
-      // Only check units that are actually nearby
-      for (const unitIdx of nearbyUnitIndices) {
+      // Simple distance-based check for all units
+      for (const unitIdx of activeUnits) {
         // Team check first (cheapest)
         if (pType !== 2 && unitTeam[unitIdx] === pTeam) continue;
         if (unitHp[unitIdx] <= 0) continue;

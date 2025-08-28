@@ -175,6 +175,10 @@ export class UnitProxyManager implements DataQuery {
   public readonly arrays: UnitArrays;
   private metadataStore: Map<string, any>;
   private idToIndex: Map<string, number> = new Map();
+  
+  public getUnitIndex(unitId: string): number | undefined {
+    return this.idToIndex.get(unitId);
+  }
 
   public useLightweightProxies: boolean = true;
 

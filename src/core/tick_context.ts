@@ -44,16 +44,16 @@ export interface TickContext {
 
   getUnitIndex(unitId: string): number | undefined;
   getArrays(): {
-    posX: number[];
-    posY: number[];
+    posX: Float32Array;
+    posY: Float32Array;
     activeIndices: number[];
-    team: number[];
-    state: number[];
+    team: Int8Array;
+    state: Int8Array;
     unitIds: string[];
-    hp: number[];
-    maxHp: number[];
-    mass: number[];
-    dmg: number[];
+    hp: Int16Array;
+    maxHp: Int16Array;
+    mass: Float32Array;
+    dmg: Int16Array;
   };
   getUnitColdData(unitId: string): any;
   getUnitColdDataByIndex(index: number): any;
@@ -255,20 +255,20 @@ export class TickContextImpl implements TickContext {
   }
 
   getUnitIndex(unitId: string): number | undefined {
-    return this.sim.getProxyManager()?.idToIndex?.get(unitId);
+    return this.sim.getProxyManager()?.getUnitIndex(unitId);
   }
 
   getArrays(): {
-    posX: number[];
-    posY: number[];
+    posX: Float32Array;
+    posY: Float32Array;
     activeIndices: number[];
-    team: number[];
-    state: number[];
+    team: Int8Array;
+    state: Int8Array;
     unitIds: string[];
-    hp: number[];
-    maxHp: number[];
-    mass: number[];
-    dmg: number[];
+    hp: Int16Array;
+    maxHp: Int16Array;
+    mass: Float32Array;
+    dmg: Int16Array;
   } {
     const arrays = this.sim.getUnitArrays();
     return {

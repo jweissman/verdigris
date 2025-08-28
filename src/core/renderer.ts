@@ -153,7 +153,7 @@ class ScaledDisplay {
 
 type ViewMode = "grid" | "cinematic" | "iso" | "inventory";
 export default class Renderer extends Display {
-  private viewMode: ViewMode = "iso";
+  public viewMode: ViewMode = "iso";
   private battle: Orthographic | null = null;
   private cinematic: Cinematic | null = null;
   private isometric: Isometric | null = null;

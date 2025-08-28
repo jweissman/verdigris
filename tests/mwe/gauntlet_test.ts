@@ -3,14 +3,16 @@ import { GauntletGame } from '../../src/mwe/gauntlet';
 
 describe('Gauntlet MWE', () => {
   test('creates gauntlet game instance', () => {
-    const gauntlet = new GauntletGame();
+    const canvas = { width: 640, height: 480 } as HTMLCanvasElement;
+    const gauntlet = new GauntletGame(canvas);
     expect(gauntlet).toBeDefined();
     expect(gauntlet.sim).toBeDefined();
     expect(gauntlet.renderer).toBeDefined();
   });
 
   test('has stage configuration data', () => {
-    const gauntlet = new GauntletGame();
+    const canvas = { width: 640, height: 480 } as HTMLCanvasElement;
+    const gauntlet = new GauntletGame(canvas);
     
 
     const stages = (gauntlet as any).stages;
@@ -27,7 +29,8 @@ describe('Gauntlet MWE', () => {
   });
 
   test('stage dimensions are epic scale', () => {
-    const gauntlet = new GauntletGame();
+    const canvas = { width: 640, height: 480 } as HTMLCanvasElement;
+    const gauntlet = new GauntletGame(canvas);
     const stages = (gauntlet as any).stages;
     
 
@@ -43,7 +46,8 @@ describe('Gauntlet MWE', () => {
   });
 
   test('has diverse enemy types per stage', () => {
-    const gauntlet = new GauntletGame();
+    const canvas = { width: 640, height: 480 } as HTMLCanvasElement;
+    const gauntlet = new GauntletGame(canvas);
     const stages = (gauntlet as any).stages;
     
 
@@ -60,7 +64,8 @@ describe('Gauntlet MWE', () => {
   });
 
   test('background stitching covers different environments', () => {
-    const gauntlet = new GauntletGame();
+    const canvas = { width: 640, height: 480 } as HTMLCanvasElement;
+    const gauntlet = new GauntletGame(canvas);
     const stages = (gauntlet as any).stages;
     
     const backgrounds = stages.map((stage: any) => stage.background);
@@ -76,7 +81,8 @@ describe('Gauntlet MWE', () => {
   });
 
   test('ability mapping covers all enemy types', () => {
-    const gauntlet = new GauntletGame();
+    const canvas = { width: 640, height: 480 } as HTMLCanvasElement;
+    const gauntlet = new GauntletGame(canvas);
     const abilityMap = (gauntlet as any).getAbilitiesForType;
     
     expect(abilityMap('soldier')).toEqual(['melee']);
@@ -94,7 +100,8 @@ describe('Gauntlet MWE', () => {
   });
 
   test('input handler processes gauntlet controls', () => {
-    const gauntlet = new GauntletGame();
+    const canvas = { width: 640, height: 480 } as HTMLCanvasElement;
+    const gauntlet = new GauntletGame(canvas);
     const handler = gauntlet.getInputHandler();
     
     expect(handler).toBeDefined();
@@ -111,7 +118,8 @@ describe('Gauntlet MWE', () => {
   });
 
   test('stage progression sequences match VISION.md', () => {
-    const gauntlet = new GauntletGame();
+    const canvas = { width: 640, height: 480 } as HTMLCanvasElement;
+    const gauntlet = new GauntletGame(canvas);
     const stages = (gauntlet as any).stages;
     
 

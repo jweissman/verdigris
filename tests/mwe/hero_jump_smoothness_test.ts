@@ -15,7 +15,7 @@ describe("Hero Jump Smoothness", () => {
       pos: { x: 10, y: 10 },
       hp: 100,
       maxHp: 100,
-      team: 1,
+      team: "friendly" as const,
       tags: ["hero"],
       meta: { controlled: true, facing: "right" },
     });
@@ -77,7 +77,7 @@ describe("Hero Jump Smoothness", () => {
       pos: { x: 5, y: 5 },
       hp: 100,
       maxHp: 100,
-      team: 1,
+      team: "friendly" as const,
       tags: ["hero"],
       meta: { controlled: true, facing: "left" },
     });
@@ -115,7 +115,7 @@ describe("Hero Jump Smoothness", () => {
       pos: { x: 0, y: 0 },
       hp: 100,
       maxHp: 100,
-      team: 1,
+      team: "friendly" as const,
       tags: ["hero"],
       meta: { controlled: true },
     });
