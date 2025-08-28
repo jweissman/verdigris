@@ -21,6 +21,13 @@ export class Transform {
   }
 
   /**
+   * Get projectiles for reading
+   */
+  get projectiles(): readonly Projectile[] {
+    return this.sim.projectiles;
+  }
+
+  /**
    * Get working copy for mutations
    * Now just returns the main units array since we removed double buffering
    */
@@ -139,6 +146,31 @@ export class Transform {
    */
   addProjectile(projectile: Projectile): void {
     this.sim.projectileArrays.addProjectile(projectile);
+    this.sim.invalidateProjectilesCache();
+  }
+
+  /**
+   * Remove a projectile by ID
+   */
+  removeProjectileById(id: string): void {
+    this.sim.projectileArrays.removeProjectileById(id);
+    this.sim.invalidateProjectilesCache();
+  }
+
+  /**
+   * Remove a projectile by index
+   */
+  removeProjectileByIndex(index: number): void {
+    this.sim.projectileArrays.removeProjectile(index);
+    this.sim.invalidateProjectilesCache();
+  }
+
+  /**
+   * Clear all projectiles
+   */
+  clearProjectiles(): void {
+    this.sim.projectileArrays.clear();
+    this.sim.invalidateProjectilesCache();
   }
 
   /**

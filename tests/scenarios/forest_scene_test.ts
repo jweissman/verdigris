@@ -33,7 +33,7 @@ describe('Forest Scene', () => {
 
     
 
-    expect((sim as any).background).toBe('forest');
+    expect(sim.sceneBackground).toBe('forest');
 
     const temp = sim.getTemperature(20, 10);
     expect(temp).toBeGreaterThan(15);

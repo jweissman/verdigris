@@ -14,7 +14,8 @@ export class PairwiseBatcherRule extends Rule {
     }
     
     // Process all registered intents and collect commands
-    const commands = batcher.process((context as any).sim.units, (context as any).sim);
+    const sim = context.getSimulator();
+    const commands = batcher.process(sim.units, sim);
     
     // Clear intents after processing
     batcher.intents = [];

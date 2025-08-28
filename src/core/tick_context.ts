@@ -65,6 +65,10 @@ export interface TickContext {
   getUnitProxyByIndex?(index: number): Unit | undefined;
   getPairwiseBatcher(): PairwiseBatcher;
   getUnitIndicesNearPoint(x: number, y: number, radius: number): number[];
+  
+  // For PairwiseBatcher - returns sim reference
+  // TODO: Refactor to avoid exposing sim directly
+  getSimulator(): any;
 }
 
 /**
@@ -161,7 +165,7 @@ export class TickContextImpl implements TickContext {
   }
 
   getRandom(): number {
-    return (this.sim.constructor as any).rng?.random() || Math.random();
+    return this.sim.getRandomNumber();
   }
 
   getCurrentTick(): number {
@@ -227,19 +231,19 @@ export class TickContextImpl implements TickContext {
   }
 
   isWinterActive(): boolean {
-    return (this.sim as any).winterActive || false;
+    return this.sim.isWinterActive();
   }
 
   isSandstormActive(): boolean {
-    return (this.sim as any).sandstormActive || false;
+    return this.sim.isSandstormActive();
   }
 
   getSandstormIntensity(): number {
-    return (this.sim as any).sandstormIntensity || 0;
+    return this.sim.getSandstormIntensity();
   }
 
   getSandstormDuration(): number {
-    return (this.sim as any).sandstormDuration || 0;
+    return this.sim.getSandstormDuration();
   }
 
   getQueuedEvents(): readonly any[] {
@@ -247,11 +251,11 @@ export class TickContextImpl implements TickContext {
   }
 
   getPairwiseBatcher(): PairwiseBatcher {
-    return (this.sim as any).pairwiseBatcher;
+    return this.sim.getPairwiseBatcher();
   }
 
   getUnitIndex(unitId: string): number | undefined {
-    return (this.sim as any).proxyManager?.idToIndex?.get(unitId);
+    return this.sim.getProxyManager()?.idToIndex?.get(unitId);
   }
 
   getArrays(): {
@@ -266,7 +270,7 @@ export class TickContextImpl implements TickContext {
     mass: number[];
     dmg: number[];
   } {
-    const arrays = (this.sim as any).unitArrays;
+    const arrays = this.sim.getUnitArrays();
     return {
       posX: arrays.posX,
       posY: arrays.posY,
@@ -282,13 +286,13 @@ export class TickContextImpl implements TickContext {
   }
 
   getUnitColdData(unitId: string): any {
-    return (this.sim as any).unitColdData.get(unitId);
+    return this.sim.getUnitColdData(unitId);
   }
 
   getUnitColdDataByIndex(index: number): any {
-    const arrays = (this.sim as any).unitArrays;
+    const arrays = this.sim.getUnitArrays();
     const unitId = arrays.unitIds[index];
-    return (this.sim as any).unitColdData.get(unitId);
+    return this.sim.getUnitColdData(unitId);
   }
 
   /**
@@ -387,8 +391,7 @@ export class TickContextImpl implements TickContext {
   }
 
   isAbilityForced(unitId: string, abilityName: string): boolean {
-    const key = `${unitId}:${abilityName}`;
-    return (this.sim as any).forcedAbilitiesThisTick?.has(key) || false;
+    return this.sim.isAbilityForced(unitId, abilityName);
   }
 
   getActiveUnitIndices(): number[] {
@@ -411,7 +414,7 @@ export class TickContextImpl implements TickContext {
   }
 
   getUnitProxyByIndex(index: number): Unit | undefined {
-    return (this.sim as any).proxyManager?.getProxy(index);
+    return this.sim.getProxyManager()?.getProxy(index);
   }
 
   getUnitIndicesNearPoint(x: number, y: number, radius: number): number[] {
@@ -433,5 +436,11 @@ export class TickContextImpl implements TickContext {
     
     // Fallback to brute force if no grid
     return this.findUnitIndicesInRadius({ x, y }, radius);
+  }
+
+  getSimulator(): any {
+    // TODO: This is a temporary solution to avoid breaking PairwiseBatcher
+    // Should refactor to avoid exposing sim directly
+    return this.sim;
   }
 }

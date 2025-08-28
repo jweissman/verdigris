@@ -87,10 +87,9 @@ export class Projectile extends Command {
       projectile.vel = { x: 1, y: 0 };
     }
 
-    // Only use SoA arrays
+    // Use Transform to add projectile
     if (this.sim.projectileArrays) {
-      this.sim.invalidateProjectilesCache();
-      this.sim.projectileArrays.addProjectile({
+      this.sim.getTransform().addProjectile({
         id: projectile.id,
         pos: projectile.pos,
         vel: projectile.vel,
@@ -121,8 +120,7 @@ export class Projectile extends Command {
     }
     
     if (this.sim.projectileArrays) {
-      this.sim.invalidateProjectilesCache();
-      this.sim.projectileArrays.removeProjectileById(id);
+      this.sim.getTransform().removeProjectileById(id);
     }
   }
   

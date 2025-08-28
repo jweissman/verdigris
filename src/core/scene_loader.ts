@@ -200,18 +200,17 @@ export class SceneLoader {
     const args = parts.slice(1);
 
     if (command === "bg" || command === "background") {
-      (this.sim as any).background = args[0] || "";
-      (this.sim as any).sceneBackground = args[0] || "";
+      this.sim.setBackground(args[0] || "");
       return;
     }
 
     if (command === "strip") {
-      (this.sim as any).stripWidth = args[0] || "";
+      this.sim.setStripWidth(args[0] || "");
       return;
     }
 
     if (command === "height") {
-      (this.sim as any).battleHeight = args[0] || "";
+      this.sim.setBattleHeight(args[0] || "");
       return;
     }
 

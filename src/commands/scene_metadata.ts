@@ -12,16 +12,15 @@ export class SceneMetadata extends Command {
     switch (metadataType) {
       case "bg":
       case "background":
-        (this.sim as any).background = value;
-        (this.sim as any).sceneBackground = value;
+        this.sim.setBackground(value);
         break;
 
       case "strip":
-        (this.sim as any).stripWidth = value;
+        this.sim.setStripWidth(value);
         break;
 
       case "height":
-        (this.sim as any).battleHeight = value;
+        this.sim.setBattleHeight(value);
         break;
 
       default:

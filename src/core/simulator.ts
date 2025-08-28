@@ -311,6 +311,63 @@ class Simulator {
     return this.proxyManager;
   }
 
+  // Proper accessors for TickContext
+  public getUnitArrays() {
+    return this.unitArrays;
+  }
+
+  public getUnitColdData(unitId: string) {
+    return this.unitColdData.get(unitId);
+  }
+
+  public isWinterActive(): boolean {
+    return this.winterActive || false;
+  }
+
+  public isSandstormActive(): boolean {
+    return this.sandstormActive || false;
+  }
+
+  public getSandstormIntensity(): number {
+    return 0; // TODO: Add actual sandstorm intensity property
+  }
+
+  public getSandstormDuration(): number {
+    return 0; // TODO: Add actual sandstorm duration property
+  }
+
+  public isAbilityForced(unitId: string, abilityName: string): boolean {
+    const key = `${unitId}:${abilityName}`;
+    return this.forcedAbilitiesThisTick.has(key);
+  }
+
+  public getPairwiseBatcher() {
+    return this.pairwiseBatcher;
+  }
+
+  public getRandomNumber(): number {
+    return Simulator.rng?.random() || Math.random();
+  }
+
+  // Scene metadata setters
+  public setBackground(value: string): void {
+    this.sceneBackground = value;
+  }
+
+  public setStripWidth(value: any): void {
+    // TODO: Add stripWidth property
+    this.sceneMetadata.stripWidth = value;
+  }
+
+  public setBattleHeight(value: any): void {
+    // TODO: Add battleHeight property  
+    this.sceneMetadata.battleHeight = value;
+  }
+
+  public getCurrentWeather(): string {
+    return this.currentWeather?.type || "clear";
+  }
+
   private setupDeterministicRandomness(): void {
     if (Simulator.randomProtected) return;
 

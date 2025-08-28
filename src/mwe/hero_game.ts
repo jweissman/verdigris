@@ -26,7 +26,7 @@ class HeroGameRunner {
     rooftopImg.src = "../assets/bg/rooftop.png";
     backgrounds.set("rooftop", rooftopImg);
 
-    (this.sim as any).sceneBackground = "rooftop";
+    this.sim.setBackground("rooftop");
 
     this.renderer = new Renderer(
       320,
