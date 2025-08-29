@@ -189,7 +189,16 @@ export class ProjectileArrays {
       // Apply gravity to bombs
       if (this.type[i] === 1) { // bomb type
         this.velY[i] += 0.2 * deltaTime;
-        this.lifetime[i] += 1;
+      }
+      
+      // Update lifetime for all projectiles
+      this.lifetime[i] += 1;
+      
+      // Remove projectiles that have lived too long (max 30 ticks for bullets)
+      const maxLifetime = this.type[i] === 0 ? 30 : 60; // bullets: 30, others: 60
+      if (this.lifetime[i] > maxLifetime) {
+        outOfBounds.push(i);
+        continue;
       }
       
       // Update progress for targeted projectiles

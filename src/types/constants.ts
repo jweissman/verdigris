@@ -24,6 +24,7 @@ export type ProjectileType =
 
 export const PARTICLE_TYPES = {
   SMOKE: "smoke",
+  STAGE_TRANSITION: "stage_transition",
   BLOOD: "blood",
   SPARK: "spark",
   DEBRIS: "debris",

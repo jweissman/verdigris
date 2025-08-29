@@ -18,6 +18,12 @@ export class ProjectileMotion extends Rule {
   
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
+    this.frameCounter++;
+    
+    // Only process projectiles every other frame to reduce CPU load
+    if (this.frameCounter % 2 !== 0) {
+      return this.commands;
+    }
     
     const projectileArrays = context.getProjectileArrays();
     if (!projectileArrays || projectileArrays.activeCount === 0) {
@@ -121,33 +127,47 @@ export class ProjectileMotion extends Rule {
     const unitHp = unitArrays.hp;
     const unitIds = unitArrays.unitIds;
     
-    for (const pIdx of allProjectiles) {
+    // Process projectiles in batches for better cache locality
+    for (let p = 0; p < allProjectiles.length; p++) {
+      const pIdx = allProjectiles[p];
       const projX = projPosX[pIdx];
       const projY = projPosY[pIdx];
       
-      const radius = projRadius[pIdx];
-      const radiusSq = radius * radius;
-      const pTeam = projTeam[pIdx];
-      const pType = projType[pIdx];
-      
       // Early exit for projectiles out of bounds
-      if (projX < 0 || projY < 0 || projX > 1000 || projY > 1000) {
+      if (projX < -5 || projY < -5 || projX > 105 || projY > 105) {
         this.toRemove.push(pIdx);
         continue;
       }
       
+      const radius = projRadius[pIdx];
+      const pTeam = projTeam[pIdx];
+      const pType = projType[pIdx];
+      
+      // Use actual radius for collision
+      const effectiveRadius = radius;
+      const effectiveRadiusSq = radius * radius;
+      
       let hit = false;
       
-      // Simple distance-based check for all units
-      for (const unitIdx of activeUnits) {
-        // Team check first (cheapest)
-        if (pType !== 2 && unitTeam[unitIdx] === pTeam) continue;
+      // Check units, but exit early if we find a hit
+      for (let u = 0; u < unitCount; u++) {
+        const unitIdx = activeUnits[u];
+        
+        // Skip dead units first (cheapest check)
         if (unitHp[unitIdx] <= 0) continue;
         
-        // Precise distance check
+        // Team check
+        if (pType !== 2 && unitTeam[unitIdx] === pTeam) continue;
+        
+        // Coarse distance check first (Manhattan distance)
         const dx = unitPosX[unitIdx] - projX;
         const dy = unitPosY[unitIdx] - projY;
-        if ((dx * dx + dy * dy) >= radiusSq) continue;
+        
+        // Use tighter bounds for initial check
+        if (Math.abs(dx) > effectiveRadius || Math.abs(dy) > effectiveRadius) continue;
+        
+        // Precise distance check only if coarse passed
+        if ((dx * dx + dy * dy) >= effectiveRadiusSq) continue;
         
         // Hit detected!
         if (pType === 2) { // grapple

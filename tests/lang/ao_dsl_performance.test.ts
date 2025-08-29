@@ -57,16 +57,16 @@ describe('Ao DSL Performance', () => {
     getQueuedEvents: () => [],
     getUnitIndex: () => undefined,
     getArrays: () => ({
-      posX: [],
-      posY: [],
+      posX: new Float32Array(),
+      posY: new Float32Array(),
       activeIndices: [],
-      team: [],
-      state: [],
+      team: new Int8Array(),
+      state: new Int8Array(),
       unitIds: [],
-      hp: [],
-      maxHp: [],
-      mass: [],
-      dmg: []
+      hp: new Int16Array(),
+      maxHp: new Int16Array(),
+      mass: new Float32Array(),
+      dmg: new Int16Array()
     }),
     getUnitColdData: () => undefined,
     getUnitColdDataByIndex: () => undefined,
@@ -75,6 +75,10 @@ describe('Ao DSL Performance', () => {
     getActiveUnitIndices: () => [],
     getUnitIndicesWithAbilities: () => [],
     getUnitProxyByIndex: () => undefined,
+    getProjectileArrays: () => ({} as any),
+    getPairwiseBatcher: () => ({} as any),
+    getUnitIndicesNearPoint: () => [],
+    getSimulator: () => ({} as any),
   };
   
   test('DSL compiler caches getAllUnits calls within a single expression', () => {

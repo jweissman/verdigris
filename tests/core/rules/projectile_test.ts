@@ -77,12 +77,14 @@ describe('Projectile simulation', () => {
     }];
 
     const initialHp = sim.units[0].hp;
+    
+    // Step twice since we process projectiles every other frame
     sim.step();
-
+    if (sim.projectiles.length > 0) {
+      sim.step(); // Second step if first didn't process collision
+    }
 
     expect(sim.projectiles.length).toBe(0);
-    
-
     expect(sim.units[0].hp).toBeLessThan(initialHp);
   });
 });
