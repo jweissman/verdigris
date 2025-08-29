@@ -22,16 +22,28 @@ import { ScalarField } from "./ScalarField";
 import { TargetCache } from "./target_cache";
 import { ParticleArrays } from "../sim/particle_arrays";
 import Encyclopaedia from "../dmg/encyclopaedia";
+import { WeatherManager } from "./weather_manager";
+import { World } from "./world";
 
 // TODO some kind of config model??
 
 class Simulator {
-  public sceneBackground: string = "winter";
+  // Extracted managers for cleaner separation
+  private weatherManager: WeatherManager;
+  private world: World;
+  
+  // Compatibility accessors
+  get sceneBackground() { return this.world.sceneBackground; }
+  set sceneBackground(value: string) { this.world.sceneBackground = value; }
+  get enableEnvironmentalEffects() { return this.world.enableEnvironmentalEffects; }
+  set enableEnvironmentalEffects(value: boolean) { this.world.enableEnvironmentalEffects = value; }
+  get sceneMetadata() { return this.world.sceneMetadata; }
+  set sceneMetadata(value: Record<string, any>) { this.world.sceneMetadata = value; }
+  get currentBiome() { return this.world.currentBiome; }
+  set currentBiome(value: string | undefined) { this.world.currentBiome = value; }
+  
   public fieldWidth: number;
   public fieldHeight: number;
-  public enableEnvironmentalEffects: boolean = false;
-  public sceneMetadata: Record<string, any> = {};
-  public currentBiome?: string;
 
   get width() {
     return this.fieldWidth;
@@ -183,14 +195,14 @@ class Simulator {
   private lastActiveCount: number = 0;
   public interpolationFactor: number = 0;
   private hasHugeUnitsRule?: boolean;
-  public particleArrays: ParticleArrays = new ParticleArrays(5000); // SoA storage for performance
+  public particleArrays: ParticleArrays = new ParticleArrays(5000);
 
   get particles(): Particle[] {
     const result: Particle[] = [];
     const arrays = this.particleArrays;
 
     for (let i = 0; i < arrays.capacity; i++) {
-      if (arrays.active[i] === 0) continue; // Skip inactive particles
+      if (arrays.active[i] === 0) continue;
 
       const typeId = arrays.type[i];
       result.push({
@@ -246,22 +258,23 @@ class Simulator {
     return this._pressureField;
   }
 
-  weather: {
-    current:
-      | "clear"
-      | "rain"
-      | "storm"
-      | "snow"
-      | "lightning"
-      | "sandstorm"
-      | "leaves";
-    duration: number;
-    intensity: number; // 0-1 scale
-  };
-
-  winterActive?: boolean;
-  lightningActive?: boolean;
-  sandstormActive?: boolean;
+  // Compatibility for weather
+  get weather() { return this.weatherManager.weather; }
+  set weather(value: any) { this.weatherManager.weather = value; }
+  get lightningActive() { return this.weatherManager.lightningActive; }
+  set lightningActive(value: boolean | undefined) { this.weatherManager.lightningActive = value; }
+  
+  // These are derived from weather now
+  get winterActive() { return this.weatherManager.weather.current === "snow"; }
+  set winterActive(value: boolean) { 
+    if (value) this.weatherManager.setWeather("snow", 100, 0.5);
+    else if (this.weatherManager.weather.current === "snow") this.weatherManager.setWeather("clear", 0, 0);
+  }
+  get sandstormActive() { return this.weatherManager.weather.current === "sandstorm"; }
+  set sandstormActive(value: boolean) {
+    if (value) this.weatherManager.setWeather("sandstorm", 100, 0.5);
+    else if (this.weatherManager.weather.current === "sandstorm") this.weatherManager.setWeather("clear", 0, 0);
+  }
 
   private transform: Transform;
 
@@ -343,7 +356,7 @@ class Simulator {
   }
 
   public getCurrentWeather(): string {
-    return this.weather?.current || "clear";
+    return this.weatherManager.getCurrentWeather();
   }
 
   private setupDeterministicRandomness(): void {
@@ -361,6 +374,10 @@ class Simulator {
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
     this.fieldHeight = fieldHeight;
+    
+    // Initialize managers
+    this.weatherManager = new WeatherManager();
+    this.world = new World();
 
     this.setupDeterministicRandomness();
 
@@ -386,12 +403,6 @@ class Simulator {
     );
 
     this.transform = new Transform(this);
-
-    this.weather = {
-      current: "clear",
-      duration: 0,
-      intensity: 0,
-    };
 
     this.reset();
   }
@@ -420,6 +431,9 @@ class Simulator {
     this.projectileArrays = new ProjectileArrays(500);
     this.processedEvents = [];
     this.queuedCommands = [];
+    
+    // Reset weather
+    this.weatherManager = new WeatherManager();
 
     this.commandProcessor = new CommandHandler(this, this.transform);
     this.rulebook = RulesetFactory.createDefaultRulebook();
@@ -746,7 +760,7 @@ class Simulator {
     }
   }
 
-  private getParticleTypeName(typeId: number): any {
+  getParticleTypeName(typeId: number): any {
     const types = [
       "",
       "leaf",
@@ -1006,20 +1020,12 @@ class Simulator {
   }
 
   updateWeather() {
-    if (this.weather.duration > 0) {
-      this.weather.duration--;
-
-      this.applyWeatherEffects();
-
-      if (this.weather.duration <= 0) {
-        this.weather.current = "clear";
-        this.weather.intensity = 0;
-      }
-    }
+    this.weatherManager.updateWeather();
+    this.applyWeatherEffects();
   }
 
   applyWeatherEffects() {
-    switch (this.weather.current) {
+    switch (this.weatherManager.weather.current) {
       case "rain":
         this.applyRainEffects();
         break;
@@ -1028,6 +1034,12 @@ class Simulator {
         break;
       case "leaves":
         this.applyLeavesEffects();
+        break;
+      case "snow":
+        // Snow effects handled by BiomeEffects rule
+        break;
+      case "sandstorm":
+        // Sandstorm effects handled by BiomeEffects rule
         break;
     }
   }
@@ -1098,10 +1110,7 @@ class Simulator {
     duration: number = 80,
     intensity: number = 0.7,
   ): void {
-    this.weather.current = type;
-    this.weather.duration = duration;
-    this.weather.intensity = intensity;
-
+    this.weatherManager.setWeather(type as any, duration, intensity);
     if (type !== "clear" && duration > 0) {
       this.enableEnvironmentalEffects = true;
     }
@@ -1227,23 +1236,7 @@ class Simulator {
   }
 
   processWeatherCommand(command: string, ...args: any[]): void {
-    switch (command) {
-      case "rain":
-        const duration = parseInt(args[0]) || 80;
-        const intensity = parseFloat(args[1]) || 0.7;
-        this.setWeather("rain", duration, intensity);
-        break;
-      case "storm":
-        const stormDuration = parseInt(args[0]) || 120;
-        const stormIntensity = parseFloat(args[1]) || 0.9;
-        this.setWeather("storm", stormDuration, stormIntensity);
-        break;
-      case "clear":
-        this.setWeather("clear", 0, 0);
-        break;
-      default:
-        console.warn(`Unknown weather command: ${command}`);
-    }
+    this.weatherManager.processWeatherCommand(command, ...args);
   }
 
   accept(input) {

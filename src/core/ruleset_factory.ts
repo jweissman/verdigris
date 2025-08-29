@@ -27,70 +27,66 @@ import { HeroAnimation } from "../rules/hero_animation";
 
 export class RulesetFactory {
   static createDefaultRulebook(): Rule[] {
+    // Core simulation rules - movement, cleanup
     const coreRules = [
       new UnitBehavior(),
       new UnitMovement(), 
       new Cleanup()
     ];
 
+    // Combat and tactics rules
     const combatRules = [
-      new MeleeCombat(), // Registers intents with batcher
-      new Knockback(), // Registers intents with batcher  
-      new RangedCombat(), // Registers intents with batcher
-      new Abilities(), // Handles all other abilities
-      new StatusEffects(),
-      new Perdurance(),
-      new ChargeAccumulator(), // Handles charge accumulation for charging attacks
-      new PairwiseBatcherRule(), // Processes all pairwise intents at the end
-    ];
-
-    const specialRules = [
-      new HugeUnits(),
-      new SegmentedCreatures(),
-      new GrapplingPhysics(),
-      new AirdropPhysics(),
-      new BiomeEffects(),
-      new AmbientSpawning(),
-      new AmbientBehavior(),
-      new LightningStorm(),
-      new AreaOfEffect(),
-      new ProjectileMotion(),
-      new Jumping(),
-      new Tossing(),
-    ];
-
-    const heroRules = [
-      new PlayerControl(),
-      new HeroAnimation() // Visual metadata for hero rig
-    ];
-
-    return [
-      ...coreRules,
-      ...combatRules,
-      ...specialRules,
-      ...heroRules,
-    ];
-  }
-
-  static createMinimalRulebook(): Rule[] {
-    return [
-      new UnitBehavior(),
-      new UnitMovement(),
-      new Cleanup()
-    ];
-  }
-
-  static createCombatRulebook(): Rule[] {
-    return [
-      ...RulesetFactory.createMinimalRulebook(),
       new MeleeCombat(),
-      new Knockback(),
+      new Knockback(),  
       new RangedCombat(),
       new Abilities(),
       new StatusEffects(),
       new Perdurance(),
       new ChargeAccumulator(),
       new PairwiseBatcherRule(),
+    ];
+
+    // Tactical mechanics that affect combat
+    const tacticalRules = [
+      new HugeUnits(),
+      new SegmentedCreatures(),
+      new GrapplingPhysics(),
+      new AirdropPhysics(),
+      new AreaOfEffect(),
+      new ProjectileMotion(),
+      new Jumping(),
+      new Tossing(),
+      new BiomeEffects(),
+    ];
+
+    // Environmental and ambient rules
+    const environmentalRules = [
+      new AmbientSpawning(),
+      new AmbientBehavior(),
+      new LightningStorm(),
+    ];
+
+    // Player control and animation
+    const controlRules = [
+      new PlayerControl(),
+      new HeroAnimation(),
+    ];
+
+    return [
+      ...coreRules,
+      ...combatRules,
+      ...tacticalRules,
+      ...environmentalRules,
+      ...controlRules,
+    ];
+  }
+
+  // Minimal rulebook for testing or special scenarios
+  static createMinimalRulebook(): Rule[] {
+    return [
+      new UnitBehavior(),
+      new UnitMovement(),
+      new Cleanup()
     ];
   }
 }
