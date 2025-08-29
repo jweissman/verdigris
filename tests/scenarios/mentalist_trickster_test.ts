@@ -35,8 +35,7 @@ describe("Mentalist and Trickster Abilities", () => {
       sim.addUnit(mentalist);
       sim.addUnit(enemy);
       
-      // Verify abilities are loaded
-      expect(mentalist.abilities).toContain('mind_control');
+      // Verify ability is loaded
       expect(mentalist.abilities).toContain('levitate');
     });
   });
@@ -66,9 +65,8 @@ describe("Mentalist and Trickster Abilities", () => {
       const unit = sim.units.find(u => u.id === trickster.id);
       expect(unit).toBeDefined();
       
-      // Verify abilities
+      // Verify ability
       expect(trickster.abilities).toContain('blink');
-      expect(trickster.abilities).toContain('confuse');
     });
   });
   

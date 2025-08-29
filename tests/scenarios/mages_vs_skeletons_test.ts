@@ -54,7 +54,7 @@ describe('Epic Mage Battle - The Four Schools vs Undead Horde', () => {
     const hasLightning = particleTypes.has('lightning') || particleTypes.has('lightning_branch');
     const hasFire = particleTypes.has('fire');
     const hasIce = particleTypes.has('ice');
-    const hasEarth = particleTypes.has('rock') || particleTypes.has('earth');
+    const hasEarth = particleTypes.has('rock' as any) || particleTypes.has('earth' as any);
     
     expect(hasLightning || hasFire || hasIce || hasEarth).toBe(true);
     

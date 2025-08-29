@@ -13,15 +13,14 @@ describe("EventHandler browser compatibility", () => {
     try {
       const sim = new Simulator(10, 10);
       const handler = new EventHandler();
-      const context = new TickContextImpl(sim, []);
+      const context = new TickContextImpl(sim);
       
 
       sim.processedEvents.push({
         kind: "damage",
         target: "test-unit",
-        amount: 10,
-        meta: { tick: 1 }
-      });
+        meta: { tick: 1, amount: 10 }
+      } as any);
       
 
       expect(() => {

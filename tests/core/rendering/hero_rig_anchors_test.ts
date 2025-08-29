@@ -77,7 +77,7 @@ describe('Hero Rig Anchors', () => {
     };
     
     for (const anchor of anchors) {
-      const expectedParent = expectedParents[anchor.name];
+      const expectedParent = expectedParents[anchor.name] as any;
       expect(anchor.partName).toBe(expectedParent);
     }
   });

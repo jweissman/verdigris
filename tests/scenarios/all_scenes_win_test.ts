@@ -204,7 +204,7 @@ describe('Coastal Agora - Mage Showcase', () => {
     );
     
     // Either moved or created smoke particles
-    const hasSmokeParticles = sim.particles.some(p => p.type === 'smoke');
+    const hasSmokeParticles = sim.particles.some(p => (p as any).type === 'smoke');
     expect(moved || hasSmokeParticles).toBe(true);
   });
 });

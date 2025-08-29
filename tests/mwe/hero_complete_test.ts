@@ -6,7 +6,7 @@ describe('Complete Hero Test', () => {
   test('test all hero functionality like in MWE', () => {
     const sim = new Simulator(40, 40);
     
-    const playerControl = sim.rules.find(r => r.constructor === PlayerControl);
+    const playerControl = sim.rules.find(r => r.constructor === PlayerControl) as any;
     
 
     const hero = sim.addUnit({

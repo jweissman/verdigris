@@ -5,7 +5,8 @@ describe("Hero Jump Smoothness", () => {
   let game: HeroGame;
 
   beforeEach(() => {
-    game = new HeroGame();
+    const canvas = { width: 800, height: 600 } as any;
+    game = new HeroGame(canvas);
   });
 
   it("should move unit position smoothly during jump without discontinuities", () => {

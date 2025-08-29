@@ -692,7 +692,7 @@
     "maxHp": 40,
     "dmg": 6,
     "mass": 0.8,
-    "abilities": ["levitate", "mind_control"],
+    "abilities": ["levitate"],
     "tags": ["mage", "coastal", "psychic", "flying"],
     "meta": {
       "description": "Master of minds and levitation",
@@ -712,7 +712,7 @@
     "maxHp": 35,
     "dmg": 9,
     "mass": 0.9,
-    "abilities": ["blink", "confuse"],
+    "abilities": ["blink"],
     "tags": ["mage", "coastal", "illusion", "agile"],
     "meta": {
       "description": "Illusionist and escape artist",

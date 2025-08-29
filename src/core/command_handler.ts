@@ -166,7 +166,7 @@ export class CommandHandler {
     );
     this.commands.set("markDead", new Kill(sim, this.transform));
     this.commands.set("halt", new HaltCommand(sim, this.transform));
-    this.commands.set("meta", new MetaCommand(sim, this.transform));
+    this.commands.set("meta", new MetaCommand(sim, this.transform)); // DEPRECATED
     this.commands.set("pull", new PullCommand(sim, this.transform));
     this.commands.set("burrow", new BurrowCommand(sim, this.transform));
     const charmCmd = new CharmCommand(sim, this.transform);

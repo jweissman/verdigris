@@ -74,7 +74,7 @@ describe('Pairwise Batcher Integration', () => {
     
     // Debug the step
     console.log('Initial state:');
-    sim._debugUnits(['giant', 'worm']);
+    sim._debugUnits([sim.roster['giant'], sim.roster['worm']], 'Initial');
     
     sim.step();
     
@@ -83,7 +83,7 @@ describe('Pairwise Batcher Integration', () => {
     console.log('Move commands generated:', moveCommands);
     
     console.log('\nAfter step:');
-    sim._debugUnits(['giant', 'worm']);
+    sim._debugUnits([sim.roster['giant'], sim.roster['worm']], 'After step');
     
     const finalWormX = sim.roster['worm'].pos.x;
     
