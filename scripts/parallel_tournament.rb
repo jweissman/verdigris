@@ -121,14 +121,26 @@ class ParallelTournament
     sorted_synergies = synergies.sort_by { |_, s| -s[:synergy_score] }
     sorted_synergies.first(10).each do |pair, syn|
       if syn[:synergy_score] > 0
+        units = pair.split('+')
+        individual_win_rates = units.map { |u| 
+          s = stats["#{u}+#{u}"]
+          s ? (s[:win_rate] * 100).round(1) : 0.0
+        }
         puts "  #{pair}: +#{(syn[:synergy_score] * 100).round(1)}% synergy bonus"
+        puts "    (#{units[0]} alone: #{individual_win_rates[0]}%, #{units[1]} alone: #{individual_win_rates[1]}%, mixed: #{(syn[:win_rate] * 100).round(1)}%)"
       end
     end
     
     puts "\nWorst Anti-Synergies:"
     sorted_synergies.last(5).each do |pair, syn|
       if syn[:synergy_score] < -0.05
+        units = pair.split('+')
+        individual_win_rates = units.map { |u| 
+          s = stats["#{u}+#{u}"]
+          s ? (s[:win_rate] * 100).round(1) : 0.0
+        }
         puts "  #{pair}: #{(syn[:synergy_score] * 100).round(1)}% synergy penalty"
+        puts "    (#{units[0]} alone: #{individual_win_rates[0]}%, #{units[1]} alone: #{individual_win_rates[1]}%, mixed: #{(syn[:win_rate] * 100).round(1)}%)"
       end
     end
   end
