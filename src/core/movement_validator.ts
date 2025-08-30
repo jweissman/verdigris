@@ -12,7 +12,7 @@ export class MovementValidator {
     private fieldHeight: number
   ) {}
 
-  validMove(unit: any, dx: number, dy: number): boolean {
+  validMove(unit: any, dx: number, dy: number, units?: readonly Unit[]): boolean {
     if (!unit) return false;
 
     if (unit.meta?.huge) {
@@ -31,7 +31,7 @@ export class MovementValidator {
           return false;
         }
 
-        if (this.isApparentlyOccupied(newX, newY, unit)) {
+        if (this.isApparentlyOccupied(newX, newY, unit, units)) {
           return false;
         }
       }
@@ -50,7 +50,7 @@ export class MovementValidator {
     )
       return false;
 
-    return !this.isApparentlyOccupied(newX, newY, unit);
+    return !this.isApparentlyOccupied(newX, newY, unit, units);
   }
 
   getHugeUnitBodyPositions(unit: any) {
@@ -78,9 +78,9 @@ export class MovementValidator {
       const unitsAtPosition = this.positionMap.get(key);
       if (unitsAtPosition) {
         for (const unit of unitsAtPosition) {
-          if (unit !== excludeUnit && !unit.meta?.phantom) {
-            return true;
-          }
+          if (unit === excludeUnit) continue;
+          if (this.isOwnPhantom(unit, excludeUnit)) continue;
+          return true;
         }
       }
       return false;
@@ -89,13 +89,16 @@ export class MovementValidator {
     // Fallback to linear search if position map is not available
     if (units) {
       for (const unit of units) {
-        if (unit === excludeUnit || unit.meta?.phantom) continue;
+        if (unit === excludeUnit) continue;
+        if (unit.state === "dead") continue;
 
         if (unit.meta?.huge) {
           const bodyPositions = this.getHugeUnitBodyPositions(unit);
           for (const pos of bodyPositions) {
             if (Math.round(pos.x) === roundedX && Math.round(pos.y) === roundedY) {
-              return true;
+              if (!this.isOwnPhantom(unit, excludeUnit)) {
+                return true;
+              }
             }
           }
         } else {
@@ -103,7 +106,9 @@ export class MovementValidator {
             Math.round(unit.pos.x) === roundedX &&
             Math.round(unit.pos.y) === roundedY
           ) {
-            return true;
+            if (!this.isOwnPhantom(unit, excludeUnit)) {
+              return true;
+            }
           }
         }
       }
@@ -112,10 +117,19 @@ export class MovementValidator {
     return false;
   }
 
+  private isOwnPhantom(unit: Unit | null, owner: Unit | null): boolean {
+    if (!unit) return false;
+    
+    return (
+      (unit.meta && unit.meta.phantom && unit.meta.parentId === owner?.id) ||
+      unit === owner
+    );
+  }
+
   updatePositionMap(units: readonly Unit[]): void {
     this.positionMap.clear();
     for (const unit of units) {
-      if (unit.meta?.phantom) continue;
+      if (unit.state === "dead") continue;
 
       if (unit.meta?.huge) {
         const bodyPositions = this.getHugeUnitBodyPositions(unit);

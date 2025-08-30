@@ -2,7 +2,6 @@ import { Rule } from "../rules/rule";
 import { EventHandler } from "../rules/event_handler";
 import { CommandHandler, QueuedCommand } from "./command_handler";
 import { RulesetFactory } from "./ruleset_factory";
-import { Abilities } from "../rules/abilities";
 import { RNG } from "./rng";
 import { TickContext, TickContextImpl } from "./tick_context";
 import { Projectile } from "../types/Projectile";
@@ -23,6 +22,11 @@ import { ParticleArrays } from "../sim/particle_arrays";
 import Encyclopaedia from "../dmg/encyclopaedia";
 import { WeatherManager } from "./weather_manager";
 import { World } from "./world";
+import { MovementValidator } from "./movement_validator";
+import { AbilityHandler } from "./ability_handler";
+import { ParticleManager } from "./particle_manager";
+import { FireEffects } from "./fire_effects";
+import { DebugHelper } from "./debug_helper";
 
 // TODO some kind of config model??
 
@@ -30,6 +34,10 @@ class Simulator {
   // Extracted managers for cleaner separation
   private weatherManager: WeatherManager;
   private world: World;
+  private movementValidator: MovementValidator;
+  private abilityHandler: AbilityHandler;
+  private particleManager: ParticleManager;
+  private fireEffects: FireEffects;
   
   // Compatibility accessors
   get sceneBackground() { return this.world.sceneBackground; }
@@ -67,7 +75,6 @@ class Simulator {
   > = new Map();
 
   private dirtyUnits: Set<string> = new Set();
-  private positionMap: Map<string, Set<Unit>> = new Map();
   public spatialQueries: SpatialQueryBatcher;
   public pairwiseBatcher: PairwiseBatcher;
   public targetCache: TargetCache;
@@ -93,11 +100,6 @@ class Simulator {
     return this.proxyManager.getRealProxies();
   }
 
-  setUnitsFromTransform(units: Unit[]): void {
-    throw new Error(
-      "setUnitsFromTransform is deprecated! Units should be managed through addUnit/removeUnitById only",
-    );
-  }
 
   removeUnitById(unitId: string): void {
     for (let i = 0; i < this.unitArrays.capacity; i++) {
@@ -191,30 +193,17 @@ class Simulator {
   public lastUnitPositions: Map<string, { x: number; y: number }> = new Map();
   private lastActiveCount: number = 0;
   public interpolationFactor: number = 0;
-  public particleArrays: ParticleArrays = new ParticleArrays(5000);
+  
+  get particleArrays() {
+    return this.particleManager.particleArrays;
+  }
+  
+  set particleArrays(value: ParticleArrays) {
+    this.particleManager.particleArrays = value;
+  }
 
   get particles(): Particle[] {
-    const result: Particle[] = [];
-    const arrays = this.particleArrays;
-
-    for (let i = 0; i < arrays.capacity; i++) {
-      if (arrays.active[i] === 0) continue;
-
-      const typeId = arrays.type[i];
-      result.push({
-        id: arrays.particleIds[i] || `particle_${i}`,
-        type: this.getParticleTypeName(typeId),
-        pos: { x: arrays.posX[i], y: arrays.posY[i] },
-        vel: { x: arrays.velX[i], y: arrays.velY[i] },
-        radius: arrays.radius[i],
-        color: arrays.color[i] || "#FFFFFF",
-        lifetime: arrays.lifetime[i],
-        z: arrays.z[i],
-        landed: arrays.landed[i] === 1,
-      });
-    }
-
-    return result;
+    return this.particleManager.particles;
   }
 
   private _temperatureField: ScalarField | null = null;
@@ -323,8 +312,7 @@ class Simulator {
   }
 
   public isAbilityForced(unitId: string, abilityName: string): boolean {
-    const key = `${unitId}:${abilityName}`;
-    return this.forcedAbilitiesThisTick.has(key);
+    return this.abilityHandler.isAbilityForced(unitId, abilityName);
   }
 
   public getPairwiseBatcher() {
@@ -374,7 +362,13 @@ class Simulator {
     // Initialize managers
     this.weatherManager = new WeatherManager();
     this.world = new World();
-
+    this.movementValidator = new MovementValidator(fieldWidth, fieldHeight);
+    this.particleManager = new ParticleManager();
+    this.fireEffects = new FireEffects(
+      this.particleManager,
+      this.temperatureField,
+      this.humidityField
+    );
     this.setupDeterministicRandomness();
 
     this.dirtyUnits = new Set();
@@ -400,6 +394,9 @@ class Simulator {
     this.transform = new Transform(this);
 
     this.reset();
+    
+    // Initialize ability handler after rulebook is set
+    this.abilityHandler = new AbilityHandler(this.proxyManager, this.rulebook, this.ticks);
   }
 
 
@@ -530,26 +527,12 @@ class Simulator {
   }
 
   get roster() {
-    const sim = this;
-
-    const realProxies = this.proxyManager.getRealProxies();
-    return new Proxy(
-      {},
-      {
-        get(target, prop) {
-          if (typeof prop === "string") {
-            return realProxies.find((u) => u.id === prop);
-          }
-          return undefined;
-        },
-        has(target, prop) {
-          if (typeof prop === "string") {
-            return realProxies.some((u) => u.id === prop);
-          }
-          return false;
-        },
-      },
-    );
+    const proxies = this.proxyManager.getRealProxies();
+    const result: any = {};
+    for (const proxy of proxies) {
+      result[proxy.id] = proxy;
+    }
+    return result;
   }
 
   tick() {
@@ -558,7 +541,6 @@ class Simulator {
 
   ticks = 0;
   lastCall: number = 0;
-  private ruleApplicability: Map<string, boolean> = new Map();
 
   private stepDepth = 0;
 
@@ -626,8 +608,6 @@ class Simulator {
 
     // Execute all rules - they will register pairwise intents
     for (const rule of this.rulebook) {
-      const ruleName = rule.constructor.name;
-
       const commands = rule.execute(context);
       if (commands && commands.length > 0) {
         // if (ruleName === "StatusEffects") console.log(`${ruleName} returned ${commands.length} commands`);
@@ -688,104 +668,9 @@ class Simulator {
   }
 
   updateParticles() {
-    const arrays = this.particleArrays;
-
-    // First, apply gravity to particles that need it
-    for (let i = 0; i < arrays.capacity; i++) {
-      if (arrays.active[i] === 0) continue;
-      const type = arrays.type[i];
-      // Only apply gravity to particles we don't manually control
-      if (type !== 1 && type !== 2 && type !== 3) {
-        arrays.velY[i] += 0.1 * (1 - arrays.landed[i]);
-      }
-    }
-
-    // Then override velocities for controlled particle types
-    for (let i = 0; i < arrays.capacity; i++) {
-      if (arrays.active[i] === 0) continue;
-
-      const type = arrays.type[i];
-
-      if (type === 1) {
-        // Leaves - fall straight down, no horizontal movement
-        arrays.velX[i] = 0;
-        arrays.velY[i] = 0.5;
-      } else if (type === 2) {
-        // Rain - slight diagonal
-        arrays.velX[i] = 0.3;
-        arrays.velY[i] = 1.2;
-      } else if (type === 3) {
-        // Snow - very slow drift
-        arrays.velX[i] = 0;
-        arrays.velY[i] = 0.15;
-      }
-    }
-
-    // Finally update positions based on velocities
-    arrays.updatePhysics();
-
-    for (let i = 0; i < arrays.capacity; i++) {
-      if (arrays.active[i] === 0) continue;
-
-      const type = arrays.type[i];
-
-      if (type === 3) {
-        const fieldHeightPx = this.fieldHeight * 8;
-        if (arrays.posY[i] >= fieldHeightPx - 1) {
-          arrays.landed[i] = 1;
-          arrays.posY[i] = fieldHeightPx - 1;
-          arrays.velX[i] = 0;
-          arrays.velY[i] = 0;
-        }
-      }
-
-      const isStormCloud = type === 13;
-      if (
-        arrays.lifetime[i] <= 0 ||
-        (arrays.landed[i] === 0 &&
-          !isStormCloud &&
-          (arrays.posX[i] < -50 ||
-            arrays.posX[i] > this.fieldWidth * 8 + 50 ||
-            arrays.posY[i] < -50 ||
-            arrays.posY[i] > this.fieldHeight * 8 + 50))
-      ) {
-        arrays.removeParticle(i);
-      }
-    }
+    this.particleManager.updateParticles(this.fieldWidth, this.fieldHeight);
   }
 
-  getParticleTypeName(typeId: number): any {
-    const types = [
-      "",
-      "leaf",
-      "rain",
-      "snow",
-      "debris",
-      "lightning",
-      "sand",
-      "energy",
-      "magic",
-      "grapple_line",
-      "test_particle",
-      "test",
-      "pin",
-      "storm_cloud",
-      "lightning_branch",
-      "electric_spark",
-      "power_surge",
-      "ground_burst",
-      "entangle",
-      "tame",
-      "calm",
-      "heal",
-      "thunder_ring",
-      "explosion",
-      "fire",
-      "bubble",
-      "pain",
-    ];
-    return types[typeId] || undefined;
-  }
 
   applyVectorizedMovement() {
     const count = this.unitArrays.capacity;
@@ -807,153 +692,46 @@ class Simulator {
     }
   }
 
-  updateLeafParticle(particle: Particle) {
-    if (particle.landed) {
-      particle.vel.x = 0;
-      particle.vel.y = 0;
-      particle.lifetime -= 3; // Fade 4x faster when landed (including normal decrement)
-      return;
-    }
 
-    particle.vel.x = 0; // No horizontal movement
-    particle.vel.y = 0.5; // Constant fall speed
-
-    const gridX = Math.floor(particle.pos.x / 8);
-    particle.pos.x = gridX * 8 + 4; // Center of grid cell
-    particle.pos.y += particle.vel.y;
-    if (particle.z !== undefined) {
-      particle.z = Math.max(0, particle.z - Math.abs(particle.vel.y) * 0.5);
-    }
-
-    const fieldWidthPixels = this.fieldWidth * 8;
-    if (particle.pos.x < 0) particle.pos.x = fieldWidthPixels + particle.pos.x;
-    if (particle.pos.x > fieldWidthPixels)
-      particle.pos.x = particle.pos.x - fieldWidthPixels;
-
-    if (particle.z !== undefined && particle.z <= 0) {
-      particle.landed = true;
-      particle.z = 0;
-
-      const gridX = Math.floor(particle.pos.x / 8);
-      const gridY = Math.floor(particle.pos.y / 8);
-      particle.pos.x = gridX * 8 + 4; // Center of cell
-      particle.pos.y = gridY * 8 + 4; // Center of cell
-
-      particle.vel.x = 0; // Stop all movement
-      particle.vel.y = 0;
-      particle.lifetime = Math.min(particle.lifetime, 20); // Fade quickly after landing
-    }
-  }
-
-  updateRainParticle(particle: Particle) {
-    if (particle.landed) {
-      particle.vel.x = 0;
-      particle.vel.y = 0;
-      return;
-    }
-
-    particle.vel.x = 0; // No horizontal movement
-    particle.vel.y = 1.0; // Faster than leaves
-
-    const gridX = Math.floor(particle.pos.x / 8);
-    particle.pos.x = gridX * 8 + 4; // Center of grid cell
-    particle.pos.y += particle.vel.y;
-    if (particle.z !== undefined) {
-      particle.z = Math.max(0, particle.z - particle.vel.y * 2); // Descend faster than leaves
-    }
-
-    if (particle.pos.x < 0) particle.pos.x = this.fieldWidth;
-    if (particle.pos.x > this.fieldWidth) particle.pos.x = 0;
-
-    if (particle.z !== undefined && particle.z <= 0) {
-      particle.landed = true;
-      particle.z = 0;
-
-      const gridX = Math.floor(particle.pos.x / 8);
-      const gridY = Math.floor(particle.pos.y / 8);
-      particle.pos.x = gridX * 8 + 4; // Center of cell
-      particle.pos.y = gridY * 8 + 4; // Center of cell
-
-      particle.vel.x = 0;
-      particle.vel.y = 0;
-      particle.lifetime = Math.min(particle.lifetime, 30); // Fade quickly when landed
-
-      this.humidityField.addGradient(gridX, gridY, 1, 0.05);
-    }
-  }
 
   spawnLeafParticle() {
-    const gridX = Math.floor(Simulator.rng.random() * this.fieldWidth);
-    this.particleArrays.addParticle({
-      pos: {
-        x: gridX * 8 + 4, // Center of grid cell
-        y: -2, // Start above the visible area
-      },
-      vel: {
-        x: 0, // No horizontal velocity - drops straight down
-        y: 0.5, // Consistent downward velocity
-      },
-      radius: Simulator.rng.random() * 1.5 + 0.5, // Small leaf size
-      lifetime: 1000 + Simulator.rng.random() * 500, // Long lifetime for drifting
-      z: 10 + Simulator.rng.random() * 20, // Start at various heights
-      type: "leaf",
-      landed: false,
-    });
+    this.particleManager.spawnLeafParticle(this.fieldWidth, this.fieldHeight);
   }
 
   updateScalarFields() {
-    this.temperatureField.diffuse(0.02); // Just diffuse, minimal decay
-    this.temperatureField.decay(0.0005); // Very slow decay towards ambient
-
+    this.temperatureField.diffuse(0.02);
+    this.temperatureField.decay(0.0005);
     this.humidityField.diffuse(0.03);
-    this.humidityField.decay(0.001); // Slow evaporation
-
-    this.pressureField.decayAndDiffuse(0.01, 0.12); // Pressure normalizes faster
+    this.humidityField.decay(0.001);
+    this.pressureField.decayAndDiffuse(0.01, 0.12);
   }
 
   applyFieldInteractions() {
     if (!this.temperatureField || !this.humidityField) return;
-
     const startY = (this.ticks % 10) * Math.floor(this.fieldHeight / 10);
-    const endY = Math.min(
-      startY + Math.floor(this.fieldHeight / 10),
-      this.fieldHeight,
-    );
+    const endY = Math.min(startY + Math.floor(this.fieldHeight / 10), this.fieldHeight);
 
     for (let y = startY; y < endY; y++) {
       for (let x = 0; x < this.fieldWidth; x++) {
         const temp = this.temperatureField.get(x, y);
         const humidity = this.humidityField.get(x, y);
-
-        if (temp > 30) {
-          const evaporation = (temp - 30) * 0.001;
-          this.humidityField.add(x, y, -evaporation);
-        }
-
-        if (humidity > 0.8) {
-          const condensation = (humidity - 0.8) * 0.01;
-          this.humidityField.add(x, y, -condensation);
-        }
+        if (temp > 30) this.humidityField.add(x, y, -(temp - 30) * 0.001);
+        if (humidity > 0.8) this.humidityField.add(x, y, -(humidity - 0.8) * 0.01);
       }
     }
   }
 
   updateUnitTemperatureEffects() {
     for (const unit of this.units) {
-      if (unit.meta.phantom) continue;
-      if (unit.state === "dead") continue;
-
-      const pos = unit.pos;
-      const x = Math.floor(pos.x);
-      const y = Math.floor(pos.y);
+      if (unit.meta.phantom || unit.state === "dead") continue;
+      const x = Math.floor(unit.pos.x);
+      const y = Math.floor(unit.pos.y);
 
       if (unit.type === "freezebot") {
-        const currentTemp = this.temperatureField.get(x, y);
-
-        if (currentTemp > 0) {
-          this.temperatureField.addGradient(x, y, 4, -0.5); // Gentler cooling gradient
-
-          this.temperatureField.set(x, y, currentTemp * 0.95); // 5% cooling per tick
+        const temp = this.temperatureField.get(x, y);
+        if (temp > 0) {
+          this.temperatureField.addGradient(x, y, 4, -0.5);
+          this.temperatureField.set(x, y, temp * 0.95);
         }
       } else if (unit.tags?.includes("construct")) {
         this.temperatureField.addGradient(x, y, 2, 1.0);
@@ -968,8 +746,7 @@ class Simulator {
   }
 
   get temperature(): number {
-    let total = 0;
-    let count = 0;
+    let total = 0, count = 0;
     for (let x = 0; x < this.fieldWidth; x++) {
       for (let y = 0; y < this.fieldHeight; y++) {
         total += this.temperatureField.get(x, y);
@@ -1019,219 +796,88 @@ class Simulator {
   }
 
   applyWeatherEffects() {
-    switch (this.weatherManager.weather.current) {
-      case "rain":
-        this.applyRainEffects();
-        break;
-      case "storm":
-        this.applyStormEffects();
-        break;
-      case "leaves":
-        this.applyLeavesEffects();
-        break;
-      case "snow":
-        // Snow effects handled by BiomeEffects rule
-        break;
-      case "sandstorm":
-        // Sandstorm effects handled by BiomeEffects rule
-        break;
+    const weatherType = this.weatherManager.weather.current;
+    const intensity = this.weatherManager.weather.intensity;
+    
+    if (weatherType === "rain") {
+      this.applyRainEffects();
+    } else if (weatherType === "storm") {
+      this.applyStormEffects();
+    } else if (weatherType === "leaves") {
+      this.applyLeavesEffects();
     }
   }
 
   applyRainEffects() {
-    const intensity = this.weather.intensity;
-
-    for (let i = 0; i < Math.ceil(intensity * 5); i++) {
-      const x = Simulator.rng.random() * this.fieldWidth;
-      const y = Simulator.rng.random() * this.fieldHeight;
-      this.humidityField.addGradient(x, y, 2, intensity * 0.1);
+    const int = this.weather.intensity;
+    const rng = Simulator.rng;
+    for (let i = 0; i < Math.ceil(int * 5); i++) {
+      this.humidityField.addGradient(rng.random() * this.fieldWidth, rng.random() * this.fieldHeight, 2, int * 0.1);
     }
-
-    for (let i = 0; i < Math.ceil(intensity * 3); i++) {
-      const x = Simulator.rng.random() * this.fieldWidth;
-      const y = Simulator.rng.random() * this.fieldHeight;
-      this.temperatureField.addGradient(x, y, 3, -intensity * 2);
+    for (let i = 0; i < Math.ceil(int * 3); i++) {
+      this.temperatureField.addGradient(rng.random() * this.fieldWidth, rng.random() * this.fieldHeight, 3, -int * 2);
     }
-
-    if (Simulator.rng.random() < intensity * 0.5) {
-      this.spawnRainParticle();
-    }
-
+    if (rng.random() < int * 0.5) this.spawnRainParticle();
     this.extinguishFires();
   }
 
   applyStormEffects() {
     this.applyRainEffects();
-
-    const intensity = this.weather.intensity;
-
-    for (let i = 0; i < Math.ceil(intensity * 3); i++) {
-      const x = Simulator.rng.random() * this.fieldWidth;
-      const y = Simulator.rng.random() * this.fieldHeight;
-      const pressureChange = (Simulator.rng.random() - 0.5) * intensity * 0.2;
-      this.pressureField.addGradient(x, y, 4, pressureChange);
+    const int = this.weather.intensity;
+    for (let i = 0; i < Math.ceil(int * 3); i++) {
+      this.pressureField.addGradient(
+        Simulator.rng.random() * this.fieldWidth,
+        Simulator.rng.random() * this.fieldHeight,
+        4,
+        (Simulator.rng.random() - 0.5) * int * 0.2
+      );
     }
   }
 
   applyLeavesEffects() {
-    const intensity = this.weather.intensity;
-
-    if (Simulator.rng.random() < intensity * 0.3) {
+    if (Simulator.rng.random() < this.weather.intensity * 0.3) {
       const leafCount = 1 + Math.floor(Simulator.rng.random() * 3);
       for (let i = 0; i < leafCount; i++) {
-        this.particleArrays.addParticle({
-          id: `leaf_${Date.now()}_${this.ticks}_${i}`,
-          type: "leaf",
-          pos: {
-            x: Simulator.rng.random() * this.fieldWidth * 8, // Spread across full width
-            y: -10 - Simulator.rng.random() * 10, // Start above the field
-          },
-          vel: {
-            x: 0, // No horizontal drift - fall straight down
-            y: 0.2 + Simulator.rng.random() * 0.2, // Slow fall
-          },
-          z: 15 + Simulator.rng.random() * 25, // Varying heights
-          lifetime: 400 + Simulator.rng.random() * 200, // Long lifetime to cross field
-          radius: 1,
-          color: "green",
-        });
+        this.spawnLeafParticle();
       }
     }
   }
 
-  setWeather(
-    type: "clear" | "rain" | "storm" | "sandstorm" | "leaves",
-    duration: number = 80,
-    intensity: number = 0.7,
-  ): void {
+  setWeather(type: string, duration = 80, intensity = 0.7): void {
     this.weatherManager.setWeather(type as any, duration, intensity);
-    if (type !== "clear" && duration > 0) {
-      this.enableEnvironmentalEffects = true;
-    }
+    if (type !== "clear" && duration > 0) this.enableEnvironmentalEffects = true;
   }
 
   spawnRainParticle() {
-    this.particleArrays.addParticle({
-      pos: {
-        x: Simulator.rng.random() * this.fieldWidth,
-        y: -1, // Start above visible area
-      },
-      vel: {
-        x: 0, // No horizontal movement - fall straight down
-        y: 0.8 + Simulator.rng.random() * 0.4, // Fast downward
-      },
-      radius: 0.5 + Simulator.rng.random() * 0.5, // Small drops
-      lifetime: 50 + Simulator.rng.random() * 30, // Short lifetime
-
-      z: 5 + Simulator.rng.random() * 10, // Start at moderate height
-      type: "rain",
-      landed: false,
-    });
+    this.particleManager.spawnRainParticle(this.fieldWidth, this.fieldHeight);
   }
 
   spawnFireParticle(x: number, y: number) {
-    this.particleArrays.addParticle({
-      pos: { x, y },
-      vel: {
-        x: (Simulator.rng.random() - 0.5) * 0.4, // Random horizontal spread
-        y: -0.2 - Simulator.rng.random() * 0.3, // Upward movement (fire rises)
-      },
-      radius: 0.8 + Simulator.rng.random() * 0.7, // Variable spark size
-      lifetime: 30 + Simulator.rng.random() * 40, // Medium lifetime
-
-      z: Simulator.rng.random() * 3, // Start at ground level to low height
-      type: "debris", // Reuse debris type for now
-      landed: false,
-    });
+    this.particleManager.spawnFireParticle(x, y);
   }
 
   setUnitOnFire(unit: Unit) {
-    if (unit.meta?.onFire) return; // Already on fire
-
-    this.queuedCommands.push({
-      type: "meta",
-      params: {
-        unitId: unit.id,
-        meta: {
-          ...unit.meta,
-          onFire: true,
-          fireDuration: 40, // Burn for 5 seconds at 8fps
-          fireTickDamage: 2, // Damage per tick while burning
-        },
-      },
-    });
+    const command = this.fireEffects.setUnitOnFire(unit);
+    if (command) {
+      this.queuedCommands.push(command);
+    }
   }
 
   processFireEffects() {
-    for (const unit of this.units) {
-      if (unit.meta && unit.meta.onFire && unit.meta.fireDuration > 0) {
-        this.queuedCommands.push({
-          type: "damage",
-          params: {
-            targetId: unit.id,
-            amount: unit.meta.fireTickDamage || 2,
-            aspect: "fire",
-            sourceId: "fire",
-          },
-        });
-
-        this.queuedCommands.push({
-          type: "meta",
-          params: {
-            unitId: unit.id,
-            meta: {
-              ...unit.meta,
-              fireDuration: unit.meta.fireDuration - 1,
-            },
-          },
-        });
-
-        if (Simulator.rng.random() < 0.3) {
-          const offsetX = (Simulator.rng.random() - 0.5) * 2;
-          const offsetY = (Simulator.rng.random() - 0.5) * 2;
-          this.spawnFireParticle(unit.pos.x + offsetX, unit.pos.y + offsetY);
-        }
-
-        this.addHeat(unit.pos.x, unit.pos.y, 3, 1.5);
-
-        if (unit.meta.fireDuration <= 0) {
-          unit.meta.onFire = false;
-          delete unit.meta.fireDuration;
-          delete unit.meta.fireTickDamage;
-        }
-      }
-    }
+    const commands = this.fireEffects.processFireEffects(this.units, Simulator.rng);
+    this.queuedCommands.push(...commands);
   }
 
   extinguishFires() {
-    if (this.weather.current === "rain" || this.weather.current === "storm") {
-      for (const unit of this.units) {
-        if (unit.meta?.onFire) {
-          const humidity = this.getHumidity(unit.pos.x, unit.pos.y);
-          const temperature = this.getTemperature(unit.pos.x, unit.pos.y);
-
-          if (humidity > 0.6 && temperature < 30) {
-            this.queuedCommands.push({
-              type: "meta",
-              params: {
-                unitId: unit.id,
-                meta: {
-                  ...unit.meta,
-                  onFire: false,
-                  fireDuration: undefined,
-                  fireTickDamage: undefined,
-                },
-              },
-            });
-          }
-        }
-      }
-    }
+    const commands = this.fireEffects.extinguishFires(
+      this.units,
+      this.weather.current,
+      (x, y) => this.getHumidity(x, y),
+      (x, y) => this.getTemperature(x, y)
+    );
+    this.queuedCommands.push(...commands);
   }
 
-  processWeatherCommand(command: string, ...args: any[]): void {
-    this.weatherManager.processWeatherCommand(command, ...args);
-  }
 
   accept(input) {
     this.handleInput(input);
@@ -1241,146 +887,48 @@ class Simulator {
 
 
   clone() {
-    const newSimulator = new Simulator();
-
+    const newSim = new Simulator();
     for (let i = 0; i < this.unitArrays.capacity; i++) {
       if (this.unitArrays.active[i] === 0) continue;
-
-      const unit = {
-        id: this.unitArrays.unitIds[i],
+      const id = this.unitArrays.unitIds[i];
+      const data = this.unitColdData.get(id);
+      newSim.addUnit({
+        id,
         pos: { x: this.unitArrays.posX[i], y: this.unitArrays.posY[i] },
-        intendedMove: {
-          x: this.unitArrays.intendedMoveX[i],
-          y: this.unitArrays.intendedMoveY[i],
-        },
+        intendedMove: { x: this.unitArrays.intendedMoveX[i], y: this.unitArrays.intendedMoveY[i] },
         hp: this.unitArrays.hp[i],
         maxHp: this.unitArrays.maxHp[i],
         team: ["friendly", "hostile", "neutral"][this.unitArrays.team[i]],
         state: ["idle", "walk", "attack", "dead"][this.unitArrays.state[i]],
         mass: this.unitArrays.mass[i],
         dmg: this.unitArrays.dmg[i],
-        sprite:
-          this.unitColdData.get(this.unitArrays.unitIds[i])?.sprite ||
-          "default",
-        abilities:
-          this.unitColdData.get(this.unitArrays.unitIds[i])?.abilities || [],
-        meta: this.unitColdData.get(this.unitArrays.unitIds[i])?.meta || {},
-      } as Unit;
-      newSimulator.addUnit(unit);
+        sprite: data?.sprite || "default",
+        abilities: data?.abilities || [],
+        meta: data?.meta || {},
+      } as Unit);
     }
-    return newSimulator;
+    return newSim;
   }
 
   validMove(unit, dx, dy) {
-    if (!unit) return false;
-
-    if (unit.meta.huge) {
-      const bodyPositions = this.getHugeUnitBodyPositions(unit);
-
-      for (const pos of bodyPositions) {
-        const newX = pos.x + dx;
-        const newY = pos.y + dy;
-
-        if (
-          newX < 0 ||
-          newX >= this.fieldWidth ||
-          newY < 0 ||
-          newY >= this.fieldHeight
-        ) {
-          return false;
-        }
-
-        if (this.isApparentlyOccupied(newX, newY, unit)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    const newX = unit.pos.x + dx;
-    const newY = unit.pos.y + dy;
-
-    if (
-      newX < 0 ||
-      newX >= this.fieldWidth ||
-      newY < 0 ||
-      newY >= this.fieldHeight
-    )
-      return false;
-
-    return !this.isApparentlyOccupied(newX, newY, unit);
+    return this.movementValidator.validMove(unit, dx, dy, this.units);
   }
 
   getHugeUnitBodyPositions(unit) {
-    if (!unit.meta.huge) return [unit.pos];
-
-    return [
-      unit.pos, // Head
-      { x: unit.pos.x, y: unit.pos.y + 1 }, // Body segment 1
-      { x: unit.pos.x, y: unit.pos.y + 2 }, // Body segment 2
-      { x: unit.pos.x, y: unit.pos.y + 3 }, // Body segment 3
-    ];
+    return this.movementValidator.getHugeUnitBodyPositions(unit);
   }
 
-  getRealUnits() {
-    return this.units.filter((unit) => !unit.meta.phantom);
-  }
-
-  getApparentUnits() {
-    return this.units;
-  }
+  getRealUnits() { return this.units.filter((unit) => !unit.meta.phantom); }
+  getApparentUnits() { return this.units; }
 
   isApparentlyOccupied(
     x: number,
     y: number,
     excludeUnit: Unit | null = null,
   ): boolean {
-    const roundedX = Math.round(x);
-    const roundedY = Math.round(y);
-
-    if (this.positionMap.size > 0) {
-      const key = `${roundedX},${roundedY}`;
-      const unitsAtPos = this.positionMap.get(key);
-
-      if (!unitsAtPos || unitsAtPos.size === 0) {
-        return false;
-      }
-
-      for (const unit of unitsAtPos) {
-        if (unit === excludeUnit) continue;
-        if (this.isOwnPhantom(unit, excludeUnit)) continue;
-        return true; // Position is occupied
-      }
-
-      return false;
-    }
-
-    for (const unit of this.units) {
-      if (unit === excludeUnit) continue;
-      if (unit.state === "dead") continue;
-
-      const positions = this.getHugeUnitBodyPositions(unit);
-      for (const pos of positions) {
-        if (Math.round(pos.x) === roundedX && Math.round(pos.y) === roundedY) {
-          if (!this.isOwnPhantom(unit, excludeUnit)) {
-            return true;
-          }
-        }
-      }
-    }
-
-    return false;
+    return this.movementValidator.isApparentlyOccupied(x, y, excludeUnit, this.units);
   }
 
-  private isOwnPhantom(unit, owner) {
-    if (!unit) return false;
-
-    return (
-      (unit.meta && unit.meta.phantom && unit.meta.parentId === owner?.id) ||
-      unit === owner
-    );
-  }
 
   private unitCache: Map<string, Unit> = new Map();
 
@@ -1388,49 +936,9 @@ class Simulator {
     return this.unitCache.get(id);
   }
 
-  objEq(a: any, b: any): boolean {
-    if (a === b) return true;
-    if (typeof a !== "object" || typeof b !== "object") return false;
-    if (Object.keys(a).length !== Object.keys(b).length) return false;
-    for (const key of Object.keys(a)) {
-      if (!b.hasOwnProperty(key) || a[key] !== b[key]) return false;
-    }
-    return true;
-  }
 
-  delta(before: Unit, after: Unit): Partial<Unit> {
-    if (before.id !== after.id) {
-      throw new Error(`Unit IDs do not match: ${before.id} !== ${after.id}`);
-    }
-
-    const changes: Partial<Unit> = {};
-    for (const key of Object.keys(before)) {
-      if (!this.objEq(before[key], after[key])) {
-        changes[key] = after[key];
-      }
-    }
-    return changes;
-  }
-
-  prettyPrint(val: any) {
-    return (JSON.stringify(val, null, 2) || "")
-      .replace(/\n/g, "")
-      .replace(/ /g, "");
-  }
-
-  attrEmoji: { [key: string]: string } = {
-    hp: "❤️",
-    mass: "⚖️",
-    pos: "📍",
-    intendedMove: "➡️",
-    intendedTarget: "🎯",
-    state: "🛡️",
-  };
-
-  private updateChangedUnits(): void {
-    return;
-  }
-
+  private updateChangedUnits(): void {}
+  
   public getChangedUnits(): string[] {
     return Array.from(this.changedUnits);
   }
@@ -1439,68 +947,34 @@ class Simulator {
     return this.changedUnits.has(unitId);
   }
 
-  _debugUnits(unitsBefore: Unit[], phase: string) {
-    let printedPhase = false;
-    for (const u of this.units) {
-      if (unitsBefore) {
-        const before = unitsBefore.find((b) => b.id === u.id);
-        if (before) {
-          let delta = this.delta(before, u);
-          if (Object.keys(delta).length === 0) {
-            continue; // No changes, skip detailed logging
-          }
-          if (!printedPhase) {
-            console.debug(`## ${phase}`);
-            printedPhase = true;
-          }
-          let str = `  ${u.id}`;
-          Object.keys(delta).forEach((key) => {
-            let icon = this.attrEmoji[key] || "|";
-            str += ` | ${icon} ${key}: ${this.prettyPrint(before[key])} → ${this.prettyPrint(u[key])}`;
-          });
-          console.debug(str);
-        }
-      } else {
-        console.debug(`  ${u.id}: (${u.pos.x},${u.pos.y})`, JSON.stringify(u));
-      }
-    }
-  }
 
   handleInput(input) {
     for (const unit of this.units) {
-      const command = input.commands[unit.id];
-      if (command) {
-        for (const cmd of command) {
-          if (cmd.action === "move") {
-            if (cmd.target) {
-              this.proxyManager.setIntendedMove(unit.id, cmd.target);
-            }
-          }
-          if (cmd.action === "fire" && cmd.target) {
-            const target = this.units.find((u) => u.id === cmd.target);
-            if (target) {
-              const dx = target.pos.x - unit.pos.x;
-              const dy = target.pos.y - unit.pos.y;
-              const mag = Math.sqrt(dx * dx + dy * dy) || 1;
-              const speed = 1; // Could be parameterized
-              const vel = { x: (dx / mag) * speed, y: (dy / mag) * speed };
-
-              const offset = 0.5;
-              const projX = unit.pos.x + (dx / mag) * offset;
-              const projY = unit.pos.y + (dy / mag) * offset;
-
-              const projectile = {
-                id: `proj_${unit.id}_${Date.now()}`,
-                pos: { x: projX, y: projY },
-                vel,
-                radius: 1.5,
-                damage: 5,
-                team: unit.team,
-                type: "bullet" as const,
-              };
-              this.invalidateProjectilesCache();
-              this.projectileArrays.addProjectile(projectile);
-            }
+      const commands = input.commands[unit.id];
+      if (!commands) continue;
+      
+      for (const cmd of commands) {
+        if (cmd.action === "move" && cmd.target) {
+          this.proxyManager.setIntendedMove(unit.id, cmd.target);
+        } else if (cmd.action === "fire" && cmd.target) {
+          const target = this.units.find((u) => u.id === cmd.target);
+          if (target) {
+            const dx = target.pos.x - unit.pos.x;
+            const dy = target.pos.y - unit.pos.y;
+            const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+            const vel = { x: dx / mag, y: dy / mag };
+            const offset = 0.5;
+            
+            this.invalidateProjectilesCache();
+            this.projectileArrays.addProjectile({
+              id: `proj_${unit.id}_${Date.now()}`,
+              pos: { x: unit.pos.x + vel.x * offset, y: unit.pos.y + vel.y * offset },
+              vel,
+              radius: 1.5,
+              damage: 5,
+              team: unit.team,
+              type: "bullet" as const,
+            });
           }
         }
       }
@@ -1508,96 +982,27 @@ class Simulator {
     return this;
   }
 
-  unitAt(x: number, y: number): Unit | undefined {
-    return this.units.find((u) => u.pos.x === x && u.pos.y === y);
+
+
+  processWeatherCommand(command: string, ...args: any[]): void {
+    this.weatherManager.processWeatherCommand(command, ...args);
   }
 
-  areaDamage(config: {
-    pos: { x: number; y: number };
-    radius: number;
-    damage: number;
-    team: string;
-  }) {
-    for (const unit of this.units) {
-      if (unit.team !== config.team) {
-        const dx = unit.pos.x - config.pos.x;
-        const dy = unit.pos.y - config.pos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist <= config.radius) {
-          unit.hp -= config.damage;
-        }
-      }
-    }
+  _debugUnits(unitsBefore: Unit[], phase: string) {
+    const debugHelper = new DebugHelper();
+    debugHelper.debugUnits(this.units as any, unitsBefore, phase);
   }
-
-  private forcedAbilitiesThisTick = new Set<string>();
 
   forceAbility(unitId: string, abilityName: string, target?: any): void {
-    const key = `${unitId}:${abilityName}`;
-    this.forcedAbilitiesThisTick.add(key);
-    const unit = this.units.find((u) => u.id === unitId);
-    if (
-      !unit ||
-      !Array.isArray(unit.abilities) ||
-      !unit.abilities.includes(abilityName)
-    )
-      return;
-
-    const abilitiesRule = this.rulebook.find(
-      (rule) => rule.constructor.name === "Abilities",
+    this.abilityHandler.updateTicks(this.ticks);
+    const commands = this.abilityHandler.forceAbility(
+      unitId,
+      abilityName,
+      this.units,
+      this.getTickContext(),
+      target
     );
-    if (!abilitiesRule) {
-      console.warn("Abilities rule not found in rulebook");
-      return;
-    }
-
-    const jsonAbility = Abilities.all[abilityName];
-    if (!jsonAbility) {
-      console.warn(`Ability ${abilityName} not found in JSON definitions`);
-      return;
-    }
-
-    const context = this.getTickContext();
-
-    const primaryTarget = target || unit;
-
-    (abilitiesRule as any).commands = [];
-
-    (abilitiesRule as any).cachedAllUnits = context.getAllUnits();
-
-    for (const effect of jsonAbility.effects) {
-      (abilitiesRule as Abilities).processEffectAsCommand(
-        context,
-        effect,
-        unit,
-        primaryTarget,
-      );
-    }
-
-    const generatedCommands = (abilitiesRule as any).commands || [];
-    this.queuedCommands.push(...generatedCommands);
-
-    const proxyManager = this.proxyManager;
-    if (proxyManager) {
-      const currentTick = {
-        ...unit.lastAbilityTick,
-        [abilityName]: this.ticks,
-      };
-      proxyManager.setLastAbilityTick(unit.id, currentTick);
-    }
-
-    this.queuedCommands.push({
-      type: "meta",
-      params: {
-        unitId: unit.id,
-        meta: {
-          lastAbilityTick: {
-            ...unit.lastAbilityTick,
-            [abilityName]: this.ticks,
-          },
-        },
-      },
-    });
+    this.queuedCommands.push(...commands);
   }
 }
 

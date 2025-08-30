@@ -38,26 +38,35 @@ export class ParticleManager {
   
   private getParticleTypeName(typeId: number): any {
     const types = [
-      "fire",
-      "smoke",
-      "debris",
-      "magic",
-      "healing",
-      "lightning",
-      "explosion",
+      "",
       "leaf",
       "rain",
-      "test_particle",
-      "impact",
-      "text",
-      "lightning_branch",
-      "grapple_line",
-      "dust",
-      "spark",
-      "blood",
       "snow",
+      "debris",
+      "lightning",
+      "sand",
+      "energy",
+      "magic",
+      "grapple_line",
+      "test_particle",
+      "test",
+      "pin",
+      "storm_cloud",
+      "lightning_branch",
+      "electric_spark",
+      "power_surge",
+      "ground_burst",
+      "entangle",
+      "tame",
+      "calm",
+      "heal",
+      "thunder_ring",
+      "explosion",
+      "fire",
+      "bubble",
+      "pain",
     ];
-    return types[typeId] || "unknown";
+    return types[typeId] || undefined;
   }
   
   addParticle(particle: Partial<Particle>): void {
@@ -73,38 +82,66 @@ export class ParticleManager {
   
   updateParticles(fieldWidth: number, fieldHeight: number): void {
     const arrays = this.particleArrays;
-    
-    // Apply gravity to particles that need it
+
+    // First, apply gravity to particles that need it
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
-      
+      const type = arrays.type[i];
       // Only apply gravity to particles we don't manually control
-      if (arrays.type[i] !== 7 && arrays.type[i] !== 8) { // Not leaf or rain
-        arrays.velY[i] += 0.1;
+      if (type !== 1 && type !== 2 && type !== 3) {
+        arrays.velY[i] += 0.1 * (1 - arrays.landed[i]);
       }
     }
-    
-    // Update specific particle types
+
+    // Then override velocities for controlled particle types
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
-      
-      const particleType = arrays.type[i];
-      
-      if (particleType === 1) { // leaf - corrected type ID
-        this.updateLeafParticle(i, fieldWidth * 8);
-      } else if (particleType === 2) { // rain - corrected type ID
-        this.updateRainParticle(i, fieldWidth);
-      } else {
-        // Standard particle update
-        arrays.posX[i] += arrays.velX[i];
-        arrays.posY[i] += arrays.velY[i];
-        arrays.velX[i] *= 0.95;
-        arrays.velY[i] *= 0.95;
+
+      const type = arrays.type[i];
+
+      if (type === 1) {
+        // Leaves - fall straight down, no horizontal movement
+        arrays.velX[i] = 0;
+        arrays.velY[i] = 0.5;
+      } else if (type === 2) {
+        // Rain - slight diagonal
+        arrays.velX[i] = 0.3;
+        arrays.velY[i] = 1.2;
+      } else if (type === 3) {
+        // Snow - very slow drift
+        arrays.velX[i] = 0;
+        arrays.velY[i] = 0.15;
       }
-      
-      // Update lifetime
-      arrays.lifetime[i]--;
-      if (arrays.lifetime[i] <= 0) {
+    }
+
+    // Finally update positions based on velocities
+    arrays.updatePhysics();
+
+    for (let i = 0; i < arrays.capacity; i++) {
+      if (arrays.active[i] === 0) continue;
+
+      const type = arrays.type[i];
+
+      if (type === 3) {
+        const fieldHeightPx = fieldHeight * 8;
+        if (arrays.posY[i] >= fieldHeightPx - 1) {
+          arrays.landed[i] = 1;
+          arrays.posY[i] = fieldHeightPx - 1;
+          arrays.velX[i] = 0;
+          arrays.velY[i] = 0;
+        }
+      }
+
+      const isStormCloud = type === 13;
+      if (
+        arrays.lifetime[i] <= 0 ||
+        (arrays.landed[i] === 0 &&
+          !isStormCloud &&
+          (arrays.posX[i] < -50 ||
+            arrays.posX[i] > fieldWidth * 8 + 50 ||
+            arrays.posY[i] < -50 ||
+            arrays.posY[i] > fieldHeight * 8 + 50))
+      ) {
         arrays.removeParticle(i);
       }
     }
