@@ -322,23 +322,91 @@ export class PlayerControl extends Rule {
                 },
               });
             } else if (primaryAction === "freeze") {
+              // Find nearest enemy to target
+              const enemies = context
+                .getAllUnits()
+                .filter((u) => u.team !== unit.team && u.hp > 0);
+              
+              let targetX = unit.pos.x;
+              let targetY = unit.pos.y;
+              let targetEnemy = null;
+              
+              if (enemies.length > 0) {
+                enemies.sort((a, b) => {
+                  const distA = Math.abs(a.pos.x - unit.pos.x) + Math.abs(a.pos.y - unit.pos.y);
+                  const distB = Math.abs(b.pos.x - unit.pos.x) + Math.abs(b.pos.y - unit.pos.y);
+                  return distA - distB;
+                });
+                
+                const target = enemies[0];
+                if (Math.abs(target.pos.x - unit.pos.x) <= 5 && Math.abs(target.pos.y - unit.pos.y) <= 5) {
+                  targetX = target.pos.x;
+                  targetY = target.pos.y;
+                  targetEnemy = target;
+                }
+              }
+              
+              // Apply freezing temperature
               commands.push({
                 type: "temperature",
                 params: {
-                  x: unit.pos.x,
-                  y: unit.pos.y,
+                  x: targetX,
+                  y: targetY,
                   radius: 3,
-                  delta: -50,
+                  amount: -100, // Make it colder to ensure freezing
                 },
               });
+              
+              // Also directly freeze the target enemy
+              if (targetEnemy) {
+                commands.push({
+                  type: "applyStatusEffect",
+                  params: {
+                    targetId: targetEnemy.id,
+                    effect: "frozen",
+                    duration: 60
+                  }
+                });
+                
+                // Stop the enemy immediately
+                commands.push({
+                  type: "halt",
+                  params: {
+                    unitId: targetEnemy.id
+                  }
+                });
+              }
             } else if (primaryAction === "fire") {
+              // Find nearest enemy to target
+              const enemies = context
+                .getAllUnits()
+                .filter((u) => u.team !== unit.team && u.hp > 0);
+              
+              let targetX = unit.pos.x;
+              let targetY = unit.pos.y;
+              
+              if (enemies.length > 0) {
+                enemies.sort((a, b) => {
+                  const distA = Math.abs(a.pos.x - unit.pos.x) + Math.abs(a.pos.y - unit.pos.y);
+                  const distB = Math.abs(b.pos.x - unit.pos.x) + Math.abs(b.pos.y - unit.pos.y);
+                  return distA - distB;
+                });
+                
+                const target = enemies[0];
+                if (Math.abs(target.pos.x - unit.pos.x) <= 5 && Math.abs(target.pos.y - unit.pos.y) <= 5) {
+                  targetX = target.pos.x;
+                  targetY = target.pos.y;
+                }
+              }
+              
               commands.push({
-                type: "temperature",
+                type: "fire",
+                unitId: unit.id,
                 params: {
-                  x: unit.pos.x,
-                  y: unit.pos.y,
+                  x: targetX,
+                  y: targetY,
                   radius: 3,
-                  delta: 50,
+                  temperature: 500,
                 },
               });
             }

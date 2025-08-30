@@ -82,7 +82,8 @@ export class FireCommand extends Command {
     const unitsInFire = this.sim.units.filter(
       u => Math.abs(u.pos.x - x) <= radius && 
            Math.abs(u.pos.y - y) <= radius &&
-           u.hp > 0
+           u.hp > 0 &&
+           u.id !== unitId // Don't damage the caster
     );
     
     for (const unit of unitsInFire) {
@@ -111,21 +112,81 @@ export class FireCommand extends Command {
       }
     }
     
-    // Add visual fire particles
-    for (let i = 0; i < 10; i++) {
-      const angle = (Math.PI * 2 * i) / 10;
+    // Add visual fire particles and cell effects
+    for (let i = 0; i < 20; i++) {
+      const angle = (Math.PI * 2 * i) / 20;
       const r = Math.random() * radius;
       this.sim.particleArrays.addParticle({
         id: `fire_${this.sim.ticks}_${i}`,
         type: "fire",
         pos: {
-          x: x * 8 + Math.cos(angle) * r * 8,
-          y: y * 8 + Math.sin(angle) * r * 8,
+          x: x * 8 + Math.cos(angle) * r * 8 + 4,
+          y: y * 8 + Math.sin(angle) * r * 8 + 4,
         },
-        vel: { x: 0, y: -0.5 - Math.random() * 0.5 },
-        radius: 0.5 + Math.random() * 0.5,
-        color: Math.random() > 0.5 ? "#FF6600" : "#FFAA00",
-        lifetime: 30 + Math.random() * 30,
+        vel: { x: (Math.random() - 0.5) * 0.3, y: -0.8 - Math.random() * 0.5 },
+        radius: 1 + Math.random() * 0.5,
+        color: Math.random() > 0.3 ? "#FF4500" : "#FFA500", // OrangeRed and Orange
+        lifetime: 40 + Math.random() * 30,
+      });
+    }
+    
+    // Add burning cell effects to the affected tiles
+    for (let dx = -radius; dx <= radius; dx++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= radius) {
+          const cellX = Math.floor(x + dx);
+          const cellY = Math.floor(y + dy);
+          
+          if (cellX >= 0 && cellX < this.sim.fieldWidth &&
+              cellY >= 0 && cellY < this.sim.fieldHeight) {
+            // Add burning effect to cell
+            this.sim.queuedCommands.push({
+              type: "effects",
+              params: {
+                x: cellX,
+                y: cellY,
+                effect: "burning",
+                duration: 60 + Math.random() * 30
+              }
+            });
+            
+            // Add embers floating up from burning cells
+            if (Math.random() < 0.3) {
+              this.sim.particleArrays.addParticle({
+                id: `ember_${this.sim.ticks}_${cellX}_${cellY}`,
+                type: "ember",
+                pos: {
+                  x: cellX * 8 + 4 + (Math.random() - 0.5) * 4,
+                  y: cellY * 8 + 4 + (Math.random() - 0.5) * 4,
+                },
+                vel: { 
+                  x: (Math.random() - 0.5) * 0.2, 
+                  y: -0.3 - Math.random() * 0.3 
+                },
+                radius: 0.3 + Math.random() * 0.3,
+                color: "#FF8C00", // Dark orange
+                lifetime: 50 + Math.random() * 20,
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    // Add smoke particles for atmosphere
+    for (let i = 0; i < 5; i++) {
+      this.sim.particleArrays.addParticle({
+        id: `smoke_${this.sim.ticks}_${i}`,
+        type: "smoke",
+        pos: {
+          x: x * 8 + 4 + (Math.random() - 0.5) * radius * 8,
+          y: y * 8 + 4 + (Math.random() - 0.5) * radius * 8,
+        },
+        vel: { x: (Math.random() - 0.5) * 0.1, y: -0.2 - Math.random() * 0.2 },
+        radius: 2 + Math.random(),
+        color: "#696969", // Dim gray
+        lifetime: 80 + Math.random() * 40,
       });
     }
   }

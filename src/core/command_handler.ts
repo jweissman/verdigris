@@ -43,6 +43,8 @@ import { ForcesCommand } from "../commands/forces";
 import { AICommand } from "../commands/ai";
 import { SimulateCommand } from "../commands/simulate";
 import { Wander } from "../commands/wander";
+import { GroundPound } from "../commands/ground_pound";
+import { Dash } from "../commands/dash";
 // RemoveProjectileCommand merged into Projectile command
 import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
@@ -135,7 +137,9 @@ export class CommandHandler {
     this.commands.set("temperature", tempCmd);
     this.commands.set("temp", tempCmd); // Alias
     this.commands.set("fire", new FireCommand(sim, this.transform));
-    this.commands.set("bg", new BgCommand(sim, this.transform));
+    const bgCmd = new BgCommand(sim, this.transform);
+    this.commands.set("bg", bgCmd);
+    this.commands.set("sceneMetadata", bgCmd); // Alias for compatibility
     this.commands.set("wander", new Wander(sim, this.transform));
 
     this.commands.set("damage", new Damage(sim, this.transform));
@@ -200,6 +204,10 @@ export class CommandHandler {
       "ability_effects",
       new AbilityEffectsCommand(sim, this.transform),
     );
+    
+    // Hero commands
+    this.commands.set("groundPound", new GroundPound(sim, this.transform));
+    this.commands.set("dash", new Dash(sim, this.transform));
   }
 
   private executeOne(

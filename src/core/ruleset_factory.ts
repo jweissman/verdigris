@@ -24,6 +24,7 @@ import { Jumping } from "../rules/jumping";
 import { Tossing } from "../rules/tossing";
 import { PlayerControl } from "../rules/player_control";
 import { HeroAnimation } from "../rules/hero_animation";
+import { FreezeAnimation } from "../rules/freeze_animation";
 
 export class RulesetFactory {
   static createDefaultRulebook(): Rule[] {
@@ -70,6 +71,7 @@ export class RulesetFactory {
     const controlRules = [
       new PlayerControl(),
       new HeroAnimation(),
+      new FreezeAnimation(),
     ];
 
     return [

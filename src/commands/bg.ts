@@ -11,6 +11,13 @@ import { Command, CommandParams } from "../rules/command";
  */
 export class BgCommand extends Command {
   execute(unitId: string | null, params: CommandParams): void {
+    // Handle sceneMetadata command format (type: 'background', value: 'name')
+    if (params.type === 'background' && params.value) {
+      // Set the background directly on simulator
+      this.sim.sceneBackground = params.value as string;
+      return;
+    }
+    
     const scene = params.scene as string | undefined;
     const tileset = params.tileset as string | undefined;
     const biome = params.biome as string | undefined;
