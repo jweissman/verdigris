@@ -45,6 +45,8 @@ import { SimulateCommand } from "../commands/simulate";
 import { Wander } from "../commands/wander";
 import { GroundPound } from "../commands/ground_pound";
 import { Dash } from "../commands/dash";
+import { Blink } from "../commands/blink";
+import { FireTrailCommand } from "../commands/fire_trail";
 // RemoveProjectileCommand merged into Projectile command
 import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
@@ -211,6 +213,8 @@ export class CommandHandler {
     // Hero commands
     this.commands.set("groundPound", new GroundPound(sim, this.transform));
     this.commands.set("dash", new Dash(sim, this.transform));
+    this.commands.set("blink", new Blink(sim, this.transform));
+    this.commands.set("firetrail", new FireTrailCommand(sim, this.transform));
   }
 
   private executeOne(

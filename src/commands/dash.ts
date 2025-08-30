@@ -24,9 +24,9 @@ export class Dash extends Command {
     const afterimage = params.afterimage !== false;
 
     // Check if dash is on cooldown
-    const lastDash = hero.meta?.lastDashTime || 0;
+    const lastDash = hero.meta?.lastDashTime;
     const dashCooldown = 30; // 30 ticks cooldown
-    if (this.sim.ticks - lastDash < dashCooldown) {
+    if (lastDash !== undefined && this.sim.ticks - lastDash < dashCooldown) {
       console.log("[Dash] Dash on cooldown");
       return;
     }

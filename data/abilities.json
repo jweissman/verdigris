@@ -50,7 +50,7 @@
       "duration": 10
     },
     "target": "closest.enemy()?.pos",
-    "trigger": "distance(closest.enemy()?.pos) > 2 && distance(closest.enemy()?.pos) <= 8",
+    "trigger": "distance(closest.enemy()?.pos) > 2",
     "effects": [
       {
         "type": "jump",

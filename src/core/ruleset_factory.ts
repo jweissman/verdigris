@@ -24,6 +24,7 @@ import { Jumping } from "../rules/jumping";
 import { Tossing } from "../rules/tossing";
 import { PlayerControl } from "../rules/player_control";
 import { HeroAnimation } from "../rules/hero_animation";
+import { FireTrail } from "../rules/fire_trail";
 // import { FreezeAnimation } from "../rules/freeze_animation"; // DISABLED: Performance issue - checking entire field every tick
 
 export class RulesetFactory {
@@ -67,6 +68,7 @@ export class RulesetFactory {
     const controlRules = [
       new PlayerControl(),
       new HeroAnimation(), // Needed for hero rig animations
+      new FireTrail(), // Fire trail effect for hero
       // new FreezeAnimation(), // DISABLED: Performance issue
     ];
 

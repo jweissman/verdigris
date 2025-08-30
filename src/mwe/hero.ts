@@ -64,7 +64,6 @@ export class HeroGame extends Game {
       this.sim.addUnit({
         type: "squirrel",
         pos: { x: 12 + i * 2, y: 8 + (i % 2) * 2 },
-        team: "hostile", // Make squirrels hostile so they attack
         tags: ["wander"], // Allow wandering with behavioral tag
       });
     }

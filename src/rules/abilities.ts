@@ -885,10 +885,10 @@ export class Abilities extends Rule {
     const dx = pos.x - caster.pos.x;
     const dy = pos.y - caster.pos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     let targetX = pos.x;
     let targetY = pos.y;
-    
+
     if (distance > maxJumpDistance) {
       // Jump towards target but only up to max distance
       const ratio = maxJumpDistance / distance;

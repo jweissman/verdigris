@@ -205,17 +205,68 @@ export class PlayerControl extends Rule {
         });
       }
 
-      // Simple jump - no multi-jump complexity
-      if (this.keysHeld.has(" ") && !unit.meta?.jumping) {
-        commands.push({
-          type: "jump",
-          unitId: unit.id,
-          params: {
-            direction: unit.meta?.facing || "right",
-            distance: 6,
-            height: 6,
-          },
-        });
+      // Jump with flip-jump (double jump) capability
+      if (this.keysHeld.has(" ")) {
+        const jumpCount = unit.meta?.jumpCount || 0;
+        const maxJumps = 2; // Allow double jump
+        const currentTick = context.getCurrentTick();
+        const lastJumpTime = unit.meta?.lastJumpTime || 0;
+        const jumpCooldown = 10; // Small cooldown between jumps
+        
+        const canJump = !unit.meta?.jumping || 
+                       (jumpCount < maxJumps && currentTick - lastJumpTime > jumpCooldown);
+        
+        if (canJump) {
+          const isFlipJump = jumpCount > 0;
+          
+          commands.push({
+            type: "jump",
+            unitId: unit.id,
+            params: {
+              direction: unit.meta?.facing || "right",
+              distance: isFlipJump ? 4 : 6, // Flip jump is shorter
+              height: isFlipJump ? 5 : 6,
+              damage: isFlipJump ? 5 : 10, // Less damage on flip jump
+              radius: isFlipJump ? 1 : 2,
+              flipJump: isFlipJump,
+            },
+          });
+          
+          // Update jump count
+          commands.push({
+            type: "meta",
+            params: {
+              unitId: unit.id,
+              meta: {
+                jumpCount: jumpCount + 1,
+                lastJumpTime: currentTick,
+              },
+            },
+          });
+          
+          // Visual effect for flip jump
+          if (isFlipJump) {
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+              commands.push({
+                type: "particle",
+                params: {
+                  pos: {
+                    x: unit.pos.x * 8 + 4,
+                    y: unit.pos.y * 8 + 4,
+                  },
+                  vel: {
+                    x: Math.cos(angle) * 2,
+                    y: Math.sin(angle) * 2,
+                  },
+                  lifetime: 20,
+                  type: "energy",
+                  color: "#00FFFF", // Cyan for flip
+                  radius: 1,
+                },
+              });
+            }
+          }
+        }
       }
 
       // Ability rotation with Tab key
@@ -255,6 +306,8 @@ export class PlayerControl extends Rule {
           "3": "heal",
           "4": "freeze",
           "5": "fire",
+          "6": "dash",
+          "7": "blink",
         };
 
         for (const [key, ability] of Object.entries(abilityMap)) {
@@ -338,7 +391,7 @@ export class PlayerControl extends Rule {
             });
           } else if (primaryAction === "freeze") {
             const freezeRadius = 3;
-            
+
             // Find nearest enemy to target
             const enemies = context
               .getAllUnits()
@@ -386,7 +439,7 @@ export class PlayerControl extends Rule {
               // No enemies - freeze in front of hero based on facing
               const facing = unit.meta?.facing || "right";
               const freezeDistance = 3; // Freeze 3 tiles in front
-              
+
               if (facing === "left") {
                 targetX = unit.pos.x - freezeDistance;
                 targetY = unit.pos.y;
@@ -446,6 +499,17 @@ export class PlayerControl extends Rule {
                 amount: -100, // Make it colder to ensure freezing
               },
             });
+          } else if (primaryAction === "firetrail") {
+            // Activate fire trail - hero leaves fire in their wake
+            commands.push({
+              type: "firetrail",
+              unitId: unit.id,
+              params: {
+                duration: 60, // Trail lasts for 60 ticks
+                temperature: 400,
+                damage: 3,
+              },
+            });
           } else if (primaryAction === "fire") {
             // Find nearest enemy to target
             const enemies = context
@@ -487,7 +551,7 @@ export class PlayerControl extends Rule {
               // No enemies - fire in front of hero based on facing
               const facing = unit.meta?.facing || "right";
               const fireDistance = 3; // Fire 3 tiles in front
-              
+
               if (facing === "left") {
                 targetX = unit.pos.x - fireDistance;
                 targetY = unit.pos.y;
@@ -505,6 +569,29 @@ export class PlayerControl extends Rule {
                 y: targetY,
                 radius: 3,
                 temperature: 500,
+              },
+            });
+          } else if (primaryAction === "dash") {
+            // Execute dash ability
+            commands.push({
+              type: "dash",
+              unitId: unit.id,
+              params: {
+                distance: 8,
+                damage: 15,
+                targetEnemy: true,
+                afterimage: true,
+              },
+            });
+          } else if (primaryAction === "blink") {
+            // Execute blink ability
+            commands.push({
+              type: "blink",
+              unitId: unit.id,
+              params: {
+                distance: 10,
+                damage: 5,
+                radius: 2,
               },
             });
           }
