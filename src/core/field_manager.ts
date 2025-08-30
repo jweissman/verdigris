@@ -1,4 +1,6 @@
 import { ScalarField } from "./ScalarField";
+import { Unit } from "../types/Unit";
+import { RNG } from "./rng";
 
 /**
  * Manages scalar fields (temperature, humidity, pressure) for environmental effects
@@ -110,5 +112,72 @@ export class FieldManager {
   
   getPressureField(): ScalarField {
     return this.pressureField;
+  }
+  
+  // Aliases for compatibility
+  updateScalarFields(): void {
+    this.updateFields();
+  }
+  
+  addHeat(x: number, y: number, intensity: number, radius: number = 2): void {
+    this.addTemperatureGradient(x, y, radius, intensity);
+  }
+  
+  addMoisture(x: number, y: number, intensity: number, radius: number = 3): void {
+    this.addHumidityGradient(x, y, radius, intensity);
+  }
+  
+  adjustPressure(x: number, y: number, intensity: number, radius: number = 4): void {
+    this.addPressureGradient(x, y, radius, intensity);
+  }
+  
+  updateUnitTemperatureEffects(units: readonly Unit[]): void {
+    for (const unit of units) {
+      if (unit.meta.phantom || unit.state === "dead") continue;
+      const x = Math.floor(unit.pos.x);
+      const y = Math.floor(unit.pos.y);
+
+      if (unit.type === "freezebot") {
+        const temp = this.temperatureField.get(x, y);
+        if (temp > 0) {
+          this.temperatureField.addGradient(x, y, 4, -0.5);
+          this.temperatureField.set(x, y, temp * 0.95);
+        }
+      } else if (unit.tags?.includes("construct")) {
+        this.temperatureField.addGradient(x, y, 2, 1.0);
+      } else {
+        this.temperatureField.addGradient(x, y, 2, 0.5);
+      }
+
+      if (unit.state === "walk" || unit.state === "attack") {
+        this.humidityField.addGradient(x, y, 1.5, 0.02);
+      }
+    }
+  }
+  
+  applyRainEffects(intensity: number, rng: RNG): void {
+    const width = this.temperatureField.width;
+    const height = this.temperatureField.height;
+    
+    for (let i = 0; i < Math.ceil(intensity * 5); i++) {
+      this.humidityField.addGradient(rng.random() * width, rng.random() * height, 2, intensity * 0.1);
+    }
+    for (let i = 0; i < Math.ceil(intensity * 3); i++) {
+      this.temperatureField.addGradient(rng.random() * width, rng.random() * height, 3, -intensity * 2);
+    }
+  }
+  
+  applyStormPressureEffects(intensity: number, rng: RNG): void {
+    const width = this.temperatureField.width;
+    const height = this.temperatureField.height;
+    
+    for (let i = 0; i < Math.ceil(intensity * 3); i++) {
+      this.pressureField.addGradient(
+        rng.random() * width,
+        rng.random() * height,
+        4,
+        (rng.random() - 0.5) * intensity * 0.2
+      );
+    }
   }
 }

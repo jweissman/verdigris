@@ -290,11 +290,27 @@ export class UnitRenderer {
     }
 
     const shouldFlip = options?.flipHorizontal || unit.meta?.facing === "left";
+    
+    // Debug: log hero rendering state
+    if (unit.tags?.includes('hero')) {
+      // Log once per second to avoid spam
+      if (!this.lastHeroLog || Date.now() - this.lastHeroLog > 1000) {
+        this.lastHeroLog = Date.now();
+        console.log('Hero render state:', {
+          id: unit.id,
+          state: unit.state,
+          intendedMove: unit.intendedMove,
+          partsCount: parts.length,
+          centerPos: { x: centerX, y: centerY },
+          firstPart: parts[0] ? { name: parts[0].name, offset: parts[0].offset, sprite: parts[0].sprite } : null
+        });
+      }
+    }
 
     for (const part of parts) {
       const sprite = sprites.get(part.sprite);
       if (!sprite || !sprite.complete) {
-        console.warn(`Missing sprite for ${part.name}: ${part.sprite}`);
+        // Silently skip missing sprites - they may still be loading
         continue;
       }
 

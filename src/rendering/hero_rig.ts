@@ -615,11 +615,11 @@ export class HeroRig {
     if (torso) {
       const oldY = torso.offset.y;
       if (isWind) {
-        torso.offset.y = -breathAmount * 1.5; // Subtle vertical movement
-        torso.offset.x = Math.sin(phase * Math.PI * 2) * 0.5; // Very gentle sway
+        torso.offset.y = 0 - breathAmount * 1.5; // Base at 0, subtle vertical movement
+        torso.offset.x = 0 + Math.sin(phase * Math.PI * 2) * 0.5; // Base at 0, gentle sway
       } else {
-        torso.offset.y = -breathAmount * 1; // Very subtle rise and fall
-        torso.offset.x = Math.sin(phase * Math.PI * 4) * 0.25; // Minimal sway
+        torso.offset.y = 0 - breathAmount * 1; // Base at 0, subtle rise and fall
+        torso.offset.x = 0 + Math.sin(phase * Math.PI * 4) * 0.25; // Base at 0, minimal sway
       }
       torso.frame = Math.floor(phase * 3) % 3; // Cycle frames
     }

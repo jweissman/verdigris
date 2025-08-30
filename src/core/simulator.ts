@@ -26,6 +26,7 @@ import { MovementValidator } from "./movement_validator";
 import { AbilityHandler } from "./ability_handler";
 import { ParticleManager } from "./particle_manager";
 import { FireEffects } from "./fire_effects";
+import { FieldManager } from "./field_manager";
 import { DebugHelper } from "./debug_helper";
 
 // TODO some kind of config model??
@@ -38,6 +39,7 @@ class Simulator {
   private abilityHandler: AbilityHandler;
   private particleManager: ParticleManager;
   private fireEffects: FireEffects;
+  private fieldManager: FieldManager;
   
   // Compatibility accessors
   get sceneBackground() { return this.world.sceneBackground; }
@@ -206,41 +208,16 @@ class Simulator {
     return this.particleManager.particles;
   }
 
-  private _temperatureField: ScalarField | null = null;
-  private _humidityField: ScalarField | null = null;
-  private _pressureField: ScalarField | null = null;
-
   get temperatureField(): ScalarField {
-    if (!this._temperatureField) {
-      this._temperatureField = new ScalarField(
-        this.fieldWidth,
-        this.fieldHeight,
-        20,
-      );
-    }
-    return this._temperatureField;
+    return this.fieldManager?.getTemperatureField();
   }
 
   get humidityField(): ScalarField {
-    if (!this._humidityField) {
-      this._humidityField = new ScalarField(
-        this.fieldWidth,
-        this.fieldHeight,
-        0.3,
-      );
-    }
-    return this._humidityField;
+    return this.fieldManager?.getHumidityField();
   }
 
   get pressureField(): ScalarField {
-    if (!this._pressureField) {
-      this._pressureField = new ScalarField(
-        this.fieldWidth,
-        this.fieldHeight,
-        1.0,
-      );
-    }
-    return this._pressureField;
+    return this.fieldManager?.getPressureField();
   }
 
   // Compatibility for weather
@@ -364,6 +341,10 @@ class Simulator {
     this.world = new World();
     this.movementValidator = new MovementValidator(fieldWidth, fieldHeight);
     this.particleManager = new ParticleManager();
+    this.fieldManager = new FieldManager(
+      this.fieldWidth,
+      this.fieldHeight
+    );
     this.fireEffects = new FireEffects(
       this.particleManager,
       this.temperatureField,
@@ -699,77 +680,35 @@ class Simulator {
   }
 
   updateScalarFields() {
-    this.temperatureField.diffuse(0.02);
-    this.temperatureField.decay(0.0005);
-    this.humidityField.diffuse(0.03);
-    this.humidityField.decay(0.001);
-    this.pressureField.decayAndDiffuse(0.01, 0.12);
+    this.fieldManager.updateScalarFields();
   }
 
   applyFieldInteractions() {
-    if (!this.temperatureField || !this.humidityField) return;
-    const startY = (this.ticks % 10) * Math.floor(this.fieldHeight / 10);
-    const endY = Math.min(startY + Math.floor(this.fieldHeight / 10), this.fieldHeight);
-
-    for (let y = startY; y < endY; y++) {
-      for (let x = 0; x < this.fieldWidth; x++) {
-        const temp = this.temperatureField.get(x, y);
-        const humidity = this.humidityField.get(x, y);
-        if (temp > 30) this.humidityField.add(x, y, -(temp - 30) * 0.001);
-        if (humidity > 0.8) this.humidityField.add(x, y, -(humidity - 0.8) * 0.01);
-      }
-    }
+    this.fieldManager.applyFieldInteractions(this.ticks);
   }
 
   updateUnitTemperatureEffects() {
-    for (const unit of this.units) {
-      if (unit.meta.phantom || unit.state === "dead") continue;
-      const x = Math.floor(unit.pos.x);
-      const y = Math.floor(unit.pos.y);
-
-      if (unit.type === "freezebot") {
-        const temp = this.temperatureField.get(x, y);
-        if (temp > 0) {
-          this.temperatureField.addGradient(x, y, 4, -0.5);
-          this.temperatureField.set(x, y, temp * 0.95);
-        }
-      } else if (unit.tags?.includes("construct")) {
-        this.temperatureField.addGradient(x, y, 2, 1.0);
-      } else {
-        this.temperatureField.addGradient(x, y, 2, 0.5);
-      }
-
-      if (unit.state === "walk" || unit.state === "attack") {
-        this.humidityField.addGradient(x, y, 1.5, 0.02);
-      }
-    }
+    this.fieldManager.updateUnitTemperatureEffects(this.units);
   }
 
   get temperature(): number {
-    let total = 0, count = 0;
-    for (let x = 0; x < this.fieldWidth; x++) {
-      for (let y = 0; y < this.fieldHeight; y++) {
-        total += this.temperatureField.get(x, y);
-        count++;
-      }
-    }
-    return count > 0 ? Math.round(total / count) : 20;
+    return this.fieldManager.getAverageTemperature();
   }
 
   getTemperature(x: number, y: number): number {
-    return this.temperatureField.get(x, y);
+    return this.fieldManager.getTemperature(x, y);
   }
 
   getHumidity(x: number, y: number): number {
-    return this.humidityField.get(x, y);
+    return this.fieldManager.getHumidity(x, y);
   }
 
   getPressure(x: number, y: number): number {
-    return this.pressureField.get(x, y);
+    return this.fieldManager.getPressure(x, y);
   }
 
   addHeat(x: number, y: number, intensity: number, radius: number = 2): void {
-    this.temperatureField.addGradient(x, y, radius, intensity);
+    this.fieldManager.addHeat(x, y, intensity, radius);
   }
 
   addMoisture(
@@ -778,7 +717,7 @@ class Simulator {
     intensity: number,
     radius: number = 3,
   ): void {
-    this.humidityField.addGradient(x, y, radius, intensity);
+    this.fieldManager.addMoisture(x, y, intensity, radius);
   }
 
   adjustPressure(
@@ -787,7 +726,7 @@ class Simulator {
     intensity: number,
     radius: number = 4,
   ): void {
-    this.pressureField.addGradient(x, y, radius, intensity);
+    this.fieldManager.adjustPressure(x, y, intensity, radius);
   }
 
   updateWeather() {
@@ -811,12 +750,7 @@ class Simulator {
   applyRainEffects() {
     const int = this.weather.intensity;
     const rng = Simulator.rng;
-    for (let i = 0; i < Math.ceil(int * 5); i++) {
-      this.humidityField.addGradient(rng.random() * this.fieldWidth, rng.random() * this.fieldHeight, 2, int * 0.1);
-    }
-    for (let i = 0; i < Math.ceil(int * 3); i++) {
-      this.temperatureField.addGradient(rng.random() * this.fieldWidth, rng.random() * this.fieldHeight, 3, -int * 2);
-    }
+    this.fieldManager.applyRainEffects(int, rng);
     if (rng.random() < int * 0.5) this.spawnRainParticle();
     this.extinguishFires();
   }
@@ -824,14 +758,7 @@ class Simulator {
   applyStormEffects() {
     this.applyRainEffects();
     const int = this.weather.intensity;
-    for (let i = 0; i < Math.ceil(int * 3); i++) {
-      this.pressureField.addGradient(
-        Simulator.rng.random() * this.fieldWidth,
-        Simulator.rng.random() * this.fieldHeight,
-        4,
-        (Simulator.rng.random() - 0.5) * int * 0.2
-      );
-    }
+    this.fieldManager.applyStormPressureEffects(int, Simulator.rng);
   }
 
   applyLeavesEffects() {
