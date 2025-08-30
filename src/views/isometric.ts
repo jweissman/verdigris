@@ -254,7 +254,7 @@ export default class Isometric extends View {
     
     // Check if we have a previous position for interpolation
     const lastPos = this.sim.lastUnitPositions.get(unit.id);
-    if (lastPos && this.sim.interpolationFactor !== undefined && this.sim.interpolationFactor < 1) {
+    if (lastPos && this.sim.interpolationFactor !== undefined) {
       // Interpolate between last and current position
       const t = this.sim.interpolationFactor;
       renderX = lastPos.x + (unit.pos.x - lastPos.x) * t;
@@ -746,19 +746,14 @@ export default class Isometric extends View {
       }
     };
 
-    const centerX = Math.floor(this.sim.fieldWidth / 2);
-    const centerY = Math.floor(this.sim.fieldHeight / 2);
-    const temp = this.sim.getTemperature(centerX, centerY);
-
-    if (temp > 30) {
+    // Render temperature effects based on actual temperature field values
+    for (let y = 0; y < this.sim.fieldHeight; y++) {
       for (let x = 0; x < this.sim.fieldWidth; x++) {
-        for (let y = this.sim.fieldHeight - 2; y < this.sim.fieldHeight; y++) {
+        const temp = this.sim.getTemperature(x, y);
+        
+        if (temp > 30) {
           setCellEffect(x, y, "heat");
-        }
-      }
-    } else if (temp < 0) {
-      for (let x = 0; x < this.sim.fieldWidth; x++) {
-        for (let y = this.sim.fieldHeight - 2; y < this.sim.fieldHeight; y++) {
+        } else if (temp < 0) {
           setCellEffect(x, y, "snow");
         }
       }

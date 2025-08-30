@@ -402,7 +402,8 @@ export class BiomeEffects extends Rule {
         Math.floor(unit.pos.y),
       );
 
-      if (temp <= 0 && !unit.meta.frozen) {
+      // Don't freeze heroes from environmental cold
+      if (temp <= 0 && !unit.meta.frozen && !unit.tags?.includes('hero')) {
         const metaUpdate = {
           frozen: true,
           frozenDuration: 1,  // Renewed each tick while cold

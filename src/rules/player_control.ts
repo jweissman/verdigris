@@ -322,10 +322,10 @@ export class PlayerControl extends Rule {
                 },
               });
             } else if (primaryAction === "freeze") {
-              // Find ALL enemies to freeze in area
+              // Find ALL enemies to freeze in area (exclude hero!)
               const enemies = context
                 .getAllUnits()
-                .filter((u) => u.team !== unit.team && u.hp > 0);
+                .filter((u) => u.team !== unit.team && u.hp > 0 && u.id !== unit.id && !u.tags?.includes('hero'));
               
               // Freeze enemies in radius around hero
               const freezeRadius = 4;
