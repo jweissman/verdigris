@@ -22,7 +22,7 @@ export class MoveCommand extends Command {
       const meta = proxyManager.getMeta(targetId);
       const isFrozen = meta?.frozen;
       const isStunned = meta?.stunned;
-      
+
       if (isFrozen || isStunned) {
         // Set intended move to 0 to ensure no movement
         transform.updateUnit(targetId, {
@@ -59,7 +59,7 @@ export class MoveCommand extends Command {
       const meta = proxyManager.getMeta(targetId);
       const isFrozen = meta?.frozen;
       const isStunned = meta?.stunned;
-      
+
       if (isStunned || isFrozen) {
         effectiveDx = 0;
         effectiveDy = 0;

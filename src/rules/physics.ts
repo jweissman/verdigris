@@ -38,7 +38,8 @@ export class Physics extends Rule {
 
       // Type-specific updates
       const projType = projectileArrays.type[i];
-      if (projType === 1) { // bomb
+      if (projType === 1) {
+        // bomb
         if (!projectileArrays.targetIds[i]) {
           projectileArrays.velY[i] += 0.2; // gravity
         }
@@ -48,7 +49,7 @@ export class Physics extends Rule {
       }
 
       // Check for removal conditions
-      const shouldRemove = 
+      const shouldRemove =
         // Out of bounds
         projectileArrays.posX[i] < 0 ||
         projectileArrays.posX[i] >= this.sim.fieldWidth ||
@@ -66,7 +67,7 @@ export class Physics extends Rule {
     for (const idx of toRemove) {
       projectileArrays.removeProjectile(idx);
     }
-    
+
     // Invalidate cache if we removed anything
     if (toRemove.length > 0) {
       this.sim.invalidateProjectilesCache();

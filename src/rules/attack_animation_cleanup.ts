@@ -20,8 +20,8 @@ export class AttackAnimationCleanup extends Rule {
           commands.push({
             type: "remove",
             params: {
-              unitId: unit.id
-            }
+              unitId: unit.id,
+            },
           });
         } else {
           commands.push({
@@ -30,13 +30,13 @@ export class AttackAnimationCleanup extends Rule {
               unitId: unit.id,
               meta: {
                 ...unit.meta,
-                lifetime: newLifetime
-              }
-            }
+                lifetime: newLifetime,
+              },
+            },
           });
         }
       }
-      
+
       // Handle attack animation cleanup
       if (unit.state === "attack" && unit.meta?.attackEndTick) {
         if (currentTick >= unit.meta.attackEndTick) {

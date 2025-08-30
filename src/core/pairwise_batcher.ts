@@ -15,7 +15,7 @@ export class PairwiseBatcher {
   private spatialAdjacency?: SpatialAdjacency;
 
   private collectedCommands: any[] = [];
-  
+
   register(
     ruleId: string,
     callback: (a: Unit, b: Unit) => any[],
@@ -34,7 +34,7 @@ export class PairwiseBatcher {
     } else {
       this.processLegacy(units);
     }
-    
+
     return this.collectedCommands;
   }
 

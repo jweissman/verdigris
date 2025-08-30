@@ -51,38 +51,37 @@ export class Jumping extends Rule {
 
     const peakHeight = unit.meta.jumpHeight || 6;
     const z = Math.max(0, 4 * peakHeight * t * (1 - t));
-    
+
     // Calculate interpolated position for smooth visual
     if (jumpTarget && jumpOrigin) {
       const dx = jumpTarget.x - jumpOrigin.x;
       const dy = jumpTarget.y - jumpOrigin.y;
-      
+
       // Update actual ground position during jump
       const newX = jumpOrigin.x + dx * t;
       const newY = jumpOrigin.y + dy * t;
-      
-      
+
       // Move the unit along the ground path
       this.commands.push({
         type: "move",
         params: {
           unitId: unit.id,
           x: newX,
-          y: newY
-        }
+          y: newY,
+        },
       });
     }
-    
+
     // Store jump progress and height
     this.commands.push({
       type: "meta",
       params: {
         unitId: unit.id,
-        meta: { 
-          z: z, 
-          jumpProgress: progress
-        }
-      }
+        meta: {
+          z: z,
+          jumpProgress: progress,
+        },
+      },
     });
 
     // If doing a midair flip, add rotation
@@ -111,7 +110,8 @@ export class Jumping extends Rule {
       }
 
       if (unit.meta.jumpDamage && unit.meta.jumpRadius) {
-        const landingPos = unit.meta.jumpTarget || unit.pos;
+        // Damage should happen where the unit ACTUALLY lands, not the intended target
+        const landingPos = unit.pos; // Use actual position, not target
         const radius = unit.meta.jumpRadius;
 
         this.commands.push({

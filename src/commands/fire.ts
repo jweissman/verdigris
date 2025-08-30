@@ -14,43 +14,45 @@ export class FireCommand extends Command {
     let y = params.y as number | undefined;
     const temperature = (params.temperature as number) || 700;
     const radius = (params.radius as number) || 2;
-    
-    // If no position specified and called by hero, start fire near hero
-    if ((x === undefined || y === undefined) && unitId) {
-      const hero = this.sim.units.find(u => u.id === unitId);
-      if (hero) {
-        // Start fire 2-3 tiles in front of hero based on facing
-        const facing = hero.meta?.facing || 'right';
-        const distance = 2 + Math.random();
-        
-        switch (facing) {
-          case 'right':
-            x = hero.pos.x + distance;
-            y = hero.pos.y;
-            break;
-          case 'left':
-            x = hero.pos.x - distance;
-            y = hero.pos.y;
-            break;
-          default:
-            // Default to right if facing is undefined
-            x = hero.pos.x + distance;
-            y = hero.pos.y;
-            break;
+
+    // If no position specified, use default behavior
+    if (x === undefined || y === undefined) {
+      if (unitId) {
+        const hero = this.sim.units.find((u) => u.id === unitId);
+        if (hero) {
+          // Start fire 2-3 tiles in front of hero based on facing
+          const facing = hero.meta?.facing || "right";
+          const distance = 2 + Math.random();
+
+          switch (facing) {
+            case "right":
+              x = hero.pos.x + distance;
+              y = hero.pos.y;
+              break;
+            case "left":
+              x = hero.pos.x - distance;
+              y = hero.pos.y;
+              break;
+            default:
+              // Default to right if facing is undefined
+              x = hero.pos.x + distance;
+              y = hero.pos.y;
+              break;
+          }
         }
       }
     }
-    
+
     // Fallback to center if still no position
     if (x === undefined || y === undefined) {
       x = Math.floor(this.sim.fieldWidth / 2);
       y = Math.floor(this.sim.fieldHeight / 2);
     }
-    
+
     // Clamp to field bounds
     x = Math.max(0, Math.min(this.sim.fieldWidth - 1, x));
     y = Math.max(0, Math.min(this.sim.fieldHeight - 1, y));
-    
+
     // Set temperature in area (this routes through temperature command)
     for (let dx = -radius; dx <= radius; dx++) {
       for (let dy = -radius; dy <= radius; dy++) {
@@ -58,60 +60,66 @@ export class FireCommand extends Command {
         if (dist <= radius) {
           const targetX = Math.floor(x + dx);
           const targetY = Math.floor(y + dy);
-          
-          if (targetX >= 0 && targetX < this.sim.fieldWidth &&
-              targetY >= 0 && targetY < this.sim.fieldHeight) {
+
+          if (
+            targetX >= 0 &&
+            targetX < this.sim.fieldWidth &&
+            targetY >= 0 &&
+            targetY < this.sim.fieldHeight
+          ) {
             // Temperature falloff from center
             const falloff = 1 - (dist / radius) * 0.5;
             const localTemp = temperature * falloff;
-            
+
             this.sim.queuedCommands.push({
               type: "temperature",
               params: {
                 x: targetX,
                 y: targetY,
-                amount: localTemp
-              }
+                amount: localTemp,
+              },
             });
           }
         }
       }
     }
-    
+
     // Deal immediate AoE damage to units in the fire area
     const unitsInFire = this.sim.units.filter(
-      u => Math.abs(u.pos.x - x) <= radius && 
-           Math.abs(u.pos.y - y) <= radius &&
-           u.hp > 0 &&
-           u.id !== unitId // Don't damage the caster
+      (u) =>
+        Math.abs(u.pos.x - x) <= radius &&
+        Math.abs(u.pos.y - y) <= radius &&
+        u.hp > 0 &&
+        u.id !== unitId, // Don't damage the caster
     );
-    
+
     for (const unit of unitsInFire) {
       const dx = Math.abs(unit.pos.x - x);
       const dy = Math.abs(unit.pos.y - y);
       const dist = Math.sqrt(dx * dx + dy * dy);
-      
+
       if (dist <= radius) {
         // Synergy: Stunned/frozen units take extra damage
         // Undead are weak to fire
         const isStunned = unit.meta?.stunned || unit.meta?.frozen;
-        const isUndead = unit.tags?.includes('undead') || unit.meta?.perdurance === 'undead';
+        const isUndead =
+          unit.tags?.includes("undead") || unit.meta?.perdurance === "undead";
         const baseDamage = 30;
         let damage = isStunned ? baseDamage * 2 : baseDamage;
         if (isUndead) damage *= 2; // Double damage vs undead
-        
+
         this.sim.queuedCommands.push({
           type: "damage",
           params: {
             targetId: unit.id,
             amount: damage,
             source: unitId || "fire",
-            aspect: "fire"
-          }
+            aspect: "fire",
+          },
         });
       }
     }
-    
+
     // Add visual fire particles and cell effects
     for (let i = 0; i < 20; i++) {
       const angle = (Math.PI * 2 * i) / 20;
@@ -129,7 +137,7 @@ export class FireCommand extends Command {
         lifetime: 40 + Math.random() * 30,
       });
     }
-    
+
     // Add burning cell effects to the affected tiles
     for (let dx = -radius; dx <= radius; dx++) {
       for (let dy = -radius; dy <= radius; dy++) {
@@ -137,9 +145,13 @@ export class FireCommand extends Command {
         if (dist <= radius) {
           const cellX = Math.floor(x + dx);
           const cellY = Math.floor(y + dy);
-          
-          if (cellX >= 0 && cellX < this.sim.fieldWidth &&
-              cellY >= 0 && cellY < this.sim.fieldHeight) {
+
+          if (
+            cellX >= 0 &&
+            cellX < this.sim.fieldWidth &&
+            cellY >= 0 &&
+            cellY < this.sim.fieldHeight
+          ) {
             // Add burning effect to cell
             this.sim.queuedCommands.push({
               type: "effects",
@@ -147,10 +159,10 @@ export class FireCommand extends Command {
                 x: cellX,
                 y: cellY,
                 effect: "burning",
-                duration: 60 + Math.random() * 30
-              }
+                duration: 60 + Math.random() * 30,
+              },
             });
-            
+
             // Add embers floating up from burning cells
             if (Math.random() < 0.3) {
               this.sim.particleArrays.addParticle({
@@ -160,9 +172,9 @@ export class FireCommand extends Command {
                   x: cellX * 8 + 4 + (Math.random() - 0.5) * 4,
                   y: cellY * 8 + 4 + (Math.random() - 0.5) * 4,
                 },
-                vel: { 
-                  x: (Math.random() - 0.5) * 0.2, 
-                  y: -0.3 - Math.random() * 0.3 
+                vel: {
+                  x: (Math.random() - 0.5) * 0.2,
+                  y: -0.3 - Math.random() * 0.3,
                 },
                 radius: 0.3 + Math.random() * 0.3,
                 color: "#FF8C00", // Dark orange
@@ -173,7 +185,7 @@ export class FireCommand extends Command {
         }
       }
     }
-    
+
     // Add smoke particles for atmosphere
     for (let i = 0; i < 5; i++) {
       this.sim.particleArrays.addParticle({

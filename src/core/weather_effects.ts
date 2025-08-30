@@ -12,7 +12,7 @@ export class WeatherEffects {
     private particleManager: ParticleManager,
     private fieldWidth: number,
     private fieldHeight: number,
-    private rng: RNG
+    private rng: RNG,
   ) {}
 
   applyWeatherEffects(weatherType: string, intensity: number, ticks: number) {

@@ -175,7 +175,7 @@ export class UnitProxyManager implements DataQuery {
   public readonly arrays: UnitArrays;
   private metadataStore: Map<string, any>;
   private idToIndex: Map<string, number> = new Map();
-  
+
   public getUnitIndex(unitId: string): number | undefined {
     return this.idToIndex.get(unitId);
   }
@@ -246,7 +246,13 @@ export class UnitProxyManager implements DataQuery {
 
   getStateByIndex(index: number): UnitState {
     const stateId = this.arrays.state[index];
-    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead", "charging"];
+    const stateMap: UnitState[] = [
+      "idle",
+      "walk",
+      "attack",
+      "dead",
+      "charging",
+    ];
     return stateMap[stateId] || "idle";
   }
 
@@ -333,7 +339,13 @@ export class UnitProxyManager implements DataQuery {
   getState(unitId: string): UnitState {
     const idx = this.getIndex(unitId);
     const stateId = this.arrays.state[idx];
-    const stateMap: UnitState[] = ["idle", "walk", "attack", "dead", "charging"];
+    const stateMap: UnitState[] = [
+      "idle",
+      "walk",
+      "attack",
+      "dead",
+      "charging",
+    ];
     return stateMap[stateId] || "idle";
   }
 
@@ -588,7 +600,14 @@ export class UnitProxyManager implements DataQuery {
     if (activeCount <= 75) {
       return this.batchFindTargetsSimple(radiusSq, enemies, allies);
     } else {
-      return this.batchFindTargetsGrid(searchRadius, radiusSq, enemies, allies, fieldWidth, fieldHeight);
+      return this.batchFindTargetsGrid(
+        searchRadius,
+        radiusSq,
+        enemies,
+        allies,
+        fieldWidth,
+        fieldHeight,
+      );
     }
   }
 

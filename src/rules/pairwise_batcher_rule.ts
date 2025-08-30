@@ -12,14 +12,14 @@ export class PairwiseBatcherRule extends Rule {
     if (!batcher || batcher.intents.length === 0) {
       return [];
     }
-    
+
     // Process all registered intents and collect commands
     const sim = context.getSimulator();
     const commands = batcher.process(sim.units, sim);
-    
+
     // Clear intents after processing
     batcher.intents = [];
-    
+
     return commands || [];
   }
 }

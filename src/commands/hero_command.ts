@@ -231,11 +231,11 @@ export class HeroCommand extends Command {
           // Use pattern generator for cleaner, more powerful attack
           const attackZones = generateAttackPattern({
             origin: hero.pos,
-            direction: direction as 'left' | 'right' | 'up' | 'down',
+            direction: direction as "left" | "right" | "up" | "down",
             range: range,
-            pattern: 'cone',
+            pattern: "cone",
             width: 13, // Even wider base
-            taper: 1.2  // Gentler taper for broader reach
+            taper: 1.2, // Gentler taper for broader reach
           });
 
           const attackDx =
@@ -245,8 +245,9 @@ export class HeroCommand extends Command {
 
           // Generate particles for each attack zone
           for (const zone of attackZones) {
-            const dist = Math.abs(zone.x - hero.pos.x) + Math.abs(zone.y - hero.pos.y);
-            
+            const dist =
+              Math.abs(zone.x - hero.pos.x) + Math.abs(zone.y - hero.pos.y);
+
             this.sim.queuedCommands.push({
               type: "particle",
               params: {

@@ -12,7 +12,7 @@ export class SimulationQueries {
     private particleArrays?: any,
     private weather?: any,
     private lightningActive?: boolean,
-    private enableEnvironmentalEffects?: boolean
+    private enableEnvironmentalEffects?: boolean,
   ) {}
 
   hasGrapplingHooks(): boolean {
@@ -54,9 +54,8 @@ export class SimulationQueries {
       // Check for chill
       if (data?.meta?.chilled || data?.meta?.chillIntensity !== undefined)
         return true;
-      // Check for chill triggers  
-      if (data?.meta?.chillTrigger)
-        return true;
+      // Check for chill triggers
+      if (data?.meta?.chillTrigger) return true;
     }
     return false;
   }
@@ -197,6 +196,8 @@ export class SimulationQueries {
   }
 
   hasEnvironmentalEffects(): boolean {
-    return !!this.enableEnvironmentalEffects || this.weather?.current !== "clear";
+    return (
+      !!this.enableEnvironmentalEffects || this.weather?.current !== "clear"
+    );
   }
 }

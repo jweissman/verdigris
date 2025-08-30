@@ -142,7 +142,7 @@ export class AoE extends Command {
         if (dist <= radius) {
           zones.push({
             x: Math.round(center.x + dx),
-            y: Math.round(center.y + dy)
+            y: Math.round(center.y + dy),
           });
         }
       }

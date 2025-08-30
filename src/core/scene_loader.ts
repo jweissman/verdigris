@@ -154,7 +154,7 @@ export class SceneLoader {
     // todo use builtin index
     // Adding mage mappings using extended ASCII
     // "1": "philosopher",
-    // "2": "rhetorician", 
+    // "2": "rhetorician",
     // "3": "logician",
     // "4": "geometer",
     // "5": "mentalist",
@@ -165,7 +165,7 @@ export class SceneLoader {
     this.sim.reset();
     this.customLegend = {}; // Reset custom legend for each scene
     const lines = sceneText.trim().split("\n");
-    
+
     // First pass: find and parse metadata (including legend)
     let metadataStartIndex = -1;
     for (let i = 0; i < lines.length; i++) {
@@ -174,18 +174,18 @@ export class SceneLoader {
         break;
       }
     }
-    
+
     if (metadataStartIndex >= 0) {
       for (let i = metadataStartIndex; i < lines.length; i++) {
         this.parseMetadata(lines[i]);
       }
     }
-    
+
     // Second pass: parse the grid using the legend
     for (let y = 0; y < lines.length; y++) {
       const line = lines[y];
       if (!line.trim()) continue;
-      
+
       if (line === "---") {
         break; // Stop at metadata marker
       }
@@ -202,7 +202,10 @@ export class SceneLoader {
         // Check for multi-character legends (like "dragon")
         let matched = false;
         for (const [legend, unitType] of Object.entries(this.customLegend)) {
-          if (legend.length > 1 && line.substring(x, x + legend.length) === legend) {
+          if (
+            legend.length > 1 &&
+            line.substring(x, x + legend.length) === legend
+          ) {
             this.createUnit(unitType, x, y);
             x += legend.length;
             matched = true;
@@ -212,7 +215,8 @@ export class SceneLoader {
 
         if (!matched) {
           // Check single character legend
-          const template = this.customLegend[char] || SceneLoader.defaultLegend[char];
+          const template =
+            this.customLegend[char] || SceneLoader.defaultLegend[char];
           if (template) {
             this.createUnit(template, x, y);
           }
@@ -237,8 +241,11 @@ export class SceneLoader {
     if (trimmed.includes(":") && !trimmed.startsWith("#")) {
       const colonIndex = trimmed.indexOf(":");
       const char = trimmed.substring(0, colonIndex).trim();
-      const unitType = trimmed.substring(colonIndex + 1).trim().split(" ")[0]; // Take first word after colon
-      
+      const unitType = trimmed
+        .substring(colonIndex + 1)
+        .trim()
+        .split(" ")[0]; // Take first word after colon
+
       // Support both single character and multi-character legends
       if (char.length > 0) {
         this.customLegend[char] = unitType;

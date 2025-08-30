@@ -85,7 +85,7 @@ export class Damage extends Command {
     // Create damage event for visual effects
     this.sim.queuedEvents.push({
       kind: "damage",
-      source: params.sourceId as string || "unknown",
+      source: (params.sourceId as string) || "unknown",
       target: targetId,
       meta: {
         amount: finalDamage,

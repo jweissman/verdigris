@@ -15,7 +15,7 @@ export class AbilityHandler {
   constructor(
     private proxyManager: UnitProxyManager,
     private rulebook: Rule[],
-    private ticks: number
+    private ticks: number,
   ) {}
 
   isAbilityForced(unitId: string, abilityName: string): boolean {
@@ -36,11 +36,11 @@ export class AbilityHandler {
     abilityName: string,
     units: readonly Unit[],
     context: TickContext,
-    target?: any
+    target?: any,
   ): QueuedCommand[] {
     const key = `${unitId}:${abilityName}`;
     this.forcedAbilitiesThisTick.add(key);
-    
+
     const unit = units.find((u) => u.id === unitId);
     if (
       !unit ||

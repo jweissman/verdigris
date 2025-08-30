@@ -118,7 +118,7 @@ export class LightningStorm extends Rule {
     // Apply stun to units in radius
     const radius = 3;
     const stunDuration = 20;
-    
+
     const affectedUnits = context.getAllUnits().filter((unit) => {
       const dx = unit.pos.x - pos.x;
       const dy = unit.pos.y - pos.y;
@@ -127,7 +127,7 @@ export class LightningStorm extends Rule {
       const mechanicalImmune = unit.tags?.includes("mechanical");
       return inRange && !mechanicalImmune && unit.hp > 0;
     });
-    
+
     for (const unit of affectedUnits) {
       this.commands.push({
         type: "meta",
@@ -139,7 +139,7 @@ export class LightningStorm extends Rule {
           },
         },
       });
-      
+
       // Visual particle effect
       this.commands.push({
         type: "particle",
@@ -155,7 +155,7 @@ export class LightningStorm extends Rule {
         },
       });
     }
-    
+
     // Still queue the event for informational purposes
     context.queueEvent({
       kind: "aoe",

@@ -18,13 +18,20 @@ export class ProjectileManager {
     if (this._projectilesCacheDirty) {
       this._projectilesCache = [];
       const arrays = this.projectileArrays;
-      
+
       for (let i = 0; i < arrays.capacity; i++) {
         if (arrays.active[i] === 0) continue;
-        
-        const teamName = arrays.team[i] === 1 ? "friendly" : arrays.team[i] === 2 ? "hostile" : "neutral";
-        const typeName = ["bullet", "bomb", "grapple", "laser_beam"][arrays.type[i]] || "bullet";
-        
+
+        const teamName =
+          arrays.team[i] === 1
+            ? "friendly"
+            : arrays.team[i] === 2
+              ? "hostile"
+              : "neutral";
+        const typeName =
+          ["bullet", "bomb", "grapple", "laser_beam"][arrays.type[i]] ||
+          "bullet";
+
         const proj: Projectile = {
           id: arrays.projectileIds[i],
           pos: { x: arrays.posX[i], y: arrays.posY[i] },
@@ -34,26 +41,31 @@ export class ProjectileManager {
           team: teamName as "friendly" | "hostile" | "neutral",
           type: typeName as "bullet" | "bomb" | "grapple" | "laser_beam",
         };
-        
+
         if (arrays.sourceIds[i]) proj.sourceId = arrays.sourceIds[i];
-        
+
         // Add optional fields based on projectile type
-        if (arrays.type[i] === 1 || arrays.type[i] === 2) { // bomb or grapple have targets
+        if (arrays.type[i] === 1 || arrays.type[i] === 2) {
+          // bomb or grapple have targets
           proj.target = { x: arrays.targetX[i], y: arrays.targetY[i] };
         }
-        if (arrays.type[i] === 1) { // bomb has origin
+        if (arrays.type[i] === 1) {
+          // bomb has origin
           proj.origin = { x: arrays.originX[i], y: arrays.originY[i] };
         }
         if (arrays.progress[i] > 0) proj.progress = arrays.progress[i];
         if (arrays.duration[i] > 0) proj.duration = arrays.duration[i];
-        if (arrays.type[i] === 1) { // bombs have these fields
+        if (arrays.type[i] === 1) {
+          // bombs have these fields
           proj.z = arrays.z[i];
           proj.aoeRadius = arrays.aoeRadius[i] || 3; // Default for bombs
         }
         if (arrays.lifetime[i] > 0) proj.lifetime = arrays.lifetime[i];
-        if (arrays.explosionRadius[i] !== 3) proj.explosionRadius = arrays.explosionRadius[i];
-        if (arrays.aspect[i] && arrays.aspect[i] !== "physical") proj.aspect = arrays.aspect[i];
-        
+        if (arrays.explosionRadius[i] !== 3)
+          proj.explosionRadius = arrays.explosionRadius[i];
+        if (arrays.aspect[i] && arrays.aspect[i] !== "physical")
+          proj.aspect = arrays.aspect[i];
+
         this._projectilesCache.push(proj);
       }
       this._projectilesCacheDirty = false;
@@ -84,8 +96,16 @@ export class ProjectileManager {
     this._projectilesCacheDirty = true;
   }
 
-  updatePhysics(fieldWidth: number, fieldHeight: number, deltaTime: number = 1): number[] {
-    const outOfBounds = this.projectileArrays.updatePhysics(fieldWidth, fieldHeight, deltaTime);
+  updatePhysics(
+    fieldWidth: number,
+    fieldHeight: number,
+    deltaTime: number = 1,
+  ): number[] {
+    const outOfBounds = this.projectileArrays.updatePhysics(
+      fieldWidth,
+      fieldHeight,
+      deltaTime,
+    );
     if (outOfBounds.length > 0) {
       this._projectilesCacheDirty = true;
     }

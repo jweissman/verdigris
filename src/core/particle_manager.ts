@@ -7,18 +7,18 @@ import { Particle } from "../types/Particle";
  */
 export class ParticleManager {
   public particleArrays: ParticleArrays;
-  
+
   constructor(capacity: number = 5000) {
     this.particleArrays = new ParticleArrays(capacity);
   }
-  
+
   get particles(): Particle[] {
     const result: Particle[] = [];
     const arrays = this.particleArrays;
-    
+
     for (let i = 0; i < arrays.capacity; i++) {
       if (!arrays.active || arrays.active[i] === 0) continue;
-      
+
       const typeId = arrays.type[i];
       result.push({
         id: arrays.particleIds[i] || `particle_${i}`,
@@ -32,10 +32,10 @@ export class ParticleManager {
         landed: arrays.landed[i] === 1,
       });
     }
-    
+
     return result;
   }
-  
+
   private getParticleTypeName(typeId: number): any {
     const types = [
       "",
@@ -68,18 +68,18 @@ export class ParticleManager {
     ];
     return types[typeId] || undefined;
   }
-  
+
   addParticle(particle: Partial<Particle>): void {
     // Ensure required fields are provided with defaults
     const fullParticle = {
       pos: { x: 0, y: 0 },
       vel: { x: 0, y: 0 },
       lifetime: 100,
-      ...particle
+      ...particle,
     };
     this.particleArrays.addParticle(fullParticle);
   }
-  
+
   updateParticles(fieldWidth: number, fieldHeight: number): void {
     const arrays = this.particleArrays;
 
@@ -146,86 +146,91 @@ export class ParticleManager {
       }
     }
   }
-  
+
   private updateLeafParticle(index: number, fieldWidthPixels: number): void {
     const arrays = this.particleArrays;
-    
+
     if (arrays.landed[index] === 1) {
       arrays.velX[index] = 0;
       arrays.velY[index] = 0;
       arrays.lifetime[index] -= 3; // Fade faster when landed
       return;
     }
-    
+
     arrays.velX[index] = 0;
     arrays.velY[index] = 0.5; // Constant fall speed
-    
+
     const gridX = Math.floor(arrays.posX[index] / 8);
     arrays.posX[index] = gridX * 8 + 4; // Center of grid cell
     arrays.posY[index] += arrays.velY[index];
-    
+
     if (arrays.z[index] !== undefined) {
-      arrays.z[index] = Math.max(0, arrays.z[index] - Math.abs(arrays.velY[index]) * 0.5);
+      arrays.z[index] = Math.max(
+        0,
+        arrays.z[index] - Math.abs(arrays.velY[index]) * 0.5,
+      );
     }
-    
+
     // Wrap horizontally
-    if (arrays.posX[index] < 0) arrays.posX[index] = fieldWidthPixels + arrays.posX[index];
-    if (arrays.posX[index] > fieldWidthPixels) arrays.posX[index] = arrays.posX[index] - fieldWidthPixels;
-    
+    if (arrays.posX[index] < 0)
+      arrays.posX[index] = fieldWidthPixels + arrays.posX[index];
+    if (arrays.posX[index] > fieldWidthPixels)
+      arrays.posX[index] = arrays.posX[index] - fieldWidthPixels;
+
     if (arrays.z[index] !== undefined && arrays.z[index] <= 0) {
       arrays.landed[index] = 1;
       arrays.z[index] = 0;
-      
+
       const gridX = Math.floor(arrays.posX[index] / 8);
       const gridY = Math.floor(arrays.posY[index] / 8);
       arrays.posX[index] = gridX * 8 + 4;
       arrays.posY[index] = gridY * 8 + 4;
-      
+
       arrays.velX[index] = 0;
       arrays.velY[index] = 0;
       arrays.lifetime[index] = Math.min(arrays.lifetime[index], 20);
     }
   }
-  
+
   private updateRainParticle(index: number, fieldWidth: number): void {
     const arrays = this.particleArrays;
-    
+
     if (arrays.landed[index] === 1) {
       arrays.velX[index] = 0;
       arrays.velY[index] = 0;
       return;
     }
-    
+
     arrays.velX[index] = 0;
     arrays.velY[index] = 1.0; // Faster than leaves
-    
+
     const gridX = Math.floor(arrays.posX[index] / 8);
     arrays.posX[index] = gridX * 8 + 4;
     arrays.posY[index] += arrays.velY[index];
-    
+
     if (arrays.z[index] !== undefined) {
       arrays.z[index] = Math.max(0, arrays.z[index] - arrays.velY[index] * 2);
     }
-    
-    // Wrap horizontally  
+
+    // Wrap horizontally
     if (arrays.posX[index] < 0) arrays.posX[index] = fieldWidth;
     if (arrays.posX[index] > fieldWidth) arrays.posX[index] = 0;
-    
+
     if (arrays.z[index] !== undefined && arrays.z[index] <= 0) {
       arrays.landed[index] = 1;
       arrays.z[index] = 0;
-      
+
       const gridX = Math.floor(arrays.posX[index] / 8);
       const gridY = Math.floor(arrays.posY[index] / 8);
       arrays.posX[index] = gridX * 8 + 4;
       arrays.posY[index] = gridY * 8 + 4;
-      
+
       arrays.velX[index] = 0;
       arrays.velY[index] = 0;
       arrays.lifetime[index] = Math.min(arrays.lifetime[index], 30);
     }
   }
-  
+
   spawnLeafParticle(fieldWidth: number, fieldHeight: number): void {
     const x = Math.random() * fieldWidth * 8;
     this.particleArrays.addParticle({
@@ -239,7 +244,7 @@ export class ParticleManager {
       z: fieldHeight * 8 + Math.random() * 50,
     });
   }
-  
+
   spawnRainParticle(fieldWidth: number, fieldHeight: number): void {
     this.particleArrays.addParticle({
       id: `rain_${Date.now()}`,
@@ -252,7 +257,7 @@ export class ParticleManager {
       z: fieldHeight * 8,
     });
   }
-  
+
   spawnFireParticle(x: number, y: number): void {
     this.particleArrays.addParticle({
       id: `fire_${Date.now()}`,
@@ -264,7 +269,7 @@ export class ParticleManager {
       color: Math.random() > 0.5 ? "#ff4400" : "#ff8800",
     });
   }
-  
+
   clear(): void {
     this.particleArrays = new ParticleArrays(this.particleArrays.capacity);
   }

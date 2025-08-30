@@ -22,7 +22,6 @@ export class MetaCommand extends Command {
       return;
     }
 
-
     const updates: any = {};
 
     if (params.meta) {

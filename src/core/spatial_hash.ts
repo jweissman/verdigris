@@ -5,23 +5,23 @@
 export class SpatialHash {
   private cellSize: number;
   private cells: Map<number, number[]>;
-  
+
   constructor(cellSize: number = 10) {
     this.cellSize = cellSize;
     this.cells = new Map();
   }
-  
+
   clear(): void {
     this.cells.clear();
   }
-  
+
   private getKey(x: number, y: number): number {
     const cx = Math.floor(x / this.cellSize);
     const cy = Math.floor(y / this.cellSize);
     // Simple hash function that works well for 2D grids
     return (cx * 0x1f1f1f1f) ^ cy;
   }
-  
+
   insert(x: number, y: number, index: number): void {
     const key = this.getKey(x, y);
     let cell = this.cells.get(key);
@@ -31,7 +31,7 @@ export class SpatialHash {
     }
     cell.push(index);
   }
-  
+
   /**
    * Get all entity indices within radius of a point
    * Returns indices that are in cells that could contain entities within radius
@@ -39,7 +39,7 @@ export class SpatialHash {
   query(x: number, y: number, radius: number): number[] {
     const result: number[] = [];
     const cellRadius = Math.ceil(radius / this.cellSize);
-    
+
     // Check all cells that could contain entities within radius
     for (let dx = -cellRadius; dx <= cellRadius; dx++) {
       for (let dy = -cellRadius; dy <= cellRadius; dy++) {
@@ -54,17 +54,17 @@ export class SpatialHash {
         }
       }
     }
-    
+
     return result;
   }
-  
+
   /**
    * Build spatial hash from unit arrays
    */
   buildFromArrays(
     posX: Float32Array,
     posY: Float32Array,
-    activeIndices: number[]
+    activeIndices: number[],
   ): void {
     this.clear();
     for (const idx of activeIndices) {

@@ -40,7 +40,7 @@ export class Abilities extends Rule {
           target?: Function;
           ability: Ability;
         } = { ability };
-        
+
         // Compile trigger if present
         if (ability.trigger) {
           try {
@@ -49,8 +49,8 @@ export class Abilities extends Rule {
             console.error(`Failed to compile trigger for ${name}:`, err);
           }
         }
-        
-        // Compile target if present  
+
+        // Compile target if present
         if (ability.target) {
           try {
             compiled.target = dslCompiler.compile(ability.target);
@@ -880,11 +880,27 @@ export class Abilities extends Rule {
     const radius =
       this.resolveValue(context, effect.radius, caster, target) || 3;
 
+    // Limit jump distance to a reasonable range (max 6 tiles)
+    const maxJumpDistance = 6;
+    const dx = pos.x - caster.pos.x;
+    const dy = pos.y - caster.pos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    let targetX = pos.x;
+    let targetY = pos.y;
+    
+    if (distance > maxJumpDistance) {
+      // Jump towards target but only up to max distance
+      const ratio = maxJumpDistance / distance;
+      targetX = caster.pos.x + dx * ratio;
+      targetY = caster.pos.y + dy * ratio;
+    }
+
     this.commands.push({
       type: "jump",
       params: {
-        targetX: pos.x,
-        targetY: pos.y,
+        targetX: targetX,
+        targetY: targetY,
         height: height,
         damage: damage,
         radius: radius,

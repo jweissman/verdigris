@@ -32,6 +32,9 @@ export class AICommand extends Command {
 
       if (unit.meta?.jumping) continue;
 
+      // Skip frozen or stunned units
+      if (unit.meta?.frozen || unit.meta?.stunned) continue;
+
       let posture = unit.posture || unit.meta?.posture;
       if (!posture && unit.tags) {
         if (unit.tags.includes("hunt")) posture = "hunt";
@@ -55,7 +58,11 @@ export class AICommand extends Command {
     const proxyManager = this.sim.getProxyManager();
     const fieldWidth = context.getFieldWidth();
     const fieldHeight = context.getFieldHeight();
-    const moves = proxyManager.batchProcessAI(postures, fieldWidth, fieldHeight);
+    const moves = proxyManager.batchProcessAI(
+      postures,
+      fieldWidth,
+      fieldHeight,
+    );
 
     const nonZeroMoves = new Map<string, { dx: number; dy: number }>();
     for (const [unitId, move] of moves) {

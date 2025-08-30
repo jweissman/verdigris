@@ -163,7 +163,10 @@ export class CommandHandler {
     );
     this.commands.set("knockback", new KnockbackCommand(sim, this.transform));
 
-    this.commands.set("applyStatusEffect", new ApplyStatusEffectCommand(sim, this.transform));
+    this.commands.set(
+      "applyStatusEffect",
+      new ApplyStatusEffectCommand(sim, this.transform),
+    );
     this.commands.set(
       "updateStatusEffects",
       new UpdateStatusEffectsCommand(sim, this.transform),
@@ -204,7 +207,7 @@ export class CommandHandler {
       "ability_effects",
       new AbilityEffectsCommand(sim, this.transform),
     );
-    
+
     // Hero commands
     this.commands.set("groundPound", new GroundPound(sim, this.transform));
     this.commands.set("dash", new Dash(sim, this.transform));
@@ -452,7 +455,6 @@ export class CommandHandler {
           x: args[0] ? parseFloat(args[0]) : undefined,
           y: args[1] ? parseFloat(args[1]) : undefined,
         };
-
 
       case "particle":
         if (typeof args === "object" && !Array.isArray(args)) {

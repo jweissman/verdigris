@@ -5,7 +5,7 @@ import type { QueuedCommand } from "../core/command_handler";
 export default class Cleanup extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
-    
+
     // Remove dead units
     const deadUnits = context
       .getAllUnits()
@@ -17,18 +17,20 @@ export default class Cleanup extends Rule {
         params: { unitId: unit.id },
       });
     });
-    
+
     // Handle effect units with lifetime
     const effectUnits = context
       .getAllUnits()
-      .filter((unit) => unit.meta?.lifetime !== undefined && unit.meta.lifetime > 0);
-      
+      .filter(
+        (unit) => unit.meta?.lifetime !== undefined && unit.meta.lifetime > 0,
+      );
+
     effectUnits.forEach((unit) => {
       const newLifetime = unit.meta.lifetime - 1;
       if (newLifetime <= 0) {
         commands.push({
           type: "remove",
-          params: { unitId: unit.id }
+          params: { unitId: unit.id },
         });
       } else {
         commands.push({
@@ -36,9 +38,9 @@ export default class Cleanup extends Rule {
           params: {
             unitId: unit.id,
             meta: {
-              lifetime: newLifetime
-            }
-          }
+              lifetime: newLifetime,
+            },
+          },
         });
       }
     });

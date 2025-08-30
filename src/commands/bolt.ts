@@ -21,7 +21,7 @@ export class BoltCommand extends Command {
 
     const pixelX = strikePos.x * 8 + 4;
     const pixelY = strikePos.y * 8 + 4;
-    
+
     // Queue a spawn command for the lightning bolt effect unit
     const boltId = `bolt_${this.sim.ticks}_${Math.random().toString(36).substr(2, 5)}`;
     this.sim.queuedCommands.push({
@@ -45,9 +45,9 @@ export class BoltCommand extends Command {
             tall: true, // Indicates this is a tall sprite
             height: 48,
             immobile: true, // Can't be pushed around
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     for (let i = 0; i < 8; i++) {
@@ -117,7 +117,7 @@ export class BoltCommand extends Command {
         u.id !== unitId && // Don't damage the caster
         Math.abs(u.pos.x - strikePos.x) <= damageRadius &&
         Math.abs(u.pos.y - strikePos.y) <= damageRadius &&
-        u.hp > 0
+        u.hp > 0,
     );
 
     for (const unit of unitsAtPos) {
@@ -126,14 +126,14 @@ export class BoltCommand extends Command {
       const dy = Math.abs(unit.pos.y - strikePos.y);
       const dist = Math.max(dx, dy);
       const damage = dist === 0 ? 50 : dist === 1 ? 30 : 20;
-      
+
       this.sim.queuedCommands.push({
         type: "damage",
         params: {
           targetId: unit.id,
           amount: damage,
           source: unitId || "lightning",
-          aspect: "lightning"
+          aspect: "lightning",
         },
       });
     }
@@ -152,17 +152,22 @@ export class BoltCommand extends Command {
         excludeSource: true, // Don't stun the caster!
       },
     });
-    
+
     // Add fire effects in a smaller radius around the strike
     const fireRadius = 2;
     for (let dx = -fireRadius; dx <= fireRadius; dx++) {
       for (let dy = -fireRadius; dy <= fireRadius; dy++) {
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist <= fireRadius && Math.random() < 0.3) { // 30% chance per cell
+        if (dist <= fireRadius && Math.random() < 0.3) {
+          // 30% chance per cell
           const fireX = strikePos.x + dx;
           const fireY = strikePos.y + dy;
-          if (fireX >= 0 && fireX < this.sim.fieldWidth && 
-              fireY >= 0 && fireY < this.sim.fieldHeight) {
+          if (
+            fireX >= 0 &&
+            fireX < this.sim.fieldWidth &&
+            fireY >= 0 &&
+            fireY < this.sim.fieldHeight
+          ) {
             // Set high temperature to ignite fires
             this.sim.queuedCommands.push({
               type: "temperature",
@@ -176,7 +181,7 @@ export class BoltCommand extends Command {
         }
       }
     }
-    
+
     // Still queue event for informational purposes
     this.sim.queuedEvents.push({
       kind: "aoe",

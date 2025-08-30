@@ -148,7 +148,7 @@ export class ChangeWeather extends Command {
         const action = (params.action as "start" | "stop") || "start";
         if (action === "start") {
           this.sim.lightningActive = true;
-          
+
           for (let i = 0; i < 8; i++) {
             this.sim.particleArrays.addParticle({
               pos: {

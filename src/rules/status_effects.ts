@@ -27,7 +27,11 @@ export class StatusEffects extends Rule {
       }
 
       // Handle frozen status countdown
-      if (unit.meta.frozen && unit.meta.frozenDuration !== undefined && unit.meta.frozenDuration > 0) {
+      if (
+        unit.meta.frozen &&
+        unit.meta.frozenDuration !== undefined &&
+        unit.meta.frozenDuration > 0
+      ) {
         const newDuration = unit.meta.frozenDuration - 1;
         if (newDuration <= 0) {
           this.commands.push({
@@ -38,8 +42,8 @@ export class StatusEffects extends Rule {
                 frozen: undefined,
                 frozenDuration: undefined,
                 stunned: undefined,
-              }
-            }
+              },
+            },
           });
         } else {
           this.commands.push({
@@ -48,22 +52,26 @@ export class StatusEffects extends Rule {
               unitId: unit.id,
               meta: {
                 frozenDuration: newDuration,
-              }
-            }
+              },
+            },
           });
         }
-        
+
         // Prevent movement when frozen
         if (unit.intendedMove) {
           this.commands.push({
             type: "halt",
-            params: { unitId: unit.id }
+            params: { unitId: unit.id },
           });
         }
       }
 
       // Handle old-style stunDuration countdown
-      if (unit.meta.stunned && unit.meta.stunDuration !== undefined && unit.meta.stunDuration > 0) {
+      if (
+        unit.meta.stunned &&
+        unit.meta.stunDuration !== undefined &&
+        unit.meta.stunDuration > 0
+      ) {
         const newDuration = unit.meta.stunDuration - 1;
         // console.log(`StatusEffects: unit ${unit.id} stunDuration ${unit.meta.stunDuration} -> ${newDuration}`);
         if (newDuration <= 0) {
@@ -75,8 +83,8 @@ export class StatusEffects extends Rule {
               meta: {
                 stunned: undefined,
                 stunDuration: undefined,
-              }
-            }
+              },
+            },
           };
           // console.log("  -> Pushing clear command meta:", clearCommand.params.meta);
           this.commands.push(clearCommand);
@@ -86,10 +94,10 @@ export class StatusEffects extends Rule {
             params: {
               unitId: unit.id,
               meta: {
-                stunned: true,  // PRESERVE the stunned flag!
+                stunned: true, // PRESERVE the stunned flag!
                 stunDuration: newDuration,
-              }
-            }
+              },
+            },
           });
         }
       }
@@ -97,7 +105,10 @@ export class StatusEffects extends Rule {
       if (unit.meta.statusEffects && unit.meta.statusEffects.length > 0) {
         this.updateStatusEffects(context, unit);
         this.applyStatusEffectMechanics(context, unit);
-      } else if (unit.meta.chilled || (unit.meta.stunned && !unit.meta.stunDuration)) {
+      } else if (
+        unit.meta.chilled ||
+        (unit.meta.stunned && !unit.meta.stunDuration)
+      ) {
         // Only clean up old effects if there's no duration being tracked
         this.applyStatusEffectMechanics(context, unit);
       }

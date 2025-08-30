@@ -117,7 +117,6 @@ export class Transform {
           newMeta[key] = value;
         }
       }
-      
 
       proxyManager.setMeta(unitId, newMeta);
     }
@@ -192,7 +191,11 @@ export class Transform {
   /**
    * Set weather conditions
    */
-  setWeather(type: "rain" | "clear" | "storm" | "sandstorm" | "leaves", duration: number, intensity: number): void {
+  setWeather(
+    type: "rain" | "clear" | "storm" | "sandstorm" | "leaves",
+    duration: number,
+    intensity: number,
+  ): void {
     this.sim.setWeather(type, duration, intensity);
   }
 }

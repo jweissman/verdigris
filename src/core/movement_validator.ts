@@ -9,10 +9,15 @@ export class MovementValidator {
 
   constructor(
     private fieldWidth: number,
-    private fieldHeight: number
+    private fieldHeight: number,
   ) {}
 
-  validMove(unit: any, dx: number, dy: number, units?: readonly Unit[]): boolean {
+  validMove(
+    unit: any,
+    dx: number,
+    dy: number,
+    units?: readonly Unit[],
+  ): boolean {
     if (!unit) return false;
 
     if (unit.meta?.huge) {
@@ -68,7 +73,7 @@ export class MovementValidator {
     x: number,
     y: number,
     excludeUnit: Unit | null = null,
-    units?: readonly Unit[]
+    units?: readonly Unit[],
   ): boolean {
     const roundedX = Math.round(x);
     const roundedY = Math.round(y);
@@ -95,7 +100,10 @@ export class MovementValidator {
         if (unit.meta?.huge) {
           const bodyPositions = this.getHugeUnitBodyPositions(unit);
           for (const pos of bodyPositions) {
-            if (Math.round(pos.x) === roundedX && Math.round(pos.y) === roundedY) {
+            if (
+              Math.round(pos.x) === roundedX &&
+              Math.round(pos.y) === roundedY
+            ) {
               if (!this.isOwnPhantom(unit, excludeUnit)) {
                 return true;
               }
@@ -119,7 +127,7 @@ export class MovementValidator {
 
   private isOwnPhantom(unit: Unit | null, owner: Unit | null): boolean {
     if (!unit) return false;
-    
+
     return (
       (unit.meta && unit.meta.phantom && unit.meta.parentId === owner?.id) ||
       unit === owner

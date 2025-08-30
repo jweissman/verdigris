@@ -32,7 +32,7 @@ export class ForcesCommand extends Command {
     // Apply movement, but skip frozen or stunned units
     for (let i = 0; i < capacity; i++) {
       if (arrays.active[i] === 0) continue;
-      
+
       // Check if unit is frozen or stunned through proxyManager
       const unitId = arrays.unitIds[i];
       const proxyManager = this.sim.getProxyManager();
@@ -43,7 +43,7 @@ export class ForcesCommand extends Command {
         moveY[i] = 0;
         continue;
       }
-      
+
       posX[i] += moveX[i];
       posY[i] += moveY[i];
     }
@@ -74,7 +74,7 @@ export class ForcesCommand extends Command {
           arrays.mass[existing] * 10 + arrays.hp[existing];
 
         let toDisplace = priorityI > priorityExisting ? existing : i;
-        
+
         // If the unit to displace is frozen/stunned, displace the other one instead
         const proxyManager = this.sim.getProxyManager();
         const unitId = arrays.unitIds[toDisplace];
@@ -82,7 +82,7 @@ export class ForcesCommand extends Command {
         if (meta?.frozen || meta?.stunned) {
           // Switch to displace the other unit
           toDisplace = toDisplace === existing ? i : existing;
-          
+
           // Check if the other unit is also frozen
           const otherUnitId = arrays.unitIds[toDisplace];
           const otherMeta = proxyManager.getMeta(otherUnitId);

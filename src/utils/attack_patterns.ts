@@ -10,9 +10,9 @@ export interface AttackZone {
 
 export interface AttackPatternConfig {
   origin: { x: number; y: number };
-  direction: 'left' | 'right' | 'up' | 'down';
+  direction: "left" | "right" | "up" | "down";
   range: number;
-  pattern: 'cone' | 'line' | 'wave' | 'burst';
+  pattern: "cone" | "line" | "wave" | "burst";
   width?: number;
   taper?: number; // How much to reduce width per distance
 }
@@ -24,22 +24,22 @@ export interface AttackPatternConfig {
 export function generateConePattern(config: AttackPatternConfig): AttackZone[] {
   const zones: AttackZone[] = [];
   const { origin, direction, range } = config;
-  
+
   // Base width and taper amount
   const baseWidth = config.width || 11; // Very wide base
   const taperRate = config.taper || 1.5; // Reduce by 1.5 per distance
-  
-  const dx = direction === 'right' ? 1 : direction === 'left' ? -1 : 0;
-  const dy = direction === 'down' ? 1 : direction === 'up' ? -1 : 0;
-  
+
+  const dx = direction === "right" ? 1 : direction === "left" ? -1 : 0;
+  const dy = direction === "down" ? 1 : direction === "up" ? -1 : 0;
+
   for (let dist = 1; dist <= range; dist++) {
     const centerX = origin.x + dx * dist;
     const centerY = origin.y + dy * dist;
-    
+
     // Calculate width at this distance
     const width = Math.max(1, baseWidth - Math.floor(dist * taperRate));
     const halfWidth = Math.floor(width / 2);
-    
+
     // Add zones perpendicular to attack direction
     if (dx !== 0) {
       // Horizontal attack - spread vertically
@@ -53,7 +53,7 @@ export function generateConePattern(config: AttackPatternConfig): AttackZone[] {
       }
     }
   }
-  
+
   return zones;
 }
 
@@ -63,19 +63,19 @@ export function generateConePattern(config: AttackPatternConfig): AttackZone[] {
 export function generateWavePattern(config: AttackPatternConfig): AttackZone[] {
   const zones: AttackZone[] = [];
   const { origin, direction, range } = config;
-  
+
   const baseWidth = config.width || 7;
-  const dx = direction === 'right' ? 1 : direction === 'left' ? -1 : 0;
-  const dy = direction === 'down' ? 1 : direction === 'up' ? -1 : 0;
-  
+  const dx = direction === "right" ? 1 : direction === "left" ? -1 : 0;
+  const dy = direction === "down" ? 1 : direction === "up" ? -1 : 0;
+
   for (let dist = 1; dist <= range; dist++) {
     const centerX = origin.x + dx * dist;
     const centerY = origin.y + dy * dist;
-    
+
     // Oscillate width using sine wave
     const width = Math.floor(baseWidth + Math.sin(dist * 0.5) * 3);
     const halfWidth = Math.floor(width / 2);
-    
+
     if (dx !== 0) {
       for (let offset = -halfWidth; offset <= halfWidth; offset++) {
         zones.push({ x: centerX, y: centerY + offset });
@@ -86,29 +86,31 @@ export function generateWavePattern(config: AttackPatternConfig): AttackZone[] {
       }
     }
   }
-  
+
   return zones;
 }
 
 /**
  * Generate a burst pattern - circular explosion
  */
-export function generateBurstPattern(config: AttackPatternConfig): AttackZone[] {
+export function generateBurstPattern(
+  config: AttackPatternConfig,
+): AttackZone[] {
   const zones: AttackZone[] = [];
   const { origin, range } = config;
-  
+
   for (let dx = -range; dx <= range; dx++) {
     for (let dy = -range; dy <= range; dy++) {
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance <= range) {
-        zones.push({ 
-          x: Math.round(origin.x + dx), 
-          y: Math.round(origin.y + dy) 
+        zones.push({
+          x: Math.round(origin.x + dx),
+          y: Math.round(origin.y + dy),
         });
       }
     }
   }
-  
+
   return zones;
 }
 
@@ -118,15 +120,15 @@ export function generateBurstPattern(config: AttackPatternConfig): AttackZone[] 
 export function generateLinePattern(config: AttackPatternConfig): AttackZone[] {
   const zones: AttackZone[] = [];
   const { origin, direction, range } = config;
-  
+
   const width = config.width || 1;
-  const dx = direction === 'right' ? 1 : direction === 'left' ? -1 : 0;
-  const dy = direction === 'down' ? 1 : direction === 'up' ? -1 : 0;
-  
+  const dx = direction === "right" ? 1 : direction === "left" ? -1 : 0;
+  const dy = direction === "down" ? 1 : direction === "up" ? -1 : 0;
+
   for (let dist = 1; dist <= range; dist++) {
     const centerX = origin.x + dx * dist;
     const centerY = origin.y + dy * dist;
-    
+
     if (width === 1) {
       zones.push({ x: centerX, y: centerY });
     } else {
@@ -142,22 +144,24 @@ export function generateLinePattern(config: AttackPatternConfig): AttackZone[] {
       }
     }
   }
-  
+
   return zones;
 }
 
 /**
  * Main function to generate attack patterns
  */
-export function generateAttackPattern(config: AttackPatternConfig): AttackZone[] {
+export function generateAttackPattern(
+  config: AttackPatternConfig,
+): AttackZone[] {
   switch (config.pattern) {
-    case 'cone':
+    case "cone":
       return generateConePattern(config);
-    case 'wave':
+    case "wave":
       return generateWavePattern(config);
-    case 'burst':
+    case "burst":
       return generateBurstPattern(config);
-    case 'line':
+    case "line":
       return generateLinePattern(config);
     default:
       return generateConePattern(config);

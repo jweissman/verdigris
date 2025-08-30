@@ -33,15 +33,16 @@ export class HeroAnimation extends Rule {
         this.updateAnimation(unit, rig, commands);
 
         // Slow down walk animation to match movement speed
-        const isWalking = unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0;
+        const isWalking =
+          unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0;
         const updateRate = isWalking ? 0.5 : 1; // Match slower movement
         rig.update(updateRate);
 
         const facing = unit.meta?.facing || "right";
-        
+
         // Get the animated rig parts as an array
         const rigParts = rig.getParts(facing);
-        
+
         commands.push({
           type: "meta",
           params: {

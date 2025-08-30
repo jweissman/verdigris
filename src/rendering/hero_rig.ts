@@ -483,7 +483,11 @@ export class HeroRig {
             lleg: { offset: { x: -3, y: 6 }, rotation: -0.3, frame: 1 }, // Back leg loaded
             rleg: { offset: { x: 5, y: 7 }, rotation: 0.3, frame: 1 }, // Front leg braced
             // Sword follows rarm position + wrist offset
-            sword: { offset: { x: -15 + 6, y: -8 - 3 }, rotation: -2.8 + 0.2, scale: 1.8 }, // Fixed to wrist
+            sword: {
+              offset: { x: -15 + 6, y: -8 - 3 },
+              rotation: -2.8 + 0.2,
+              scale: 1.8,
+            }, // Fixed to wrist
           },
         },
         {
@@ -496,7 +500,11 @@ export class HeroRig {
             lleg: { offset: { x: -5, y: 8 }, rotation: 0.4, frame: 2 }, // Planted hard
             rleg: { offset: { x: 10, y: 5 }, rotation: -0.3, frame: 2 }, // Pushing forward
             // Sword follows rarm position + wrist offset
-            sword: { offset: { x: 22 + 8, y: 2 - 2 }, rotation: 1.2 + 0.3, scale: 2.5 }, // Fixed to wrist
+            sword: {
+              offset: { x: 22 + 8, y: 2 - 2 },
+              rotation: 1.2 + 0.3,
+              scale: 2.5,
+            }, // Fixed to wrist
           },
         },
         {
@@ -507,7 +515,11 @@ export class HeroRig {
             larm: { offset: { x: -14, y: 3 }, rotation: -0.6, frame: 2 },
             head: { offset: { x: 8, y: -9 }, rotation: 0.35, frame: 2 },
             // Sword follows rarm position + wrist offset
-            sword: { offset: { x: 24 + 8, y: 4 - 1 }, rotation: 1.5 + 0.4, scale: 2.3 }, // Fixed to wrist
+            sword: {
+              offset: { x: 24 + 8, y: 4 - 1 },
+              rotation: 1.5 + 0.4,
+              scale: 2.3,
+            }, // Fixed to wrist
           },
         },
         {
@@ -518,7 +530,11 @@ export class HeroRig {
             larm: { offset: { x: -10, y: -1 }, rotation: -0.2, frame: 1 },
             head: { offset: { x: 4, y: -11 }, rotation: 0.1, frame: 1 },
             // Sword follows rarm position + wrist offset
-            sword: { offset: { x: 16 + 6, y: 0 - 2 }, rotation: 0.6 + 0.2, scale: 1.6 }, // Fixed to wrist
+            sword: {
+              offset: { x: 16 + 6, y: 0 - 2 },
+              rotation: 0.6 + 0.2,
+              scale: 1.6,
+            }, // Fixed to wrist
           },
         },
         {
@@ -531,7 +547,11 @@ export class HeroRig {
             lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 0 },
             rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 0 },
             // Sword follows rarm position + wrist offset
-            sword: { offset: { x: 10 + 4, y: -3 - 1 }, rotation: 0.1 + 0.1, scale: 1.2 }, // Fixed to wrist
+            sword: {
+              offset: { x: 10 + 4, y: -3 - 1 },
+              rotation: 0.1 + 0.1,
+              scale: 1.2,
+            }, // Fixed to wrist
           },
         },
         {
@@ -797,19 +817,19 @@ export class HeroRig {
         // Attach sword to the right hand
         const handAnchor = this.anchors.get("hand_r");
         const armPart = this.parts.get("rarm");
-        
+
         if (handAnchor && armPart) {
           // Sword follows right arm position
           // does nothing??
           swordPart.offset = {
             x: armPart.offset.x + 4, // Offset from arm position
-            y: armPart.offset.y - 2,  // Down from shoulder
+            y: armPart.offset.y - 2, // Down from shoulder
           };
-          
+
           // Sword maintains a fixed angle relative to the arm
           const armRotation = armPart.rotation || 0;
           swordPart.rotation = armRotation - 0.4; // Fixed angle relative to arm
-          
+
           swordPart.scale = 1.0;
           swordPart.frame = 0; // Always use first frame
         }

@@ -251,8 +251,9 @@ export default class Isometric extends View {
     // Use interpolation for smooth movement
     let renderX = unit.pos.x;
     let renderY = unit.pos.y;
-    
+
     // Check if we have a previous position for interpolation
+    // ALWAYS interpolate positions, even for jumping units
     const lastPos = this.sim.lastUnitPositions.get(unit.id);
     if (lastPos && this.sim.interpolationFactor !== undefined) {
       // Interpolate between last and current position
@@ -260,12 +261,23 @@ export default class Isometric extends View {
       renderX = lastPos.x + (unit.pos.x - lastPos.x) * t;
       renderY = lastPos.y + (unit.pos.y - lastPos.y) * t;
     }
-    
-    // Override with smoothX/Y if jumping (special case)
-    if (unit.meta?.smoothX !== undefined && unit.meta?.smoothX !== null) renderX = unit.meta.smoothX;
-    if (unit.meta?.smoothY !== undefined && unit.meta?.smoothY !== null) renderY = unit.meta.smoothY;
-    
+
+    // Override with smoothX/Y if explicitly set (legacy support)
+    if (unit.meta?.smoothX !== undefined && unit.meta?.smoothX !== null)
+      renderX = unit.meta.smoothX;
+    if (unit.meta?.smoothY !== undefined && unit.meta?.smoothY !== null)
+      renderY = unit.meta.smoothY;
+
     let renderZ = unit.meta?.z || 0;
+
+    // Interpolate Z position for jumping units
+    if (unit.meta?.jumping && lastPos) {
+      const lastZ = (lastPos as any).z || 0;
+      const currentZ = unit.meta?.z || 0;
+      if (this.sim.interpolationFactor !== undefined) {
+        renderZ = lastZ + (currentZ - lastZ) * this.sim.interpolationFactor;
+      }
+    }
 
     const dimensions = this.unitRenderer.getSpriteDimensions(unit);
     const spriteWidth = dimensions.width;
@@ -274,8 +286,10 @@ export default class Isometric extends View {
     let screenX: number;
     let screenY: number;
 
-    // Don't use interpolation for jumping units - they handle their own smooth movement
-    const interp = unit.meta?.jumping ? null : this.unitInterpolations.get(unit.id);
+    // Use view interpolation for non-jumping units (old system for wandering etc)
+    const interp = unit.meta?.jumping
+      ? null
+      : this.unitInterpolations.get(unit.id);
     if (interp) {
       const easeProgress = this.easeInOutQuad(interp.progress);
 
@@ -664,15 +678,15 @@ export default class Isometric extends View {
         const age = event.meta.tick ? this.sim.ticks - event.meta.tick : 0;
         const maxAge = 30;
         const alpha = Math.max(0, 1 - age / maxAge);
-        
+
         // Draw each cell in the strike zone
         this.ctx.save();
         this.ctx.globalAlpha = alpha * 0.6;
         this.ctx.fillStyle = "#ff0000"; // Red for strike zones
-        
+
         for (const zone of event.meta.zones) {
           const cellScreen = this.toIsometric(zone.x, zone.y);
-          
+
           // Draw diamond shape for each affected cell
           this.ctx.beginPath();
           this.ctx.moveTo(cellScreen.x, cellScreen.y - 4);
@@ -682,7 +696,7 @@ export default class Isometric extends View {
           this.ctx.closePath();
           this.ctx.fill();
         }
-        
+
         this.ctx.restore();
       } else if (typeof event.target === "object" && "x" in event.target) {
         // Fallback for old-style AOE (circular)
@@ -750,7 +764,7 @@ export default class Isometric extends View {
     for (let y = 0; y < this.sim.fieldHeight; y++) {
       for (let x = 0; x < this.sim.fieldWidth; x++) {
         const temp = this.sim.getTemperature(x, y);
-        
+
         if (temp > 30) {
           setCellEffect(x, y, "heat");
         } else if (temp < 0) {

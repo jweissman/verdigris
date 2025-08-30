@@ -65,7 +65,7 @@ export interface TickContext {
   getUnitProxyByIndex?(index: number): Unit | undefined;
   getPairwiseBatcher(): PairwiseBatcher;
   getUnitIndicesNearPoint(x: number, y: number, radius: number): number[];
-  
+
   // For PairwiseBatcher - returns sim reference
   // TODO: Refactor to avoid exposing sim directly
   getSimulator(): any;
@@ -185,7 +185,7 @@ export class TickContextImpl implements TickContext {
     const projectiles: Projectile[] = [];
     const arrays = this.sim.projectileArrays;
     if (!arrays) return [];
-    
+
     for (let i = 0; i < arrays.capacity; i++) {
       if (arrays.active[i] === 0) continue;
       projectiles.push({
@@ -194,13 +194,24 @@ export class TickContextImpl implements TickContext {
         vel: { x: arrays.velX[i], y: arrays.velY[i] },
         radius: arrays.radius[i],
         damage: arrays.damage[i],
-        team: arrays.team[i] === 1 ? "friendly" : arrays.team[i] === 2 ? "hostile" : "neutral",
-        type: ["bullet", "bomb", "grapple", "laser_beam"][arrays.type[i]] as any,
+        team:
+          arrays.team[i] === 1
+            ? "friendly"
+            : arrays.team[i] === 2
+              ? "hostile"
+              : "neutral",
+        type: ["bullet", "bomb", "grapple", "laser_beam"][
+          arrays.type[i]
+        ] as any,
         sourceId: arrays.sourceIds[i] || undefined,
-        target: arrays.targetX[i] ? { x: arrays.targetX[i], y: arrays.targetY[i] } : undefined,
+        target: arrays.targetX[i]
+          ? { x: arrays.targetX[i], y: arrays.targetY[i] }
+          : undefined,
         progress: arrays.progress[i] || undefined,
         duration: arrays.duration[i] || undefined,
-        origin: arrays.originX[i] ? { x: arrays.originX[i], y: arrays.originY[i] } : undefined,
+        origin: arrays.originX[i]
+          ? { x: arrays.originX[i], y: arrays.originY[i] }
+          : undefined,
         z: arrays.z[i] || undefined,
         lifetime: arrays.lifetime[i] || undefined,
         aoeRadius: arrays.aoeRadius[i] || undefined,
@@ -210,7 +221,7 @@ export class TickContextImpl implements TickContext {
     }
     return projectiles;
   }
-  
+
   getProjectileArrays(): ProjectileArrays {
     return this.sim.projectileArrays;
   }
@@ -304,7 +315,7 @@ export class TickContextImpl implements TickContext {
     const radiusSq = radius * radius;
     const arrays = this.getArrays();
     const { posX, posY, activeIndices } = arrays;
-    
+
     // Early exit for large radius (would include most units anyway)
     if (radius > 20) {
       for (const idx of activeIndices) {
@@ -317,29 +328,29 @@ export class TickContextImpl implements TickContext {
       }
       return result;
     }
-    
+
     // Optimized path for small radius - use bounding box first
     const minX = center.x - radius;
     const maxX = center.x + radius;
     const minY = center.y - radius;
     const maxY = center.y + radius;
-    
+
     for (const idx of activeIndices) {
       const x = posX[idx];
       if (x < minX || x > maxX) continue;
-      
+
       const y = posY[idx];
       if (y < minY || y > maxY) continue;
-      
+
       const dx = x - center.x;
       const dy = y - center.y;
       const distSq = dx * dx + dy * dy;
-      
+
       if (distSq <= radiusSq) {
         result.push(idx);
       }
     }
-    
+
     return result;
   }
 
@@ -422,7 +433,7 @@ export class TickContextImpl implements TickContext {
     if (this.sim.gridPartition) {
       const nearbyUnits = this.sim.gridPartition.getNearby(x, y, radius);
       const indices: number[] = [];
-      
+
       // Convert units to indices
       for (const unit of nearbyUnits) {
         const idx = this.getUnitIndex(unit.id);
@@ -430,10 +441,10 @@ export class TickContextImpl implements TickContext {
           indices.push(idx);
         }
       }
-      
+
       return indices;
     }
-    
+
     // Fallback to brute force if no grid
     return this.findUnitIndicesInRadius({ x, y }, radius);
   }

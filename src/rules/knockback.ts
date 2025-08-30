@@ -8,7 +8,7 @@ export class Knockback extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
-    
+
     const batcher = context.getPairwiseBatcher();
     if (batcher) {
       // Register knockback intent with batcher
@@ -18,19 +18,23 @@ export class Knockback extends Rule {
           const commands: QueuedCommand[] = [];
           // Phantoms can push regardless of mass, others need to be heavier
           const isPhantomPushing = unitA.meta?.phantom === true;
-          if (!isPhantomPushing && (!unitA.mass || !unitB.mass || unitA.mass <= unitB.mass)) return commands;
+          if (
+            !isPhantomPushing &&
+            (!unitA.mass || !unitB.mass || unitA.mass <= unitB.mass)
+          )
+            return commands;
           // Phantom units can push but not be pushed
           if (unitB.meta?.phantom) return commands;
-          
+
           const dx = unitB.pos.x - unitA.pos.x;
           const dy = unitB.pos.y - unitA.pos.y;
           const distSq = dx * dx + dy * dy;
-          
+
           if (distSq > 0) {
             const dist = Math.sqrt(distSq);
             const pushX = (dx / dist) * 0.5;
             const pushY = (dy / dist) * 0.5;
-            
+
             commands.push({
               type: "move",
               params: {
@@ -40,7 +44,7 @@ export class Knockback extends Rule {
               },
             });
           }
-          
+
           return commands;
         },
         1.1, // knockback range
@@ -48,12 +52,16 @@ export class Knockback extends Rule {
           // Filter: alive, have mass, and either different teams OR phantom pushing
           const differentTeams = a.team !== b.team;
           const phantomPushing = a.meta?.phantom === true;
-          return (differentTeams || phantomPushing) && 
-                 a.hp > 0 && b.hp > 0 &&
-                 a.mass > 0 && b.mass > 0;
-        }
+          return (
+            (differentTeams || phantomPushing) &&
+            a.hp > 0 &&
+            b.hp > 0 &&
+            a.mass > 0 &&
+            b.mass > 0
+          );
+        },
       );
-      
+
       return this.commands;
     }
 
@@ -73,7 +81,7 @@ export class Knockback extends Rule {
 
       const coldDataI = context.getUnitColdDataByIndex(i);
       const phantomPushing = coldDataI?.meta?.phantom === true;
-      
+
       for (const j of arrays.activeIndices) {
         if (i === j || arrays.state[j] === 3 || arrays.mass[j] === 0) continue;
         if (!phantomPushing && team1 === arrays.team[j]) continue; // Same team, no knockback (unless phantom)
@@ -88,27 +96,27 @@ export class Knockback extends Rule {
 
           // Phantoms can push regardless of mass
           if (!phantomPushing && massDiff <= 0) continue;
-          
+
           const coldData = context.getUnitColdDataByIndex(j);
           if (coldData?.meta?.phantom) continue; // Don't push other phantoms
 
-            const dist = Math.sqrt(distSq);
-            const pushX = (dx / dist) * 0.5;
-            const pushY = (dy / dist) * 0.5;
+          const dist = Math.sqrt(distSq);
+          const pushX = (dx / dist) * 0.5;
+          const pushY = (dy / dist) * 0.5;
 
-            this.commands.push({
-              type: "move",
-              params: {
-                unitId: arrays.unitIds[j],
-                dx: pushX,
-                dy: pushY,
-              },
-            });
-          }
+          this.commands.push({
+            type: "move",
+            params: {
+              unitId: arrays.unitIds[j],
+              dx: pushX,
+              dy: pushY,
+            },
+          });
         }
       }
+    }
 
     return this.commands;
-    }
+  }
   // }
 }

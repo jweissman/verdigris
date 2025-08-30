@@ -50,7 +50,7 @@
       "duration": 10
     },
     "target": "closest.enemy()?.pos",
-    "trigger": "distance(closest.enemy()?.pos) > 10",
+    "trigger": "distance(closest.enemy()?.pos) > 2 && distance(closest.enemy()?.pos) <= 8",
     "effects": [
       {
         "type": "jump",
@@ -270,18 +270,10 @@
   },
   "deployBot": {
     "name": "Deploy Bot",
-    "cooldown": 80,
+    "cooldown": 8,
     "maxUses": 4,
     "config": {
-      "range": 12,
-      "constructTypes": [
-        "freezebot",
-        "clanker",
-        "spiker",
-        "swarmbot",
-        "roller",
-        "zapper"
-      ]
+      "range": 12
     },
     "target": "closest.enemy()?.pos || self.pos",
     "trigger": "distance(closest.enemy()?.pos) <= 12 || true",

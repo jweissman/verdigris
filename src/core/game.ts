@@ -266,7 +266,7 @@ class Game {
     { name: "penguin", src: penguin },
     { name: "ninja", src: ninja },
     { name: "cell-effects", src: cellEffects },
-    
+
     // Items sprites
     { name: "ice-cube", src: iceCube },
     { name: "flames", src: flames },

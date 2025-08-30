@@ -40,17 +40,33 @@ class Simulator {
   private particleManager: ParticleManager;
   private fireEffects: FireEffects;
   private fieldManager: FieldManager;
-  
+
   // Compatibility accessors
-  get sceneBackground() { return this.world.sceneBackground; }
-  set sceneBackground(value: string) { this.world.sceneBackground = value; }
-  get enableEnvironmentalEffects() { return this.world.enableEnvironmentalEffects; }
-  set enableEnvironmentalEffects(value: boolean) { this.world.enableEnvironmentalEffects = value; }
-  get sceneMetadata() { return this.world.sceneMetadata; }
-  set sceneMetadata(value: Record<string, any>) { this.world.sceneMetadata = value; }
-  get currentBiome() { return this.world.currentBiome; }
-  set currentBiome(value: string | undefined) { this.world.currentBiome = value; }
-  
+  get sceneBackground() {
+    return this.world.sceneBackground;
+  }
+  set sceneBackground(value: string) {
+    this.world.sceneBackground = value;
+  }
+  get enableEnvironmentalEffects() {
+    return this.world.enableEnvironmentalEffects;
+  }
+  set enableEnvironmentalEffects(value: boolean) {
+    this.world.enableEnvironmentalEffects = value;
+  }
+  get sceneMetadata() {
+    return this.world.sceneMetadata;
+  }
+  set sceneMetadata(value: Record<string, any>) {
+    this.world.sceneMetadata = value;
+  }
+  get currentBiome() {
+    return this.world.currentBiome;
+  }
+  set currentBiome(value: string | undefined) {
+    this.world.currentBiome = value;
+  }
+
   public fieldWidth: number;
   public fieldHeight: number;
 
@@ -102,7 +118,6 @@ class Simulator {
     return this.proxyManager.getRealProxies();
   }
 
-
   removeUnitById(unitId: string): void {
     for (let i = 0; i < this.unitArrays.capacity; i++) {
       if (this.unitArrays.active[i] === 0) continue;
@@ -126,7 +141,7 @@ class Simulator {
   projectileArrays: ProjectileArrays;
   private _projectilesCache: Projectile[] = [];
   private _projectilesCacheDirty: boolean = true;
-  
+
   get projectiles(): Projectile[] {
     if (this._projectilesCacheDirty) {
       this._projectilesCache = [];
@@ -140,28 +155,40 @@ class Simulator {
             vel: { x: arrays.velX[i], y: arrays.velY[i] },
             radius: arrays.radius[i],
             damage: arrays.damage[i],
-            team: arrays.team[i] === 1 ? "friendly" : arrays.team[i] === 2 ? "hostile" : "neutral",
-            type: ["bullet", "bomb", "grapple", "laser_beam"][arrays.type[i]] as any,
+            team:
+              arrays.team[i] === 1
+                ? "friendly"
+                : arrays.team[i] === 2
+                  ? "hostile"
+                  : "neutral",
+            type: ["bullet", "bomb", "grapple", "laser_beam"][
+              arrays.type[i]
+            ] as any,
             sourceId: arrays.sourceIds[i] || undefined,
           };
-          
+
           // Add optional fields based on projectile type
-          if (arrays.type[i] === 1 || arrays.type[i] === 2) { // bomb or grapple have targets
+          if (arrays.type[i] === 1 || arrays.type[i] === 2) {
+            // bomb or grapple have targets
             proj.target = { x: arrays.targetX[i], y: arrays.targetY[i] };
           }
-          if (arrays.type[i] === 1) { // bomb has origin
+          if (arrays.type[i] === 1) {
+            // bomb has origin
             proj.origin = { x: arrays.originX[i], y: arrays.originY[i] };
           }
           if (arrays.progress[i] > 0) proj.progress = arrays.progress[i];
           if (arrays.duration[i] > 0) proj.duration = arrays.duration[i];
-          if (arrays.type[i] === 1) { // bombs have these fields
+          if (arrays.type[i] === 1) {
+            // bombs have these fields
             proj.z = arrays.z[i];
             proj.aoeRadius = arrays.aoeRadius[i] || 3; // Default for bombs
           }
           if (arrays.lifetime[i] > 0) proj.lifetime = arrays.lifetime[i];
-          if (arrays.explosionRadius[i] !== 3) proj.explosionRadius = arrays.explosionRadius[i];
-          if (arrays.aspect[i] && arrays.aspect[i] !== "physical") proj.aspect = arrays.aspect[i];
-          
+          if (arrays.explosionRadius[i] !== 3)
+            proj.explosionRadius = arrays.explosionRadius[i];
+          if (arrays.aspect[i] && arrays.aspect[i] !== "physical")
+            proj.aspect = arrays.aspect[i];
+
           this._projectilesCache.push(proj);
         }
       }
@@ -169,7 +196,7 @@ class Simulator {
     }
     return this._projectilesCache;
   }
-  
+
   set projectiles(projectiles: Projectile[]) {
     // Clear and repopulate SoA arrays
     this.projectileArrays.clear();
@@ -178,7 +205,7 @@ class Simulator {
     }
     this._projectilesCacheDirty = true;
   }
-  
+
   invalidateProjectilesCache(): void {
     this._projectilesCacheDirty = true;
   }
@@ -195,11 +222,11 @@ class Simulator {
   public lastUnitPositions: Map<string, { x: number; y: number }> = new Map();
   private lastActiveCount: number = 0;
   public interpolationFactor: number = 0;
-  
+
   get particleArrays() {
     return this.particleManager.particleArrays;
   }
-  
+
   set particleArrays(value: ParticleArrays) {
     this.particleManager.particleArrays = value;
   }
@@ -221,21 +248,35 @@ class Simulator {
   }
 
   // Compatibility for weather
-  get weather() { return this.weatherManager.weather; }
-  set weather(value: any) { this.weatherManager.weather = value; }
-  get lightningActive() { return this.weatherManager.lightningActive; }
-  set lightningActive(value: boolean | undefined) { this.weatherManager.lightningActive = value; }
-  
-  // These are derived from weather now
-  get winterActive() { return this.weatherManager.weather.current === "snow"; }
-  set winterActive(value: boolean) { 
-    if (value) this.weatherManager.setWeather("snow", 100, 0.5);
-    else if (this.weatherManager.weather.current === "snow") this.weatherManager.setWeather("clear", 0, 0);
+  get weather() {
+    return this.weatherManager.weather;
   }
-  get sandstormActive() { return this.weatherManager.weather.current === "sandstorm"; }
+  set weather(value: any) {
+    this.weatherManager.weather = value;
+  }
+  get lightningActive() {
+    return this.weatherManager.lightningActive;
+  }
+  set lightningActive(value: boolean | undefined) {
+    this.weatherManager.lightningActive = value;
+  }
+
+  // These are derived from weather now
+  get winterActive() {
+    return this.weatherManager.weather.current === "snow";
+  }
+  set winterActive(value: boolean) {
+    if (value) this.weatherManager.setWeather("snow", 100, 0.5);
+    else if (this.weatherManager.weather.current === "snow")
+      this.weatherManager.setWeather("clear", 0, 0);
+  }
+  get sandstormActive() {
+    return this.weatherManager.weather.current === "sandstorm";
+  }
   set sandstormActive(value: boolean) {
     if (value) this.weatherManager.setWeather("sandstorm", 100, 0.5);
-    else if (this.weatherManager.weather.current === "sandstorm") this.weatherManager.setWeather("clear", 0, 0);
+    else if (this.weatherManager.weather.current === "sandstorm")
+      this.weatherManager.setWeather("clear", 0, 0);
   }
 
   private transform: Transform;
@@ -300,7 +341,6 @@ class Simulator {
     return Simulator.rng?.random() || Math.random();
   }
 
-
   // Scene metadata setters
   public setBackground(value: string): void {
     this.sceneBackground = value;
@@ -312,7 +352,7 @@ class Simulator {
   }
 
   public setBattleHeight(value: any): void {
-    // TODO: Add battleHeight property  
+    // TODO: Add battleHeight property
     this.sceneMetadata.battleHeight = value;
   }
 
@@ -335,20 +375,17 @@ class Simulator {
   constructor(fieldWidth = 128, fieldHeight = 128) {
     this.fieldWidth = fieldWidth;
     this.fieldHeight = fieldHeight;
-    
+
     // Initialize managers
     this.weatherManager = new WeatherManager();
     this.world = new World();
     this.movementValidator = new MovementValidator(fieldWidth, fieldHeight);
     this.particleManager = new ParticleManager();
-    this.fieldManager = new FieldManager(
-      this.fieldWidth,
-      this.fieldHeight
-    );
+    this.fieldManager = new FieldManager(this.fieldWidth, this.fieldHeight);
     this.fireEffects = new FireEffects(
       this.particleManager,
       this.temperatureField,
-      this.humidityField
+      this.humidityField,
     );
     this.setupDeterministicRandomness();
 
@@ -375,11 +412,14 @@ class Simulator {
     this.transform = new Transform(this);
 
     this.reset();
-    
-    // Initialize ability handler after rulebook is set
-    this.abilityHandler = new AbilityHandler(this.proxyManager, this.rulebook, this.ticks);
-  }
 
+    // Initialize ability handler after rulebook is set
+    this.abilityHandler = new AbilityHandler(
+      this.proxyManager,
+      this.rulebook,
+      this.ticks,
+    );
+  }
 
   parseCommand(inputString: string) {
     const command = CommandHandler.parseCommand(inputString, this);
@@ -403,7 +443,7 @@ class Simulator {
     this.projectileArrays = new ProjectileArrays(500);
     this.processedEvents = [];
     this.queuedCommands = [];
-    
+
     // Reset weather
     this.weatherManager = new WeatherManager();
 
@@ -529,7 +569,11 @@ class Simulator {
     // Store current positions for interpolation
     this.lastUnitPositions.clear();
     for (const unit of this.units) {
-      this.lastUnitPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y });
+      this.lastUnitPositions.set(unit.id, {
+        x: unit.pos.x,
+        y: unit.pos.y,
+        z: unit.meta?.z || 0, // Store Z for jump interpolation
+      } as any);
     }
   }
 
@@ -635,10 +679,10 @@ class Simulator {
     if (this.projectileArrays && this.projectileArrays.activeCount > 0) {
       this.invalidateProjectilesCache(); // Physics changes positions
       const outOfBounds = this.projectileArrays.updatePhysics(
-        this.fieldWidth, 
-        this.fieldHeight
+        this.fieldWidth,
+        this.fieldHeight,
       );
-      
+
       // Remove out-of-bounds projectiles
       if (outOfBounds.length > 0) {
         for (const idx of outOfBounds) {
@@ -651,7 +695,6 @@ class Simulator {
   updateParticles() {
     this.particleManager.updateParticles(this.fieldWidth, this.fieldHeight);
   }
-
 
   applyVectorizedMovement() {
     const count = this.unitArrays.capacity;
@@ -672,8 +715,6 @@ class Simulator {
       moveY[i] *= 1 - shouldMove;
     }
   }
-
-
 
   spawnLeafParticle() {
     this.particleManager.spawnLeafParticle(this.fieldWidth, this.fieldHeight);
@@ -737,7 +778,7 @@ class Simulator {
   applyWeatherEffects() {
     const weatherType = this.weatherManager.weather.current;
     const intensity = this.weatherManager.weather.intensity;
-    
+
     if (weatherType === "rain") {
       this.applyRainEffects();
     } else if (weatherType === "storm") {
@@ -772,7 +813,8 @@ class Simulator {
 
   setWeather(type: string, duration = 80, intensity = 0.7): void {
     this.weatherManager.setWeather(type as any, duration, intensity);
-    if (type !== "clear" && duration > 0) this.enableEnvironmentalEffects = true;
+    if (type !== "clear" && duration > 0)
+      this.enableEnvironmentalEffects = true;
   }
 
   spawnRainParticle() {
@@ -791,7 +833,10 @@ class Simulator {
   }
 
   processFireEffects() {
-    const commands = this.fireEffects.processFireEffects(this.units, Simulator.rng);
+    const commands = this.fireEffects.processFireEffects(
+      this.units,
+      Simulator.rng,
+    );
     this.queuedCommands.push(...commands);
   }
 
@@ -800,18 +845,16 @@ class Simulator {
       this.units,
       this.weather.current,
       (x, y) => this.getHumidity(x, y),
-      (x, y) => this.getTemperature(x, y)
+      (x, y) => this.getTemperature(x, y),
     );
     this.queuedCommands.push(...commands);
   }
-
 
   accept(input) {
     this.handleInput(input);
     this.step();
     return this;
   }
-
 
   clone() {
     const newSim = new Simulator();
@@ -822,7 +865,10 @@ class Simulator {
       newSim.addUnit({
         id,
         pos: { x: this.unitArrays.posX[i], y: this.unitArrays.posY[i] },
-        intendedMove: { x: this.unitArrays.intendedMoveX[i], y: this.unitArrays.intendedMoveY[i] },
+        intendedMove: {
+          x: this.unitArrays.intendedMoveX[i],
+          y: this.unitArrays.intendedMoveY[i],
+        },
         hp: this.unitArrays.hp[i],
         maxHp: this.unitArrays.maxHp[i],
         team: ["friendly", "hostile", "neutral"][this.unitArrays.team[i]],
@@ -845,17 +891,25 @@ class Simulator {
     return this.movementValidator.getHugeUnitBodyPositions(unit);
   }
 
-  getRealUnits() { return this.units.filter((unit) => !unit.meta.phantom); }
-  getApparentUnits() { return this.units; }
+  getRealUnits() {
+    return this.units.filter((unit) => !unit.meta.phantom);
+  }
+  getApparentUnits() {
+    return this.units;
+  }
 
   isApparentlyOccupied(
     x: number,
     y: number,
     excludeUnit: Unit | null = null,
   ): boolean {
-    return this.movementValidator.isApparentlyOccupied(x, y, excludeUnit, this.units);
+    return this.movementValidator.isApparentlyOccupied(
+      x,
+      y,
+      excludeUnit,
+      this.units,
+    );
   }
-
 
   private unitCache: Map<string, Unit> = new Map();
 
@@ -863,9 +917,8 @@ class Simulator {
     return this.unitCache.get(id);
   }
 
-
   private updateChangedUnits(): void {}
-  
+
   public getChangedUnits(): string[] {
     return Array.from(this.changedUnits);
   }
@@ -874,12 +927,11 @@ class Simulator {
     return this.changedUnits.has(unitId);
   }
 
-
   handleInput(input) {
     for (const unit of this.units) {
       const commands = input.commands[unit.id];
       if (!commands) continue;
-      
+
       for (const cmd of commands) {
         if (cmd.action === "move" && cmd.target) {
           this.proxyManager.setIntendedMove(unit.id, cmd.target);
@@ -891,11 +943,14 @@ class Simulator {
             const mag = Math.sqrt(dx * dx + dy * dy) || 1;
             const vel = { x: dx / mag, y: dy / mag };
             const offset = 0.5;
-            
+
             this.invalidateProjectilesCache();
             this.projectileArrays.addProjectile({
               id: `proj_${unit.id}_${Date.now()}`,
-              pos: { x: unit.pos.x + vel.x * offset, y: unit.pos.y + vel.y * offset },
+              pos: {
+                x: unit.pos.x + vel.x * offset,
+                y: unit.pos.y + vel.y * offset,
+              },
               vel,
               radius: 1.5,
               damage: 5,
@@ -908,8 +963,6 @@ class Simulator {
     }
     return this;
   }
-
-
 
   processWeatherCommand(command: string, ...args: any[]): void {
     this.weatherManager.processWeatherCommand(command, ...args);
@@ -927,7 +980,7 @@ class Simulator {
       abilityName,
       this.units,
       this.getTickContext(),
-      target
+      target,
     );
     this.queuedCommands.push(...commands);
   }

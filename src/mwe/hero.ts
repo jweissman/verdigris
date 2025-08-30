@@ -28,7 +28,7 @@ export class HeroGame extends Game {
   setupInput() {
     // Don't add the default input listener
   }
-  
+
   bootstrap() {
     super.bootstrap();
     this.renderer.setViewMode("iso");
@@ -64,7 +64,8 @@ export class HeroGame extends Game {
       this.sim.addUnit({
         type: "squirrel",
         pos: { x: 12 + i * 2, y: 8 + (i % 2) * 2 },
-        tags: ["wander"] // Allow wandering with behavioral tag
+        team: "hostile", // Make squirrels hostile so they attack
+        tags: ["wander"], // Allow wandering with behavioral tag
       });
     }
 
@@ -81,7 +82,7 @@ export class HeroGame extends Game {
     this.sim.addUnit({
       type: "bear",
       pos: { x: 20, y: 15 },
-      tags: ["wander"] // Allow wandering with behavioral tag
+      tags: ["wander"], // Allow wandering with behavioral tag
     });
   }
 }
@@ -90,16 +91,16 @@ if (typeof window !== "undefined") {
   const canvas = document.getElementById("battlefield") as HTMLCanvasElement;
   if (canvas) {
     // @ts-ignore
-    const game = window.HeroGame = new HeroGame(canvas);
-    
+    const game = (window.HeroGame = new HeroGame(canvas));
+
     // Bootstrap the game (this starts the internal loop)
     game.bootstrap();
-    
+
     // Get PlayerControl from the simulator's existing rules
     const playerControl = game.sim.rules.find(
       (r) => r instanceof PlayerControl,
     ) as PlayerControl | undefined;
-    
+
     document.addEventListener("keydown", (e) => {
       // Handle view switching
       if (e.key === "i" || e.key === "I") {

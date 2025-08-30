@@ -403,10 +403,10 @@ export class BiomeEffects extends Rule {
       );
 
       // Don't freeze heroes from environmental cold
-      if (temp <= 0 && !unit.meta.frozen && !unit.tags?.includes('hero')) {
+      if (temp <= 0 && !unit.meta.frozen && !unit.tags?.includes("hero")) {
         const metaUpdate = {
           frozen: true,
-          frozenDuration: 1,  // Renewed each tick while cold
+          frozenDuration: 1, // Renewed each tick while cold
           brittle: true,
           stunned: true,
         };
@@ -455,7 +455,11 @@ export class BiomeEffects extends Rule {
             },
           },
         });
-      } else if (temp > 0 && unit.meta.frozen && unit.meta.frozenDuration <= 1) {
+      } else if (
+        temp > 0 &&
+        unit.meta.frozen &&
+        unit.meta.frozenDuration <= 1
+      ) {
         // Thaw when warm and short duration (environmental freeze)
         this.commands.push({
           type: "meta",
@@ -472,9 +476,10 @@ export class BiomeEffects extends Rule {
       } else if (temp > 100) {
         // Apply heat damage if temperature is very high
         // But heroes are immune to environmental heat (they have fire resistance)
-        if (!unit.tags?.includes('hero')) {
+        if (!unit.tags?.includes("hero")) {
           const heatDamage = Math.floor((temp - 100) / 50); // 1 damage per 50 degrees above 100
-          if (heatDamage > 0 && context.getCurrentTick() % 10 === 0) { // Apply damage every 10 ticks
+          if (heatDamage > 0 && context.getCurrentTick() % 10 === 0) {
+            // Apply damage every 10 ticks
             this.commands.push({
               type: "damage",
               params: {

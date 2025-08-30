@@ -59,30 +59,19 @@ describe('Tactical Behavior Improvements', () => {
   // NOTE: very flaky somehow
   it('should limit toymaker deployment to prevent overload', () => {
     const sim = new Simulator();
-    
-    
-
     const toymaker = { ...Encyclopaedia.unit('toymaker'), pos: { x: 5, y: 5 } };
     sim.addUnit(toymaker);
-    
     const deployBotAbility = Abilities.all.deployBot;
     expect(deployBotAbility.maxUses).toBe(4);
-    
     let deploymentsSuccessful = 0;
-    const initialUnits = sim.units.length;
-    
-
     const enemy = { ...Encyclopaedia.unit('worm'), pos: { x: 10, y: 10 }, team: 'hostile' as const };
     sim.addUnit(enemy);
-    
-
     for (let i = 0; i < 10; i++) {
       const enemyWorm = { ...Encyclopaedia.unit('worm'), pos: { x: 15 + i, y: 10 }, team: 'hostile' as const };
       sim.addUnit(enemyWorm);
     }
     
-
-    for (let i = 0; i < 500; i++) { // Run long enough for 5 deployments (100 ticks apart)
+    for (let i = 0; i < 50; i++) { // Run long enough for 5 deployments (10 ticks apart)
       const beforeUnits = sim.units.length;
       
       sim.step(); // This processes abilities, commands, and events
@@ -96,14 +85,6 @@ describe('Tactical Behavior Improvements', () => {
     }
     
     expect(deploymentsSuccessful).toBe(4);
-    
-
-    const finalToymaker = sim.units.find(u => u.id === toymaker.id);
-
-
-
-
-    
   });
   
   it('should allow deployment without enemies present', () => {

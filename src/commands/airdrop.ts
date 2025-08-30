@@ -25,7 +25,7 @@ export class Airdrop extends Command {
     // If called by hero without position, drop near hero
     if (x === undefined || y === undefined) {
       if (unitId) {
-        const hero = this.sim.units.find(u => u.id === unitId);
+        const hero = this.sim.units.find((u) => u.id === unitId);
         if (hero) {
           // Drop 2-3 tiles away from hero in a random direction
           const angle = Math.random() * Math.PI * 2;

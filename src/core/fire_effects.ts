@@ -11,7 +11,7 @@ export class FireEffects {
   constructor(
     private particleManager: ParticleManager,
     private temperatureField: ScalarField,
-    private humidityField: ScalarField
+    private humidityField: ScalarField,
   ) {}
 
   setUnitOnFire(unit: Unit): QueuedCommand | null {
@@ -31,7 +31,10 @@ export class FireEffects {
     };
   }
 
-  processFireEffects(units: readonly Unit[], rng: { random(): number }): QueuedCommand[] {
+  processFireEffects(
+    units: readonly Unit[],
+    rng: { random(): number },
+  ): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
 
     for (const unit of units) {
@@ -60,7 +63,10 @@ export class FireEffects {
         if (rng.random() < 0.3) {
           const offsetX = (rng.random() - 0.5) * 2;
           const offsetY = (rng.random() - 0.5) * 2;
-          this.particleManager.spawnFireParticle(unit.pos.x + offsetX, unit.pos.y + offsetY);
+          this.particleManager.spawnFireParticle(
+            unit.pos.x + offsetX,
+            unit.pos.y + offsetY,
+          );
         }
 
         this.temperatureField.addGradient(unit.pos.x, unit.pos.y, 2, 1.5);
@@ -80,7 +86,7 @@ export class FireEffects {
     units: readonly Unit[],
     weatherType: string,
     getHumidity: (x: number, y: number) => number,
-    getTemperature: (x: number, y: number) => number
+    getTemperature: (x: number, y: number) => number,
   ): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
 

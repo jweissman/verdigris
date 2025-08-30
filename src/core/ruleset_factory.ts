@@ -24,21 +24,17 @@ import { Jumping } from "../rules/jumping";
 import { Tossing } from "../rules/tossing";
 import { PlayerControl } from "../rules/player_control";
 import { HeroAnimation } from "../rules/hero_animation";
-import { FreezeAnimation } from "../rules/freeze_animation";
+// import { FreezeAnimation } from "../rules/freeze_animation"; // DISABLED: Performance issue - checking entire field every tick
 
 export class RulesetFactory {
   static createDefaultRulebook(): Rule[] {
     // Core simulation rules - movement, cleanup
-    const coreRules = [
-      new UnitBehavior(),
-      new UnitMovement(), 
-      new Cleanup()
-    ];
+    const coreRules = [new UnitBehavior(), new UnitMovement(), new Cleanup()];
 
     // Combat and tactics rules
     const combatRules = [
       new MeleeCombat(),
-      new Knockback(),  
+      new Knockback(),
       new RangedCombat(),
       new Abilities(),
       new StatusEffects(),
@@ -70,8 +66,8 @@ export class RulesetFactory {
     // Player control and animation
     const controlRules = [
       new PlayerControl(),
-      new HeroAnimation(),
-      new FreezeAnimation(),
+      new HeroAnimation(), // Needed for hero rig animations
+      // new FreezeAnimation(), // DISABLED: Performance issue
     ];
 
     return [
@@ -85,10 +81,6 @@ export class RulesetFactory {
 
   // Minimal rulebook for testing or special scenarios
   static createMinimalRulebook(): Rule[] {
-    return [
-      new UnitBehavior(),
-      new UnitMovement(),
-      new Cleanup()
-    ];
+    return [new UnitBehavior(), new UnitMovement(), new Cleanup()];
   }
 }

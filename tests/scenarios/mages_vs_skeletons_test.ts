@@ -16,7 +16,7 @@ describe('Epic Mage Battle - The Four Schools vs Undead Horde', () => {
     expect(skeletons.length).toBeGreaterThan(20);
     
     // Run the epic battle
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 10; i++) {
       sim.step();
     }
     

@@ -72,7 +72,7 @@ export class UnitRenderer {
       const frame = Math.floor(elapsedTicks / (unit.meta.frameSpeed || 1));
       return Math.min(frame, unit.meta.frameCount - 1);
     }
-    
+
     if (unit.tags?.includes("hero") || unit.meta?.scale === "hero") {
       if (unit.state === "dead") {
         return 12; // Last frame for death
@@ -115,7 +115,7 @@ export class UnitRenderer {
         height: unit.meta.height, // Custom height from meta
       };
     }
-    
+
     const scale = getUnitScale(unit);
     const dimensions = getSpriteDimensions(scale);
 
@@ -224,22 +224,28 @@ export class UnitRenderer {
   ) {
     // Render flames underlay for burning units
     if (unit.meta?.onFire || unit.meta?.burning) {
-      const flamesSprite = sprites.get('flames');
+      const flamesSprite = sprites.get("flames");
       if (flamesSprite && flamesSprite.complete) {
         const animFrame = Math.floor((Date.now() / 100) % 4); // 4 frame animation
         ctx.drawImage(
           flamesSprite,
-          animFrame * 16, 0, 16, 16,
-          screenX - 8, screenY - 8, 16, 16
+          animFrame * 16,
+          0,
+          16,
+          16,
+          screenX - 8,
+          screenY - 8,
+          16,
+          16,
         );
       }
     }
-    
+
     if (unit.meta?.rig) {
       this.renderRiggedUnit(ctx, unit, sprites, screenX, screenY, options);
-      
+
       // Render ice cube overlay for frozen units AFTER the unit
-      if (unit.meta?.frozen || unit.state === 'stunned') {
+      if (unit.meta?.frozen || unit.state === "stunned") {
         this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
       }
       return;
@@ -249,9 +255,9 @@ export class UnitRenderer {
     if (!sprite || !sprite.complete) {
       ctx.fillStyle = this.getUnitColor(unit);
       ctx.fillRect(screenX - 8, screenY - 8, 16, 16);
-      
+
       // Render ice cube overlay for frozen units even without sprite
-      if (unit.meta?.frozen || unit.state === 'stunned') {
+      if (unit.meta?.frozen || unit.state === "stunned") {
         this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
       }
       return;
@@ -271,10 +277,10 @@ export class UnitRenderer {
     }
 
     // For tall sprites (like lightning), anchor at bottom
-    const yOffset = unit.meta?.tall 
-      ? screenY - dimensions.height  // Anchor at bottom for tall sprites
+    const yOffset = unit.meta?.tall
+      ? screenY - dimensions.height // Anchor at bottom for tall sprites
       : screenY - dimensions.height / 2; // Center for normal sprites
-    
+
     ctx.drawImage(
       sprite,
       frame * frameWidth,
@@ -288,13 +294,13 @@ export class UnitRenderer {
     );
 
     ctx.restore();
-    
+
     // Render ice cube overlay for frozen units AFTER the unit sprite
-    if (unit.meta?.frozen || unit.state === 'stunned') {
+    if (unit.meta?.frozen || unit.state === "stunned") {
       this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
     }
   }
-  
+
   /**
    * Render ice cube overlay for frozen units
    */
@@ -303,27 +309,31 @@ export class UnitRenderer {
     unit: Unit,
     sprites: Map<string, HTMLImageElement>,
     screenX: number,
-    screenY: number
+    screenY: number,
   ) {
-    const iceCubeSprite = sprites.get('ice-cube') || sprites.get('icecube');
+    const iceCubeSprite = sprites.get("ice-cube") || sprites.get("icecube");
     if (iceCubeSprite && iceCubeSprite.complete) {
       // Semi-transparent overlay
       ctx.save();
       ctx.globalAlpha = 0.7;
-      
+
       // Slightly pulsing effect
       const pulse = Math.sin(Date.now() * 0.003) * 0.1 + 0.9;
       const size = 16 * pulse;
       const offset = (16 - size) / 2;
-      
+
       ctx.drawImage(
         iceCubeSprite,
-        0, 0, 16, 16,
+        0,
+        0,
+        16,
+        16,
         screenX - 8 + offset,
         screenY - 8 + offset,
-        size, size
+        size,
+        size,
       );
-      
+
       ctx.restore();
     }
   }
@@ -341,19 +351,27 @@ export class UnitRenderer {
   ) {
     const rig = unit.meta.rig;
     if (!rig) return;
-    
+
     // Convert object to array if needed
     let parts = rig;
     if (!Array.isArray(rig)) {
       // It's an object with named parts - convert to array in drawing order
-      const drawOrder = ['larm', 'lleg', 'rleg', 'torso', 'rarm', 'head', 'sword'];
-      parts = drawOrder.map(name => rig[name]).filter(p => p);
+      const drawOrder = [
+        "larm",
+        "lleg",
+        "rleg",
+        "torso",
+        "rarm",
+        "head",
+        "sword",
+      ];
+      parts = drawOrder.map((name) => rig[name]).filter((p) => p);
     }
 
     const shouldFlip = options?.flipHorizontal || unit.meta?.facing === "left";
-    
+
     // Debug: log hero rendering state
-    if (unit.tags?.includes('hero')) {
+    if (unit.tags?.includes("hero")) {
       // Log once per second to avoid spam
       // if (!this.lastHeroLog || Date.now() - this.lastHeroLog > 1000) {
       //   this.lastHeroLog = Date.now();

@@ -155,11 +155,7 @@ export class TitleScreen {
     ctx.fillText(`Background Simulation:`, 15, 25);
     ctx.fillText(`Ticks: ${this.sim.ticks}`, 15, 40);
     ctx.fillText(`Units: ${this.sim.units.length}`, 15, 55);
-    ctx.fillText(
-      `Weather: ${this.sim.getCurrentWeather()}`,
-      15,
-      70,
-    );
+    ctx.fillText(`Weather: ${this.sim.getCurrentWeather()}`, 15, 70);
   }
 
   private startGame(): void {

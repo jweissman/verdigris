@@ -52,9 +52,9 @@ export class EventHandler extends Rule {
       }
 
       (event as any)._processed = true;
-      
+
       // Log event for debugging
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         console.log(`[Event] ${this.glossary(event, context)}`);
       }
 
@@ -151,7 +151,7 @@ export class EventHandler extends Rule {
     ) {
       return;
     }
-    
+
     const target = event.target as Vec2;
     const isHealing = event.meta?.aspect === "heal";
     const isEmp = event.meta?.aspect === "emp";

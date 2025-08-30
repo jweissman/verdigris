@@ -19,22 +19,24 @@ export class StrikeCommand extends Command {
     if (!attacker) return;
 
     const targetId = params.targetId as string;
-    const direction = params.direction as string || attacker.meta?.facing || "right";
+    const direction =
+      (params.direction as string) || attacker.meta?.facing || "right";
     const damage = (params.damage as number) || attacker.dmg || 10;
     const knockback = (params.knockback as number) || 0;
     const aspect = (params.aspect as string) || "kinetic";
-    const range = (params.range as number) || (attacker.tags?.includes("hero") ? 7 : 1);
+    const range =
+      (params.range as number) || (attacker.tags?.includes("hero") ? 7 : 1);
 
     // Generate attack pattern based on unit type
     const attackZones = generateAttackPattern({
       origin: attacker.pos,
-      direction: direction as 'left' | 'right' | 'up' | 'down',
+      direction: direction as "left" | "right" | "up" | "down",
       range: range,
-      pattern: attacker.tags?.includes("hero") ? 'cone' : 'line',
+      pattern: attacker.tags?.includes("hero") ? "cone" : "line",
       width: attacker.tags?.includes("hero") ? 13 : 1,
-      taper: attacker.tags?.includes("hero") ? 1.2 : 0
+      taper: attacker.tags?.includes("hero") ? 1.2 : 0,
     });
-    
+
     // Store attack zones in sim for ALL units (not just hero)
     const transform = new Transform(this.sim);
     transform.updateUnit(attacker.id, {
@@ -42,9 +44,9 @@ export class StrikeCommand extends Command {
         ...attacker.meta,
         attackStartTick: this.sim.ticks,
         attackEndTick: this.sim.ticks + 10,
-      }
+      },
     });
-    
+
     // Queue AOE event for visualization through sim
     if (attackZones.length > 0) {
       this.sim.queuedEvents.push({
@@ -59,12 +61,14 @@ export class StrikeCommand extends Command {
         },
       });
     }
-    
+
     // Hit all enemies in attack zones
     const enemies = this.sim.units.filter((u) => {
-      if (u.id === attacker.id || u.team === attacker.team || u.hp <= 0) return false;
-      return attackZones.some(zone => 
-        Math.abs(u.pos.x - zone.x) < 0.5 && Math.abs(u.pos.y - zone.y) < 0.5
+      if (u.id === attacker.id || u.team === attacker.team || u.hp <= 0)
+        return false;
+      return attackZones.some(
+        (zone) =>
+          Math.abs(u.pos.x - zone.x) < 0.5 && Math.abs(u.pos.y - zone.y) < 0.5,
       );
     });
 

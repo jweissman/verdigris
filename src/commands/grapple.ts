@@ -22,10 +22,10 @@ export class Grapple extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     // Handle grapple state operations
     const operation = params.operation as string | undefined;
-    if (operation === 'hit' || operation === 'release') {
+    if (operation === "hit" || operation === "release") {
       return this.updateGrappleState(params);
     }
-    
+
     // Default: fire grappling hook
     const targetX = (params.x ?? params.targetX) as number;
     const targetY = (params.y ?? params.targetY) as number;
@@ -111,7 +111,7 @@ export class Grapple extends Command {
       sourceId: grappler.id,
       target: targetPos,
     };
-    
+
     this.sim.invalidateProjectilesCache();
     this.sim.projectileArrays.addProjectile(projectile);
 
@@ -128,28 +128,28 @@ export class Grapple extends Command {
       },
     });
   }
-  
+
   private updateGrappleState(params: CommandParams): void {
     const targetId = params.unitId as string;
     if (!targetId) {
       return;
     }
-    
+
     const transform = this.sim.getTransform();
     const operation = params.operation as string;
-    
-    if (operation === 'hit') {
+
+    if (operation === "hit") {
       const meta: any = {
         grappleHit: true,
         grapplerID: params.grapplerID as string,
-        grappleOrigin: params.origin as {x: number, y: number}
+        grappleOrigin: params.origin as { x: number; y: number },
       };
       transform.updateUnit(targetId, { meta });
-    } else if (operation === 'release') {
+    } else if (operation === "release") {
       const meta: any = {
         grappleHit: false,
         grapplerID: null,
-        grappleOrigin: null
+        grappleOrigin: null,
       };
       transform.updateUnit(targetId, { meta });
     }

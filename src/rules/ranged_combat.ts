@@ -10,11 +10,11 @@ import type { Unit } from "../types/Unit";
 export class RangedCombat extends Rule {
   private lastFireTick: Float32Array | null = null;
   private commands: QueuedCommand[] = [];
-  
+
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
     const currentTick = context.getCurrentTick();
-    
+
     // Try to use pairwise batcher if available
     const batcher = context.getPairwiseBatcher();
     if (batcher) {
@@ -32,14 +32,15 @@ export class RangedCombat extends Rule {
           if (!a.abilities?.includes("ranged")) return false;
           // Check cooldown
           const lastTick = a.lastAbilityTick?.ranged;
-          if (lastTick !== undefined && currentTick - lastTick < 6) return false;
+          if (lastTick !== undefined && currentTick - lastTick < 6)
+            return false;
           // Check min range
           const dx = b.pos.x - a.pos.x;
           const dy = b.pos.y - a.pos.y;
           const distSq = dx * dx + dy * dy;
           if (distSq <= 4) return false; // Too close
           return true;
-        }
+        },
       );
       return this.commands;
     }
@@ -52,7 +53,7 @@ export class RangedCombat extends Rule {
 
     const { posX, posY, team, state, hp, unitIds, activeIndices } = arrays;
     const activeCount = activeIndices.length;
-    
+
     // Initialize firing cooldown array if needed
     if (!this.lastFireTick || this.lastFireTick.length < unitIds.length) {
       this.lastFireTick = new Float32Array(unitIds.length);
@@ -62,16 +63,16 @@ export class RangedCombat extends Rule {
     const firingUnits: number[] = [];
     for (const idx of activeIndices) {
       if (state[idx] === 5 || hp[idx] <= 0) continue;
-      
+
       // Check cooldown early
       if (currentTick - this.lastFireTick[idx] < 6) continue;
-      
+
       const coldData = context.getUnitColdData(unitIds[idx]);
       if (!coldData?.abilities?.includes("ranged")) continue;
-      
+
       firingUnits.push(idx);
     }
-    
+
     if (firingUnits.length === 0) return this.commands;
 
     // Build target cache once
@@ -99,7 +100,7 @@ export class RangedCombat extends Rule {
         // Manhattan distance early reject
         const absDx = Math.abs(posX[enemyIdx] - unitX);
         if (absDx > 6) continue;
-        const absDy = Math.abs(posY[enemyIdx] - unitY); 
+        const absDy = Math.abs(posY[enemyIdx] - unitY);
         if (absDy > 6) continue;
 
         const dx = posX[enemyIdx] - unitX;
@@ -116,7 +117,7 @@ export class RangedCombat extends Rule {
       }
 
       if (closestEnemyIdx === -1) continue;
-      
+
       // Update cooldown
       this.lastFireTick[idx] = currentTick;
 
@@ -167,14 +168,18 @@ export class RangedCombat extends Rule {
     return this.commands;
   }
 
-  private processRangedPair(unitA: Unit, unitB: Unit, context: TickContext): QueuedCommand[] {
+  private processRangedPair(
+    unitA: Unit,
+    unitB: Unit,
+    context: TickContext,
+  ): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
-    
+
     // unitA is the attacker with ranged ability, unitB is the target
     const dx = unitB.pos.x - unitA.pos.x;
     const dy = unitB.pos.y - unitA.pos.y;
     const norm = Math.sqrt(dx * dx + dy * dy);
-    
+
     commands.push({
       type: "projectile",
       params: {
@@ -203,7 +208,7 @@ export class RangedCombat extends Rule {
         },
       },
     });
-    
+
     return commands;
   }
 

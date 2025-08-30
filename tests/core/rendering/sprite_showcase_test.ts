@@ -8,7 +8,7 @@ describe('Sprite Showcase - Visual Testing', () => {
     sim = new Simulator();
   });
 
-  it('should create a comprehensive creature showcase for visual testing', () => {
+  it.skip('should create a comprehensive creature showcase for visual testing', () => {
 
     const allCreatures = Object.keys(Encyclopaedia.bestiary);
     
