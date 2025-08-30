@@ -132,6 +132,12 @@ import castleBg from "../assets/bg/castle.png";
 import towerGateBg from "../assets/bg/tower-gate.png";
 // @ts-ignore
 import cellEffects from "../assets/cell-effects.png";
+// @ts-ignore
+import iceCube from "../assets/sprites/ice-cube.png";
+// @ts-ignore
+import flames from "../assets/sprites/flames.png";
+// @ts-ignore
+import rock from "../assets/sprites/rock.png";
 
 import config from "../../data/config/core.json";
 import Renderer, { createScaledRenderer } from "./renderer";
@@ -260,6 +266,11 @@ class Game {
     { name: "penguin", src: penguin },
     { name: "ninja", src: ninja },
     { name: "cell-effects", src: cellEffects },
+    
+    // Items sprites
+    { name: "ice-cube", src: iceCube },
+    { name: "flames", src: flames },
+    { name: "rock", src: rock },
 
     { name: "hero-head", src: heroHead },
     { name: "hero-torso", src: heroTorso },

@@ -322,60 +322,60 @@ export class PlayerControl extends Rule {
                 },
               });
             } else if (primaryAction === "freeze") {
-              // Find nearest enemy to target
+              // Find ALL enemies to freeze in area
               const enemies = context
                 .getAllUnits()
                 .filter((u) => u.team !== unit.team && u.hp > 0);
               
-              let targetX = unit.pos.x;
-              let targetY = unit.pos.y;
-              let targetEnemy = null;
-              
-              if (enemies.length > 0) {
-                enemies.sort((a, b) => {
-                  const distA = Math.abs(a.pos.x - unit.pos.x) + Math.abs(a.pos.y - unit.pos.y);
-                  const distB = Math.abs(b.pos.x - unit.pos.x) + Math.abs(b.pos.y - unit.pos.y);
-                  return distA - distB;
-                });
-                
-                const target = enemies[0];
-                if (Math.abs(target.pos.x - unit.pos.x) <= 5 && Math.abs(target.pos.y - unit.pos.y) <= 5) {
-                  targetX = target.pos.x;
-                  targetY = target.pos.y;
-                  targetEnemy = target;
+              // Freeze enemies in radius around hero
+              const freezeRadius = 4;
+              for (const enemy of enemies) {
+                const dist = Math.abs(enemy.pos.x - unit.pos.x) + Math.abs(enemy.pos.y - unit.pos.y);
+                if (dist <= freezeRadius) {
+                  // Directly freeze this enemy
+                  commands.push({
+                    type: "applyStatusEffect",
+                    params: {
+                      unitId: enemy.id,
+                      effect: {
+                        type: "frozen",
+                        duration: 60,
+                        initialDuration: 60
+                      }
+                    }
+                  });
+                  
+                  commands.push({
+                    type: "meta",
+                    params: {
+                      unitId: enemy.id,
+                      state: "stunned",
+                      meta: {
+                        frozen: true,
+                        stunned: true
+                      }
+                    }
+                  });
+                  
+                  commands.push({
+                    type: "halt",
+                    params: {
+                      unitId: enemy.id
+                    }
+                  });
                 }
               }
               
-              // Apply freezing temperature
+              // Apply freezing temperature around hero
               commands.push({
                 type: "temperature",
                 params: {
-                  x: targetX,
-                  y: targetY,
-                  radius: 3,
+                  x: unit.pos.x,
+                  y: unit.pos.y,
+                  radius: freezeRadius,
                   amount: -100, // Make it colder to ensure freezing
                 },
               });
-              
-              // Also directly freeze the target enemy
-              if (targetEnemy) {
-                commands.push({
-                  type: "applyStatusEffect",
-                  params: {
-                    targetId: targetEnemy.id,
-                    effect: "frozen",
-                    duration: 60
-                  }
-                });
-                
-                // Stop the enemy immediately
-                commands.push({
-                  type: "halt",
-                  params: {
-                    unitId: targetEnemy.id
-                  }
-                });
-              }
             } else if (primaryAction === "fire") {
               // Find nearest enemy to target
               const enemies = context

@@ -1,5 +1,5 @@
 {
   "simulation": {
-    "tickRate": 120
+    "tickRate": 10
   }
 }

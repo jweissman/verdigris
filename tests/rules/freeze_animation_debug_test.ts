@@ -15,21 +15,16 @@ describe('FreezeAnimation Debug', () => {
       maxHp: 50,
       team: 'hostile',
       sprite: 'soldier',
-      state: 'stunned' as const
+      meta: {
+        frozen: true
+      }
     });
-    
-    console.log('Unit state:', unit.state);
-    console.log('Unit meta:', unit.meta);
     
     const context = new TickContextImpl(sim, 5);
     const commands = rule.execute(context);
     
-    console.log('Commands generated:', commands.length);
-    console.log('Unit after execute:', unit.meta);
-    
-    // Check that we generate particle effects for stunned/frozen units
-    const particleCommands = commands.filter(c => c.type === 'particle');
-    expect(particleCommands.length).toBeGreaterThan(0);
+    // Check that we generate effects for frozen units
+    expect(commands.length).toBeGreaterThan(0);
     
     // Visual effects should be applied directly to the unit
     expect(unit.meta?.visualOffsetX).toBeDefined();

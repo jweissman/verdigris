@@ -222,8 +222,26 @@ export class UnitRenderer {
       flipHorizontal?: boolean;
     },
   ) {
+    // Render flames underlay for burning units
+    if (unit.meta?.onFire || unit.meta?.burning) {
+      const flamesSprite = sprites.get('flames');
+      if (flamesSprite && flamesSprite.complete) {
+        const animFrame = Math.floor((Date.now() / 100) % 4); // 4 frame animation
+        ctx.drawImage(
+          flamesSprite,
+          animFrame * 16, 0, 16, 16,
+          screenX - 8, screenY - 8, 16, 16
+        );
+      }
+    }
+    
     if (unit.meta?.rig) {
       this.renderRiggedUnit(ctx, unit, sprites, screenX, screenY, options);
+      
+      // Render ice cube overlay for frozen units AFTER the unit
+      if (unit.meta?.frozen || unit.state === 'stunned') {
+        this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
+      }
       return;
     }
 
@@ -231,6 +249,11 @@ export class UnitRenderer {
     if (!sprite || !sprite.complete) {
       ctx.fillStyle = this.getUnitColor(unit);
       ctx.fillRect(screenX - 8, screenY - 8, 16, 16);
+      
+      // Render ice cube overlay for frozen units even without sprite
+      if (unit.meta?.frozen || unit.state === 'stunned') {
+        this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
+      }
       return;
     }
 
@@ -265,6 +288,44 @@ export class UnitRenderer {
     );
 
     ctx.restore();
+    
+    // Render ice cube overlay for frozen units AFTER the unit sprite
+    if (unit.meta?.frozen || unit.state === 'stunned') {
+      this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
+    }
+  }
+  
+  /**
+   * Render ice cube overlay for frozen units
+   */
+  private renderFrozenOverlay(
+    ctx: CanvasRenderingContext2D,
+    unit: Unit,
+    sprites: Map<string, HTMLImageElement>,
+    screenX: number,
+    screenY: number
+  ) {
+    const iceCubeSprite = sprites.get('ice-cube') || sprites.get('icecube');
+    if (iceCubeSprite && iceCubeSprite.complete) {
+      // Semi-transparent overlay
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      
+      // Slightly pulsing effect
+      const pulse = Math.sin(Date.now() * 0.003) * 0.1 + 0.9;
+      const size = 16 * pulse;
+      const offset = (16 - size) / 2;
+      
+      ctx.drawImage(
+        iceCubeSprite,
+        0, 0, 16, 16,
+        screenX - 8 + offset,
+        screenY - 8 + offset,
+        size, size
+      );
+      
+      ctx.restore();
+    }
   }
 
   /**
