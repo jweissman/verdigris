@@ -67,11 +67,6 @@ export class HeroCommandsGame extends Game {
     this.sim.addUnit(hero);
 
     this.spawnTestEnemies();
-
-    console.log(`Hero spawned: ${this.heroType} at (20, 15)`);
-    console.log(
-      `Controls: WASD=move, Space=jump, Q=ground pound, E=dash, 1-5=play cards`,
-    );
   }
 
   private spawnTestEnemies() {
@@ -105,7 +100,6 @@ export class HeroCommandsGame extends Game {
         this.cardHand.push(card);
       }
     }
-    console.log(`Starting hand: ${this.cardHand.join(", ")}`);
   }
 
   getInputHandler(): (e: { key: string }) => void {
@@ -160,7 +154,6 @@ export class HeroCommandsGame extends Game {
 
     if (!hero.meta?.jumping && this.jumpCount > 0) {
       this.jumpCount = 0;
-      console.log("Jump count reset");
     }
 
     const newX = Math.max(

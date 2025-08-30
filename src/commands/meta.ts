@@ -19,7 +19,6 @@ export class MetaCommand extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     const targetId = (params.unitId as string) || unitId;
     if (!targetId) {
-      // console.log("MetaCommand: No target unit ID");
       return;
     }
 

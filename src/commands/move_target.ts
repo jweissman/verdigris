@@ -29,9 +29,5 @@ export class MoveTargetCommand extends Command {
     };
 
     unit.meta.currentPath = null;
-
-    console.log(
-      `[MoveTarget] Unit ${unitId} targeting position (${targetX}, ${targetY}), attackMove: ${attackMove}`,
-    );
   }
 }

@@ -15,12 +15,10 @@ describe("Bolt Visual", () => {
     
     // Check for bolt unit
     let boltUnit = sim.units.find(u => u.id?.startsWith("bolt_"));
-    console.log("After command, bolt unit:", boltUnit?.id, "lifetime:", boltUnit?.meta?.lifetime);
     
     sim.step(); // Process spawns
     
     boltUnit = sim.units.find(u => u.id?.startsWith("bolt_"));
-    console.log("After spawn, bolt unit:", boltUnit?.id, "lifetime:", boltUnit?.meta?.lifetime);
     expect(boltUnit).toBeDefined();
     expect(boltUnit?.sprite).toBe("lightning");
     expect(boltUnit?.meta?.tall).toBe(true);
@@ -30,7 +28,6 @@ describe("Bolt Visual", () => {
     for (let i = 0; i < 5; i++) {
       sim.step();
       boltUnit = sim.units.find(u => u.id?.startsWith("bolt_"));
-      console.log(`Step ${i+1}: bolt unit:`, boltUnit?.id, "lifetime:", boltUnit?.meta?.lifetime);
       if (i < 4) {
         expect(boltUnit).toBeDefined();
       }

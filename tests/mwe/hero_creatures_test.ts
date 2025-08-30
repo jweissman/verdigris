@@ -21,9 +21,6 @@ describe("Hero MWE Creatures", () => {
     expect(squirrel).toBeDefined();
     
     const initialPos = { ...squirrel!.pos };
-    console.log("Initial squirrel position:", initialPos);
-    console.log("Initial squirrel meta:", squirrel!.meta);
-    
     // Run many ticks
     for (let i = 0; i < 100; i++) {
       sim.tick();
@@ -32,9 +29,6 @@ describe("Hero MWE Creatures", () => {
     // Get fresh reference
     const movedSquirrel = sim.units.find(u => u.id === "squirrel_0");
     const finalPos = movedSquirrel!.pos;
-    
-    console.log("Final squirrel position:", finalPos);
-    console.log("Final squirrel meta:", movedSquirrel!.meta);
     
     const moved = initialPos.x !== finalPos.x || initialPos.y !== finalPos.y;
     expect(moved).toBe(true);
@@ -71,9 +65,6 @@ describe("Hero MWE Creatures", () => {
     expect(hero).toBeDefined();
     
     const initialWolfPos = { ...wolf!.pos };
-    console.log("Initial wolf position:", initialWolfPos);
-    console.log("Wolf tags:", wolf!.tags);
-    console.log("Hero position:", hero!.pos);
     
     // Run many ticks
     for (let i = 0; i < 100; i++) {
@@ -82,9 +73,6 @@ describe("Hero MWE Creatures", () => {
     
     const movedWolf = sim.units.find(u => u.id === "wolf_0");
     const finalWolfPos = movedWolf!.pos;
-    
-    console.log("Final wolf position:", finalWolfPos);
-    console.log("Wolf meta after hunting:", movedWolf!.meta);
     
     // Wolf should have moved toward hero
     const moved = initialWolfPos.x !== finalWolfPos.x || initialWolfPos.y !== finalWolfPos.y;

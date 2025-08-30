@@ -33,22 +33,15 @@ describe("Bolt Stun Debug", () => {
     sim.step(); // Process meta/stun
     
     const enemy = sim.units.find(u => u.id === "enemy");
-    console.log("After stun applied:", {
-      stunned: enemy?.meta?.stunned,
-      stunDuration: enemy?.meta?.stunDuration
-    });
+
     
     // Track stun duration over time
     for (let i = 0; i < 25; i++) {
       sim.step();
       const e = sim.units.find(u => u.id === "enemy");
-      console.log(`Tick ${i+1}:`, {
-        stunned: e?.meta?.stunned,
-        stunDuration: e?.meta?.stunDuration
-      });
+
       
       if (!e?.meta?.stunned) {
-        console.log(`Stun wore off at tick ${i+1}`);
         break;
       }
     }

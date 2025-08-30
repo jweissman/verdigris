@@ -262,8 +262,8 @@ export default class Isometric extends View {
     }
     
     // Override with smoothX/Y if jumping (special case)
-    if (unit.meta?.smoothX !== undefined) renderX = unit.meta.smoothX;
-    if (unit.meta?.smoothY !== undefined) renderY = unit.meta.smoothY;
+    if (unit.meta?.smoothX !== undefined && unit.meta?.smoothX !== null) renderX = unit.meta.smoothX;
+    if (unit.meta?.smoothY !== undefined && unit.meta?.smoothY !== null) renderY = unit.meta.smoothY;
     
     let renderZ = unit.meta?.z || 0;
 

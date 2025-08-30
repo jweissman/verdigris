@@ -31,18 +31,12 @@ describe('Hero Jump Visual Issue', () => {
     
     // Check if jump command was queued
     const jumpCmd = sim.queuedCommands.find(c => c.type === 'jump');
-    console.log('Jump command queued:', jumpCmd);
     
     playerControl.setKeyState(' ', false); // Release spacebar
     
 
     for (let step = 1; step < 20; step++) {
       sim.step();
-      const h = sim.units.find(u => u.id === 'jump_hero');
-      
-      if (step <= 2 || h?.meta?.jumping || step === 19) {
-        console.log(`Step ${step}: pos.x=${h?.pos.x}, jumping=${h?.meta?.jumping}, facing=${h?.meta?.facing}`);
-      }
     }
     
     const finalHero = sim.units.find(u => u.id === 'jump_hero');

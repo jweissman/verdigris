@@ -36,7 +36,6 @@ export class HeroController {
     };
 
     this.sim.addUnit(hero);
-    console.log(`Hero spawned at (${x}, ${y})`);
   }
 
   handleKeyDown(key: string) {
@@ -117,14 +116,10 @@ export class HeroController {
   private jump() {
     const hero = this.sim.units.find((u) => u.id === this.heroId);
     if (!hero) {
-      console.log("Jump failed: Hero not found");
       return;
     }
 
     if (hero.meta?.jumping) {
-      console.log(
-        `Jump blocked: Already jumping (progress: ${hero.meta.jumpProgress})`,
-      );
       return;
     }
 
@@ -147,13 +142,6 @@ export class HeroController {
     };
 
     this.sim.queuedCommands.push(jumpCommand);
-
-    console.log(`[JUMP] Queued jump command:`);
-    console.log(`  From: (${hero.pos.x.toFixed(1)}, ${hero.pos.y.toFixed(1)})`);
-    console.log(`  To: (${targetX}, ${hero.pos.y})`);
-    console.log(`  Facing: ${hero.meta?.facing || "right"}`);
-    console.log(`  Height: 5`);
-    console.log(`  Command queue length: ${this.sim.queuedCommands.length}`);
   }
 
   private useAbility(abilityName: string) {
@@ -168,7 +156,5 @@ export class HeroController {
         target: hero.pos,
       },
     });
-
-    console.log(`Hero using ability: ${abilityName}`);
   }
 }

@@ -23,9 +23,6 @@ export class HeroCommand extends Command {
         );
         const nextIndex = (currentIndex + 1) % abilities.length;
         hero.meta.primaryAbility = abilities[nextIndex];
-        console.log(
-          `[HeroCommand] Rotated to ability: ${abilities[nextIndex]}`,
-        );
       }
       return;
     }
@@ -42,7 +39,6 @@ export class HeroCommand extends Command {
             ...params, // Pass through any additional params
           },
         });
-        console.log(`[HeroCommand] Executing primary: ${primaryAbility}`);
       }
       return;
     }
@@ -60,9 +56,6 @@ export class HeroCommand extends Command {
           attackMove: params.attackMove || false,
           setTick: this.sim.ticks,
         };
-        console.log(
-          `[HeroCommand] Hero ${hero.id} move-to (${targetX}, ${targetY})`,
-        );
       }
       return;
     }

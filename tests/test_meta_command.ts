@@ -28,10 +28,7 @@ test("meta command should clear stun", () => {
     }
   });
   
-  console.log("Before processing:", sim.units.find(u => u.id === "test")?.meta);
   sim.step();
-  console.log("After processing:", sim.units.find(u => u.id === "test")?.meta);
-  
   const unit = sim.units.find(u => u.id === "test");
   expect(unit?.meta?.stunned).toBeUndefined();
   expect(unit?.meta?.stunDuration).toBeUndefined();

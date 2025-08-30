@@ -25,10 +25,8 @@ describe('Hero Rig Idle Bug Investigation', () => {
     // Initial state - should have rig
     sim.step();
     let currentHero = sim.units.find(u => u.id === 'hero1');
-    console.log('Initial hero meta:', currentHero?.meta);
     expect(currentHero?.meta?.rig).toBeDefined();
     const initialRig = currentHero?.meta?.rig;
-    console.log('Initial rig:', initialRig);
     
     // Queue movement command
     sim.queuedCommands.push({
@@ -43,22 +41,17 @@ describe('Hero Rig Idle Bug Investigation', () => {
     // Hero starts moving
     sim.step();
     currentHero = sim.units.find(u => u.id === 'hero1');
-    console.log('Moving hero meta:', currentHero?.meta);
     expect(currentHero?.meta?.rig).toBeDefined();
     const movingRig = currentHero?.meta?.rig;
-    console.log('Moving rig:', movingRig);
     
     // Continue movement for several steps
     for (let i = 0; i < 10; i++) {
       sim.step();
       currentHero = sim.units.find(u => u.id === 'hero1');
-      console.log(`Step ${i+2} - hero at (${currentHero?.pos.x}, ${currentHero?.pos.y}), intendedMove:`, currentHero?.intendedMove);
-      console.log(`Step ${i+2} - rig exists:`, !!currentHero?.meta?.rig);
     }
     
     // Movement should be complete or nearly complete
     currentHero = sim.units.find(u => u.id === 'hero1');
-    console.log('After movement hero meta:', currentHero?.meta);
     
     // Hero should be idle now
     expect(currentHero?.intendedMove?.x ?? 0).toBe(0);
@@ -67,8 +60,6 @@ describe('Hero Rig Idle Bug Investigation', () => {
     // Check rig still exists when idle
     expect(currentHero?.meta?.rig).toBeDefined();
     const idleRig = currentHero?.meta?.rig;
-    console.log('Idle rig:', idleRig);
-    
     // Rig should still have parts
     if (Array.isArray(idleRig)) {
       expect(idleRig.length).toBeGreaterThan(0);
@@ -80,14 +71,11 @@ describe('Hero Rig Idle Bug Investigation', () => {
     for (let i = 0; i < 5; i++) {
       sim.step();
       currentHero = sim.units.find(u => u.id === 'hero1');
-      console.log(`Idle step ${i+1} - rig exists:`, !!currentHero?.meta?.rig);
-      console.log(`Idle step ${i+1} - rig content:`, currentHero?.meta?.rig ? 'has content' : 'missing');
     }
     
     // Final check - rig should still be present
     currentHero = sim.units.find(u => u.id === 'hero1');
     expect(currentHero?.meta?.rig).toBeDefined();
-    console.log('Final rig:', currentHero?.meta?.rig);
   });
   
   test('hero animation state transitions', () => {
@@ -113,7 +101,6 @@ describe('Hero Rig Idle Bug Investigation', () => {
     // Check initial animation (should be breathing)
     sim.step();
     let currentHero = sim.units.find(u => u.id === 'hero2');
-    console.log('Initial state:', currentHero?.state, 'intendedMove:', currentHero?.intendedMove);
     
     // Start movement
     sim.queuedCommands.push({
@@ -130,7 +117,6 @@ describe('Hero Rig Idle Bug Investigation', () => {
       sim.step();
       currentHero = sim.units.find(u => u.id === 'hero2');
       const isMoving = (currentHero?.intendedMove?.x !== 0 || currentHero?.intendedMove?.y !== 0);
-      console.log(`Step ${i+1}: pos=(${currentHero?.pos.x}, ${currentHero?.pos.y}), moving=${isMoving}, rig exists=${!!currentHero?.meta?.rig}`);
       
       // Rig should always exist
       expect(currentHero?.meta?.rig).toBeDefined();

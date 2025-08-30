@@ -25,8 +25,6 @@ describe('Basic Segmented Creatures', () => {
     
     sim.step();
     
-    sim._debugUnits(unitsBefore, 'Segmentation Phase');
-    
 
     const allUnits = sim.units;
     const wormUnits = allUnits.filter(u => u.id.includes('testworm'));

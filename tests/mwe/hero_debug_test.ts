@@ -23,19 +23,6 @@ describe('Hero MWE Debug', () => {
     
     // Step once to see what happens
     sim.step();
-    
-    // Check for any unexpected units
-    console.log('Units after first step:');
-    for (const unit of sim.units) {
-      console.log(`- ${unit.id} [${unit.sprite}] at (${unit.pos.x}, ${unit.pos.y})`);
-    }
-    
-    // Check for particles
-    console.log('Particles:', sim.particles.length);
-    if (sim.particles.length > 0) {
-      console.log('Particle types:', sim.particles.map(p => p.type));
-    }
-    
     expect(sim.units.length).toBe(1); // Should only have hero
   });
 });

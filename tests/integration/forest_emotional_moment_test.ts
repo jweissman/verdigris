@@ -22,7 +22,6 @@ describe('Forest Emotional Moment Integration', () => {
     );
     
     expect(forestCreatures.length).toBeGreaterThan(0);
-    console.debug(`🌲 Forest creatures loaded: ${forestCreatures.length}`);
     
 
 
@@ -56,9 +55,6 @@ describe('Forest Emotional Moment Integration', () => {
     );
     
     expect(peacefulCreatures.length).toBeGreaterThan(0);
-    console.debug(`🕊️ Peaceful creatures: ${peacefulCreatures.length}`);
-    
-    console.debug('✨ Forest emotional moment test complete - scene is ready for user testing!');
   });
   
   it('should have proper creature sprites and forest atmosphere', () => {
@@ -77,8 +73,6 @@ describe('Forest Emotional Moment Integration', () => {
       'forest-squirrel': sim.units.filter(u => u.type === 'forest-squirrel').length
     };
     
-    console.debug('🦌 Forest creature census:', creatures);
-    console.debug
 
     const creatureTypes = Object.values(creatures).filter(count => count > 0).length;
     expect(creatureTypes).toBeGreaterThanOrEqual(3);

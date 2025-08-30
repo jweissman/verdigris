@@ -11,17 +11,12 @@ describe('Hero Rig Visibility After Movement', () => {
     rig.update();
     
     const initialParts = rig.getParts();
-    console.log('Initial wind state:');
-    for (const part of initialParts) {
-      console.log(`  ${part.name}: offset=(${part.offset.x.toFixed(2)}, ${part.offset.y.toFixed(2)})`);
-    }
     
     // Check all parts are reasonably positioned initially
     const initialVisibleParts = initialParts.filter(p => {
       const dist = Math.abs(p.offset.x) + Math.abs(p.offset.y);
       return dist > 0.5; // Should be away from origin
     });
-    console.log(`Initially visible parts: ${initialVisibleParts.length}/${initialParts.length}`);
     
     // Switch to walk
     rig.play("walk");
@@ -30,28 +25,18 @@ describe('Hero Rig Visibility After Movement', () => {
     }
     
     const walkParts = rig.getParts();
-    console.log('During walk:');
-    for (const part of walkParts.slice(0, 3)) { // Just show first few
-      console.log(`  ${part.name}: offset=(${part.offset.x.toFixed(2)}, ${part.offset.y.toFixed(2)})`);
-    }
-    
+
     // Switch back to wind (this is where the bug happens)
     rig.play("wind");
     rig.update();
     
     const afterParts = rig.getParts();
-    console.log('After returning to wind:');
-    for (const part of afterParts) {
-      console.log(`  ${part.name}: offset=(${part.offset.x.toFixed(2)}, ${part.offset.y.toFixed(2)})`);
-    }
     
     // Check parts are still visible
     const visibleAfter = afterParts.filter(p => {
       const dist = Math.abs(p.offset.x) + Math.abs(p.offset.y);
       return dist > 0.5;
     });
-    
-    console.log(`After transition visible parts: ${visibleAfter.length}/${afterParts.length}`);
     
     // The bug: parts collapse to near-origin after walk->wind transition
     expect(visibleAfter.length).toBeGreaterThanOrEqual(5); // At least head, arms, legs visible
@@ -101,12 +86,6 @@ describe('Hero Rig Visibility After Movement', () => {
         return dist < 1.0; // Very close to origin
       });
       
-      if (collapsedParts.length > 2) { // More than just torso at origin
-        console.log(`Frame ${i}: ${collapsedParts.length} parts collapsed!`);
-        collapsedParts.forEach(p => {
-          console.log(`  ${p.name} at (${p.offset.x.toFixed(2)}, ${p.offset.y.toFixed(2)})`);
-        });
-      }
       
       // Should never have most parts collapsed
       expect(collapsedParts.length).toBeLessThanOrEqual(2);

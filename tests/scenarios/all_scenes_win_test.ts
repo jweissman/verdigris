@@ -49,7 +49,6 @@ describe('All Scenes - Friendlies Should Win', () => {
         loader.loadScene(sceneName);
       } catch (e) {
         // Scene might not exist yet
-        console.log(`Scene ${sceneName} not found, skipping`);
         return;
       }
       
@@ -59,7 +58,6 @@ describe('All Scenes - Friendlies Should Win', () => {
       
       // Skip if no friendlies or no hostiles
       if (initialFriendlies.length === 0 || initialHostiles.length === 0) {
-        console.log(`Scene ${sceneName} has no clear teams, skipping`);
         return;
       }
       

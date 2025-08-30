@@ -34,21 +34,17 @@ describe("Bolt Stun Clear Debug", () => {
     
     let enemy = sim.units.find(u => u.id === "enemy");
     const initialDuration = enemy?.meta?.stunDuration || 0;
-    console.log("Initial stun duration:", initialDuration);
     expect(initialDuration).toBeGreaterThan(0);
     
     // Step exactly the duration
     for (let i = 0; i < initialDuration; i++) {
       sim.step();
       enemy = sim.units.find(u => u.id === "enemy");
-      console.log(`After step ${i+1}: stunned=${enemy?.meta?.stunned}, duration=${enemy?.meta?.stunDuration}`);
       
       // Check if it should be cleared
       if (enemy?.meta?.stunDuration === 0) {
-        console.log("Duration hit 0, checking next step...");
         sim.step();
         enemy = sim.units.find(u => u.id === "enemy");
-        console.log(`After clearing step: stunned=${enemy?.meta?.stunned}, duration=${enemy?.meta?.stunDuration}`);
         break;
       }
     }

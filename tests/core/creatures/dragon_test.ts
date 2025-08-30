@@ -177,32 +177,6 @@ describe('Dragon Test', () => {
     expect(sandworm.mass).toBeGreaterThan(30); // Pinned only
   });
 
-  it('should test _debugUnits functionality with dragon encounter', () => {
-    const sim = new Simulator(20, 15);
-    
-
-    const grappler = { ...Encyclopaedia.unit('grappler'), id: 'grappler1', pos: { x: 5, y: 5 } };
-    const sandworm = { ...Encyclopaedia.unit('giant-sandworm'), id: 'sandworm1', pos: { x: 10, y: 5 } };
-    
-    sim.addUnit(grappler);
-    sim.addUnit(sandworm);
-
-
-    
-
-    const unitsBefore = sim.units.map(u => ({ ...u, pos: { ...u.pos }, meta: { ...u.meta } }));
-    
-
-    grappler.intendedMove = { x: 1, y: 0 };
-    sandworm.intendedMove = { x: -1, y: 0 };
-    
-    sim.step();
-    
-
-    sim._debugUnits(unitsBefore, 'Movement Phase');
-    
-    expect(sim.units.length).toBeGreaterThan(2); // Includes created segments
-  });
 
   it('should explore mountain/desert scene for dragon testing', () => {
     const sim = new Simulator(40, 25);

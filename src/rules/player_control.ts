@@ -53,7 +53,7 @@ export class PlayerControl extends Rule {
     // Early exit if no heroes exist
     const heroes = allUnits.filter(u => u.meta?.controlled || u.tags?.includes("hero"));
     if (heroes.length === 0) {
-      console.log("[PlayerControl] No heroes found, keysHeld:", Array.from(this.keysHeld));
+      // console.log("[PlayerControl] No heroes found, keysHeld:", Array.from(this.keysHeld));
       return commands;
     }
     
@@ -205,6 +205,60 @@ export class PlayerControl extends Rule {
             },
           });
         }
+        
+        // Ability rotation with Tab key
+        if (this.keysHeld.has("Tab") && unit.tags?.includes("hero")) {
+          const abilities = ["strike", "bolt", "heal", "freeze", "fire"];
+          const currentIndex = abilities.indexOf(unit.meta?.primaryAction || "strike");
+          const nextIndex = (currentIndex + 1) % abilities.length;
+          const nextAbility = abilities[nextIndex];
+          
+          // Check cooldown for ability switching
+          const switchCooldown = unit.meta?.lastAbilitySwitch 
+            ? context.getCurrentTick() - unit.meta.lastAbilitySwitch
+            : 999;
+            
+          if (switchCooldown > this.ABILITY_SWITCH_COOLDOWN) {
+            commands.push({
+              type: "meta",
+              params: {
+                unitId: unit.id,
+                meta: {
+                  primaryAction: nextAbility,
+                  lastAbilitySwitch: context.getCurrentTick()
+                }
+              }
+            });
+            // console.log(`Switched ability to: ${nextAbility}`);
+          }
+        }
+        
+        // Quick ability selection with number keys
+        if (unit.tags?.includes("hero")) {
+          const abilityMap = {
+            "1": "strike",
+            "2": "bolt", 
+            "3": "heal",
+            "4": "freeze",
+            "5": "fire"
+          };
+          
+          for (const [key, ability] of Object.entries(abilityMap)) {
+            if (this.keysHeld.has(key)) {
+              commands.push({
+                type: "meta",
+                params: {
+                  unitId: unit.id,
+                  meta: {
+                    primaryAction: ability
+                  }
+                }
+              });
+              // console.log(`Selected ability: ${ability}`);
+              break;
+            }
+          }
+        }
 
         // Primary action (Q key or E key)
         if (
@@ -267,6 +321,26 @@ export class PlayerControl extends Rule {
                   amount: 25,
                 },
               });
+            } else if (primaryAction === "freeze") {
+              commands.push({
+                type: "temperature",
+                params: {
+                  x: unit.pos.x,
+                  y: unit.pos.y,
+                  radius: 3,
+                  delta: -50,
+                },
+              });
+            } else if (primaryAction === "fire") {
+              commands.push({
+                type: "temperature",
+                params: {
+                  x: unit.pos.x,
+                  y: unit.pos.y,
+                  radius: 3,
+                  delta: 50,
+                },
+              });
             }
 
             unit.meta = unit.meta || {};
@@ -277,7 +351,7 @@ export class PlayerControl extends Rule {
         // Rotate primary action with comma/period keys (with cooldown)
         if (this.abilitySwitchCooldown <= 0) {
           if (this.keysHeld.has(",") || this.keysHeld.has("<")) {
-            const actions = ["strike", "bolt", "heal"];
+            const actions = ["strike", "bolt", "heal", "freeze", "fire"];
             const currentIndex = actions.indexOf(
               unit.meta?.primaryAction || "strike",
             );
@@ -320,14 +394,14 @@ export class PlayerControl extends Rule {
               });
             }
 
-            console.log(
-              `[PlayerControl] Primary action: ${actions[prevIndex]}`,
-            );
+            // console.log(
+            //   `[PlayerControl] Primary action: ${actions[prevIndex]}`,
+            // );
             this.abilitySwitchCooldown = this.ABILITY_SWITCH_COOLDOWN;
           }
 
           if (this.keysHeld.has(".") || this.keysHeld.has(">")) {
-            const actions = ["strike", "bolt", "heal"];
+            const actions = ["strike", "bolt", "heal", "freeze", "fire"];
             const currentIndex = actions.indexOf(
               unit.meta?.primaryAction || "strike",
             );
@@ -369,9 +443,9 @@ export class PlayerControl extends Rule {
               });
             }
 
-            console.log(
-              `[PlayerControl] Primary action: ${actions[nextIndex]}`,
-            );
+            // console.log(
+            //   `[PlayerControl] Primary action: ${actions[nextIndex]}`,
+            // );
             this.abilitySwitchCooldown = this.ABILITY_SWITCH_COOLDOWN;
           }
         }

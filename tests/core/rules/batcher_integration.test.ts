@@ -33,7 +33,6 @@ describe('Pairwise Batcher Integration', () => {
     
     // Check if damage commands were generated
     const damageCommands = sim.queuedCommands.filter(c => c.type === 'damage');
-    console.log('Damage commands after step:', damageCommands);
     
     // Process commands
     sim.step();
@@ -41,9 +40,6 @@ describe('Pairwise Batcher Integration', () => {
     // Check if damage was applied
     const finalSoldierHp = sim.roster['soldier1'].hp;
     const finalWormHp = sim.roster['worm1'].hp;
-    
-    console.log('Soldier HP:', initialSoldierHp, '->', finalSoldierHp);
-    console.log('Worm HP:', initialWormHp, '->', finalWormHp);
     
     // At least one should have taken damage
     expect(finalSoldierHp < initialSoldierHp || finalWormHp < initialWormHp).toBe(true);
@@ -72,18 +68,7 @@ describe('Pairwise Batcher Integration', () => {
     
     const initialWormX = sim.roster['worm'].pos.x;
     
-    // Debug the step
-    console.log('Initial state:');
-    sim._debugUnits([sim.roster['giant'], sim.roster['worm']], 'Initial');
-    
     sim.step();
-    
-    // Check what commands were generated
-    const moveCommands = sim.queuedCommands.filter(c => c.type === 'move');
-    console.log('Move commands generated:', moveCommands);
-    
-    console.log('\nAfter step:');
-    sim._debugUnits([sim.roster['giant'], sim.roster['worm']], 'After step');
     
     const finalWormX = sim.roster['worm'].pos.x;
     

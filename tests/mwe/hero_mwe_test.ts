@@ -84,17 +84,7 @@ describe("Hero MWE", () => {
     
     // Get fresh reference after ticks
     const movedSquirrel = game.sim.units.find(u => u.id === squirrelId);
-    if (!movedSquirrel) {
-      // Check if squirrel died
-      const anySquirrel = game.sim.units.find(u => u.type === "squirrel");
-      console.log("Squirrel disappeared. Any squirrels left?", anySquirrel ? "yes" : "no");
-      console.log("Total units:", game.sim.units.length);
-    }
-    const finalPos = movedSquirrel?.pos || initialPos;
-    
-    // Squirrels may or may not move depending on ambient behavior
-    const moved = initialPos.x !== finalPos.x || initialPos.y !== finalPos.y;
-    
+
     // Squirrels might die or move - just verify we still have some units
     if (movedSquirrel) {
       expect(movedSquirrel.pos.x).toBeGreaterThanOrEqual(0);

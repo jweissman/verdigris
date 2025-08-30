@@ -88,8 +88,6 @@ describe('Hero Single Attack Debug', () => {
       maxHp: 8
     });
 
-    console.log('Before strike - Squirrel HP:', squirrel.hp);
-
     sim.queuedCommands.push({
       type: 'hero',
       params: {
@@ -107,8 +105,6 @@ describe('Hero Single Attack Debug', () => {
     }
     
     const finalSquirrel = sim.units.find(u => u.id === 'test-squirrel');
-    console.log('After strike - Squirrel HP:', finalSquirrel?.hp);
-    console.log('Squirrel alive:', finalSquirrel && finalSquirrel.hp > 0);
     
     // Squirrel should be dead/removed since hero does 25 damage and squirrel has 8 HP
     expect(finalSquirrel).toBeUndefined();
@@ -141,9 +137,6 @@ describe('Hero Single Attack Debug', () => {
       maxHp: 8
     });
 
-    console.log('Before strike - Hostile Squirrel HP:', hostileSquirrel.hp);
-    console.log('Before strike - Hostile Squirrel Team:', hostileSquirrel.team);
-
     sim.queuedCommands.push({
       type: 'hero',
       params: {
@@ -161,9 +154,6 @@ describe('Hero Single Attack Debug', () => {
     }
     
     const finalHostileSquirrel = sim.units.find(u => u.id === 'hostile-squirrel');
-    console.log('After strike - Hostile Squirrel HP:', finalHostileSquirrel?.hp);
-    console.log('After strike - Hostile Squirrel alive:', finalHostileSquirrel && finalHostileSquirrel.hp > 0);
-    
     // Hostile squirrel should be dead/removed since hero does 25 damage
     expect(finalHostileSquirrel).toBeUndefined();
   });
