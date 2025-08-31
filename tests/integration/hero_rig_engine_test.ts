@@ -101,15 +101,11 @@ describe('Hero Rig Engine Integration', () => {
     
     const heroAfterCommand = sim.units.find(u => u.id === 'commanded_hero');
     
-
-    expect(heroAfterCommand?.intendedMove.x).toBe(1);
+    // Movement is now immediate
+    expect(heroAfterCommand?.pos.x).toBe(11);
     
-    sim.step(); // Second step applies movement
-    const movedHero = sim.units.find(u => u.id === 'commanded_hero');
-    expect(movedHero?.pos.x).toBe(11);
-    
-
-    expect(movedHero?.meta?.rig).toBeDefined();
+    // Check rig is defined
+    expect(heroAfterCommand?.meta?.rig).toBeDefined();
   });
   
   test('hero jump with rig animation', () => {

@@ -38,9 +38,9 @@ class Simulator {
   public rulebook: Rule[];
   private commandProcessor: CommandHandler;
 
-  private queuedEvents: Action[] = [];
+  queuedEvents: Action[] = [];
   private processedEvents: Action[] = [];
-  private queuedCommands: QueuedCommand[] = [];
+  queuedCommands: QueuedCommand[] = [];
   // TODO for symmetry why not processedCommands?
   // private processedCommands: QueuedCommand[] = [];
 
@@ -114,6 +114,66 @@ class Simulator {
     );
     this.transform = new Transform(this);
     this.reset();
+  }
+
+  public step(force = false) {
+    if (this.paused) {
+      if (!force) {
+        return this;
+      } else {
+        console.debug(`Forcing simulation step while paused.`);
+      }
+    }
+
+    let t0 = performance.now();
+    this.ticks++;
+    this.changedUnits = new Set(this.dirtyUnits);
+    this.dirtyUnits.clear();
+    let needsSpatialRebuild =
+      this.ticks === 0 || this.unitArrays.activeCount !== this.lastActiveCount;
+
+    if (needsSpatialRebuild) {
+      this.rebuildSpatialPartition();
+    }
+
+    const context = new TickContextImpl(this);
+    context.clearCache();
+
+    if (this.pairwiseBatcher) {
+      this.pairwiseBatcher.intents = [];
+    }
+
+    for (const rule of this.rulebook) {
+      const commands = rule.execute(context);
+      if (commands && commands.length > 0) {
+        for (let i = 0; i < commands.length; i++) {
+          this.queuedCommands.push(commands[i]);
+        }
+      }
+    }
+
+    this.commandProcessor.execute(context);
+    this.updateSystems();
+    this.lastCall = t0;
+    return this;
+  } 
+
+  public reset() {
+    this.unitArrays.clear();
+    this.unitCache.clear();
+    this.unitColdData.clear();
+    this.proxyManager.clearCache();
+    this.projectileArrays = new ProjectileArrays(500);
+    this.processedEvents = [];
+    this.queuedCommands = [];
+    this.weatherManager = new WeatherManager();
+    this.commandProcessor = new CommandHandler(this, this.transform);
+    this.rulebook = RulesetFactory.createDefaultRulebook();
+    this.abilityHandler = new AbilityHandler(
+      this.proxyManager,
+      this.rulebook,
+      this.ticks,
+    );
   }
 
   get sceneBackground() {
@@ -451,24 +511,6 @@ class Simulator {
     return command;
   }
 
-  reset() {
-    this.unitArrays.clear();
-    this.unitCache.clear();
-    this.unitColdData.clear();
-    this.proxyManager.clearCache();
-    this.projectileArrays = new ProjectileArrays(500);
-    this.processedEvents = [];
-    this.queuedCommands = [];
-    this.weatherManager = new WeatherManager();
-    this.commandProcessor = new CommandHandler(this, this.transform);
-    this.rulebook = RulesetFactory.createDefaultRulebook();
-    // Initialize ability handler after rulebook is set
-    this.abilityHandler = new AbilityHandler(
-      this.proxyManager,
-      this.rulebook,
-      this.ticks,
-    );
-  }
 
   addUnit(unit: Partial<Unit>): Unit {
     let baseUnit = unit;
@@ -595,47 +637,6 @@ class Simulator {
     this.lastActiveCount = arrays.activeCount;
   }
 
-  step(force = false) {
-    if (this.paused) {
-      if (!force) {
-        return this;
-      } else {
-        console.debug(`Forcing simulation step while paused.`);
-      }
-    }
-
-    let t0 = performance.now();
-    this.ticks++;
-    this.changedUnits = new Set(this.dirtyUnits);
-    this.dirtyUnits.clear();
-    let needsSpatialRebuild =
-      this.ticks === 0 || this.unitArrays.activeCount !== this.lastActiveCount;
-
-    if (needsSpatialRebuild) {
-      this.rebuildSpatialPartition();
-    }
-
-    const context = new TickContextImpl(this);
-    context.clearCache();
-
-    if (this.pairwiseBatcher) {
-      this.pairwiseBatcher.intents = [];
-    }
-
-    for (const rule of this.rulebook) {
-      const commands = rule.execute(context);
-      if (commands && commands.length > 0) {
-        for (let i = 0; i < commands.length; i++) {
-          this.queuedCommands.push(commands[i]);
-        }
-      }
-    }
-
-    this.commandProcessor.execute(context);
-    this.updateSystems();
-    this.lastCall = t0;
-    return this;
-  }
 
   updateSystems() {
     if (this.projectiles && this.projectiles.length > 0) {
@@ -895,9 +896,10 @@ class Simulator {
     this.queuedCommands.push(...commands);
   }
 
-  enqueue(event: Action) {
-    this.queuedEvents.push(event);
-  }
+  // todo -- systems should not just write events onto us!!
+  // enqueue(event: Action) {
+  //   this.queuedEvents.push(event);
+  // }
 }
 
 export { Simulator };
