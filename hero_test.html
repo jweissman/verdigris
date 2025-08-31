@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hero MWE Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #222;
+            color: white;
+            font-family: monospace;
+        }
+        canvas {
+            border: 2px solid white;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .controls h3 {
+            color: #0f0;
+        }
+        .controls p {
+            margin: 5px 0;
+        }
+        .ability {
+            color: #ff0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Verdigris Hero MWE Test</h1>
+    <canvas id="game" width="640" height="400"></canvas>
+    
+    <div class="controls">
+        <h3>Controls:</h3>
+        <p>Movement: Arrow Keys or WASD</p>
+        <p>Jump: Space (press again in air for flip-jump)</p>
+        <p>Attack: Q / E / Enter</p>
+        <p>Switch Ability: Tab / Comma / Period</p>
+        
+        <h3>Abilities in Rotation:</h3>
+        <p class="ability">1. Strike - Wide visor attack pattern</p>
+        <p class="ability">2. Bolt - Lightning attack</p>
+        <p class="ability">3. Heal - Restore HP</p>
+        <p class="ability">4. Freeze - Ice attack</p>
+        <p class="ability">5. Fire - Fire attack</p>
+        <p class="ability">6. Dash - Quick dash with damage</p>
+        <p class="ability">7. Blink - Instant teleport</p>
+        
+        <h3>New Features:</h3>
+        <p>✓ Hero renders at correct height (fixed 4px offset)</p>
+        <p>✓ Attack shape is now a wide visor (7 tiles wide, 3 forward)</p>
+        <p>✓ Double jump (flip-jump) in mid-air</p>
+        <p>✓ Jump deals AOE damage on landing</p>
+        <p>✓ Dash and Blink in ability rotation</p>
+    </div>
+
+    <script type="module">
+        import { HeroGame } from './src/mwe/hero.ts';
+        
+        const canvas = document.getElementById('game');
+        const game = new HeroGame(canvas);
+        game.bootstrap();
+        
+        // Log ability switches for testing
+        const originalStep = game.sim.step.bind(game.sim);
+        game.sim.step = function() {
+            const hero = this.units.find(u => u.id === 'hero');
+            if (hero?.meta?.primaryAction && hero.meta.primaryAction !== window.lastAction) {
+                console.log(`Switched to: ${hero.meta.primaryAction}`);
+                window.lastAction = hero.meta.primaryAction;
+            }
+            return originalStep.call(this);
+        };
+        
+        console.log('Hero MWE loaded. Use arrow keys to move, space to jump, Q/E to attack.');
+    </script>
+</body>
+</html>

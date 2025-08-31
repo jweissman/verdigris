@@ -22,19 +22,22 @@ export class StrikeCommand extends Command {
     const direction =
       (params.direction as string) || attacker.meta?.facing || "right";
     const damage = (params.damage as number) || attacker.dmg || 10;
+    console.log(`[Strike] Damage will be: ${damage} (params.damage=${params.damage}, attacker.dmg=${attacker.dmg})`);
     const knockback = (params.knockback as number) || 0;
     const aspect = (params.aspect as string) || "kinetic";
     const range =
       (params.range as number) || (attacker.tags?.includes("hero") ? 7 : 1);
 
     // Generate attack pattern based on unit type
+    // Hero gets a wide "visor" pattern - very wide but short range
+    const isHero = attacker.tags?.includes("hero");
     const attackZones = generateAttackPattern({
       origin: attacker.pos,
       direction: direction as "left" | "right" | "up" | "down",
-      range: range,
-      pattern: attacker.tags?.includes("hero") ? "cone" : "line",
-      width: attacker.tags?.includes("hero") ? 13 : 1,
-      taper: attacker.tags?.includes("hero") ? 1.2 : 0,
+      range: isHero ? 3 : range, // Hero has shorter range for visor
+      pattern: isHero ? "visor" : "line",
+      width: isHero ? 7 : 1, // Very wide sweep for visor
+      taper: 0, // No taper for visor pattern
     });
 
     // Store attack zones in sim for ALL units (not just hero)

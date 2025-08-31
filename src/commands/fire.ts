@@ -12,8 +12,8 @@ export class FireCommand extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     let x = params.x as number | undefined;
     let y = params.y as number | undefined;
-    const temperature = (params.temperature as number) || 700;
-    const radius = (params.radius as number) || 2;
+    const temperature = (params.temperature as number) || 500; // Lower default temperature
+    const radius = (params.radius as number) || 1; // Smaller default radius
 
     // If no position specified, use default behavior
     if (x === undefined || y === undefined) {

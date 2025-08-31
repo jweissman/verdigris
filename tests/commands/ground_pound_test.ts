@@ -115,12 +115,6 @@ describe('Ground Pound', () => {
     // Should have created particles
     const particles = sim.particleManager.particles;
     
-    // Check if we have any particles at all
-    console.log('Total particles:', particles.length);
-    if (particles.length > 0) {
-      console.log('Particle types:', [...new Set(particles.map(p => p.type))]);
-    }
-    
     // Ground pound should create particles (either shockwave or dust)
     expect(particles.length).toBeGreaterThan(0);
   });

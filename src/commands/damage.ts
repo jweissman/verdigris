@@ -71,8 +71,19 @@ export class Damage extends Command {
 
     const damageTaken = target.meta?.segment ? finalDamage : undefined;
 
+    // Combat engagement: neutral creatures become hostile when attacked by friendly units
+    let newTeam = target.team;
+    const sourceId = (params.source || params.sourceId) as string;
+    if (sourceId) {
+      const source = this.sim.units.find((u) => u.id === sourceId);
+      if (source && target.team === "neutral" && source.team === "friendly" && finalDamage > 0) {
+        newTeam = "hostile";
+      }
+    }
+
     transform.updateUnit(targetId, {
       hp: newHp,
+      team: newTeam,
       state: newHp <= 0 ? "dead" : target.state,
       meta: {
         ...target.meta,

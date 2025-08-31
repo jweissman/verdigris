@@ -25,6 +25,7 @@ import { Tossing } from "../rules/tossing";
 import { PlayerControl } from "../rules/player_control";
 import { HeroAnimation } from "../rules/hero_animation";
 import { FireTrail } from "../rules/fire_trail";
+import { FireDamage } from "../rules/fire_damage";
 // import { FreezeAnimation } from "../rules/freeze_animation"; // DISABLED: Performance issue - checking entire field every tick
 
 export class RulesetFactory {
@@ -62,6 +63,7 @@ export class RulesetFactory {
       new AmbientSpawning(),
       new AmbientBehavior(),
       new LightningStorm(),
+      new FireDamage(), // Fire damage from hot tiles
     ];
 
     // Player control and animation

@@ -110,13 +110,14 @@ export class Blink extends Command {
       });
     }
 
-    // Teleport the unit
+    // Teleport the unit instantly (mark as teleport to skip interpolation)
     this.sim.queuedCommands.push({
       type: "move",
       params: {
         unitId: unitId,
         x: targetX,
         y: targetY,
+        teleport: true, // Skip interpolation for instant teleport
       },
     });
 
@@ -129,6 +130,7 @@ export class Blink extends Command {
           ...unit.meta,
           lastBlinkTime: this.sim.ticks,
           facing: dx > 0 ? "right" : dx < 0 ? "left" : unit.meta?.facing,
+          teleported: true, // Mark that unit just teleported
         },
       },
     });

@@ -7,6 +7,7 @@ export class HeroAnimation extends Rule {
   private rigs: Map<string, HeroRig> = new Map();
   private currentAnimations: Map<string, string> = new Map();
   private debugCallCount: number = 0;
+  private lastPositions: Map<string, {x: number, y: number}> = new Map();
 
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
@@ -69,6 +70,12 @@ export class HeroAnimation extends Rule {
   private updateAnimation(unit: any, rig: HeroRig, commands: QueuedCommand[]) {
     let desiredAnimation: string;
     const currentTick = this.debugCallCount; // Using as a tick counter
+    
+    // Check if unit actually moved by comparing position to last known position
+    const unitLastPos = this.lastPositions.get(unit.id);
+    const hasMoved = unitLastPos && 
+                     (unitLastPos.x !== unit.pos.x || unitLastPos.y !== unit.pos.y);
+    this.lastPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y });
 
     const inAttackWindow =
       unit.meta?.attackStartTick &&
@@ -96,8 +103,8 @@ export class HeroAnimation extends Rule {
       desiredAnimation = "attack";
     } else if (unit.meta?.jumping) {
       desiredAnimation = "jump"; // Now implemented!
-    } else if (unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0) {
-      desiredAnimation = "walk";
+    } else if (hasMoved || unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0) {
+      desiredAnimation = "walk"; // Use hasMoved to keep walk animation stable
     } else {
       if (unit.meta?.onRooftop) {
         desiredAnimation = "wind";

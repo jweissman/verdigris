@@ -9,7 +9,11 @@ export class AmbientBehavior extends Rule {
     const ambientCreatures = context
       .getAllUnits()
       .filter(
-        (u) => u.tags?.includes("wander") && u.hp > 0 && u.team === "neutral",
+        (u) => u.tags?.includes("wander") && 
+               u.hp > 0 && 
+               u.team === "neutral" &&
+               !u.meta?.frozen && // Don't wander when frozen
+               !u.meta?.stunned, // Don't wander when stunned
       );
 
     for (const creature of ambientCreatures) {

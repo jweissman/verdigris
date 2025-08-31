@@ -271,7 +271,7 @@ export class PlayerControl extends Rule {
 
       // Ability rotation with Tab key
       if (this.keysHeld.has("Tab") && unit.tags?.includes("hero")) {
-        const abilities = ["strike", "bolt", "heal", "freeze", "fire"];
+        const abilities = ["strike", "bolt", "heal", "freeze", "fire", "dash", "blink"];
         const currentIndex = abilities.indexOf(
           unit.meta?.primaryAction || "strike",
         );
@@ -604,7 +604,7 @@ export class PlayerControl extends Rule {
       // Rotate primary action with comma/period keys (with cooldown)
       if (this.abilitySwitchCooldown <= 0) {
         if (this.keysHeld.has(",") || this.keysHeld.has("<")) {
-          const actions = ["strike", "bolt", "heal", "freeze", "fire"];
+          const actions = ["strike", "bolt", "heal", "freeze", "fire", "dash", "blink"];
           const currentIndex = actions.indexOf(
             unit.meta?.primaryAction || "strike",
           );
@@ -654,7 +654,7 @@ export class PlayerControl extends Rule {
         }
 
         if (this.keysHeld.has(".") || this.keysHeld.has(">")) {
-          const actions = ["strike", "bolt", "heal", "freeze", "fire"];
+          const actions = ["strike", "bolt", "heal", "freeze", "fire", "dash", "blink"];
           const currentIndex = actions.indexOf(
             unit.meta?.primaryAction || "strike",
           );

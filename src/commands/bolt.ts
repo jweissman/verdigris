@@ -153,13 +153,13 @@ export class BoltCommand extends Command {
       },
     });
 
-    // Add fire effects in a smaller radius around the strike
-    const fireRadius = 2;
+    // Add fire effects in a much smaller radius around the strike
+    const fireRadius = 1; // Just immediate neighbors
     for (let dx = -fireRadius; dx <= fireRadius; dx++) {
       for (let dy = -fireRadius; dy <= fireRadius; dy++) {
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist <= fireRadius && Math.random() < 0.3) {
-          // 30% chance per cell
+        if (dist <= fireRadius && Math.random() < 0.15) {
+          // 15% chance per cell (much less likely)
           const fireX = strikePos.x + dx;
           const fireY = strikePos.y + dy;
           if (

@@ -144,7 +144,10 @@ export default class Isometric extends View {
       verticalSpacing = 1.5; // Very tight for maps with limited vertical space
     }
 
-    const hexOffset = Math.floor(y) % 2 === 1 ? tileWidth / 2 : 0;
+    // For heroes moving by 2 tiles, use the target position for hex offset
+    // to prevent horizontal jitter during interpolation
+    const targetY = Math.round(y / 2) * 2; // Round to nearest even number for heroes
+    const hexOffset = Math.floor(targetY) % 2 === 1 ? tileWidth / 2 : 0;
 
     const screenX = x * tileWidth + hexOffset + offsets.x;
     const screenY = y * verticalSpacing + offsets.y;
@@ -253,9 +256,9 @@ export default class Isometric extends View {
     let renderY = unit.pos.y;
 
     // Check if we have a previous position for interpolation
-    // ALWAYS interpolate positions, even for jumping units
+    // Skip interpolation if unit just teleported (blink ability)
     const lastPos = this.sim.lastUnitPositions.get(unit.id);
-    if (lastPos && this.sim.interpolationFactor !== undefined) {
+    if (lastPos && this.sim.interpolationFactor !== undefined && !unit.meta?.teleported) {
       // Interpolate between last and current position
       const t = this.sim.interpolationFactor;
       renderX = lastPos.x + (unit.pos.x - lastPos.x) * t;
@@ -324,7 +327,8 @@ export default class Isometric extends View {
     }
 
     const isHero = unit.tags?.includes("hero");
-    const spriteOffset = 8; // Use consistent offset for all units
+    // Hero needs different offset - it renders 4 pixels too low with rigged animation
+    const spriteOffset = isHero ? 12 : 8; // Hero needs 4 extra pixels up
     this.unitRenderer.renderUnit(
       this.ctx,
       unit,
