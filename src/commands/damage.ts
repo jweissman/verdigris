@@ -76,7 +76,12 @@ export class Damage extends Command {
     const sourceId = (params.source || params.sourceId) as string;
     if (sourceId) {
       const source = this.sim.units.find((u) => u.id === sourceId);
-      if (source && target.team === "neutral" && source.team === "friendly" && finalDamage > 0) {
+      if (
+        source &&
+        target.team === "neutral" &&
+        source.team === "friendly" &&
+        finalDamage > 0
+      ) {
         newTeam = "hostile";
       }
     }

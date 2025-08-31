@@ -144,10 +144,12 @@ export default class Isometric extends View {
       verticalSpacing = 1.5; // Very tight for maps with limited vertical space
     }
 
-    // For heroes moving by 2 tiles, use the target position for hex offset
-    // to prevent horizontal jitter during interpolation
-    const targetY = Math.round(y / 2) * 2; // Round to nearest even number for heroes
-    const hexOffset = Math.floor(targetY) % 2 === 1 ? tileWidth / 2 : 0;
+    // Heroes move by 2 tiles and are always on even Y coordinates
+    // During interpolation, y might be fractional (20.5, 21, 21.5, etc)
+    // We should base hex offset on the nearest even integer to prevent jitter
+    const isInterpolating = y !== Math.floor(y);
+    const baseY = isInterpolating ? Math.round(y / 2) * 2 : Math.floor(y);
+    const hexOffset = baseY % 2 === 1 ? tileWidth / 2 : 0;
 
     const screenX = x * tileWidth + hexOffset + offsets.x;
     const screenY = y * verticalSpacing + offsets.y;
@@ -258,7 +260,11 @@ export default class Isometric extends View {
     // Check if we have a previous position for interpolation
     // Skip interpolation if unit just teleported (blink ability)
     const lastPos = this.sim.lastUnitPositions.get(unit.id);
-    if (lastPos && this.sim.interpolationFactor !== undefined && !unit.meta?.teleported) {
+    if (
+      lastPos &&
+      this.sim.interpolationFactor !== undefined &&
+      !unit.meta?.teleported
+    ) {
       // Interpolate between last and current position
       const t = this.sim.interpolationFactor;
       renderX = lastPos.x + (unit.pos.x - lastPos.x) * t;

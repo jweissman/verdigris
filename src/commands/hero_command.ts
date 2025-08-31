@@ -143,83 +143,107 @@ export class HeroCommand extends Command {
         }
 
         case "left":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: -1, dy: 0 },
+          // Execute move directly for immediate response
+          const transformL = this.sim.getTransform();
+          transformL.updateUnit(hero.id, {
+            intendedMove: { x: -1, y: 0 },
           });
+          // Update facing
+          if (!hero.meta) hero.meta = {};
+          hero.meta.facing = "left";
           break;
 
         case "right":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: 1, dy: 0 },
+          // Execute move directly for immediate response
+          const transformR = this.sim.getTransform();
+          transformR.updateUnit(hero.id, {
+            intendedMove: { x: 1, y: 0 },
           });
+          // Update facing
+          if (!hero.meta) hero.meta = {};
+          hero.meta.facing = "right";
           break;
 
         case "up":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: 0, dy: -2 },
+          // Execute move directly for immediate response
+          const transformU = this.sim.getTransform();
+          transformU.updateUnit(hero.id, {
+            intendedMove: { x: 0, y: -2 },
           });
           break;
 
         case "down":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: 0, dy: 2 },
+          // Execute move directly instead of queuing for next tick
+          const transform = this.sim.getTransform();
+          transform.updateUnit(hero.id, {
+            intendedMove: { x: 0, y: 2 },
           });
           break;
 
         case "up-left":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: -1, dy: -2 },
+          // Execute move directly for immediate response
+          const transformUL = this.sim.getTransform();
+          transformUL.updateUnit(hero.id, {
+            intendedMove: { x: -1, y: -2 },
           });
+          // Update facing
+          if (!hero.meta) hero.meta = {};
+          hero.meta.facing = "left";
           break;
 
         case "up-right":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: 1, dy: -2 },
+          // Execute move directly for immediate response
+          const transformUR = this.sim.getTransform();
+          transformUR.updateUnit(hero.id, {
+            intendedMove: { x: 1, y: -2 },
           });
+          // Update facing
+          if (!hero.meta) hero.meta = {};
+          hero.meta.facing = "right";
           break;
 
         case "down-left":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: -1, dy: 2 },
+          // Execute move directly for immediate response
+          const transformDL = this.sim.getTransform();
+          transformDL.updateUnit(hero.id, {
+            intendedMove: { x: -1, y: 2 },
           });
+          // Update facing
+          if (!hero.meta) hero.meta = {};
+          hero.meta.facing = "left";
           break;
 
         case "down-right":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: 1, dy: 2 },
+          // Execute move directly for immediate response
+          const transformDR = this.sim.getTransform();
+          transformDR.updateUnit(hero.id, {
+            intendedMove: { x: 1, y: 2 },
           });
+          // Update facing
+          if (!hero.meta) hero.meta = {};
+          hero.meta.facing = "right";
           break;
 
         case "knight-left":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: -1, dy: -2 },
+          // Execute move directly for immediate response
+          const transformKL = this.sim.getTransform();
+          transformKL.updateUnit(hero.id, {
+            intendedMove: { x: -1, y: -2 },
           });
+          // Update facing
+          if (!hero.meta) hero.meta = {};
+          hero.meta.facing = "left";
           break;
 
         case "knight-right":
-          this.sim.queuedCommands.push({
-            type: "move",
-            unitId: hero.id,
-            params: { dx: 1, dy: -2 },
+          // Execute move directly for immediate response
+          const transformKR = this.sim.getTransform();
+          transformKR.updateUnit(hero.id, {
+            intendedMove: { x: 1, y: -2 },
           });
+          // Update facing
+          if (!hero.meta) hero.meta = {};
+          hero.meta.facing = "right";
           break;
 
         case "attack":

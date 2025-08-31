@@ -118,23 +118,29 @@ export function generateBurstPattern(
  * Generate a visor pattern - wide horizontal arc in front
  * Like a knight's visor or a wide sweep attack
  */
-export function generateVisorPattern(config: AttackPatternConfig): AttackZone[] {
+export function generateVisorPattern(
+  config: AttackPatternConfig,
+): AttackZone[] {
   const zones: AttackZone[] = [];
   const { origin, direction, range } = config;
-  
+
   // Visor is very wide (width) but short-medium range
   const visorWidth = config.width || 11; // Even wider for better coverage
   const visorRange = Math.min(range, 4); // Slightly deeper reach
-  
+
   const dx = direction === "right" ? 1 : direction === "left" ? -1 : 0;
   const dy = direction === "down" ? 1 : direction === "up" ? -1 : 0;
-  
+
   // For horizontal attacks (left/right)
   if (dx !== 0) {
     for (let dist = 1; dist <= visorRange; dist++) {
       const x = origin.x + dx * dist;
       // Wide vertical sweep
-      for (let yOffset = -Math.floor(visorWidth / 2); yOffset <= Math.floor(visorWidth / 2); yOffset++) {
+      for (
+        let yOffset = -Math.floor(visorWidth / 2);
+        yOffset <= Math.floor(visorWidth / 2);
+        yOffset++
+      ) {
         zones.push({ x, y: origin.y + yOffset });
       }
     }
@@ -143,12 +149,16 @@ export function generateVisorPattern(config: AttackPatternConfig): AttackZone[] 
     for (let dist = 1; dist <= visorRange; dist++) {
       const y = origin.y + dy * dist;
       // Wide horizontal sweep
-      for (let xOffset = -Math.floor(visorWidth / 2); xOffset <= Math.floor(visorWidth / 2); xOffset++) {
+      for (
+        let xOffset = -Math.floor(visorWidth / 2);
+        xOffset <= Math.floor(visorWidth / 2);
+        xOffset++
+      ) {
         zones.push({ x: origin.x + xOffset, y });
       }
     }
   }
-  
+
   return zones;
 }
 

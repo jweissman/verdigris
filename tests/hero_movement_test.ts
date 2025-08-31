@@ -29,6 +29,9 @@ describe("Hero Movement Y-axis", () => {
     
     sim.step();
     
+    // Movement is applied by forces system, needs another step
+    sim.step();
+    
     expect(hero.pos.y).toBe(22); // Should move 2 tiles down
     expect(hero.pos.x).toBe(20); // X should not change
   });

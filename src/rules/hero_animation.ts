@@ -7,7 +7,7 @@ export class HeroAnimation extends Rule {
   private rigs: Map<string, HeroRig> = new Map();
   private currentAnimations: Map<string, string> = new Map();
   private debugCallCount: number = 0;
-  private lastPositions: Map<string, {x: number, y: number}> = new Map();
+  private lastPositions: Map<string, { x: number; y: number }> = new Map();
 
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
@@ -33,10 +33,10 @@ export class HeroAnimation extends Rule {
 
         this.updateAnimation(unit, rig, commands);
 
-        // Slow down walk animation to match movement speed
-        const isWalking =
-          unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0;
-        const updateRate = isWalking ? 0.5 : 1; // Match slower movement
+        // Update animation - walk animation should progress normally
+        const desiredAnim = this.currentAnimations.get(unit.id);
+        const isWalking = desiredAnim === "walk";
+        const updateRate = isWalking ? 1.0 : 1; // Normal speed for walk animation
         rig.update(updateRate);
 
         const facing = unit.meta?.facing || "right";
@@ -70,11 +70,12 @@ export class HeroAnimation extends Rule {
   private updateAnimation(unit: any, rig: HeroRig, commands: QueuedCommand[]) {
     let desiredAnimation: string;
     const currentTick = this.debugCallCount; // Using as a tick counter
-    
+
     // Check if unit actually moved by comparing position to last known position
     const unitLastPos = this.lastPositions.get(unit.id);
-    const hasMoved = unitLastPos && 
-                     (unitLastPos.x !== unit.pos.x || unitLastPos.y !== unit.pos.y);
+    const hasMoved =
+      unitLastPos &&
+      (unitLastPos.x !== unit.pos.x || unitLastPos.y !== unit.pos.y);
     this.lastPositions.set(unit.id, { x: unit.pos.x, y: unit.pos.y });
 
     const inAttackWindow =
@@ -103,8 +104,20 @@ export class HeroAnimation extends Rule {
       desiredAnimation = "attack";
     } else if (unit.meta?.jumping) {
       desiredAnimation = "jump"; // Now implemented!
-    } else if (hasMoved || unit.intendedMove?.x !== 0 || unit.intendedMove?.y !== 0) {
+    } else if (
+      hasMoved ||
+      unit.intendedMove?.x !== 0 ||
+      unit.intendedMove?.y !== 0
+    ) {
       desiredAnimation = "walk"; // Use hasMoved to keep walk animation stable
+      // Store that we're walking for a few ticks to keep animation going
+      if (!unit.meta) unit.meta = {};
+      unit.meta.walkingUntil = currentTick + 3;
+    } else if (
+      unit.meta?.walkingUntil &&
+      currentTick < unit.meta.walkingUntil
+    ) {
+      desiredAnimation = "walk"; // Keep walking animation for a few ticks after movement
     } else {
       if (unit.meta?.onRooftop) {
         desiredAnimation = "wind";

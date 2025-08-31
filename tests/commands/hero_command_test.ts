@@ -56,11 +56,10 @@ describe('Hero Command', () => {
     const leftHero = sim.units.find(u => u.id === 'move_hero');
 
 
-    expect(leftHero?.intendedMove.x).toBe(-1);
+    // Movement is now immediate, check position instead
+    expect(leftHero?.pos.x).toBe(9);
     
-    sim.step(); // Second step applies movement
-    const movedLeftHero = sim.units.find(u => u.id === 'move_hero');
-    expect(movedLeftHero?.pos.x).toBe(9);
+    // Position already updated, no need for second step
     
 
     sim.queuedCommands.push({
@@ -69,7 +68,6 @@ describe('Hero Command', () => {
     });
     
     sim.step();
-    sim.step(); // Need extra step to apply movement
     
     const rightHero = sim.units.find(u => u.id === 'move_hero');
 
@@ -111,8 +109,9 @@ describe('Hero Command', () => {
 
     
 
-    expect(knightHero?.intendedMove.x).toBe(-1);
-    expect(knightHero?.intendedMove.y).toBe(-2);
+    // Movement is immediate, check position
+    expect(knightHero?.pos.x).toBe(9);
+    expect(knightHero?.pos.y).toBe(8);
     
     sim.step(); // Second step applies movement
     const movedKnightHero = sim.units.find(u => u.id === 'knight_hero');

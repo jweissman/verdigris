@@ -855,11 +855,11 @@ export class HeroRig {
   private applyWalkInterpolation() {
     const anim = this.animations.get("walk");
     if (!anim || anim.frames.length < 2) return;
-    
+
     // Walk has 2 frames at tick 0 and tick 6, duration 12
     const frame1 = anim.frames[0];
     const frame2 = anim.frames[1];
-    
+
     // Calculate interpolation t based on animation time
     let t = 0;
     if (this.animationTime < 6) {
@@ -867,34 +867,43 @@ export class HeroRig {
       t = this.animationTime / 6;
     } else {
       // Between frame 2 and wrapping back to frame 1
-      t = 1 - ((this.animationTime - 6) / 6);
+      t = 1 - (this.animationTime - 6) / 6;
     }
-    
+
     // Smooth the interpolation
     t = 0.5 - 0.5 * Math.cos(t * Math.PI); // Sine ease
-    
+
     // Interpolate between frames
     for (const [partName, targetProps] of Object.entries(frame2.parts)) {
       const part = this.parts.get(partName as BodyPart["name"]);
       const sourceProps = frame1.parts[partName as BodyPart["name"]];
-      
+
       if (part && sourceProps && targetProps) {
         if (sourceProps.offset && targetProps.offset) {
-          part.offset.x = sourceProps.offset.x + (targetProps.offset.x - sourceProps.offset.x) * t;
-          part.offset.y = sourceProps.offset.y + (targetProps.offset.y - sourceProps.offset.y) * t;
+          part.offset.x =
+            sourceProps.offset.x +
+            (targetProps.offset.x - sourceProps.offset.x) * t;
+          part.offset.y =
+            sourceProps.offset.y +
+            (targetProps.offset.y - sourceProps.offset.y) * t;
         }
-        
-        if (sourceProps.rotation !== undefined && targetProps.rotation !== undefined) {
-          part.rotation = sourceProps.rotation + (targetProps.rotation - sourceProps.rotation) * t;
+
+        if (
+          sourceProps.rotation !== undefined &&
+          targetProps.rotation !== undefined
+        ) {
+          part.rotation =
+            sourceProps.rotation +
+            (targetProps.rotation - sourceProps.rotation) * t;
         }
-        
+
         if (sourceProps.frame !== undefined) {
           part.frame = sourceProps.frame;
         }
       }
     }
   }
-  
+
   private applyAttackInterpolation() {
     const anim = this.animations.get("attack");
     if (!anim) return;

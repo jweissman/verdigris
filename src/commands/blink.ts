@@ -65,7 +65,8 @@ export class Blink extends Command {
       } else {
         // No enemies - blink forward in facing direction
         const facing = unit.meta?.facing || "right";
-        targetX = unit.pos.x + (facing === "right" ? maxDistance : -maxDistance);
+        targetX =
+          unit.pos.x + (facing === "right" ? maxDistance : -maxDistance);
         targetY = unit.pos.y;
       }
     }

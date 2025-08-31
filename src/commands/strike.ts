@@ -22,7 +22,9 @@ export class StrikeCommand extends Command {
     const direction =
       (params.direction as string) || attacker.meta?.facing || "right";
     const damage = (params.damage as number) || attacker.dmg || 10;
-    console.log(`[Strike] Damage will be: ${damage} (params.damage=${params.damage}, attacker.dmg=${attacker.dmg})`);
+    console.log(
+      `[Strike] Damage will be: ${damage} (params.damage=${params.damage}, attacker.dmg=${attacker.dmg})`,
+    );
     const knockback = (params.knockback as number) || 0;
     const aspect = (params.aspect as string) || "kinetic";
     const range =

@@ -10,14 +10,14 @@ import { Command, CommandParams } from "../rules/command";
 export class FireTrailCommand extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     if (!unitId) return;
-    
-    const unit = this.sim.units.find(u => u.id === unitId);
+
+    const unit = this.sim.units.find((u) => u.id === unitId);
     if (!unit) return;
-    
+
     const duration = (params.duration as number) || 30;
     const temperature = (params.temperature as number) || 300;
     const damage = (params.damage as number) || 2;
-    
+
     // Enable fire trail on the unit
     unit.meta = unit.meta || {};
     unit.meta.fireTrailActive = true;
@@ -25,7 +25,7 @@ export class FireTrailCommand extends Command {
     unit.meta.fireTrailTemperature = temperature;
     unit.meta.fireTrailDamage = damage;
     unit.meta.lastTrailPos = { x: unit.pos.x, y: unit.pos.y };
-    
+
     // Visual feedback
     this.sim.particleArrays.addParticle({
       id: `trail_start_${this.sim.ticks}`,

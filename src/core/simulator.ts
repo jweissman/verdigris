@@ -28,20 +28,94 @@ import { ParticleManager } from "./particle_manager";
 import { FireEffects } from "./fire_effects";
 import { FieldManager } from "./field_manager";
 import { DebugHelper } from "./debug_helper";
-
-// TODO some kind of config model??
-
 class Simulator {
-  // Extracted managers for cleaner separation
-  private weatherManager: WeatherManager;
-  private world: World;
-  private movementValidator: MovementValidator;
-  private abilityHandler: AbilityHandler;
-  private particleManager: ParticleManager;
-  private fireEffects: FireEffects;
-  private fieldManager: FieldManager;
+  paused: boolean = false;
+  ticks = 0;
+  lastCall: number = 0;
 
-  // Compatibility accessors
+  private world: World;
+  private transform: Transform;
+  public rulebook: Rule[];
+  private commandProcessor: CommandHandler;
+
+  private queuedEvents: Action[] = [];
+  private processedEvents: Action[] = [];
+  private queuedCommands: QueuedCommand[] = [];
+  // TODO for symmetry why not processedCommands?
+  // private processedCommands: QueuedCommand[] = [];
+
+  private _projectilesCache: Projectile[] = [];
+  private _projectilesCacheDirty: boolean = true;
+  private abilityHandler: AbilityHandler;
+  private changedUnits: Set<string> = new Set();
+  private dirtyUnits: Set<string> = new Set();
+  private fieldManager: FieldManager;
+  private fireEffects: FireEffects;
+  private movementValidator: MovementValidator;
+  private particleManager: ParticleManager;
+  private static randomProtected: boolean = false;
+  private weatherManager: WeatherManager;
+  projectileArrays: ProjectileArrays;
+  public fieldHeight: number;
+  public fieldWidth: number;
+  public gridPartition: GridPartition;
+  public pairwiseBatcher: PairwiseBatcher;
+  public proxyManager: UnitProxyManager;
+  public spatialQueries: SpatialQueryBatcher;
+  public static rng: RNG = new RNG(12345);
+  public targetCache: TargetCache;
+  public unitSpatialHash: Map<string, number[]> | null = null;
+  private unitCache: Map<string, Unit> = new Map();
+  public lastUnitPositions: Map<string, { x: number; y: number }> = new Map();
+  private lastActiveCount: number = 0;
+  public interpolationFactor: number = 0;
+
+  private readonly unitArrays: UnitArrays;
+  private readonly unitColdData: Map<
+    string,
+    {
+      sprite: string;
+      abilities: any[];
+      tags?: string[];
+      meta: Record<string, any>;
+      intendedTarget?: string | Vec2;
+      posture?: string;
+      type?: string;
+      lastAbilityTick?: Record<string, number>;
+    }
+  > = new Map();
+
+  constructor(fieldWidth = 128, fieldHeight = 128) {
+    this.setupDeterministicRandomness();
+
+    this.fieldWidth = fieldWidth;
+    this.fieldHeight = fieldHeight;
+    this.weatherManager = new WeatherManager();
+    this.world = new World();
+    this.movementValidator = new MovementValidator(fieldWidth, fieldHeight);
+    this.particleManager = new ParticleManager();
+    this.fieldManager = new FieldManager(this.fieldWidth, this.fieldHeight);
+    this.fireEffects = new FireEffects(
+      this.particleManager,
+      this.temperatureField,
+      this.humidityField,
+    );
+    this.dirtyUnits = new Set();
+    this.changedUnits = new Set();
+    this.spatialQueries = new SpatialQueryBatcher();
+    this.pairwiseBatcher = new PairwiseBatcher();
+    this.targetCache = new TargetCache();
+    this.gridPartition = new GridPartition(fieldWidth, fieldHeight, 4);
+    this.unitArrays = new UnitArrays(1000); // Support up to 1000 units
+    this.unitColdData = new Map();
+    this.proxyManager = new UnitProxyManager(
+      this.unitArrays,
+      this.unitColdData,
+    );
+    this.transform = new Transform(this);
+    this.reset();
+  }
+
   get sceneBackground() {
     return this.world.sceneBackground;
   }
@@ -66,10 +140,6 @@ class Simulator {
   set currentBiome(value: string | undefined) {
     this.world.currentBiome = value;
   }
-
-  public fieldWidth: number;
-  public fieldHeight: number;
-
   get width() {
     return this.fieldWidth;
   }
@@ -77,70 +147,17 @@ class Simulator {
     return this.fieldHeight;
   }
 
-  private readonly unitArrays: UnitArrays;
-  private readonly unitColdData: Map<
-    string,
-    {
-      sprite: string;
-      abilities: any[];
-      tags?: string[];
-      meta: Record<string, any>;
-      intendedTarget?: string | Vec2;
-      posture?: string;
-      type?: string;
-      lastAbilityTick?: Record<string, number>;
-    }
-  > = new Map();
-
-  private dirtyUnits: Set<string> = new Set();
-  public spatialQueries: SpatialQueryBatcher;
-  public pairwiseBatcher: PairwiseBatcher;
-  public targetCache: TargetCache;
-  public static rng: RNG = new RNG(12345);
-  private static randomProtected: boolean = false;
-
-  private changedUnits: Set<string> = new Set();
-
-  public gridPartition: GridPartition;
-  public unitSpatialHash: Map<string, number[]> | null = null;
-
-  public proxyManager: UnitProxyManager;
-
   get units(): readonly Unit[] {
     return this.proxyManager.getAllProxies();
   }
 
   /**
    * Get units with real proxies that stay in sync with arrays
-   * FOR TESTS ONLY - production code should use 'units'
+   * NOTE: seemingly only used by mechanist tests???
    */
   get liveUnits(): readonly Unit[] {
     return this.proxyManager.getRealProxies();
   }
-
-  removeUnitById(unitId: string): void {
-    for (let i = 0; i < this.unitArrays.capacity; i++) {
-      if (this.unitArrays.active[i] === 0) continue;
-      if (this.unitArrays.unitIds[i] === unitId) {
-        this.unitArrays.active[i] = 0;
-        this.unitArrays.activeCount--;
-
-        const idx = this.unitArrays.activeIndices.indexOf(i);
-        if (idx !== -1) {
-          this.unitArrays.activeIndices.splice(idx, 1);
-        }
-
-        this.proxyManager.notifyUnitRemoved(unitId);
-        this.unitCache.delete(unitId);
-        this.unitColdData.delete(unitId);
-        return;
-      }
-    }
-  }
-
-  projectileArrays: ProjectileArrays;
-  private _projectilesCache: Projectile[] = [];
-  private _projectilesCacheDirty: boolean = true;
 
   get projectiles(): Projectile[] {
     if (this._projectilesCacheDirty) {
@@ -209,19 +226,10 @@ class Simulator {
   invalidateProjectilesCache(): void {
     this._projectilesCacheDirty = true;
   }
-  public rulebook: Rule[];
-  private commandProcessor: CommandHandler;
-  queuedEvents: Action[] = [];
-  processedEvents: Action[] = [];
-  queuedCommands: QueuedCommand[] = [];
 
   get rules(): Readonly<Rule[]> {
     return this.rulebook;
   }
-
-  public lastUnitPositions: Map<string, { x: number; y: number }> = new Map();
-  private lastActiveCount: number = 0;
-  public interpolationFactor: number = 0;
 
   get particleArrays() {
     return this.particleManager.particleArrays;
@@ -279,87 +287,152 @@ class Simulator {
       this.weatherManager.setWeather("clear", 0, 0);
   }
 
-  private transform: Transform;
+  get temperature(): number {
+    return this.fieldManager.getAverageTemperature();
+  }
 
-  createCommandHandler() {
+  public addHeat(
+    x: number,
+    y: number,
+    intensity: number,
+    radius: number = 2,
+  ): void {
+    this.fieldManager.addHeat(x, y, intensity, radius);
+  }
+  public applyFieldInteractions() {
+    this.fieldManager.applyFieldInteractions(this.ticks);
+  }
+  public createCommandHandler() {
     return new CommandHandler(this, this.transform);
   }
-
-  getTickContext(): TickContext {
-    return new TickContextImpl(this);
-  }
-
-  createEventHandler() {
+  public createEventHandler() {
     return new EventHandler();
   }
-
-  public getTransform() {
-    return this.transform;
+  public getCurrentWeather(): string {
+    return this.weatherManager.getCurrentWeather();
   }
-
-  public recordProcessedEvents(events: Action[]): void {
-    this.processedEvents.push(...events);
+  public getHumidity(x: number, y: number): number {
+    return this.fieldManager.getHumidity(x, y);
+  }
+  public getPairwiseBatcher() {
+    return this.pairwiseBatcher;
+  }
+  public getPressure(x: number, y: number): number {
+    return this.fieldManager.getPressure(x, y);
   }
   public getProxyManager() {
     return this.proxyManager;
   }
-
-  // Proper accessors for TickContext
-  public getUnitArrays() {
-    return this.unitArrays;
-  }
-
-  public getUnitColdData(unitId: string) {
-    return this.unitColdData.get(unitId);
-  }
-
-  public isWinterActive(): boolean {
-    return this.winterActive || false;
-  }
-
-  public isSandstormActive(): boolean {
-    return this.sandstormActive || false;
-  }
-
-  public getSandstormIntensity(): number {
-    return 0; // TODO: Add actual sandstorm intensity property
-  }
-
-  public getSandstormDuration(): number {
-    return 0; // TODO: Add actual sandstorm duration property
-  }
-
-  public isAbilityForced(unitId: string, abilityName: string): boolean {
-    return this.abilityHandler.isAbilityForced(unitId, abilityName);
-  }
-
-  public getPairwiseBatcher() {
-    return this.pairwiseBatcher;
-  }
-
   public getRandomNumber(): number {
     return Simulator.rng?.random() || Math.random();
   }
-
-  // Scene metadata setters
+  public getSandstormDuration(): number {
+    return 0;
+  }
+  public getSandstormIntensity(): number {
+    return 0;
+  }
+  public getTemperature(x: number, y: number): number {
+    return this.fieldManager.getTemperature(x, y);
+  }
+  public getTickContext(): TickContext {
+    return new TickContextImpl(this);
+  }
+  public getTransform() {
+    return this.transform;
+  }
+  public getUnitArrays() {
+    return this.unitArrays;
+  }
+  public getUnitColdData(unitId: string) {
+    return this.unitColdData.get(unitId);
+  }
+  public isAbilityForced(unitId: string, abilityName: string): boolean {
+    return this.abilityHandler.isAbilityForced(unitId, abilityName);
+  }
+  public isSandstormActive(): boolean {
+    return this.sandstormActive || false;
+  }
+  public isWinterActive(): boolean {
+    return this.winterActive || false;
+  }
+  public recordProcessedEvents(events: Action[]): void {
+    this.processedEvents.push(...events);
+  }
   public setBackground(value: string): void {
     this.sceneBackground = value;
   }
-
-  public setStripWidth(value: any): void {
-    // TODO: Add stripWidth property
-    this.sceneMetadata.stripWidth = value;
-  }
-
   public setBattleHeight(value: any): void {
-    // TODO: Add battleHeight property
     this.sceneMetadata.battleHeight = value;
   }
-
-  public getCurrentWeather(): string {
-    return this.weatherManager.getCurrentWeather();
+  public setStripWidth(value: any): void {
+    this.sceneMetadata.stripWidth = value;
+  }
+  public spawnLeafParticle() {
+    this.particleManager.spawnLeafParticle(this.fieldWidth, this.fieldHeight);
+  }
+  public updateParticles() {
+    this.particleManager.updateParticles(this.fieldWidth, this.fieldHeight);
+  }
+  public updateScalarFields() {
+    this.fieldManager.updateScalarFields();
+  }
+  public updateUnitTemperatureEffects() {
+    this.fieldManager.updateUnitTemperatureEffects(this.units);
+  }
+  public hasDirtyUnits(): boolean {
+    return this.dirtyUnits.size > 0;
+  }
+  public getDirtyUnits(): Set<string> {
+    return new Set(this.dirtyUnits);
+  }
+  public tick() {
+    this.step(true);
+  }
+  public creatureById(id) {
+    return this.unitCache.get(id);
+  }
+  public getChangedUnits(): string[] {
+    return Array.from(this.changedUnits);
+  }
+  public hasUnitChanged(unitId: string): boolean {
+    return this.changedUnits.has(unitId);
+  }
+  public validMove(unit, dx, dy) {
+    return this.movementValidator.validMove(unit, dx, dy, this.units);
+  }
+  public getHugeUnitBodyPositions(unit) {
+    return this.movementValidator.getHugeUnitBodyPositions(unit);
+  }
+  public getRealUnits() {
+    return this.units.filter((unit) => !unit.meta.phantom);
+  }
+  public getApparentUnits() {
+    return this.units;
+  }
+  public pause() {
+    this.paused = true;
   }
 
+  removeUnitById(unitId: string): void {
+    for (let i = 0; i < this.unitArrays.capacity; i++) {
+      if (this.unitArrays.active[i] === 0) continue;
+      if (this.unitArrays.unitIds[i] === unitId) {
+        this.unitArrays.active[i] = 0;
+        this.unitArrays.activeCount--;
+
+        const idx = this.unitArrays.activeIndices.indexOf(i);
+        if (idx !== -1) {
+          this.unitArrays.activeIndices.splice(idx, 1);
+        }
+
+        this.proxyManager.notifyUnitRemoved(unitId);
+        this.unitCache.delete(unitId);
+        this.unitColdData.delete(unitId);
+        return;
+      }
+    }
+  }
   private setupDeterministicRandomness(): void {
     if (Simulator.randomProtected) return;
 
@@ -372,83 +445,29 @@ class Simulator {
     Simulator.randomProtected = true;
   }
 
-  constructor(fieldWidth = 128, fieldHeight = 128) {
-    this.fieldWidth = fieldWidth;
-    this.fieldHeight = fieldHeight;
-
-    // Initialize managers
-    this.weatherManager = new WeatherManager();
-    this.world = new World();
-    this.movementValidator = new MovementValidator(fieldWidth, fieldHeight);
-    this.particleManager = new ParticleManager();
-    this.fieldManager = new FieldManager(this.fieldWidth, this.fieldHeight);
-    this.fireEffects = new FireEffects(
-      this.particleManager,
-      this.temperatureField,
-      this.humidityField,
-    );
-    this.setupDeterministicRandomness();
-
-    this.dirtyUnits = new Set();
-    this.changedUnits = new Set();
-
-    this.spatialQueries = new SpatialQueryBatcher();
-
-    this.pairwiseBatcher = new PairwiseBatcher();
-
-    this.targetCache = new TargetCache();
-
-    this.gridPartition = new GridPartition(fieldWidth, fieldHeight, 4);
-
-    this.unitArrays = new UnitArrays(1000); // Support up to 1000 units
-
-    this.unitColdData = new Map();
-
-    this.proxyManager = new UnitProxyManager(
-      this.unitArrays,
-      this.unitColdData,
-    );
-
-    this.transform = new Transform(this);
-
-    this.reset();
-
-    // Initialize ability handler after rulebook is set
-    this.abilityHandler = new AbilityHandler(
-      this.proxyManager,
-      this.rulebook,
-      this.ticks,
-    );
-  }
-
   parseCommand(inputString: string) {
     const command = CommandHandler.parseCommand(inputString, this);
     this.queuedCommands.push(command);
     return command;
   }
 
-  paused: boolean = false;
-
-  pause() {
-    this.paused = true;
-  }
-
   reset() {
     this.unitArrays.clear();
     this.unitCache.clear();
     this.unitColdData.clear();
-
     this.proxyManager.clearCache();
-
     this.projectileArrays = new ProjectileArrays(500);
     this.processedEvents = [];
     this.queuedCommands = [];
-
-    // Reset weather
     this.weatherManager = new WeatherManager();
-
     this.commandProcessor = new CommandHandler(this, this.transform);
     this.rulebook = RulesetFactory.createDefaultRulebook();
+    // Initialize ability handler after rulebook is set
+    this.abilityHandler = new AbilityHandler(
+      this.proxyManager,
+      this.rulebook,
+      this.ticks,
+    );
   }
 
   addUnit(unit: Partial<Unit>): Unit {
@@ -539,14 +558,6 @@ class Simulator {
     this.changedUnits.add(unitId);
   }
 
-  hasDirtyUnits(): boolean {
-    return this.dirtyUnits.size > 0;
-  }
-
-  getDirtyUnits(): Set<string> {
-    return new Set(this.dirtyUnits);
-  }
-
   get roster() {
     const proxies = this.proxyManager.getRealProxies();
     const result: any = {};
@@ -555,15 +566,6 @@ class Simulator {
     }
     return result;
   }
-
-  tick() {
-    this.step(true);
-  }
-
-  ticks = 0;
-  lastCall: number = 0;
-
-  private stepDepth = 0;
 
   storeUnitPositions(): void {
     // Store current positions for interpolation
@@ -577,14 +579,23 @@ class Simulator {
     }
   }
 
-  step(force = false) {
-    this.stepDepth++;
-    if (this.stepDepth > 1) {
-      console.error(
-        `ERROR: Recursive step() call detected! Depth=${this.stepDepth}`,
-      );
-      console.trace();
+  protected rebuildSpatialPartition() {
+    this.gridPartition.clear();
+    this.unitCache.clear();
+    const arrays = this.unitArrays;
+    for (const i of arrays.activeIndices) {
+      const id = arrays.unitIds[i];
+      let proxy = this.unitCache.get(id);
+      if (!proxy) {
+        proxy = this.proxyManager.getProxy(i);
+        this.unitCache.set(id, proxy);
+      }
+      this.gridPartition.insert(proxy);
     }
+    this.lastActiveCount = arrays.activeCount;
+  }
+
+  step(force = false) {
     if (this.paused) {
       if (!force) {
         return this;
@@ -595,84 +606,54 @@ class Simulator {
 
     let t0 = performance.now();
     this.ticks++;
-
     this.changedUnits = new Set(this.dirtyUnits);
-
     this.dirtyUnits.clear();
-
     let needsSpatialRebuild =
       this.ticks === 0 || this.unitArrays.activeCount !== this.lastActiveCount;
 
     if (needsSpatialRebuild) {
-      this.gridPartition.clear();
-      this.unitCache.clear();
-
-      const arrays = this.unitArrays;
-
-      for (const i of arrays.activeIndices) {
-        const id = arrays.unitIds[i];
-
-        let proxy = this.unitCache.get(id);
-        if (!proxy) {
-          proxy = this.proxyManager.getProxy(i);
-          this.unitCache.set(id, proxy);
-        }
-        this.gridPartition.insert(proxy);
-      }
-
-      this.lastActiveCount = arrays.activeCount;
+      this.rebuildSpatialPartition();
     }
 
     const context = new TickContextImpl(this);
-    context.clearCache(); // Clear any cached data from previous tick
+    context.clearCache();
 
-    // Clear pairwise intents
     if (this.pairwiseBatcher) {
       this.pairwiseBatcher.intents = [];
     }
 
-    // Execute all rules - they will register pairwise intents
     for (const rule of this.rulebook) {
       const commands = rule.execute(context);
       if (commands && commands.length > 0) {
-        // if (ruleName === "StatusEffects") console.log(`${ruleName} returned ${commands.length} commands`);
         for (let i = 0; i < commands.length; i++) {
           this.queuedCommands.push(commands[i]);
-          // if (ruleName === "StatusEffects") console.log(`  Pushed command: ${commands[i].type}`);
         }
       }
     }
 
     this.commandProcessor.execute(context);
+    this.updateSystems();
+    this.lastCall = t0;
+    return this;
+  }
 
-    this.updateChangedUnits();
-
-    {
-      if (this.projectiles && this.projectiles.length > 0) {
-        this.updateProjectilePhysics();
-      }
-
-      if (this.particleArrays && this.particleArrays.activeCount > 0) {
-        this.updateParticles();
-      }
-
-      if (this.enableEnvironmentalEffects) {
-        this.updateUnitTemperatureEffects();
-
-        if (this.ticks % 10 === 0) {
-          this.updateScalarFields();
-          this.updateWeather();
-        }
-
-        if (Simulator.rng.random() < 0.002) {
-          this.spawnLeafParticle();
-        }
-      }
+  updateSystems() {
+    if (this.projectiles && this.projectiles.length > 0) {
+      this.updateProjectilePhysics();
     }
 
-    this.lastCall = t0;
-    this.stepDepth--;
-    return this;
+    if (this.particleArrays && this.particleArrays.activeCount > 0) {
+      this.updateParticles();
+    }
+
+    if (this.enableEnvironmentalEffects) {
+      this.updateUnitTemperatureEffects();
+
+      if (this.ticks % 10 === 0) {
+        this.updateScalarFields();
+        this.updateWeather();
+      }
+    }
   }
 
   updateProjectilePhysics() {
@@ -690,10 +671,6 @@ class Simulator {
         }
       }
     }
-  }
-
-  updateParticles() {
-    this.particleManager.updateParticles(this.fieldWidth, this.fieldHeight);
   }
 
   applyVectorizedMovement() {
@@ -714,42 +691,6 @@ class Simulator {
       moveX[i] *= 1 - shouldMove;
       moveY[i] *= 1 - shouldMove;
     }
-  }
-
-  spawnLeafParticle() {
-    this.particleManager.spawnLeafParticle(this.fieldWidth, this.fieldHeight);
-  }
-
-  updateScalarFields() {
-    this.fieldManager.updateScalarFields();
-  }
-
-  applyFieldInteractions() {
-    this.fieldManager.applyFieldInteractions(this.ticks);
-  }
-
-  updateUnitTemperatureEffects() {
-    this.fieldManager.updateUnitTemperatureEffects(this.units);
-  }
-
-  get temperature(): number {
-    return this.fieldManager.getAverageTemperature();
-  }
-
-  getTemperature(x: number, y: number): number {
-    return this.fieldManager.getTemperature(x, y);
-  }
-
-  getHumidity(x: number, y: number): number {
-    return this.fieldManager.getHumidity(x, y);
-  }
-
-  getPressure(x: number, y: number): number {
-    return this.fieldManager.getPressure(x, y);
-  }
-
-  addHeat(x: number, y: number, intensity: number, radius: number = 2): void {
-    this.fieldManager.addHeat(x, y, intensity, radius);
   }
 
   addMoisture(
@@ -883,21 +824,6 @@ class Simulator {
     return newSim;
   }
 
-  validMove(unit, dx, dy) {
-    return this.movementValidator.validMove(unit, dx, dy, this.units);
-  }
-
-  getHugeUnitBodyPositions(unit) {
-    return this.movementValidator.getHugeUnitBodyPositions(unit);
-  }
-
-  getRealUnits() {
-    return this.units.filter((unit) => !unit.meta.phantom);
-  }
-  getApparentUnits() {
-    return this.units;
-  }
-
   isApparentlyOccupied(
     x: number,
     y: number,
@@ -909,22 +835,6 @@ class Simulator {
       excludeUnit,
       this.units,
     );
-  }
-
-  private unitCache: Map<string, Unit> = new Map();
-
-  creatureById(id) {
-    return this.unitCache.get(id);
-  }
-
-  private updateChangedUnits(): void {}
-
-  public getChangedUnits(): string[] {
-    return Array.from(this.changedUnits);
-  }
-
-  public hasUnitChanged(unitId: string): boolean {
-    return this.changedUnits.has(unitId);
   }
 
   handleInput(input) {
@@ -983,6 +893,10 @@ class Simulator {
       target,
     );
     this.queuedCommands.push(...commands);
+  }
+
+  enqueue(event: Action) {
+    this.queuedEvents.push(event);
   }
 }
 

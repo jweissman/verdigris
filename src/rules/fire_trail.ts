@@ -8,7 +8,7 @@ import { QueuedCommand } from "../core/command_handler";
 export class FireTrail extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
-    
+
     for (const unit of context.getAllUnits()) {
       if (unit.meta?.fireTrailActive && unit.meta?.fireTrailDuration > 0) {
         // Check if unit has moved
@@ -23,14 +23,14 @@ export class FireTrail extends Rule {
               amount: unit.meta.fireTrailTemperature || 300,
             },
           });
-          
+
           // Add fire particles
           commands.push({
             type: "particle",
             params: {
-              pos: { 
-                x: lastPos.x * 8 + 4, 
-                y: lastPos.y * 8 + 4 
+              pos: {
+                x: lastPos.x * 8 + 4,
+                y: lastPos.y * 8 + 4,
               },
               vel: { x: 0, y: -0.5 },
               lifetime: 30,
@@ -39,15 +39,18 @@ export class FireTrail extends Rule {
               radius: 2,
             },
           });
-          
+
           // Deal damage to units at that position
-          const unitsAtPos = context.getAllUnits().filter(
-            u => u.id !== unit.id && 
-                 u.pos.x === lastPos.x && 
-                 u.pos.y === lastPos.y &&
-                 u.hp > 0
-          );
-          
+          const unitsAtPos = context
+            .getAllUnits()
+            .filter(
+              (u) =>
+                u.id !== unit.id &&
+                u.pos.x === lastPos.x &&
+                u.pos.y === lastPos.y &&
+                u.hp > 0,
+            );
+
           for (const target of unitsAtPos) {
             commands.push({
               type: "damage",
@@ -59,14 +62,14 @@ export class FireTrail extends Rule {
               },
             });
           }
-          
+
           // Update last position
           unit.meta.lastTrailPos = { x: unit.pos.x, y: unit.pos.y };
         }
-        
+
         // Decrement duration
         unit.meta.fireTrailDuration--;
-        
+
         // Deactivate when duration expires
         if (unit.meta.fireTrailDuration <= 0) {
           unit.meta.fireTrailActive = false;
@@ -77,7 +80,7 @@ export class FireTrail extends Rule {
         }
       }
     }
-    
+
     return commands;
   }
 }

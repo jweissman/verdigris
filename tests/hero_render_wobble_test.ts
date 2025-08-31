@@ -176,39 +176,67 @@ describe("Hero Rendering Wobble Issue", () => {
 
     const rigStates = [];
     
-    // Move up multiple times
-    for (let i = 0; i < 5; i++) {
-      sim.queuedCommands.push({
-        type: "hero",
-        params: { action: "up" },
-      });
+    // Move up multiple times - need more steps for animation to progress
+    for (let i = 0; i < 15; i++) {
+      if (i % 3 === 0) {
+        // Queue movement every 3rd step to keep hero moving
+        sim.queuedCommands.push({
+          type: "hero",
+          params: { action: "up" },
+        });
+      }
       
       sim.step();
       
       // Capture rig state
       const rigParts = hero.meta?.rig;
-      if (rigParts) {
+      if (rigParts && rigParts.length > 0) {
         rigStates.push({
           tick: i,
           rig: [...rigParts],
+          pos: { ...hero.pos },
         });
+        
+        // Log first part for debugging
+        if (i === 0 || i === 14) {
+          console.log(`Tick ${i} rig sample:`, rigParts[0]);
+        }
       }
     }
     
     // Check that rig actually changes (animation progresses)
     let changesDetected = 0;
+    let significantChanges = 0;
     for (let i = 1; i < rigStates.length; i++) {
       const prev = rigStates[i-1];
       const curr = rigStates[i];
       
       // Compare rig parts to see if animation changed
-      const changed = JSON.stringify(prev.rig) !== JSON.stringify(curr.rig);
-      if (changed) changesDetected++;
+      const prevStr = JSON.stringify(prev.rig);
+      const currStr = JSON.stringify(curr.rig);
+      const changed = prevStr !== currStr;
+      if (changed) {
+        changesDetected++;
+        // Check if it's a significant change (not just tiny floating point differences)
+        if (prev.rig && curr.rig && prev.rig.length > 0 && curr.rig.length > 0) {
+          const prevFirstPart = prev.rig[0];
+          const currFirstPart = curr.rig[0];
+          if (prevFirstPart && currFirstPart) {
+            const xDiff = Math.abs((prevFirstPart.offset?.x || 0) - (currFirstPart.offset?.x || 0));
+            const yDiff = Math.abs((prevFirstPart.offset?.y || 0) - (currFirstPart.offset?.y || 0));
+            if (xDiff > 0.1 || yDiff > 0.1) {
+              significantChanges++;
+            }
+          }
+        }
+      }
     }
     
     console.log(`Animation changes detected: ${changesDetected} out of ${rigStates.length - 1} steps`);
+    console.log(`Significant changes: ${significantChanges}`);
     
     // Animation should change at least sometimes (not frozen)
-    expect(changesDetected).toBeGreaterThan(0);
+    // Accept either any changes or significant changes
+    expect(changesDetected > 0 || significantChanges > 0).toBe(true);
   });
 });

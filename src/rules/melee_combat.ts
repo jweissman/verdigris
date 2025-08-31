@@ -178,12 +178,17 @@ export class MeleeCombat extends Rule {
     }
 
     // Non-hero attacking hero
-    if (!isHeroA && isHeroB && distSq <= meleeRangeSq && !this.engagements.has(unitA.id)) {
+    if (
+      !isHeroA &&
+      isHeroB &&
+      distSq <= meleeRangeSq &&
+      !this.engagements.has(unitA.id)
+    ) {
       const lastAttack = this.lastAttacks.get(unitA.id) || -100;
       if (currentTick - lastAttack >= 3) {
         this.lastAttacks.set(unitA.id, currentTick);
         this.engagements.set(unitA.id, unitB.id);
-        
+
         commands.push({
           type: "strike",
           unitId: unitA.id,
@@ -197,12 +202,17 @@ export class MeleeCombat extends Rule {
     }
 
     // Hero being attacked by non-hero (reverse direction)
-    if (isHeroA && !isHeroB && distSq <= meleeRangeSq && !this.engagements.has(unitB.id)) {
+    if (
+      isHeroA &&
+      !isHeroB &&
+      distSq <= meleeRangeSq &&
+      !this.engagements.has(unitB.id)
+    ) {
       const lastAttack = this.lastAttacks.get(unitB.id) || -100;
       if (currentTick - lastAttack >= 3) {
         this.lastAttacks.set(unitB.id, currentTick);
         this.engagements.set(unitB.id, unitA.id);
-        
+
         commands.push({
           type: "strike",
           unitId: unitB.id,

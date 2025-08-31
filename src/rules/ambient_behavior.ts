@@ -6,15 +6,14 @@ import type { QueuedCommand } from "../core/command_handler";
 export class AmbientBehavior extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
-    const ambientCreatures = context
-      .getAllUnits()
-      .filter(
-        (u) => u.tags?.includes("wander") && 
-               u.hp > 0 && 
-               u.team === "neutral" &&
-               !u.meta?.frozen && // Don't wander when frozen
-               !u.meta?.stunned, // Don't wander when stunned
-      );
+    const ambientCreatures = context.getAllUnits().filter(
+      (u) =>
+        u.tags?.includes("wander") &&
+        u.hp > 0 &&
+        u.team === "neutral" &&
+        !u.meta?.frozen && // Don't wander when frozen
+        !u.meta?.stunned, // Don't wander when stunned
+    );
 
     for (const creature of ambientCreatures) {
       this.updateAmbientBehavior(context, creature, commands);

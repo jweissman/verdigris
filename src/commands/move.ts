@@ -14,33 +14,33 @@ export class MoveCommand extends Command {
     if (params.x !== undefined && params.y !== undefined) {
       const newX = params.x as number;
       const newY = params.y as number;
-      
+
       // Handle instant teleport
       if (params.teleport) {
         const updates: any = {
           pos: { x: newX, y: newY },
           intendedMove: { x: 0, y: 0 }, // No movement after teleport
         };
-        
+
         if (!updates.meta) updates.meta = {};
         updates.meta.teleported = true; // Mark for renderer to skip interpolation
-        
+
         if (params.z !== undefined) {
           updates.meta.z = params.z;
         }
-        
+
         transform.updateUnit(targetId, updates);
-        
+
         // Update lastUnitPositions to prevent interpolation
         this.sim.lastUnitPositions.set(targetId, {
           x: newX,
           y: newY,
-          z: params.z || 0
+          z: params.z || 0,
         } as any);
-        
+
         return;
       }
-      
+
       // Normal movement
       const dx = newX - unit.pos.x;
       const dy = newY - unit.pos.y;
