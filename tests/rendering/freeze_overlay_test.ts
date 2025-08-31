@@ -48,7 +48,11 @@ describe("Freeze Overlay Rendering", () => {
       sprite: "squirrel",
       meta: {
         frozen: true
-      }
+      },
+      intendedMove: { x: 0, y: 0 },
+      state: "idle" as const,
+      mass: 1,
+      abilities: []
     };
 
     // Render the unit
@@ -70,8 +74,11 @@ describe("Freeze Overlay Rendering", () => {
       maxHp: 100,
       team: "neutral" as const,
       sprite: "squirrel",
-      state: "stunned",
-      meta: {}
+      state: "idle" as const,
+      meta: { stunned: true },
+      intendedMove: { x: 0, y: 0 },
+      mass: 1,
+      abilities: []
     };
 
     // Render the unit
@@ -90,8 +97,11 @@ describe("Freeze Overlay Rendering", () => {
       maxHp: 100,
       team: "neutral" as const,
       sprite: "squirrel",
-      state: "idle",
-      meta: {}
+      state: "idle" as const,
+      meta: {},
+      intendedMove: { x: 0, y: 0 },
+      mass: 1,
+      abilities: []
     };
 
     // Mock sprite for the unit
@@ -123,7 +133,11 @@ describe("Freeze Overlay Rendering", () => {
       sprite: "squirrel",
       meta: {
         frozen: true
-      }
+      },
+      intendedMove: { x: 0, y: 0 },
+      state: "idle" as const,
+      mass: 1,
+      abilities: []
     };
 
     // Mock Date.now to control pulse calculation

@@ -16,7 +16,7 @@ describe("EventHandler browser compatibility", () => {
       const context = new TickContextImpl(sim);
       
 
-      sim.processedEvents.push({
+      sim.getProcessedEvents().push({
         kind: "damage",
         target: "test-unit",
         meta: { tick: 1, amount: 10 }

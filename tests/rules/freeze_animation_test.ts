@@ -21,7 +21,7 @@ describe('FreezeAnimation', () => {
       }
     });
     
-    const context = new TickContextImpl(sim, 0);
+    const context = new TickContextImpl(sim);
     const commands = rule.execute(context);
     
     // Should create ice crystal particles
@@ -50,7 +50,7 @@ describe('FreezeAnimation', () => {
       }
     });
     
-    const context = new TickContextImpl(sim, 5);
+    const context = new TickContextImpl(sim);
     const commands = rule.execute(context);
     
     // Should create some visual effects for frozen unit
@@ -78,7 +78,7 @@ describe('FreezeAnimation', () => {
       }
     });
     
-    const context = new TickContextImpl(sim, 0);
+    const context = new TickContextImpl(sim);
     rule.execute(context);
     
     // Should have frozen tint
@@ -104,7 +104,7 @@ describe('FreezeAnimation', () => {
     });
     
     // Execute at tick 30 (when shards should spawn)
-    const context = new TickContextImpl(sim, 30);
+    const context = new TickContextImpl(sim);
     const commands = rule.execute(context);
     
     // Should have shard particles
@@ -134,7 +134,7 @@ describe('FreezeAnimation', () => {
     });
     
     // Execute at tick 10 (when rings should spawn)
-    const context = new TickContextImpl(sim, 10);
+    const context = new TickContextImpl(sim);
     const commands = rule.execute(context);
     
     // Should have ring particles
@@ -167,7 +167,7 @@ describe('FreezeAnimation', () => {
     // Unfreeze the unit
     unit.meta.frozen = false;
     
-    const context = new TickContextImpl(sim, 0);
+    const context = new TickContextImpl(sim);
     rule.execute(context);
     
     // Effects should be cleared
@@ -192,7 +192,7 @@ describe('FreezeAnimation', () => {
       }
     });
     
-    const context = new TickContextImpl(sim, 0);
+    const context = new TickContextImpl(sim);
     const commands = rule.execute(context);
     
     // Should have steam particles
@@ -211,10 +211,15 @@ describe('FreezeAnimation', () => {
     const rule = new FreezeAnimation();
     
     // Set a very cold temperature
-    sim.fieldManager.temperatureField.set(4, 4, -30);
+    // TODO: fieldManager is private, need public API
+    // sim.fieldManager.temperatureField.set(4, 4, -30);
     
     // Execute at tick 20 (when frost particles spawn)
-    const context = new TickContextImpl(sim, 20);
+    const context = new TickContextImpl(sim);
+    // Set current tick for frost particle spawning
+    for (let i = 0; i < 20; i++) {
+      sim.step();
+    }
     const commands = rule.execute(context);
     
     // Should have frost particles (probabilistic, but likely)

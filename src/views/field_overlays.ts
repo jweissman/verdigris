@@ -85,7 +85,7 @@ export class FieldOverlays {
     toScreenCoords: (x: number, y: number) => { x: number; y: number },
   ) {
     const recentStrikes =
-      this.sim.processedEvents?.filter(
+      this.sim.getProcessedEvents()?.filter(
         (event) =>
           event.kind === "aoe" &&
           event.meta.aspect === "emp" &&

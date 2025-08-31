@@ -27,7 +27,7 @@ describe('Lightning Storm Environmental System', () => {
       lightningStrikes++;
     }
     sim.step();
-    empEvents = sim.processedEvents?.filter(e => e.meta.aspect === 'emp').length || 1;
+    empEvents = sim.getProcessedEvents()?.filter(e => e.meta.aspect === 'emp').length || 1;
     for (let tick = 0; tick < 50; tick++) {
       const beforeParticles = sim.particles.filter(p => p.type === 'lightning').length;
       sim.step();

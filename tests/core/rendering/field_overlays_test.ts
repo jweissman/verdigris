@@ -52,7 +52,7 @@ describe('Field Overlays - Environmental Visualization', () => {
     sim.step();
     
 
-    const empEvents = sim.processedEvents?.filter(e => 
+    const empEvents = sim.getProcessedEvents()?.filter(e => 
       e.kind === 'aoe' && e.meta.aspect === 'emp'
     ) || [];
     

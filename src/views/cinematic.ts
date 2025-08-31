@@ -356,7 +356,7 @@ export default class CinematicView extends View {
   }
 
   private renderAoEEffectsCinematic() {
-    const recentAoEEvents = this.sim.processedEvents.filter(
+    const recentAoEEvents = this.sim.getProcessedEvents().filter(
       (event) =>
         event.kind === "aoe" &&
         event.meta.tick &&

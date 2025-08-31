@@ -50,7 +50,7 @@ export class UnitRenderer {
    * Check if unit should blink due to recent damage
    */
   shouldBlinkFromDamage(unit: Unit, animationTime: number): boolean {
-    const recentDamage = this.sim.processedEvents.find(
+    const recentDamage = this.sim.getProcessedEvents().find(
       (event) =>
         event.kind === "damage" &&
         event.target === unit.id &&
@@ -245,7 +245,7 @@ export class UnitRenderer {
       this.renderRiggedUnit(ctx, unit, sprites, screenX, screenY, options);
 
       // Render ice cube overlay for frozen units AFTER the unit
-      if (unit.meta?.frozen || unit.state === "stunned") {
+      if (unit.meta?.frozen || unit.meta?.stunned) {
         this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
       }
       return;
@@ -257,7 +257,7 @@ export class UnitRenderer {
       ctx.fillRect(screenX - 8, screenY - 8, 16, 16);
 
       // Render ice cube overlay for frozen units even without sprite
-      if (unit.meta?.frozen || unit.state === "stunned") {
+      if (unit.meta?.frozen || unit.meta?.stunned) {
         this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
       }
       return;
@@ -296,7 +296,7 @@ export class UnitRenderer {
     ctx.restore();
 
     // Render ice cube overlay for frozen units AFTER the unit sprite
-    if (unit.meta?.frozen || unit.state === "stunned") {
+    if (unit.meta?.frozen || unit.meta?.stunned) {
       this.renderFrozenOverlay(ctx, unit, sprites, screenX, screenY);
     }
   }

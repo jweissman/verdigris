@@ -973,4 +973,36 @@ export class HeroRig {
       }
     }
   }
+  
+  // Methods for HeroRigLoader compatibility
+  setPart(name: BodyPart["name"], part: Partial<BodyPart>): void {
+    const existing = this.parts.get(name);
+    if (existing) {
+      this.parts.set(name, { ...existing, ...part } as BodyPart);
+    } else {
+      this.parts.set(name, { name, ...part } as BodyPart);
+    }
+  }
+  
+  setAnchor(name: AnchorPoint["name"], anchor: Partial<AnchorPoint>): void {
+    const existing = this.anchors.get(name);
+    if (existing) {
+      this.anchors.set(name, { ...existing, ...anchor } as AnchorPoint);
+    } else {
+      this.anchors.set(name, { name, ...anchor } as AnchorPoint);
+    }
+  }
+  
+  setWeaponConfig(type: WeaponType, config: Partial<WeaponConfig>): void {
+    const existing = this.weaponConfigs.get(type);
+    if (existing) {
+      this.weaponConfigs.set(type, { ...existing, ...config } as WeaponConfig);
+    } else {
+      this.weaponConfigs.set(type, { type, ...config } as WeaponConfig);
+    }
+  }
+  
+  addAnimation(animation: RigAnimation): void {
+    this.animations.set(animation.name, animation);
+  }
 }

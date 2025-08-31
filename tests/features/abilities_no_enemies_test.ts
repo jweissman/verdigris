@@ -66,14 +66,14 @@ describe.skip('Abilities Without Nearby Enemies - NEEDS REWRITE FOR NEW API', ()
     
 
     expect(mechatron.abilities).toContain('empPulse');
-    const initialProcessedEvents = sim.processedEvents.length;
+    const initialProcessedEvents = sim.getProcessedEvents().length;
     
 
     sim.forceAbility(addedMechatron.id, 'empPulse', addedMechatron.pos);
     sim.step();
     
-    expect(sim.processedEvents.length).toBe(initialProcessedEvents + 1);
-    const empEvent = sim.processedEvents[sim.processedEvents.length - 1];
+    expect(sim.getProcessedEvents().length).toBe(initialProcessedEvents + 1);
+    const empEvent = sim.getProcessedEvents()[sim.getProcessedEvents().length - 1];
     expect(empEvent.kind).toBe('aoe');
     expect(empEvent.meta.aspect).toBe('emp');
     expect(empEvent.meta.radius).toBe(8);

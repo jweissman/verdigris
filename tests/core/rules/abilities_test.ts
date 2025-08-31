@@ -64,7 +64,7 @@ describe('Abilities Rule', () => {
     expect(damageTaken).toBeLessThanOrEqual(initialEnemyHp);
     
 
-    const aoeEvents = sim.processedEvents.filter(e => e.kind === 'aoe');
+    const aoeEvents = sim.getProcessedEvents().filter(e => e.kind === 'aoe');
     expect(aoeEvents.length).toBeGreaterThan(0);
     expect(['impact', 'explosive']).toContain(aoeEvents[0].meta?.aspect);
     expect(aoeEvents[0].meta?.radius).toBe(3);

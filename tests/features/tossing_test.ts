@@ -229,7 +229,7 @@ describe('Tossing mechanics', () => {
 
     let aoeGenerated = false;
     let aoeEvent = null;
-    const initialProcessedEvents = sim.processedEvents.length;
+    const initialProcessedEvents = sim.getProcessedEvents().length;
     
 
     for (let i = 0; i < 10; i++) {
@@ -246,8 +246,8 @@ describe('Tossing mechanics', () => {
         }
         
 
-        if (sim.processedEvents.length > initialProcessedEvents) {
-          const recentEvents = sim.processedEvents.slice(initialProcessedEvents);
+        if (sim.getProcessedEvents().length > initialProcessedEvents) {
+          const recentEvents = sim.getProcessedEvents().slice(initialProcessedEvents);
           aoeEvent = recentEvents.find(e => e.kind === 'aoe');
           if (aoeEvent) {
             aoeGenerated = true;

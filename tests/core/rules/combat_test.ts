@@ -145,7 +145,7 @@ describe("Combat", () => {
       expect(clanker.tags).toContain('aggressive');
     }
 
-    const deployEvents = sim.processedEvents.filter(e => e.kind === 'spawn');
+    const deployEvents = sim.getProcessedEvents().filter(e => e.kind === 'spawn');
     expect(deployEvents.length).toBeLessThanOrEqual(8); // 3 manual + 5 from toymaker
   });
   
@@ -168,7 +168,7 @@ describe("Combat", () => {
       sim.step();
       landingTick++;
     }
-    const impactEvents = sim.processedEvents.filter(e => 
+    const impactEvents = sim.getProcessedEvents().filter(e => 
       e.kind === 'aoe' && e.meta.aspect === 'kinetic'
     );
     expect(impactEvents.length).toBeGreaterThan(0);

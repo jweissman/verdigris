@@ -20,7 +20,7 @@ describe('FreezeAnimation Debug', () => {
       }
     });
     
-    const context = new TickContextImpl(sim, 5);
+    const context = new TickContextImpl(sim);
     const commands = rule.execute(context);
     
     // Check that we generate effects for frozen units

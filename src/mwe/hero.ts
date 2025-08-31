@@ -40,7 +40,7 @@ export class HeroGame extends Game {
 
     this.sim.sceneBackground = "grad";
 
-    this.sim.addUnit({
+    const hero = this.sim.addUnit({
       id: "hero",
       type: "hero",
       pos: { x: 10, y: 10 },
@@ -57,6 +57,15 @@ export class HeroGame extends Game {
         onRooftop: true,
         facing: "right",
       },
+    });
+    
+    // Equip chain weapon on hero
+    this.sim.queuedCommands.push({
+      type: "chain_weapon",
+      unitId: "hero",
+      params: {
+        action: "equip"
+      }
     });
 
     // Add creatures from encyclopaedia with ambient behavior

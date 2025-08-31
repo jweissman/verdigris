@@ -131,7 +131,7 @@ export class Blink extends Command {
           ...unit.meta,
           lastBlinkTime: this.sim.ticks,
           facing: dx > 0 ? "right" : dx < 0 ? "left" : unit.meta?.facing,
-          teleported: true, // Mark that unit just teleported
+          teleportedAtTick: this.sim.ticks, // Store when teleport happened
         },
       },
     });

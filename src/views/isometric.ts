@@ -241,7 +241,7 @@ export default class Isometric extends View {
       return;
     }
 
-    const recentDamage = this.sim.processedEvents.find(
+    const recentDamage = this.sim.getProcessedEvents().find(
       (event) =>
         event.kind === "damage" &&
         event.target === unit.id &&
@@ -260,10 +260,12 @@ export default class Isometric extends View {
     // Check if we have a previous position for interpolation
     // Skip interpolation if unit just teleported (blink ability)
     const lastPos = this.sim.lastUnitPositions.get(unit.id);
+    const justTeleported = unit.meta?.teleportedAtTick && 
+                          this.sim.ticks - unit.meta.teleportedAtTick < 2;
     if (
       lastPos &&
       this.sim.interpolationFactor !== undefined &&
-      !unit.meta?.teleported
+      !justTeleported
     ) {
       // Interpolate between last and current position
       const t = this.sim.interpolationFactor;
@@ -345,6 +347,11 @@ export default class Isometric extends View {
         flipHorizontal: shouldFlip,
       },
     );
+    
+    // Render chain weapon if equipped
+    if (unit.meta?.chainWeapon && unit.meta?.chainLinks) {
+      this.renderChainWeapon(unit, screenX, screenY - spriteOffset - renderZ * 8);
+    }
 
     if (typeof unit.hp === "number" && unit.hp < unit.maxHp) {
       const maxHp = unit.maxHp || 100;
@@ -675,7 +682,7 @@ export default class Isometric extends View {
   }
 
   private renderAoEEffects() {
-    const recentAoEEvents = this.sim.processedEvents.filter(
+    const recentAoEEvents = this.sim.getProcessedEvents().filter(
       (event) =>
         event.kind === "aoe" &&
         event.meta.tick &&
@@ -797,7 +804,7 @@ export default class Isometric extends View {
     }
 
     const recentExplosions =
-      this.sim.processedEvents?.filter(
+      this.sim.getProcessedEvents()?.filter(
         (event) =>
           event.kind === "aoe" &&
           event.meta.tick &&
@@ -1095,6 +1102,66 @@ export default class Isometric extends View {
     for (const hint of hints) {
       this.fontAtlas.drawTinyText(hint, this.width - 70, hintY, "#888888", 1);
       hintY += 6;
+    }
+  }
+  
+  private renderChainWeapon(unit: any, screenX: number, screenY: number): void {
+    const chainLinks = unit.meta?.chainLinks;
+    const ballPos = unit.meta?.chainBallPos;
+    
+    if (!chainLinks || chainLinks.length === 0) return;
+    
+    const ctx = this.ctx;
+    
+    // Draw chain links
+    ctx.strokeStyle = "#666666";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    for (let i = 0; i < chainLinks.length; i++) {
+      const link = chainLinks[i];
+      // Convert from pixel coords to isometric screen coords
+      const linkScreen = this.toIsometric(link.x / 8, link.y / 8);
+      
+      if (i === 0) {
+        ctx.moveTo(linkScreen.x, linkScreen.y);
+      } else {
+        ctx.lineTo(linkScreen.x, linkScreen.y);
+      }
+      
+      // Draw small circles for chain links
+      if (i > 0 && i < chainLinks.length - 1) {
+        ctx.fillStyle = "#888888";
+        ctx.fillRect(linkScreen.x - 1, linkScreen.y - 1, 2, 2);
+      }
+    }
+    
+    ctx.stroke();
+    
+    // Draw the ball at the end
+    if (ballPos) {
+      const ballScreen = this.toIsometric(ballPos.x / 8, ballPos.y / 8);
+      
+      // Shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.beginPath();
+      ctx.arc(ballScreen.x, ballScreen.y + 2, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ball
+      ctx.fillStyle = "#444444";
+      ctx.strokeStyle = "#222222";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(ballScreen.x, ballScreen.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Highlight
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.beginPath();
+      ctx.arc(ballScreen.x - 1, ballScreen.y - 1, 1.5, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 }

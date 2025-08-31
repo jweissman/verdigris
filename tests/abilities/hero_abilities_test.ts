@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { Simulator } from "../../src/core/simulator";
-import { Unit } from "../../src/types/unit";
+import { Unit } from "../../src/types/Unit";
 
 describe("Hero Abilities", () => {
   let sim: Simulator;

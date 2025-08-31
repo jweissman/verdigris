@@ -419,6 +419,9 @@ class Simulator {
   public recordProcessedEvents(events: Action[]): void {
     this.processedEvents.push(...events);
   }
+  public getProcessedEvents(): Action[] {
+    return this.processedEvents;
+  }
   public setBackground(value: string): void {
     this.sceneBackground = value;
   }

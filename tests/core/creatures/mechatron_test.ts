@@ -145,7 +145,7 @@ describe('Mechatron', () => {
       sim.step(); // Process commands to create events
       
 
-      const empEvents = sim.processedEvents.filter(e => e.kind === 'aoe' && e.meta.aspect === 'emp');
+      const empEvents = sim.getProcessedEvents().filter(e => e.kind === 'aoe' && e.meta.aspect === 'emp');
       expect(empEvents.length).toBeGreaterThan(0);
       const empEvent = empEvents[empEvents.length - 1];
       expect(empEvent.kind).toBe('aoe');
@@ -163,7 +163,7 @@ describe('Mechatron', () => {
       
 
       // Check AOE events created by laser sweep
-      const laserAOEEvents = sim.processedEvents.filter(e => e.kind === 'aoe' && e.meta.aspect === 'laser');
+      const laserAOEEvents = sim.getProcessedEvents().filter(e => e.kind === 'aoe' && e.meta.aspect === 'laser');
       expect(laserAOEEvents.length).toBeGreaterThan(0);
       
       laserAOEEvents.forEach(event => {
@@ -171,7 +171,7 @@ describe('Mechatron', () => {
       });
       
       // Also check damage events
-      const laserDamageEvents = sim.processedEvents.filter(e => e.kind === 'damage' && e.meta.aspect === 'laser');
+      const laserDamageEvents = sim.getProcessedEvents().filter(e => e.kind === 'damage' && e.meta.aspect === 'laser');
       // These may have varying damage due to projectile collisions
       
     }

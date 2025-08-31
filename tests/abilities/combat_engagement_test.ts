@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { Simulator } from "../../src/core/simulator";
-import { Unit } from "../../src/types/unit";
+import { Unit } from "../../src/types/Unit";
 
 describe("Combat Engagement", () => {
   let sim: Simulator;
@@ -294,11 +294,11 @@ describe("Attack Pattern", () => {
         hp: 10,
         maxHp: 10,
         dmg: 1, // Add damage field
-        team: "hostile",
+        team: "hostile" as const,
         tags: [],
         abilities: [],
         intendedMove: { x: 0, y: 0 },
-        state: "idle",
+        state: "idle" as const,
         sprite: "goblin",
         mass: 1,
         meta: {},

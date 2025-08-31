@@ -83,7 +83,7 @@ describe('Hero Regeneration', () => {
     expect(heroAfter!.hp).toBe(100); // Should stay at 100
     
 
-    const healEvents = sim.processedEvents.filter(e => e.kind === 'heal');
+    const healEvents = sim.getProcessedEvents().filter(e => e.kind === 'heal');
     expect(healEvents.length).toBe(0);
   });
   

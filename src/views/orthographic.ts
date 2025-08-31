@@ -545,7 +545,7 @@ export default class Orthographic extends View {
   }
 
   private renderAoEEffects() {
-    const recentAoEEvents = this.sim.processedEvents.filter(
+    const recentAoEEvents = this.sim.getProcessedEvents().filter(
       (event) =>
         event.kind === "aoe" &&
         event.meta.tick &&

@@ -46,6 +46,7 @@ import { Wander } from "../commands/wander";
 import { GroundPound } from "../commands/ground_pound";
 import { Dash } from "../commands/dash";
 import { Blink } from "../commands/blink";
+import { ChainWeaponCommand } from "../commands/chain_weapon";
 import { FireTrailCommand } from "../commands/fire_trail";
 // RemoveProjectileCommand merged into Projectile command
 import { ParticleCommand } from "../commands/particle";
@@ -214,6 +215,7 @@ export class CommandHandler {
     this.commands.set("groundPound", new GroundPound(sim, this.transform));
     this.commands.set("dash", new Dash(sim, this.transform));
     this.commands.set("blink", new Blink(sim, this.transform));
+    this.commands.set("chain_weapon", new ChainWeaponCommand(sim, this.transform));
     this.commands.set("firetrail", new FireTrailCommand(sim, this.transform));
   }
 

@@ -113,7 +113,7 @@ describe('Ground Pound', () => {
     sim.tick(); // Make sure all commands are processed
     
     // Should have created particles
-    const particles = sim.particleManager.particles;
+    const particles = sim.particles;
     
     // Ground pound should create particles (either shockwave or dust)
     expect(particles.length).toBeGreaterThan(0);

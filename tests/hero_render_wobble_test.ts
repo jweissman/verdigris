@@ -52,13 +52,23 @@ describe("Hero Rendering Wobble Issue", () => {
     // Override drawImage to capture actual render positions
     let lastDrawnX = null;
     let lastDrawnY = null;
-    ctx.drawImage = (img, sx, sy, sw, sh, dx, dy, dw, dh) => {
-      // Capture the destination x,y where hero is actually drawn
-      if (dx !== undefined && dy !== undefined) {
-        lastDrawnX = dx;
-        lastDrawnY = dy;
+    ctx.drawImage = ((img: any, ...args: any[]) => {
+      // Capture the destination x,y where hero is actually drawn  
+      // Handle different overloads
+      if (args.length === 8) {
+        // Full version: sx, sy, sw, sh, dx, dy, dw, dh
+        lastDrawnX = args[4];
+        lastDrawnY = args[5];
+      } else if (args.length === 4) {
+        // dx, dy, dw, dh
+        lastDrawnX = args[0];
+        lastDrawnY = args[1];
+      } else if (args.length === 2) {
+        // dx, dy
+        lastDrawnX = args[0];
+        lastDrawnY = args[1];
       }
-    };
+    }) as any;
     
     // Initial render
     view.show();
@@ -77,7 +87,7 @@ describe("Hero Rendering Wobble Issue", () => {
       sim.step();
       
       // Update view interpolations
-      view.updateMovementInterpolations();
+      (view as any).updateMovementInterpolations();
       
       // Render
       view.show();
