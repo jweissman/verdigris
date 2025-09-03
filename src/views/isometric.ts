@@ -349,7 +349,7 @@ export default class Isometric extends View {
     );
     
     // Render chain weapon if equipped
-    if (unit.meta?.chainWeapon && unit.meta?.chainLinks) {
+    if (unit.meta?.chainWeapon && unit.meta?.chainBallId) {
       this.renderChainWeapon(unit, screenX, screenY - spriteOffset - renderZ * 8);
     }
 
@@ -1106,62 +1106,34 @@ export default class Isometric extends View {
   }
   
   private renderChainWeapon(unit: any, screenX: number, screenY: number): void {
-    const chainLinks = unit.meta?.chainLinks;
-    const ballPos = unit.meta?.chainBallPos;
+    const ballId = unit.meta?.chainBallId;
+    if (!ballId) return;
     
-    if (!chainLinks || chainLinks.length === 0) return;
+    // Find the ball unit
+    const ball = this.sim.units.find((u: any) => u.id === ballId);
+    if (!ball) return;
     
     const ctx = this.ctx;
     
-    // Draw chain links
-    ctx.strokeStyle = "#666666";
-    ctx.lineWidth = 2;
+    // Get hero hand position (right side of sprite)
+    const heroScreen = this.toIsometric(unit.pos.x, unit.pos.y);
+    const ballScreen = this.toIsometric(ball.pos.x, ball.pos.y);
+    
+    // Draw chain as simple dotted line - pure black
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]); // Dotted pattern for chain
     ctx.beginPath();
-    
-    for (let i = 0; i < chainLinks.length; i++) {
-      const link = chainLinks[i];
-      // Convert from pixel coords to isometric screen coords
-      const linkScreen = this.toIsometric(link.x / 8, link.y / 8);
-      
-      if (i === 0) {
-        ctx.moveTo(linkScreen.x, linkScreen.y);
-      } else {
-        ctx.lineTo(linkScreen.x, linkScreen.y);
-      }
-      
-      // Draw small circles for chain links
-      if (i > 0 && i < chainLinks.length - 1) {
-        ctx.fillStyle = "#888888";
-        ctx.fillRect(linkScreen.x - 1, linkScreen.y - 1, 2, 2);
-      }
-    }
-    
+    ctx.moveTo(heroScreen.x + 4, heroScreen.y - 2); // Offset to hand position
+    ctx.lineTo(ballScreen.x, ballScreen.y);
     ctx.stroke();
+    ctx.setLineDash([]); // Reset
     
-    // Draw the ball at the end
-    if (ballPos) {
-      const ballScreen = this.toIsometric(ballPos.x / 8, ballPos.y / 8);
-      
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.arc(ballScreen.x, ballScreen.y + 2, 4, 0, Math.PI * 2);
-      ctx.fill();
-      
-      // Ball
-      ctx.fillStyle = "#444444";
-      ctx.strokeStyle = "#222222";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(ballScreen.x, ballScreen.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      
-      // Highlight
-      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-      ctx.beginPath();
-      ctx.arc(ballScreen.x - 1, ballScreen.y - 1, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    // Draw ball - solid black circle (ball is rendered as its own unit now)
+    // But we can add a highlight to show it's the chain ball
+    ctx.fillStyle = "#000000";
+    ctx.beginPath();
+    ctx.arc(Math.floor(ballScreen.x), Math.floor(ballScreen.y), 4, 0, Math.PI * 2);
+    ctx.fill();
   }
 }

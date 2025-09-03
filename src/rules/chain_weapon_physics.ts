@@ -9,13 +9,7 @@ export class ChainWeaponPhysics extends Rule {
     const commands: QueuedCommand[] = [];
     const currentTick = context.getCurrentTick();
     
-    // Update all chain weapons physics every tick
-    commands.push({
-      type: "chain_weapon",
-      params: {
-        action: "update"
-      }
-    });
+    // No longer need to update physics - ball is a real unit now
     
     // Find heroes with chain weapons and allow them to swing
     const heroes = context.getAllUnits().filter(u => 
@@ -26,35 +20,48 @@ export class ChainWeaponPhysics extends Rule {
       const lastSwing = this.lastSwingTick.get(hero.id) || 0;
       const timeSinceSwing = currentTick - lastSwing;
       
-      // Auto-swing when attacking or every so often for visual effect
-      if (hero.state === "attack" || 
-          (hero.meta?.attackStartTick && currentTick - hero.meta.attackStartTick < 10)) {
-        // Swing during attack
-        if (timeSinceSwing > 5) { // Don't swing too frequently
-          commands.push({
-            type: "chain_weapon",
-            unitId: hero.id,
-            params: {
-              action: "swing",
-              direction: hero.meta?.facing || "right",
-              power: 10
-            }
-          });
-          this.lastSwingTick.set(hero.id, currentTick);
-        }
-      } else if (hero.intendedMove?.x !== 0 || hero.intendedMove?.y !== 0) {
-        // Small swing while moving for visual effect
-        if (timeSinceSwing > 10) {
-          commands.push({
-            type: "chain_weapon",
-            unitId: hero.id,
-            params: {
-              action: "swing",
-              direction: hero.meta?.facing || "right",
-              power: 3
-            }
-          });
-          this.lastSwingTick.set(hero.id, currentTick);
+      // Check if hero just started an attack
+      const justAttacked = hero.meta?.attackStartTick === currentTick;
+      
+      // Strong swing when attacking
+      if (justAttacked && timeSinceSwing > 3) {
+        // Big swing at start of attack
+        commands.push({
+          type: "chain_weapon",
+          unitId: hero.id,
+          params: {
+            action: "swing",
+            direction: hero.meta?.facing || "right",
+            power: 25, // Very strong throw for attack - should reach 8-10 tiles
+            isAttack: true
+          }
+        });
+        this.lastSwingTick.set(hero.id, currentTick);
+      }
+      
+      // Check for collisions with the ball unit
+      const ballId = hero.meta?.chainBallId;
+      if (ballId) {
+        const ball = context.getAllUnits().find(u => u.id === ballId);
+        if (ball && ball.intendedMove) {
+          const speed = Math.sqrt(
+            ball.intendedMove.x * ball.intendedMove.x + 
+            ball.intendedMove.y * ball.intendedMove.y
+          );
+          
+          if (speed > 2) {
+            // Ball is moving, check for impacts
+            commands.push({
+              type: "chain_weapon",
+              unitId: hero.id,
+              params: {
+                action: "swing",
+                direction: hero.meta?.facing || "right",
+                power: 0, // Just check collisions, don't add force
+                isAttack: false
+              }
+            });
+          }
         }
       }
     }

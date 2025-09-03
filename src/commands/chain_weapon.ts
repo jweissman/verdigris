@@ -1,9 +1,6 @@
 import { Command } from "../rules/command";
-import { KinematicChain } from "../weapons/kinematic_chain";
 
 export class ChainWeaponCommand extends Command {
-  private static chains: Map<string, KinematicChain> = new Map();
-  private static initialized: boolean = false;
   
   execute(unitId: string | null, params: Record<string, any>): void {
     const action = params.action as string;
@@ -12,69 +9,137 @@ export class ChainWeaponCommand extends Command {
       const unit = this.sim.units.find(u => u.id === unitId);
       if (!unit) return;
       
-      // Create a chain for this unit
-      const chain = new KinematicChain(
-        { x: unit.pos.x * 8 + 4, y: unit.pos.y * 8 + 4 }, // Convert to pixel coords (center of tile)
-        6, // 6 links
-        4  // Ball radius
-      );
+      // Create the ball as an actual unit in the simulation
+      const ballId = `${unitId}_chain_ball`;
       
-      ChainWeaponCommand.chains.set(unitId, chain);
+      // Remove old ball if it exists
+      const oldBall = this.sim.units.find(u => u.id === ballId);
+      if (oldBall) {
+        this.sim.units = this.sim.units.filter(u => u.id !== ballId);
+      }
       
-      // Store chain in unit meta for rendering
+      // Create ball unit - starts at rest below hero
+      const ball = this.sim.addUnit({
+        id: ballId,
+        type: "chain_ball",
+        pos: { x: unit.pos.x, y: unit.pos.y + 3 }, // 3 tiles below hero
+        hp: 1000, // Indestructible
+        maxHp: 1000,
+        team: unit.team,
+        mass: 50, // Very heavy
+        sprite: "chain_ball", // We'll need a sprite for this
+        tags: ["projectile", "chain_ball", "no_collision"], // no_collision so it doesn't block movement
+        intendedMove: { x: 0, y: 0 },
+        meta: {
+          ownerId: unitId,
+          isChainBall: true,
+          chainLength: 24, // Maximum chain length in pixels (3 tiles)
+          noBlock: true, // Don't block other units
+        }
+      });
+      
+      // Store chain info in hero's meta
       if (!unit.meta) unit.meta = {};
       unit.meta.chainWeapon = true;
+      unit.meta.chainBallId = ballId;
       
-      console.log(`[ChainWeapon] Equipped chain weapon on ${unitId}`);
       return;
     }
     
     if (action === "swing" && unitId) {
       const unit = this.sim.units.find(u => u.id === unitId);
-      const chain = ChainWeaponCommand.chains.get(unitId);
-      if (!unit || !chain) return;
+      const ballId = unit?.meta?.chainBallId;
+      if (!unit || !ballId) return;
+      
+      const ball = this.sim.units.find(u => u.id === ballId);
+      if (!ball) return;
       
       const direction = params.direction || unit.meta?.facing || "right";
       const power = params.power || 5;
       
-      // Apply swing force to the ball
-      const force = {
-        x: direction === "right" ? power : direction === "left" ? -power : 0,
-        y: direction === "up" ? -power : direction === "down" ? power : 0
-      };
+      // For attacks, create a whipping motion
+      const isAttack = params.isAttack;
       
-      chain.applyForce(force);
+      if (isAttack) {
+        // Calculate whip direction and force
+        const whipPower = power || 8; // Strong default power for attacks
+        
+        // Direction vectors
+        let forceX = 0;
+        let forceY = 0;
+        
+        switch(direction) {
+          case "right": forceX = whipPower; break;
+          case "left": forceX = -whipPower; break;
+          case "up": forceY = -whipPower; break;
+          case "down": forceY = whipPower; break;
+        }
+        
+        // Add some upward component for a more natural whip arc
+        if (forceX !== 0) {
+          forceY -= whipPower * 0.3; // Slight upward arc when swinging horizontally
+        }
+        
+        // Apply the impulse to the ball
+        if (!ball.intendedMove) {
+          ball.intendedMove = { x: 0, y: 0 };
+        }
+        
+        // Add to existing movement (impulse)
+        ball.intendedMove.x += forceX;
+        ball.intendedMove.y += forceY;
+        
+        // Store velocity for damage calculation
+        if (!ball.meta) ball.meta = {};
+        ball.meta.velocity = { x: forceX, y: forceY };
+        ball.meta.lastSwingTick = this.sim.ticks;
+      }
       
-      // Check for collisions with enemies
-      const ballPos = chain.getBallPosition();
-      if (ballPos) {
-        // Convert back to tile coordinates
-        const ballTileX = Math.floor(ballPos.x / 8);
-        const ballTileY = Math.floor(ballPos.y / 8);
+      // Check for collisions with enemies using ball's actual position
+      const enemies = this.sim.units.filter(u => {
+        if (u.id === unitId || u.id === ballId || u.team === unit.team || u.hp <= 0) return false;
         
-        console.log(`[ChainWeapon] Ball position: pixel(${ballPos.x}, ${ballPos.y}) -> tile(${ballTileX}, ${ballTileY})`);
+        const dx = u.pos.x - ball.pos.x;
+        const dy = u.pos.y - ball.pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
         
-        // Find enemies near the ball
-        const enemies = this.sim.units.filter(u => {
-          if (u.id === unitId || u.team === unit.team || u.hp <= 0) return false;
-          
-          const dx = u.pos.x - ballTileX;
-          const dy = u.pos.y - ballTileY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          console.log(`[ChainWeapon] Checking enemy ${u.id} at (${u.pos.x}, ${u.pos.y}), distance: ${dist}`);
-          
-          return dist <= 1; // Within 1 tile
+        return dist <= 1.5; // Within 1.5 tiles for collision
+      });
+      
+      // Damage enemies based on ball velocity
+      const velocity = ball.meta?.velocity || { x: 0, y: 0 };
+      const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+      const damage = Math.floor(speed * 3); // Damage based on swing speed
+        
+      // Create ground impact effect if ball is moving fast AND hitting enemies
+      if (speed > 5 && enemies.length > 0) {
+        // Impact particle at ball position
+        this.sim.queuedCommands.push({
+          type: "particle",
+          params: {
+            pos: { x: ball.pos.x * 8 + 4, y: ball.pos.y * 8 + 4 },
+            vel: { x: 0, y: -1 },
+            lifetime: 10,
+            type: "impact",
+            color: "#000000",
+            radius: 2,
+            z: 0
+          }
         });
         
-        console.log(`[ChainWeapon] Found ${enemies.length} enemies near ball`);
-        
-        // Damage enemies based on ball velocity
-        const velocity = chain.getBallVelocity();
-        const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-        const damage = Math.floor(speed * 3); // Damage based on swing speed
-        
-        console.log(`[ChainWeapon] Ball velocity: (${velocity.x}, ${velocity.y}), speed: ${speed}, damage: ${damage}`);
+        // Ground crack/impact zone visualization
+        this.sim.queuedEvents.push({
+          kind: "aoe",
+          source: unitId,
+          target: { x: ball.pos.x, y: ball.pos.y },
+          zones: [{ x: ball.pos.x, y: ball.pos.y }],
+          kind_flavor: "impact",
+          duration: 5,
+          meta: {
+            aspect: "kinetic"
+          }
+        });
+      }
         
         for (const enemy of enemies) {
           if (damage > 0) {
@@ -114,53 +179,14 @@ export class ChainWeaponCommand extends Command {
             });
           }
         }
-      }
       
-      console.log(`[ChainWeapon] Swinging chain weapon for ${unitId}`);
       return;
     }
     
     if (action === "update") {
-      // Update all chains physics
-      for (const [unitId, chain] of ChainWeaponCommand.chains) {
-        const unit = this.sim.units.find(u => u.id === unitId);
-        if (unit) {
-          // Update anchor position to follow hero's hand
-          const handX = unit.pos.x * 8 + 8;
-          const handY = unit.pos.y * 8 - 4; // Slightly above center
-          
-          // If hero has a rig, use the actual hand position
-          if (unit.meta?.rig && Array.isArray(unit.meta.rig)) {
-            const rightArm = unit.meta.rig.find((part: any) => part.name === "rarm");
-            if (rightArm && rightArm.offset) {
-              chain.setAnchorPosition({
-                x: handX + rightArm.offset.x,
-                y: handY + rightArm.offset.y
-              });
-            } else {
-              chain.setAnchorPosition({ x: handX, y: handY });
-            }
-          } else {
-            chain.setAnchorPosition({ x: handX, y: handY });
-          }
-          
-          // Update physics
-          chain.update(1);
-          
-          // Store chain data in unit meta for rendering
-          if (!unit.meta) unit.meta = {};
-          unit.meta.chainLinks = chain.getLinkPositions();
-          unit.meta.chainBallPos = chain.getBallPosition();
-          
-          // Debug: Log chain position periodically
-          if (Math.random() < 0.01) {
-            console.log(`[ChainWeapon] Chain for ${unitId} - Ball at:`, unit.meta.chainBallPos);
-          }
-        } else {
-          // Remove chain if unit no longer exists
-          ChainWeaponCommand.chains.delete(unitId);
-        }
-      }
+      // This action is no longer needed - ball is a real unit now
+      // Chain constraint is handled by ChainConstraint rule
+      return;
     }
   }
 }

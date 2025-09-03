@@ -15,6 +15,7 @@ import { SegmentedCreatures } from "../rules/segmented_creatures";
 import { GrapplingPhysics } from "../rules/grappling_physics";
 import { AirdropPhysics } from "../rules/airdrop_physics";
 import { ChainWeaponPhysics } from "../rules/chain_weapon_physics";
+import { ChainConstraint } from "../rules/chain_constraint";
 import { BiomeEffects } from "../rules/biome_effects";
 import { AmbientSpawning } from "../rules/ambient_spawning";
 import { AmbientBehavior } from "../rules/ambient_behavior";
@@ -53,6 +54,7 @@ export class RulesetFactory {
       new GrapplingPhysics(),
       new AirdropPhysics(),
       new ChainWeaponPhysics(),
+      new ChainConstraint(),
       new AreaOfEffect(),
       new ProjectileMotion(),
       new Jumping(),

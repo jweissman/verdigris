@@ -8,26 +8,29 @@ export interface ChainLink {
 
 export class KinematicChain {
   private links: ChainLink[] = [];
-  private linkLength: number = 8; // Distance between links in pixels
-  private gravity: Vec2 = { x: 0, y: 0.5 };
-  private damping: number = 0.95;
-  private iterations: number = 5; // More iterations for stability
+  private linkLength: number = 6; // Link length in pixels
+  private gravity: Vec2 = { x: 0, y: 0.5 }; // Gravity for ball only
+  private damping: number = 0.99; // Very high damping - almost no movement unless thrown
+  private iterations: number = 10; // Constraint iterations
+  private ballMass: number = 10; // Very heavy ball
+  private linkMass: number = 0.1; // Very light chain links
+  private restLength: number = 24; // Maximum extension of chain (4 links * 6 pixels)
   
   constructor(
     startPos: Vec2,
-    linkCount: number = 5,
+    linkCount: number = 4, // Shorter chain
     ballRadius: number = 4
   ) {
-    // Create chain links hanging down initially
+    // Create chain links hanging down initially, compressed
     for (let i = 0; i < linkCount; i++) {
       this.links.push({
         pos: { 
           x: startPos.x, 
-          y: startPos.y + i * this.linkLength 
+          y: startPos.y + i * 2 // Start compressed
         },
         oldPos: { 
           x: startPos.x, 
-          y: startPos.y + i * this.linkLength 
+          y: startPos.y + i * 2 
         },
         pinned: i === 0 // First link is pinned to hero's hand
       });
@@ -47,23 +50,49 @@ export class KinematicChain {
     const lastLink = this.links[this.links.length - 1];
     if (lastLink && !lastLink.pinned) {
       // Apply force by modifying velocity (pos - oldPos)
-      lastLink.pos.x += force.x;
-      lastLink.pos.y += force.y;
+      // Only apply if force is significant (actual attack)
+      if (Math.abs(force.x) > 1 || Math.abs(force.y) > 1) {
+        lastLink.pos.x += force.x;
+        lastLink.pos.y += force.y;
+      }
     }
   }
   
   update(deltaTime: number = 1): void {
-    // Verlet integration
-    for (const link of this.links) {
+    // Only update if there's actual movement
+    for (let i = 0; i < this.links.length; i++) {
+      const link = this.links[i];
       if (!link.pinned) {
         const velX = (link.pos.x - link.oldPos.x) * this.damping;
         const velY = (link.pos.y - link.oldPos.y) * this.damping;
         
+        // Only apply gravity to the ball (last link) and only if it's moving
+        const isMoving = Math.abs(velX) > 0.1 || Math.abs(velY) > 0.1;
+        const isBall = i === this.links.length - 1;
+        
         link.oldPos.x = link.pos.x;
         link.oldPos.y = link.pos.y;
         
-        link.pos.x += velX + this.gravity.x * deltaTime * deltaTime;
-        link.pos.y += velY + this.gravity.y * deltaTime * deltaTime;
+        if (isMoving) {
+          link.pos.x += velX;
+          link.pos.y += velY;
+          
+          // Only add gravity to ball when it's actually in motion
+          if (isBall && Math.abs(velY) > 0.5) {
+            link.pos.y += this.gravity.y * deltaTime * deltaTime;
+          }
+        } else {
+          // Force to rest position if not moving
+          if (isBall) {
+            // Ball should hang straight down when at rest
+            const anchorX = this.links[0].pos.x;
+            const anchorY = this.links[0].pos.y;
+            link.pos.x = anchorX;
+            link.pos.y = anchorY + this.restLength;
+            link.oldPos.x = link.pos.x;
+            link.oldPos.y = link.pos.y;
+          }
+        }
       }
     }
     
