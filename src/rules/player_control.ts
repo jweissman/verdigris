@@ -45,10 +45,6 @@ export class PlayerControl extends Rule {
       this.abilitySwitchCooldown--;
     }
 
-    // Debug: Log current state
-    if (this.keysHeld.size > 0) {
-      console.log(`[PlayerControl] Keys held: ${Array.from(this.keysHeld).join(', ')}`);
-    }
 
     // Ultra-early exit if no input AND no cooldown to update
     if (
@@ -348,27 +344,21 @@ export class PlayerControl extends Rule {
       // Additional safeguard against spam
       const ticksSinceLastAttack = currentTick - this.lastAttackTick;
       
-      // Debug: Log attack attempt
-      if (hasAttackKey) {
-        console.log(`[PlayerControl] Attack key pressed! primaryAction: ${unit.meta?.primaryAction}, ticksSinceLastAttack: ${ticksSinceLastAttack}`);
-      }
-      
       if (hasAttackKey && ticksSinceLastAttack > 5) {  // Global minimum cooldown
         this.lastAttackTick = currentTick;  // Update last attack time
-        console.log(`[PlayerControl] Firing ability: ${unit.meta?.primaryAction}`);
         const actionCooldown = unit.meta?.lastAction
           ? currentTick - unit.meta.lastAction
           : 999;
         
-        // Different cooldowns for different abilities
+        // Minimal cooldowns for player responsiveness
         const cooldownMap: Record<string, number> = {
-          strike: 10,
-          bolt: 30,  // Lightning needs longer cooldown
-          heal: 20,
-          freeze: 25,
-          fire: 15,
-          dash: 15,
-          blink: 20,
+          strike: 3,   // Very fast melee
+          bolt: 8,     // Quick ranged attack
+          heal: 10,    // Moderate healing
+          freeze: 8,   // Quick CC
+          fire: 6,     // Fast AoE
+          dash: 4,     // Very responsive movement
+          blink: 8,    // Quick teleport
         };
         
         const primaryAction = unit.meta?.primaryAction || "strike";
@@ -410,7 +400,6 @@ export class PlayerControl extends Rule {
 
               const target = enemies[0];
               // Fire bolt at target enemy
-              console.log(`[PlayerControl] Creating bolt command targeting (${target.pos.x}, ${target.pos.y})`);
               commands.push({
                 type: "bolt",
                 unitId: unit.id,
