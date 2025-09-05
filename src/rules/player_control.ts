@@ -7,6 +7,7 @@ export class PlayerControl extends Rule {
   private moveTarget: { x: number; y: number } | null = null;
   private attackMoveTarget: { x: number; y: number } | null = null;
   private abilitySwitchCooldown: number = 0;
+  private lastAttackTick: number = -1000;  // Track last attack to prevent spam
 
   // Store cooldowns directly on units via meta, not in this rule
   private readonly MOVE_COOLDOWN = 1; // Keep it smooth
@@ -18,10 +19,11 @@ export class PlayerControl extends Rule {
   }
 
   setKeyState(key: string, pressed: boolean) {
+    const normalizedKey = key.toLowerCase();
     if (pressed) {
-      this.keysHeld.add(key.toLowerCase());
+      this.keysHeld.add(normalizedKey);
     } else {
-      this.keysHeld.delete(key.toLowerCase());
+      this.keysHeld.delete(normalizedKey);
     }
   }
 
@@ -43,6 +45,11 @@ export class PlayerControl extends Rule {
       this.abilitySwitchCooldown--;
     }
 
+    // Debug: Log current state
+    if (this.keysHeld.size > 0) {
+      console.log(`[PlayerControl] Keys held: ${Array.from(this.keysHeld).join(', ')}`);
+    }
+
     // Ultra-early exit if no input AND no cooldown to update
     if (
       this.keysHeld.size === 0 &&
@@ -55,6 +62,8 @@ export class PlayerControl extends Rule {
 
     const allUnits = context.getAllUnits();
 
+    const currentTick = context.getCurrentTick();
+    
     // Early exit if no heroes exist
     const heroes = allUnits.filter(
       (u) => u.meta?.controlled || u.tags?.includes("hero"),
@@ -63,8 +72,6 @@ export class PlayerControl extends Rule {
       // console.log("[PlayerControl] No heroes found, keysHeld:", Array.from(this.keysHeld));
       return commands;
     }
-
-    const currentTick = context.getCurrentTick();
 
     for (const unit of heroes) {
       if (this.moveTarget || this.attackMoveTarget) {
@@ -209,7 +216,6 @@ export class PlayerControl extends Rule {
       if (this.keysHeld.has(" ")) {
         const jumpCount = unit.meta?.jumpCount || 0;
         const maxJumps = 2; // Allow double jump
-        const currentTick = context.getCurrentTick();
         const lastJumpTime = unit.meta?.lastJumpTime || 0;
         const jumpCooldown = 10; // Small cooldown between jumps
 
@@ -336,18 +342,40 @@ export class PlayerControl extends Rule {
         }
       }
 
-      // Primary action (Q key or E key)
-      if (
-        this.keysHeld.has("q") ||
-        this.keysHeld.has("e") ||
-        this.keysHeld.has("enter")
-      ) {
+      // Primary action (Q key or E key) - ONLY fire when key is actually pressed
+      const hasAttackKey = this.keysHeld.has("q") || this.keysHeld.has("e") || this.keysHeld.has("enter");
+      
+      // Additional safeguard against spam
+      const ticksSinceLastAttack = currentTick - this.lastAttackTick;
+      
+      // Debug: Log attack attempt
+      if (hasAttackKey) {
+        console.log(`[PlayerControl] Attack key pressed! primaryAction: ${unit.meta?.primaryAction}, ticksSinceLastAttack: ${ticksSinceLastAttack}`);
+      }
+      
+      if (hasAttackKey && ticksSinceLastAttack > 5) {  // Global minimum cooldown
+        this.lastAttackTick = currentTick;  // Update last attack time
+        console.log(`[PlayerControl] Firing ability: ${unit.meta?.primaryAction}`);
         const actionCooldown = unit.meta?.lastAction
-          ? context.getCurrentTick() - unit.meta.lastAction
+          ? currentTick - unit.meta.lastAction
           : 999;
-        if (actionCooldown > 2) {
-          // Much faster attacks
-          const primaryAction = unit.meta?.primaryAction || "strike";
+        
+        // Different cooldowns for different abilities
+        const cooldownMap: Record<string, number> = {
+          strike: 10,
+          bolt: 30,  // Lightning needs longer cooldown
+          heal: 20,
+          freeze: 25,
+          fire: 15,
+          dash: 15,
+          blink: 20,
+        };
+        
+        const primaryAction = unit.meta?.primaryAction || "strike";
+        const requiredCooldown = cooldownMap[primaryAction] || 10;
+        
+        if (actionCooldown > requiredCooldown) {
+          // Check cooldown for this specific action
 
           if (primaryAction === "strike") {
             // Send strike command with direction
@@ -381,6 +409,8 @@ export class PlayerControl extends Rule {
               });
 
               const target = enemies[0];
+              // Fire bolt at target enemy
+              console.log(`[PlayerControl] Creating bolt command targeting (${target.pos.x}, ${target.pos.y})`);
               commands.push({
                 type: "bolt",
                 unitId: unit.id,

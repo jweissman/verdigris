@@ -218,6 +218,11 @@ export class Abilities extends Rule {
       const lastAbilityTick =
         unit.lastAbilityTick || unit.meta?.lastAbilityTick; // Check both locations
 
+      // Skip auto-casting abilities for player-controlled units
+      if (unit.meta?.controlled) {
+        continue;  // Player-controlled units shouldn't auto-cast
+      }
+
       for (const abilityName of abilities) {
         if (abilityName === "melee" || abilityName === "ranged") {
           continue;

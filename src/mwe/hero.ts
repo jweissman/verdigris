@@ -51,22 +51,19 @@ export class HeroGame extends Game {
       mass: 10, // High mass to prevent being pushed around
       sprite: "hero",
       tags: ["hero"],
+      abilities: ["strike", "bolt", "jump", "dash", "blink", "groundPound"],
       meta: {
         controlled: true,
         useRig: true, // Re-enable rig for proper display
         onRooftop: true,
         facing: "right",
+        primaryAction: "strike",  // This is what PlayerControl looks for!
+        abilityA: "bolt",      // Ranged projectile
+        abilityB: "groundPound", // Area effect slam
       },
     });
     
-    // Equip chain weapon on hero
-    this.sim.queuedCommands.push({
-      type: "chain_weapon",
-      unitId: "hero",
-      params: {
-        action: "equip"
-      }
-    });
+    // Hero starts with sword (default weapon)
 
     // Add creatures from encyclopaedia with ambient behavior
     for (let i = 0; i < 3; i++) {

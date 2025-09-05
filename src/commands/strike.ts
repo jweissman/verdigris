@@ -32,10 +32,7 @@ export class StrikeCommand extends Command {
 
     // Generate attack pattern based on unit type
     const isHero = attacker.tags?.includes("hero");
-    const hasChainWeapon = attacker.meta?.chainWeapon;
-    
-    // If hero has chain weapon, don't create attack zones (chain handles damage)
-    const attackZones = hasChainWeapon ? [] : generateAttackPattern({
+    const attackZones = generateAttackPattern({
       origin: attacker.pos,
       direction: direction as "left" | "right" | "up" | "down",
       range: isHero ? 3 : range, // Hero has shorter range for visor
