@@ -10,10 +10,21 @@ import { Command, CommandParams } from "../rules/command";
  */
 export class RockDrop extends Command {
   execute(unitId: string | null, params: CommandParams): void {
-    const targetX = params.targetX as number;
-    const targetY = params.targetY as number;
+    let targetX = params.targetX as number;
+    let targetY = params.targetY as number;
     const damage = (params.damage as number) || 50;
     const radius = (params.radius as number) || 2;
+
+    // If no target specified, use the unit's position
+    if ((targetX === undefined || targetY === undefined) && unitId) {
+      const unit = this.sim.units.find(u => u.id === unitId);
+      if (!unit) {
+        console.warn("[RockDrop] No target position and unit not found");
+        return;
+      }
+      targetX = unit.pos.x;
+      targetY = unit.pos.y;
+    }
 
     if (targetX === undefined || targetY === undefined) {
       console.warn("[RockDrop] No target position specified");
@@ -21,7 +32,7 @@ export class RockDrop extends Command {
     }
 
     // Create a rock entity that falls from the sky
-    const rockId = `rock_${this.sim.ticks}_${Math.random().toString(36).substr(2, 5)}`;
+    const rockId = `rock_${this.sim.ticks}_${Math.random().toString(36).substring(2, 7)}`;
     
     // Spawn the rock high above the target
     this.sim.queuedCommands.push({
@@ -52,66 +63,10 @@ export class RockDrop extends Command {
       },
     });
 
-    // Visual effect - shadow grows as rock falls
-    for (let i = 0; i < 10; i++) {
-      const delay = i;
-      const shadowRadius = 0.5 + (i * 0.3);
-      
-      this.sim.queuedCommands.push({
-        type: "particle",
-        params: {
-          particle: {
-            pos: { x: targetX * 8 + 4, y: targetY * 8 + 4 },
-            vel: { x: 0, y: 0 },
-            radius: shadowRadius,
-            color: "#000000",
-            lifetime: 1,
-            type: "shadow",
-            alpha: 0.3,
-            delay: delay,
-          },
-        },
-      });
-    }
+    // The rock entity itself will handle damage when it lands
+    // via the falling mechanics in the rules system
 
-    // Queue damage command for when rock lands (after 10 ticks)
-    this.sim.scheduledCommands = this.sim.scheduledCommands || [];
-    this.sim.scheduledCommands.push({
-      tick: this.sim.ticks + 10,
-      command: {
-        type: "aoe",
-        unitId: unitId,
-        params: {
-          x: targetX,
-          y: targetY,
-          radius: radius,
-          damage: damage,
-          type: "impact",
-          aspect: "kinetic",
-        },
-      },
-    });
-
-    // Impact particles when rock lands
-    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
-      this.sim.queuedCommands.push({
-        type: "particle",
-        params: {
-          particle: {
-            pos: { x: targetX * 8 + 4, y: targetY * 8 + 4 },
-            vel: { 
-              x: Math.cos(angle) * 3,
-              y: Math.sin(angle) * 3 
-            },
-            radius: 1.5,
-            color: "#8B7355", // Brown dust
-            lifetime: 20,
-            type: "dust",
-            delay: 10, // Delay until impact
-          },
-        },
-      });
-    }
+    // No impact particles - keep it simple
 
     console.log(`[RockDrop] Dropping rock at (${targetX}, ${targetY})`);
   }

@@ -6,13 +6,13 @@ export class PlayerControl extends Rule {
   private keysHeld: Set<string> = new Set();
   private moveTarget: { x: number; y: number } | null = null;
   private attackMoveTarget: { x: number; y: number } | null = null;
-  private abilitySwitchCooldown: number = 0;
+  private lastAbilitySwitch: string | null = null; // Track last ability to prevent spam
   private lastAttackTick: number = -1000;  // Track last attack to prevent spam
 
   // Store cooldowns directly on units via meta, not in this rule
   private readonly MOVE_COOLDOWN = 1; // Keep it smooth
   private readonly JUMP_COOLDOWN = 5;
-  private readonly ABILITY_SWITCH_COOLDOWN = 10;
+  // No cooldown for ability switching - should be instant
 
   constructor() {
     super();
@@ -40,18 +40,11 @@ export class PlayerControl extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     const commands: QueuedCommand[] = [];
 
-    // Decrement ability switch cooldown regardless of input
-    if (this.abilitySwitchCooldown > 0) {
-      this.abilitySwitchCooldown--;
-    }
-
-
-    // Ultra-early exit if no input AND no cooldown to update
+    // Ultra-early exit if no input
     if (
       this.keysHeld.size === 0 &&
       !this.moveTarget &&
-      !this.attackMoveTarget &&
-      this.abilitySwitchCooldown <= 0
+      !this.attackMoveTarget
     ) {
       return [];
     }
@@ -289,24 +282,17 @@ export class PlayerControl extends Rule {
         const nextIndex = (currentIndex + 1) % abilities.length;
         const nextAbility = abilities[nextIndex];
 
-        // Check cooldown for ability switching
-        const switchCooldown = unit.meta?.lastAbilitySwitch
-          ? context.getCurrentTick() - unit.meta.lastAbilitySwitch
-          : 999;
-
-        if (switchCooldown > this.ABILITY_SWITCH_COOLDOWN) {
-          commands.push({
-            type: "meta",
-            params: {
-              unitId: unit.id,
-              meta: {
-                primaryAction: nextAbility,
-                lastAbilitySwitch: context.getCurrentTick(),
-              },
+        // Instant ability switching - no cooldown
+        commands.push({
+          type: "meta",
+          params: {
+            unitId: unit.id,
+            meta: {
+              primaryAction: nextAbility,
             },
-          });
-          // console.log(`Switched ability to: ${nextAbility}`);
-        }
+          },
+        });
+        // console.log(`Switched ability to: ${nextAbility}`);
       }
 
       // Quick ability selection with number keys
@@ -657,9 +643,8 @@ export class PlayerControl extends Rule {
         }
       }
 
-      // Rotate primary action with comma/period keys (with cooldown)
-      if (this.abilitySwitchCooldown <= 0) {
-        if (this.keysHeld.has(",") || this.keysHeld.has("<")) {
+      // Rotate primary action with comma/period keys (instant, no cooldown)
+      if (this.keysHeld.has(",") || this.keysHeld.has("<")) {
           const actions = [
             "strike",
             "bolt",
@@ -715,10 +700,9 @@ export class PlayerControl extends Rule {
           // console.log(
           //   `[PlayerControl] Primary action: ${actions[prevIndex]}`,
           // );
-          this.abilitySwitchCooldown = this.ABILITY_SWITCH_COOLDOWN;
-        }
+      }
 
-        if (this.keysHeld.has(".") || this.keysHeld.has(">")) {
+      if (this.keysHeld.has(".") || this.keysHeld.has(">")) {
           const actions = [
             "strike",
             "bolt",
@@ -773,8 +757,6 @@ export class PlayerControl extends Rule {
           // console.log(
           //   `[PlayerControl] Primary action: ${actions[nextIndex]}`,
           // );
-          this.abilitySwitchCooldown = this.ABILITY_SWITCH_COOLDOWN;
-        }
       }
 
       const weaponTypes = ["sword", "spear", "axe", "bow", "shield", "staff"];

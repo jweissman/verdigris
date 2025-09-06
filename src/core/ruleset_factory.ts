@@ -28,6 +28,7 @@ import { PlayerControl } from "../rules/player_control";
 import { HeroAnimation } from "../rules/hero_animation";
 import { FireTrail } from "../rules/fire_trail";
 import { FireDamage } from "../rules/fire_damage";
+import { FallingObjects } from "../rules/falling_objects";
 // import { FreezeAnimation } from "../rules/freeze_animation"; // DISABLED: Performance issue - checking entire field every tick
 
 export class RulesetFactory {
@@ -59,6 +60,7 @@ export class RulesetFactory {
       new ProjectileMotion(),
       new Jumping(),
       new Tossing(),
+      new FallingObjects(), // For rock drop and other falling objects
       new BiomeEffects(),
     ];
 
