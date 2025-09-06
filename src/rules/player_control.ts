@@ -359,6 +359,7 @@ export class PlayerControl extends Rule {
           fire: 6,     // Fast AoE
           dash: 4,     // Very responsive movement
           blink: 8,    // Quick teleport
+          drop_rock: 10, // Rock drop from sky
         };
         
         const primaryAction = unit.meta?.primaryAction || "strike";
@@ -622,6 +623,33 @@ export class PlayerControl extends Rule {
                 radius: 2,
               },
             });
+          } else if (primaryAction === "drop_rock") {
+            // Find nearest enemy to drop rock on
+            const enemies = context
+              .getAllUnits()
+              .filter((u) => u.team !== unit.team && u.hp > 0);
+            
+            if (enemies.length > 0) {
+              // Sort by distance
+              enemies.sort((a, b) => {
+                const distA = Math.abs(a.pos.x - unit.pos.x) + Math.abs(a.pos.y - unit.pos.y);
+                const distB = Math.abs(b.pos.x - unit.pos.x) + Math.abs(b.pos.y - unit.pos.y);
+                return distA - distB;
+              });
+              
+              const target = enemies[0];
+              // Drop rock straight down onto target's cell
+              commands.push({
+                type: "rock_drop",
+                unitId: unit.id,
+                params: {
+                  targetX: target.pos.x,
+                  targetY: target.pos.y,
+                  damage: 50,
+                  radius: 2,
+                },
+              });
+            }
           }
 
           unit.meta = unit.meta || {};
@@ -640,6 +668,7 @@ export class PlayerControl extends Rule {
             "fire",
             "dash",
             "blink",
+            "drop_rock",
           ];
           const currentIndex = actions.indexOf(
             unit.meta?.primaryAction || "strike",
@@ -698,6 +727,7 @@ export class PlayerControl extends Rule {
             "fire",
             "dash",
             "blink",
+            "drop_rock",
           ];
           const currentIndex = actions.indexOf(
             unit.meta?.primaryAction || "strike",

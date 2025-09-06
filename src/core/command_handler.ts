@@ -48,6 +48,7 @@ import { Dash } from "../commands/dash";
 import { Blink } from "../commands/blink";
 import { ChainWeaponCommand } from "../commands/chain_weapon";
 import { FireTrailCommand } from "../commands/fire_trail";
+import { RockDrop } from "../commands/rock_drop";
 // RemoveProjectileCommand merged into Projectile command
 import { ParticleCommand } from "../commands/particle";
 import { ParticlesBatchCommand } from "../commands/particles_batch";
@@ -217,6 +218,7 @@ export class CommandHandler {
     this.commands.set("blink", new Blink(sim, this.transform));
     this.commands.set("chain_weapon", new ChainWeaponCommand(sim, this.transform));
     this.commands.set("firetrail", new FireTrailCommand(sim, this.transform));
+    this.commands.set("rock_drop", new RockDrop(sim, this.transform));
   }
 
   private executeOne(

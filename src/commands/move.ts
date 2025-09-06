@@ -17,6 +17,7 @@ export class MoveCommand extends Command {
 
       // Handle instant teleport
       if (params.teleport) {
+        console.log(`[Move] Teleporting unit ${targetId} to (${newX}, ${newY})`);
         const updates: any = {
           pos: { x: newX, y: newY },
           intendedMove: { x: 0, y: 0 }, // No movement after teleport
@@ -24,6 +25,7 @@ export class MoveCommand extends Command {
 
         if (!updates.meta) updates.meta = {};
         updates.meta.teleported = true; // Mark for renderer to skip interpolation
+        updates.meta.teleportedAtTick = this.sim.ticks; // Also set the tick for renderer
 
         if (params.z !== undefined) {
           updates.meta.z = params.z;

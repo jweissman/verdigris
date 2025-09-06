@@ -476,10 +476,10 @@ export class HeroRig {
         {
           tick: 0,
           parts: {
-            torso: { offset: { x: -5, y: -2 }, rotation: -0.6, frame: 1 }, // Body twisted WAY back
+            torso: { offset: { x: -2, y: -1 }, rotation: -0.2, frame: 1 }, // Slight twist back
             rarm: { offset: { x: -15, y: -8 }, rotation: -2.8, frame: 1 }, // Arm WOUND up behind
-            larm: { offset: { x: -2, y: -6 }, rotation: 0.8, frame: 1 }, // Counterbalance forward
-            head: { offset: { x: -4, y: -10 }, rotation: -0.4, frame: 1 }, // Head turned to target
+            larm: { offset: { x: -8, y: 0 }, rotation: 0.05, frame: 1 }, // Left arm stays mostly still
+            head: { offset: { x: -1, y: -9 }, rotation: -0.1, frame: 1 }, // Head turns slightly
             lleg: { offset: { x: -3, y: 6 }, rotation: -0.3, frame: 1 }, // Back leg loaded
             rleg: { offset: { x: 5, y: 7 }, rotation: 0.3, frame: 1 }, // Front leg braced
             // Sword follows rarm position + wrist offset
@@ -493,10 +493,10 @@ export class HeroRig {
         {
           tick: 2,
           parts: {
-            torso: { offset: { x: 6, y: -3 }, rotation: 0.5, frame: 2 }, // Body WHIPS forward
+            torso: { offset: { x: 2, y: -1 }, rotation: 0.2, frame: 2 }, // Slight forward lean
             rarm: { offset: { x: 22, y: 2 }, rotation: 1.2, frame: 2 }, // Arm SNAPS out
-            larm: { offset: { x: -12, y: 2 }, rotation: -0.5, frame: 2 }, // Pull back hard
-            head: { offset: { x: 7, y: -10 }, rotation: 0.3, frame: 2 }, // Head follows
+            larm: { offset: { x: -8, y: 0 }, rotation: 0.05, frame: 2 }, // Left arm stays still
+            head: { offset: { x: 2, y: -9 }, rotation: 0.1, frame: 2 }, // Head follows slightly
             lleg: { offset: { x: -5, y: 8 }, rotation: 0.4, frame: 2 }, // Planted hard
             rleg: { offset: { x: 10, y: 5 }, rotation: -0.3, frame: 2 }, // Pushing forward
             // Sword follows rarm position + wrist offset
@@ -510,10 +510,10 @@ export class HeroRig {
         {
           tick: 3,
           parts: {
-            torso: { offset: { x: 7, y: -3 }, rotation: 0.6, frame: 2 },
+            torso: { offset: { x: 3, y: -1 }, rotation: 0.25, frame: 2 },
             rarm: { offset: { x: 24, y: 4 }, rotation: 1.5, frame: 2 }, // Overextended
-            larm: { offset: { x: -14, y: 3 }, rotation: -0.6, frame: 2 },
-            head: { offset: { x: 8, y: -9 }, rotation: 0.35, frame: 2 },
+            larm: { offset: { x: -8, y: 0 }, rotation: 0.05, frame: 2 }, // Left arm stays still
+            head: { offset: { x: 3, y: -9 }, rotation: 0.15, frame: 2 },
             // Sword follows rarm position + wrist offset
             sword: {
               offset: { x: 24 + 8, y: 4 - 1 },
@@ -525,10 +525,10 @@ export class HeroRig {
         {
           tick: 4,
           parts: {
-            torso: { offset: { x: 3, y: -3 }, rotation: 0.2, frame: 1 },
+            torso: { offset: { x: 1, y: -1 }, rotation: 0.1, frame: 1 },
             rarm: { offset: { x: 16, y: 0 }, rotation: 0.6, frame: 1 }, // Snapping back
-            larm: { offset: { x: -10, y: -1 }, rotation: -0.2, frame: 1 },
-            head: { offset: { x: 4, y: -11 }, rotation: 0.1, frame: 1 },
+            larm: { offset: { x: -8, y: 0 }, rotation: 0.05, frame: 1 }, // Left arm stays still
+            head: { offset: { x: 1, y: -9 }, rotation: 0.05, frame: 1 },
             // Sword follows rarm position + wrist offset
             sword: {
               offset: { x: 16 + 6, y: 0 - 2 },
@@ -540,10 +540,10 @@ export class HeroRig {
         {
           tick: 6,
           parts: {
-            torso: { offset: { x: 0, y: -3 }, rotation: 0, frame: 0 },
-            rarm: { offset: { x: 10, y: -3 }, rotation: 0.1, frame: 0 },
-            larm: { offset: { x: -8, y: -3 }, rotation: 0.05, frame: 0 },
-            head: { offset: { x: 0, y: -11 }, rotation: 0, frame: 0 },
+            torso: { offset: { x: 0, y: -1 }, rotation: 0, frame: 0 },
+            rarm: { offset: { x: 10, y: -1 }, rotation: 0.1, frame: 0 },
+            larm: { offset: { x: -8, y: 0 }, rotation: 0.05, frame: 0 },
+            head: { offset: { x: 0, y: -9 }, rotation: 0, frame: 0 },
             lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 0 },
             rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 0 },
             // Sword follows rarm position + wrist offset
@@ -558,9 +558,9 @@ export class HeroRig {
           tick: 8,
           parts: {
             torso: { offset: { x: 0, y: 0 }, rotation: 0, frame: 0 },
-            rarm: { offset: { x: 6, y: -4 }, rotation: 0, frame: 0 },
-            larm: { offset: { x: -6, y: -4 }, rotation: 0, frame: 0 },
-            head: { offset: { x: 0, y: -12 }, rotation: 0, frame: 0 },
+            rarm: { offset: { x: 8, y: 0 }, rotation: -0.05, frame: 0 },
+            larm: { offset: { x: -8, y: 0 }, rotation: 0.05, frame: 0 },
+            head: { offset: { x: 0, y: -8 }, rotation: 0, frame: 0 },
             lleg: { offset: { x: -2, y: 6 }, rotation: 0, frame: 0 },
             rleg: { offset: { x: 2, y: 6 }, rotation: 0, frame: 0 },
             sword: {

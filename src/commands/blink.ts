@@ -234,7 +234,7 @@ export class Blink extends Command {
     }
 
     console.log(
-      `[Blink] Unit ${unitId} blinks from (${startX}, ${startY}) to (${targetX}, ${targetY})`,
+      `[Blink] Unit ${unitId} blinks from (${startX}, ${startY}) to (${targetX}, ${targetY}) with teleport=true`,
     );
   }
 }

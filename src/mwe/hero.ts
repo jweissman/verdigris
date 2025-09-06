@@ -51,7 +51,7 @@ export class HeroGame extends Game {
       mass: 10, // High mass to prevent being pushed around
       sprite: "hero",
       tags: ["hero"],
-      abilities: ["strike", "bolt", "jump", "dash", "blink", "groundPound"],
+      abilities: ["strike", "bolt", "jump", "dash", "blink", "groundPound", "drop_rock"],
       meta: {
         controlled: true,
         useRig: true, // Re-enable rig for proper display
