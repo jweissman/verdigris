@@ -29,12 +29,18 @@ import { HeroAnimation } from "../rules/hero_animation";
 import { FireTrail } from "../rules/fire_trail";
 import { FireDamage } from "../rules/fire_damage";
 import { FallingObjects } from "../rules/falling_objects";
+import { ClearTeleportFlag } from "../rules/clear_teleport_flag";
 // import { FreezeAnimation } from "../rules/freeze_animation"; // DISABLED: Performance issue - checking entire field every tick
 
 export class RulesetFactory {
   static createDefaultRulebook(): Rule[] {
     // Core simulation rules - movement, cleanup
-    const coreRules = [new UnitBehavior(), new UnitMovement(), new Cleanup()];
+    const coreRules = [
+      new UnitBehavior(), 
+      new UnitMovement(), 
+      new ClearTeleportFlag(), // Clear teleport flags after a few ticks
+      new Cleanup()
+    ];
 
     // Combat and tactics rules
     const combatRules = [

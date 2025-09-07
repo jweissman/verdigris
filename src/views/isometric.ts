@@ -260,8 +260,7 @@ export default class Isometric extends View {
     // Check if we have a previous position for interpolation
     // Skip interpolation if unit just teleported (blink ability)
     const lastPos = this.sim.lastUnitPositions.get(unit.id);
-    const justTeleported = unit.meta?.teleportedAtTick && 
-                          this.sim.ticks - unit.meta.teleportedAtTick < 2;
+    const justTeleported = unit.meta?.teleported === true;
     if (
       lastPos &&
       this.sim.interpolationFactor !== undefined &&

@@ -57,26 +57,42 @@ export default class View {
       }
 
       if (prevPos.x !== unit.pos.x || prevPos.y !== unit.pos.y) {
-        const isAirborne = unit.meta?.jumping || unit.meta?.tossing;
-        if (!isAirborne || !this.unitInterpolations.has(unit.id)) {
-          this.unitInterpolations.set(unit.id, {
-            startX: prevPos.x,
-            startY: prevPos.y,
-            startZ: prevPos.z,
-            targetX: unit.pos.x,
-            targetY: unit.pos.y,
-            targetZ: currentZ,
-            progress: 0,
-            duration: isAirborne ? 200 : 66, // Smooth arc for airborne units, normal for walking
+        // Only skip interpolation if the teleported flag is currently set
+        // This flag should be cleared after the initial teleport frame
+        const justTeleported = unit.meta?.teleported === true;
+        
+        if (justTeleported) {
+          // Remove any existing interpolation for instant teleport
+          this.unitInterpolations.delete(unit.id);
+          // Also update previous position immediately for teleport
+          // so next movement will interpolate from the teleport destination
+          this.previousPositions.set(unit.id, {
+            x: unit.pos.x,
+            y: unit.pos.y,
+            z: currentZ,
+          });
+        } else {
+          const isAirborne = unit.meta?.jumping || unit.meta?.tossing;
+          if (!isAirborne || !this.unitInterpolations.has(unit.id)) {
+            this.unitInterpolations.set(unit.id, {
+              startX: prevPos.x,
+              startY: prevPos.y,
+              startZ: prevPos.z,
+              targetX: unit.pos.x,
+              targetY: unit.pos.y,
+              targetZ: currentZ,
+              progress: 0,
+              duration: isAirborne ? 200 : 66, // Smooth arc for airborne units, normal for walking
+            });
+          }
+          // Update previous position for normal movement
+          this.previousPositions.set(unit.id, {
+            x: unit.pos.x,
+            y: unit.pos.y,
+            z: currentZ,
           });
         }
       }
-
-      this.previousPositions.set(unit.id, {
-        x: unit.pos.x,
-        y: unit.pos.y,
-        z: currentZ,
-      });
     }
 
     let entries = Array.from(this.unitInterpolations.entries());
