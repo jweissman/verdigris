@@ -17,28 +17,25 @@
   - `ClearTeleportFlag` - exists only to fix rendering issue
 - **Why It Matters**: Need to run 30C4 synergy tests efficiently
 
-### 3. Strike Command Philosophy
-- **Key Principle**: ALL damage should go through strike command for consistent AOE visualization
-- **Current Problem**: Strike expects direction-based patterns, not positional AOE
-- **Need**: Strike command variant that handles centered AOE (for rock drop, explosions)
+### 3. Damage Command Philosophy  
+- **CORRECTED Understanding**: Use `aoe` command for positional area damage
+- **Strike**: For directional melee attacks only
+- **AoE**: For positional damage (jump impact, rock drop, explosions, ground pound)
+- **Pattern**: Jump correctly uses `aoe`, others should follow
 
 ## Current State of Abilities
 
 ### ✅ Working
 - **Blink**: Teleports instantly, interpolation resumes after
-- **Dash**: Fast movement with interpolation
-- **Rock Drop**: Falls in ~3 ticks, deals AOE damage
+- **Dash**: Fast movement with interpolation  
+- **Jump**: Correctly uses `aoe` command for impact damage
+- **Rock Drop**: Falls fast (~3 ticks), uses `aoe` command, damage reduced to 25
+- **Bolt**: Stun no longer shows as frozen, fire spawning reduced to 30% chance
 
 ### ⚠️ Issues
-- **Rock Drop**: 
-  - Damage too high (40-50 is excessive)
-  - Not using strike command (missing AOE visualization)
-  - Should show clear impact zone
-- **Fire**:
-  - Radius too large
-  - Doesn't target enemies well
-  - Should decay over time (scalar fields?)
-  - Burning creatures need flame overlay
+- **Ground Pound**: Manually calculates damage instead of using `aoe` command
+- **Fire**: Still has issues from before (radius, targeting, decay)
+- **Stunned units**: Need different visual effect (not ice cube)
 
 ## Design Philosophy Reminders (from docs)
 

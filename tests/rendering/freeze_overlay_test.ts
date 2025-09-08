@@ -66,7 +66,7 @@ describe("Freeze Overlay Rendering", () => {
     expect(iceCubeCall).toBeDefined();
   });
 
-  it("should render ice cube overlay for stunned units", () => {
+  it("should NOT render ice cube overlay for stunned units", () => {
     const stunnedUnit: Unit = {
       id: "stunned-test",
       pos: { x: 10, y: 10 },
@@ -84,9 +84,9 @@ describe("Freeze Overlay Rendering", () => {
     // Render the unit
     renderer.renderUnit(mockCtx, stunnedUnit, mockSprites, 100, 100, {});
 
-    // Verify ice cube overlay was drawn
+    // Verify ice cube overlay was NOT drawn (stunned != frozen)
     const iceCubeCall = drawImageCalls.find(call => call[0] === mockSprites.get('ice-cube'));
-    expect(iceCubeCall).toBeDefined();
+    expect(iceCubeCall).toBeUndefined();
   });
 
   it("should not render ice cube overlay for normal units", () => {
