@@ -1,4 +1,5 @@
 import { Vec2 } from "./Vec2";
+import { UnitMeta } from "./UnitMeta";
 
 export type UnitState = "idle" | "walk" | "attack" | "dead" | "charging";
 
@@ -33,14 +34,5 @@ export interface Unit {
   tags?: string[];
   abilities: Array<string>;
   lastAbilityTick?: { [name: string]: number };
-  meta: {
-    jumping?: boolean; // Whether the unit is currently jumping
-    jumpProgress?: number; // Progress of the jump animation
-    z?: number; // For 3D positioning, e.g., jumping
-    huge?: boolean; // Large multi-cell unit (32x64 sprite)
-    phantom?: boolean; // Invisible blocking unit for huge creatures
-    parentId?: string; // ID of parent unit for phantoms
-    facing?: "left" | "right"; // Direction the unit is facing for sprite flipping
-    [key: string]: any; // Additional metadata
-  };
+  meta: UnitMeta; // Now strongly typed!
 }

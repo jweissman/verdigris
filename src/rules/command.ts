@@ -1,11 +1,11 @@
 import { Simulator } from "../core/simulator";
 import { Transform } from "../core/transform";
+import { BaseCommandParams } from "../types/CommandParams";
 
-export interface CommandParams {
-  [key: string]: any;
-}
+// Legacy alias for backwards compatibility
+export type CommandParams = BaseCommandParams;
 
-export abstract class Command {
+export abstract class Command<TParams extends BaseCommandParams = BaseCommandParams> {
   protected sim: Simulator;
 
   protected tx: Transform;
@@ -20,5 +20,5 @@ export abstract class Command {
     this.tx = tx;
   }
 
-  abstract execute(unitId: string | null, params: CommandParams): void;
+  abstract execute(unitId: string | null, params: TParams): void;
 }

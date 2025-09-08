@@ -1,4 +1,5 @@
-import { Command, CommandParams } from "../rules/command";
+import { Command } from "../rules/command";
+import { AoeParams } from "../types/CommandParams";
 
 /**
  * AoE (Area of Effect) command - affects units in an area
@@ -9,14 +10,14 @@ import { Command, CommandParams } from "../rules/command";
  *   damage: number - Damage/heal amount
  *   type?: string - Damage type (defaults to 'physical')
  */
-export class AoE extends Command {
-  execute(unitId: string | null, params: CommandParams): void {
-    const x = params.x as number;
-    const y = params.y as number;
-    const radius = params.radius as number;
-    const damage = params.damage as number;
-    const type = (params.type as string) || "physical";
-    const stunDuration = params.stunDuration as number;
+export class AoE extends Command<AoeParams> {
+  execute(unitId: string | null, params: AoeParams): void {
+    const x = params.x;
+    const y = params.y;
+    const radius = params.radius;
+    const damage = params.damage;
+    const type = params.type || "physical";
+    const stunDuration = params.stunDuration;
     const falloff = params.falloff !== false;
     const friendlyFire = params.friendlyFire === true;
     const excludeSource = params.excludeSource === true;

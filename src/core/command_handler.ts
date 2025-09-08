@@ -60,13 +60,15 @@ import { EffectsCommand } from "../commands/effects";
 import { AbilityEffectsCommand } from "../commands/ability_effects";
 import { MoveTargetCommand } from "../commands/move_target";
 
-export type QueuedCommand = {
+import { BaseCommandParams } from "../types/CommandParams";
+
+export interface QueuedCommand {
   type: string;
-  params: Record<string, any>; // Named parameters dictionary
+  params: BaseCommandParams; // Typed parameters
   unitId?: string; // Optional for system commands
   tick?: number;
   id?: string; // Unique ID for deduplication
-};
+}
 
 export class CommandHandler {
   static parseCommand(inputString: string, sim: any): QueuedCommand {

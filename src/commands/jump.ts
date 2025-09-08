@@ -1,4 +1,5 @@
-import { Command, CommandParams } from "../rules/command";
+import { Command } from "../rules/command";
+import { JumpParams } from "../types/CommandParams";
 import { Transform } from "../core/transform";
 
 /**
@@ -11,8 +12,8 @@ import { Transform } from "../core/transform";
  *   damage?: number - Impact damage (default 0)
  *   radius?: number - Impact radius (default 0)
  */
-export class JumpCommand extends Command {
-  execute(unitId: string | null, params: CommandParams): void {
+export class JumpCommand extends Command<JumpParams> {
+  execute(unitId: string | null, params: JumpParams): void {
     if (!unitId) return;
 
     const transform = new Transform(this.sim);
@@ -42,7 +43,7 @@ export class JumpCommand extends Command {
       let targetY = params.targetY as number;
 
       if (targetX === undefined || targetY === undefined) {
-        const distance = (params.distance as number) || 3 + jumpCount; // Increasing distance
+        const distance = params.distance || 3 + jumpCount; // Increasing distance
         const facing = unit.meta?.facing || "right";
 
         targetX = unit.pos.x + (facing === "right" ? distance : -distance);
@@ -52,7 +53,7 @@ export class JumpCommand extends Command {
 
       unit.meta.jumpOrigin = { x: unit.pos.x, y: unit.pos.y };
       unit.meta.jumpTarget = { x: targetX, y: targetY };
-      unit.meta.jumpHeight = (params.height as number) || 5 + jumpCount * 2; // Higher each jump
+      unit.meta.jumpHeight = params.height || 5 + jumpCount * 2; // Higher each jump
       return;
     } else if (unit.meta?.jumping) {
       // Already at max jumps, buffer this for landing
@@ -62,11 +63,11 @@ export class JumpCommand extends Command {
       return;
     }
 
-    let targetX = params.targetX as number;
-    let targetY = params.targetY as number;
+    let targetX = params.targetX;
+    let targetY = params.targetY;
 
     if (targetX === undefined || targetY === undefined) {
-      const distance = (params.distance as number) || 3;
+      const distance = params.distance || 3;
       const facing = unit.meta?.facing || "right";
 
       targetX = unit.pos.x + (facing === "right" ? distance : -distance);
@@ -75,9 +76,9 @@ export class JumpCommand extends Command {
       targetX = Math.max(0, Math.min(this.sim.width - 1, targetX));
     }
 
-    const height = (params.height as number) || 5;
-    const damage = (params.damage as number) || 0; // Default to no damage
-    const radius = (params.radius as number) || 0; // Default to no radius
+    const height = params.height || 5;
+    const damage = params.damage || 0; // Default to no damage
+    const radius = params.radius || 0; // Default to no radius
 
     if (damage > 0 && radius > 0) {
       for (let dx = -radius; dx <= radius; dx++) {

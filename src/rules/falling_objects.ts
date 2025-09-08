@@ -1,12 +1,13 @@
 import { Rule } from "./rule";
 import { TickContext } from "../core/tick_context";
+import { QueuedCommand } from "../core/command_handler";
 
 /**
  * Simple rule to make objects with falling=true fall down
  */
 export class FallingObjects extends Rule {
-  execute(context: TickContext): any[] {
-    const commands: any[] = [];
+  execute(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const units = context.getAllUnits();
     
     for (const unit of units) {

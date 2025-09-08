@@ -1,12 +1,13 @@
 import { Rule } from "./rule";
 import { TickContext } from "../core/tick_context";
+import { QueuedCommand } from "../core/command_handler";
 
 /**
  * Clears the teleported flag after a few ticks to restore normal interpolation
  */
 export class ClearTeleportFlag extends Rule {
-  execute(context: TickContext): any[] {
-    const commands: any[] = [];
+  execute(context: TickContext): QueuedCommand[] {
+    const commands: QueuedCommand[] = [];
     const units = context.getAllUnits();
     const currentTick = context.getCurrentTick();
     

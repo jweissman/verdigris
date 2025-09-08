@@ -1,4 +1,5 @@
-import { Command, CommandParams } from "../rules/command";
+import { Command } from "../rules/command";
+import { DamageParams } from "../types/CommandParams";
 import { Transform } from "../core/transform";
 
 /**
@@ -9,12 +10,12 @@ import { Transform } from "../core/transform";
  *   aspect?: string - Type of damage (physical, radiant, fire, etc.)
  *   origin?: {x: number, y: number} - Origin point of damage for directional effects
  */
-export class Damage extends Command {
-  execute(unitId: string | null, params: CommandParams): void {
-    const targetId = params.targetId as string;
-    const amount = params.amount as number;
-    const aspect = (params.aspect as string) || "physical";
-    const origin = params.origin as { x: number; y: number } | undefined;
+export class Damage extends Command<DamageParams> {
+  execute(unitId: string | null, params: DamageParams): void {
+    const targetId = params.targetId;
+    const amount = params.amount;
+    const aspect = params.aspect || "physical";
+    const origin = params.origin;
 
     const target = this.sim.units.find((u) => u.id === targetId);
     if (!target) {

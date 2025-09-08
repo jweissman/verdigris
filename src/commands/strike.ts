@@ -1,4 +1,5 @@
-import { Command, CommandParams } from "../rules/command";
+import { Command } from "../rules/command";
+import { StrikeParams } from "../types/CommandParams";
 import { Transform } from "../core/transform";
 import { generateAttackPattern } from "../utils/attack_patterns";
 
@@ -11,24 +12,24 @@ import { generateAttackPattern } from "../utils/attack_patterns";
  *   damage?: number - Override damage amount (optional, uses unit's dmg by default)
  *   range?: number - Strike range in tiles (default 1 for melee)
  */
-export class StrikeCommand extends Command {
-  execute(unitId: string | null, params: CommandParams): void {
+export class StrikeCommand extends Command<StrikeParams> {
+  execute(unitId: string | null, params: StrikeParams): void {
     if (!unitId) return;
 
     const attacker = this.sim.units.find((u) => u.id === unitId);
     if (!attacker) return;
 
-    const targetId = params.targetId as string;
+    const targetId = params.targetId;
     const direction =
-      (params.direction as string) || attacker.meta?.facing || "right";
-    const damage = (params.damage as number) || attacker.dmg || 10;
+      params.direction || attacker.meta?.facing || "right";
+    const damage = params.damage || attacker.dmg || 10;
     console.log(
       `[Strike] Damage will be: ${damage} (params.damage=${params.damage}, attacker.dmg=${attacker.dmg})`,
     );
-    const knockback = (params.knockback as number) || 0;
-    const aspect = (params.aspect as string) || "kinetic";
+    const knockback = params.knockback || 0;
+    const aspect = params.aspect || "kinetic";
     const range =
-      (params.range as number) || (attacker.tags?.includes("hero") ? 7 : 1);
+      params.range || (attacker.tags?.includes("hero") ? 7 : 1);
 
     // Generate attack pattern based on unit type
     const isHero = attacker.tags?.includes("hero");

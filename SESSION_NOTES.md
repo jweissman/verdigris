@@ -85,8 +85,32 @@
 - Identified correct pattern: `aoe` for positional damage, `strike` for directional
 - Documented rules that need to move out of sim
 - Added TODOs for refactoring visual rules
+- Created `ARCHITECTURE_RECOMMENDATIONS.md` with detailed refactoring plan
+
+### ✅ Type Safety Improvements
+- Created `CommandParams.ts` with specific types for each command
+- Updated Command base class to be generic: `Command<TParams>`
+- Fixed rule return types (no more `any[]`, now `QueuedCommand[]`)
+- Created `UnitMeta.ts` with strongly typed unit metadata
+- Reduced `any` types from 332 to 327 (and the remaining ones are better isolated)
 
 ### 🔴 Still Needs Work
-- **PlayerControl**: Needs complete refactor (command pattern? state machine?)
+- **PlayerControl**: Needs complete refactor (796 lines! Should be simple input→command translator)
+- **HeroCommand**: Also bloated (562 lines), should delegate to ability commands
 - **HeroAnimation**: Should move to renderer (tests block this)
 - **ClearTeleportFlag**: Rendering concern in sim layer
+- **Type Safety**: 332 uses of `any` type throughout codebase
+
+## Key Insights
+
+### Command Architecture
+- PlayerControl should ONLY translate input to hero commands
+- HeroCommand should delegate to specific ability commands
+- Commands should never modify units directly (use Transform)
+- All positional AOE should use `aoe` command (jump does this right)
+
+### Separation of Concerns
+**Belongs in Sim:** Gameplay logic, damage, movement, deterministic mechanics
+**Belongs in Renderer:** Particles, animations, rigs, interpolation, visual effects
+
+See `ARCHITECTURE_RECOMMENDATIONS.md` for detailed refactoring plan
