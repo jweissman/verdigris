@@ -12,7 +12,7 @@ export class RockDrop extends Command {
   execute(unitId: string | null, params: CommandParams): void {
     let targetX = params.targetX as number;
     let targetY = params.targetY as number;
-    const damage = (params.damage as number) || 50;
+    const damage = (params.damage as number) || 25; // Reduced from 50
     const radius = (params.radius as number) || 2;
 
     // If no target specified, use the unit's position
@@ -49,10 +49,11 @@ export class RockDrop extends Command {
           sprite: "rock",
           tags: ["effect", "projectile", "falling"],
           state: "idle",
+          intendedMove: { x: 0, y: 0 },
           meta: {
-            z: 30, // Start high in the sky
+            z: 20, // Start a bit lower for faster impact
             falling: true,
-            fallSpeed: 3,
+            fallSpeed: 8, // Much faster falling
             targetZ: 0,
             damage: damage,
             radius: radius,

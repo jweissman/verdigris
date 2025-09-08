@@ -45,10 +45,10 @@ test("rock drop command creates visible falling rock entity", () => {
   expect(rockUnit.pos.y).toBe(10);
   
   // Verify rock starts high in the air
-  expect(rockUnit.meta.z).toBe(30);
+  expect(rockUnit.meta.z).toBe(20);
   expect(rockUnit.meta.falling).toBe(true);
-  expect(rockUnit.meta.fallSpeed).toBe(3);
-  expect(rockUnit.meta.damage).toBe(50); // default damage
+  expect(rockUnit.meta.fallSpeed).toBe(8);
+  expect(rockUnit.meta.damage).toBe(25); // default damage
   expect(rockUnit.meta.radius).toBe(2); // default radius
   
   // Verify rock sprite is set correctly (at unit level, not in meta)

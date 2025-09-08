@@ -56,7 +56,7 @@ export default class View {
         continue;
       }
 
-      if (prevPos.x !== unit.pos.x || prevPos.y !== unit.pos.y) {
+      if (prevPos.x !== unit.pos.x || prevPos.y !== unit.pos.y || prevPos.z !== currentZ) {
         // Only skip interpolation if the teleported flag is currently set
         // This flag should be cleared after the initial teleport frame
         const justTeleported = unit.meta?.teleported === true;

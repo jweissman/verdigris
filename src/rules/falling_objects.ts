@@ -43,24 +43,52 @@ export class FallingObjects extends Rule {
           
           // Deal damage if this is a damaging rock
           if (unit.meta.damage && unit.meta.radius) {
-            const targets = units.filter(u => {
-              if (u.id === unit.id || u.hp <= 0) return false;
-              const dx = Math.abs(u.pos.x - unit.pos.x);
-              const dy = Math.abs(u.pos.y - unit.pos.y);
-              return dx <= unit.meta.radius && dy <= unit.meta.radius;
+            // Use aoe command like jump does
+            commands.push({
+              type: "aoe",
+              unitId: unit.meta.sourceId,
+              params: {
+                x: unit.pos.x,
+                y: unit.pos.y,
+                radius: unit.meta.radius,
+                damage: unit.meta.damage,
+                type: "physical",
+                friendlyFire: false,
+                excludeSource: true
+              }
             });
             
-            for (const target of targets) {
+            // Create impact particles
+            for (let i = 0; i < 12; i++) {
+              const angle = (i / 12) * Math.PI * 2;
               commands.push({
-                type: "damage",
+                type: "particle",
                 params: {
-                  targetId: target.id,
-                  amount: unit.meta.damage,
-                  source: unit.meta.sourceId,
-                  aspect: "physical"
+                  pos: {
+                    x: unit.pos.x * 8 + 4,
+                    y: unit.pos.y * 8 + 4
+                  },
+                  vel: {
+                    x: Math.cos(angle) * 3,
+                    y: Math.sin(angle) * 3
+                  },
+                  lifetime: 20,
+                  type: "debris",
+                  color: "#808080",
+                  radius: 1.5,
+                  z: 2
                 }
               });
             }
+            
+            // Screen shake for impact
+            commands.push({
+              type: "screenshake",
+              params: {
+                intensity: 5,
+                duration: 10
+              }
+            });
           }
           
           // Remove the rock after impact
