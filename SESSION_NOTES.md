@@ -68,7 +68,25 @@
 - Key: Keep sim lean, deterministic, headless
 
 ## Code Smells to Address
-- `PlayerControl` module is chaotic
-- Too many specialized rules (ClearTeleportFlag)
-- Strike command too rigid for varied AOE patterns
-- Rendering logic mixed into sim layer
+- `PlayerControl` module is chaotic (796 lines of if/else chains!)
+- Too many specialized rules (ClearTeleportFlag exists only for rendering)
+- ~~Strike command too rigid~~ FIXED: Use `aoe` for positional damage
+- Rendering logic mixed into sim layer (HeroAnimation rule)
+
+## Improvements Made This Session
+
+### ✅ Fixed Abilities
+- **Rock Drop**: Now uses `aoe` command (consistent with jump)
+- **Bolt**: Reduced fire spawning to 30% chance, removed freeze overlay for stun
+- **Ground Pound**: Refactored to use `aoe` command
+- **Stun Visual**: No longer shows ice cube (was confusing with freeze)
+
+### ✅ Architecture Improvements
+- Identified correct pattern: `aoe` for positional damage, `strike` for directional
+- Documented rules that need to move out of sim
+- Added TODOs for refactoring visual rules
+
+### 🔴 Still Needs Work
+- **PlayerControl**: Needs complete refactor (command pattern? state machine?)
+- **HeroAnimation**: Should move to renderer (tests block this)
+- **ClearTeleportFlag**: Rendering concern in sim layer

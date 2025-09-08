@@ -38,7 +38,7 @@ export class RulesetFactory {
     const coreRules = [
       new UnitBehavior(), 
       new UnitMovement(), 
-      new ClearTeleportFlag(), // Clear teleport flags after a few ticks
+      new ClearTeleportFlag(), // TODO: MOVE TO RENDERER - Only exists for interpolation
       new Cleanup()
     ];
 
@@ -78,11 +78,11 @@ export class RulesetFactory {
       new FireDamage(), // Fire damage from hot tiles
     ];
 
-    // Player control and animation
+    // Player control and gameplay effects
     const controlRules = [
       new PlayerControl(),
-      new HeroAnimation(), // Needed for hero rig animations
-      new FireTrail(), // Fire trail effect for hero
+      new HeroAnimation(), // TODO: REFACTOR - Should be in renderer, but tests depend on it
+      new FireTrail(), // Fire trail creates actual fire tiles (gameplay, not just visual)
       // new FreezeAnimation(), // DISABLED: Performance issue
     ];
 

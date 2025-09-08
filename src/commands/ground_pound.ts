@@ -30,58 +30,51 @@ export class GroundPound extends Command {
     const impactX = hero.meta?.targetX || hero.pos.x;
     const impactY = hero.meta?.targetY || hero.pos.y;
 
-    // Find all units in radius
-    const targets = this.sim.units.filter((u) => {
-      if (u.id === unitId || u.hp <= 0) return false;
-      const dx = Math.abs(u.pos.x - impactX);
-      const dy = Math.abs(u.pos.y - impactY);
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      return dist <= radius;
+    // Use aoe command for consistent damage handling (like jump does)
+    this.sim.queuedCommands.push({
+      type: "aoe",
+      unitId: unitId,
+      params: {
+        x: impactX,
+        y: impactY,
+        radius: radius,
+        damage: damage,
+        type: "kinetic",
+        friendlyFire: false,
+        excludeSource: true,
+        falloff: true, // Damage reduces with distance
+      },
     });
 
-    // Deal damage and knockback to all targets
-    for (const target of targets) {
-      // Damage based on distance
-      const dx = target.pos.x - impactX;
-      const dy = target.pos.y - impactY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const falloff = 1 - (dist / radius) * 0.5;
-      const actualDamage = Math.floor(damage * falloff);
-
-      this.sim.queuedCommands.push({
-        type: "damage",
-        params: {
-          targetId: target.id,
-          amount: actualDamage,
-          source: unitId,
-          aspect: "impact",
-        },
+    // Handle knockback separately for affected units
+    if (knockback > 0) {
+      const targets = this.sim.units.filter((u) => {
+        if (u.id === unitId || u.hp <= 0) return false;
+        const dx = Math.abs(u.pos.x - impactX);
+        const dy = Math.abs(u.pos.y - impactY);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        return dist <= radius;
       });
 
-      // Knockback away from impact
-      if (knockback > 0 && dist > 0) {
-        const knockX = (dx / dist) * knockback;
-        const knockY = (dy / dist) * knockback;
+      for (const target of targets) {
+        const dx = target.pos.x - impactX;
+        const dy = target.pos.y - impactY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 0) {
+          const knockX = (dx / dist) * knockback;
+          const knockY = (dy / dist) * knockback;
 
-        this.sim.queuedCommands.push({
-          type: "knockback",
-          params: {
-            targetId: target.id,
-            force: knockback,
-            direction: { x: knockX, y: knockY },
-          },
-        });
+          this.sim.queuedCommands.push({
+            type: "knockback",
+            params: {
+              targetId: target.id,
+              force: knockback,
+              direction: { x: knockX, y: knockY },
+            },
+          });
+        }
       }
-
-      // Stun briefly
-      this.sim.queuedCommands.push({
-        type: "applyStatusEffect",
-        params: {
-          targetId: target.id,
-          effect: "stunned",
-          duration: 10,
-        },
-      });
     }
 
     // Visual effects
@@ -210,7 +203,7 @@ export class GroundPound extends Command {
     });
 
     console.log(
-      `[GroundPound] Hero ${unitId} ground pounds at (${impactX}, ${impactY}) hitting ${targets.length} targets`,
+      `[GroundPound] Hero ${unitId} ground pounds at (${impactX}, ${impactY}) with radius ${radius}`,
     );
   }
 }
