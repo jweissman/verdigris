@@ -91,8 +91,11 @@
 - Created `CommandParams.ts` with specific types for each command
 - Updated Command base class to be generic: `Command<TParams>`
 - Fixed rule return types (no more `any[]`, now `QueuedCommand[]`)
-- Created `UnitMeta.ts` with strongly typed unit metadata
-- Reduced `any` types from 332 to 327 (and the remaining ones are better isolated)
+- Created `UnitMeta.ts` with strongly typed unit metadata (100+ properties!)
+- **Eliminated dangerous `(context as any).sim` access patterns**
+- Rules now properly use TickContext API instead of bypassing it
+- Added missing methods to TickContext (weather, lightning)
+- Fixed commands: AoE, Strike, Damage, Jump now fully typed
 
 ### 🔴 Still Needs Work
 - **PlayerControl**: Needs complete refactor (796 lines! Should be simple input→command translator)

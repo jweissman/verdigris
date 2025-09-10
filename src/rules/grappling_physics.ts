@@ -55,25 +55,25 @@ export class GrapplingPhysics extends Rule {
     commands: QueuedCommand[],
   ) {
     if (hitUnit.meta.grappleHit) {
-      const grapplerID = hitUnit.meta.grapplerID || "unknown";
+      const grapplerID = (hitUnit.meta.grapplerID as string | undefined) || "unknown";
       const grappler = context.findUnitById(grapplerID);
 
       const grapplerPos =
-        grappler?.pos || hitUnit.meta.grappleOrigin || hitUnit.pos;
+        grappler?.pos || (hitUnit.meta.grappleOrigin as Vec2 | undefined) || hitUnit.pos;
 
       if (grapplerPos) {
         const lineID = `${grapplerID}_${hitUnit.id}`;
         const distance = this.calculateDistance(grapplerPos, hitUnit.pos);
 
         this.grappleLines.set(lineID, {
-          grapplerID,
+          grapplerID: grapplerID as string,
           targetID: hitUnit.id,
-          startPos: { ...grapplerPos },
+          startPos: { ...(grapplerPos as Vec2) },
           endPos: { ...hitUnit.pos },
           length: distance,
           taut: true,
           pinned: false,
-          duration: hitUnit.meta.pinDuration || 60,
+          duration: (hitUnit.meta.pinDuration as number | undefined) || 60,
         });
 
         commands.push({
@@ -240,7 +240,7 @@ export class GrapplingPhysics extends Rule {
           params: {
             unitId: target.id,
             meta: {
-              grappledDuration: (target.meta.grappledDuration || 1) - 1,
+              grappledDuration: ((target.meta.grappledDuration as number | undefined) || 1) - 1,
             },
           },
         });
@@ -285,12 +285,12 @@ export class GrapplingPhysics extends Rule {
     for (const unit of context.getAllUnits()) {
       if (!unit.meta) continue;
 
-      if (unit.meta.grappled && unit.meta.grappledDuration > 0) {
+      if (unit.meta.grappled && (unit.meta.grappledDuration as number) > 0) {
         if (unit.meta.movementPenalty) {
-          unit.intendedMove.x *= 1 - unit.meta.movementPenalty;
-          unit.intendedMove.y *= 1 - unit.meta.movementPenalty;
+          unit.intendedMove.x *= 1 - (unit.meta.movementPenalty as number);
+          unit.intendedMove.y *= 1 - (unit.meta.movementPenalty as number);
         }
-      } else if (unit.meta.grappled && unit.meta.grappledDuration <= 0) {
+      } else if (unit.meta.grappled && (unit.meta.grappledDuration as number) <= 0) {
         const wasPinned = unit.meta.pinned;
         this.removeGrappleFromUnit(unit);
         if (wasPinned && (unit.mass || 1) > 30) {
@@ -304,14 +304,14 @@ export class GrapplingPhysics extends Rule {
         }
       }
 
-      if (unit.meta.pinned && unit.meta.pinDuration > 0) {
+      if (unit.meta.pinned && (unit.meta.pinDuration as number) > 0) {
         commands.push({
           type: "meta",
           params: {
             unitId: unit.id,
             meta: {
               stunned: true,
-              pinDuration: unit.meta.pinDuration - 1,
+              pinDuration: (unit.meta.pinDuration as number) - 1,
             },
           },
         });

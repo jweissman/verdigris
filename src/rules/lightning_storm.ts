@@ -13,8 +13,7 @@ export class LightningStorm extends Rule {
 
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
-    const sim = (context as any).sim;
-    if (!sim?.lightningActive) return;
+    if (!context.isLightningActive()) return this.commands;
 
     const currentTick = context.getCurrentTick();
     const strikeInterval = 8; // Base interval between strikes

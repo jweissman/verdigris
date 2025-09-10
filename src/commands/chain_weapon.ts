@@ -1,8 +1,10 @@
 import { Command } from "../rules/command";
+import { ChainWeaponParams } from "../types/CommandParams";
+import { Vec2 } from "../types/Vec2";
 
-export class ChainWeaponCommand extends Command {
+export class ChainWeaponCommand extends Command<ChainWeaponParams> {
   
-  execute(unitId: string | null, params: Record<string, any>): void {
+  execute(unitId: string | null, params: ChainWeaponParams): void {
     const action = params.action as string;
     
     if (action === "equip" && unitId) {
@@ -15,7 +17,13 @@ export class ChainWeaponCommand extends Command {
       // Remove old ball if it exists
       const oldBall = this.sim.units.find(u => u.id === ballId);
       if (oldBall) {
-        this.sim.units = this.sim.units.filter(u => u.id !== ballId);
+        // Use remove command instead of mutating units array
+        this.sim.queuedCommands.push({
+          type: "remove",
+          params: {
+            unitId: ballId
+          }
+        });
       }
       
       // Create ball unit - starts at rest below hero
@@ -54,7 +62,7 @@ export class ChainWeaponCommand extends Command {
       const ball = this.sim.units.find(u => u.id === ballId);
       if (!ball) return;
       
-      const direction = params.direction || unit.meta?.facing || "right";
+      const direction = params.direction || (unit.meta?.facing as "left" | "right" | "up" | "down" | undefined) || "right";
       const power = params.power || 5;
       
       // For attacks, create a whipping motion
@@ -69,15 +77,15 @@ export class ChainWeaponCommand extends Command {
         let forceY = 0;
         
         switch(direction) {
-          case "right": forceX = whipPower; break;
-          case "left": forceX = -whipPower; break;
-          case "up": forceY = -whipPower; break;
-          case "down": forceY = whipPower; break;
+          case "right": forceX = whipPower as number; break;
+          case "left": forceX = -(whipPower as number); break;
+          case "up": forceY = -(whipPower as number); break;
+          case "down": forceY = whipPower as number; break;
         }
         
         // Add some upward component for a more natural whip arc
         if (forceX !== 0) {
-          forceY -= whipPower * 0.3; // Slight upward arc when swinging horizontally
+          forceY -= (whipPower as number) * 0.3; // Slight upward arc when swinging horizontally
         }
         
         // Apply the impulse to the ball
@@ -107,7 +115,7 @@ export class ChainWeaponCommand extends Command {
       });
       
       // Damage enemies based on ball velocity
-      const velocity = ball.meta?.velocity || { x: 0, y: 0 };
+      const velocity = (ball.meta?.velocity as Vec2 | undefined) || { x: 0, y: 0 };
       const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
       const damage = Math.floor(speed * 3); // Damage based on swing speed
         
@@ -132,11 +140,11 @@ export class ChainWeaponCommand extends Command {
           kind: "aoe",
           source: unitId,
           target: { x: ball.pos.x, y: ball.pos.y },
-          zones: [{ x: ball.pos.x, y: ball.pos.y }],
-          kind_flavor: "impact",
-          duration: 5,
           meta: {
-            aspect: "kinetic"
+            kind_flavor: "impact",
+            duration: 5,
+            aspect: "kinetic",
+            zones: [{ x: ball.pos.x, y: ball.pos.y }]
           }
         });
       }
@@ -169,7 +177,7 @@ export class ChainWeaponCommand extends Command {
               type: "particle",
               params: {
                 pos: { x: enemy.pos.x * 8 + 4, y: enemy.pos.y * 8 + 4 },
-                vel: { x: velocity.x / 4, y: velocity.y / 4 },
+                vel: { x: (velocity as Vec2).x / 4, y: (velocity as Vec2).y / 4 },
                 lifetime: 15,
                 type: "impact",
                 color: "#FF4444",

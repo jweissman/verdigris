@@ -1,23 +1,24 @@
 import { Command } from "../rules/command";
 import { Transform } from "../core/transform";
+import { ApplyStatusEffectParams, UpdateStatusEffectsParams, StatusEffect } from "../types/CommandParams";
 
-export class ApplyStatusEffectCommand extends Command {
+export class ApplyStatusEffectCommand extends Command<ApplyStatusEffectParams> {
   constructor(sim: any, transform: Transform) {
     super(sim, transform);
   }
 
-  execute(unitId: string | null, params: Record<string, any>): void {
-    const targetId = params.unitId as string;
+  execute(unitId: string | null, params: ApplyStatusEffectParams): void {
+    const targetId = params.unitId;
     const effect = params.effect;
 
     if (!targetId || !effect) return;
 
     const targetUnit = this.sim.units.find((u) => u.id === targetId);
     if (targetUnit) {
-      const statusEffects = targetUnit.meta.statusEffects || [];
+      const statusEffects = (targetUnit.meta.statusEffects as StatusEffect[] | undefined) || [];
 
       const existingEffect = statusEffects.find(
-        (e: any) => e.type === effect.type,
+        (e) => e.type === effect.type,
       );
       if (existingEffect) {
         existingEffect.duration = Math.max(
@@ -31,32 +32,32 @@ export class ApplyStatusEffectCommand extends Command {
   }
 }
 
-export class UpdateStatusEffectsCommand extends Command {
+export class UpdateStatusEffectsCommand extends Command<UpdateStatusEffectsParams> {
   constructor(sim: any, transform: Transform) {
     super(sim, transform);
   }
 
-  execute(unitId: string | null, params: Record<string, any>): void {
-    const targetId = params.unitId as string;
+  execute(unitId: string | null, params: UpdateStatusEffectsParams): void {
+    const targetId = params.unitId;
 
     if (!targetId) return;
 
     const targetUnit = this.sim.units.find((u) => u.id === targetId);
     if (targetUnit) {
-      const statusEffects = targetUnit.meta.statusEffects || [];
+      const statusEffects = (targetUnit.meta.statusEffects as StatusEffect[] | undefined) || [];
 
       const updatedEffects = statusEffects
-        .map((effect: any) => ({
+        .map((effect) => ({
           ...effect,
           duration: effect.duration - 1,
         }))
-        .filter((effect: any) => effect.duration > 0);
+        .filter((effect) => effect.duration > 0);
 
       let chilled = false;
       let chillIntensity = 0;
       let stunned = false;
 
-      updatedEffects.forEach((effect: any) => {
+      updatedEffects.forEach((effect) => {
         switch (effect.type) {
           case "chill":
             chilled = true;

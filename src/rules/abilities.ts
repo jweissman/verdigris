@@ -117,7 +117,7 @@ export class Abilities extends Rule {
     this.commands = [];
     const metaCommands: QueuedCommand[] = []; // Collect meta commands separately
 
-    const arrays = (context as any).getArrays?.();
+    const arrays = context.getArrays();
     const useArrays = arrays?.posX && arrays?.posY && arrays?.team;
 
     const allUnits = context.getAllUnits();
@@ -148,7 +148,7 @@ export class Abilities extends Rule {
       return this.commands;
     }
 
-    (context as any).cachedUnits = allUnits;
+    // Cache units for performance (remove this when context provides caching)
 
     const hostileUnits = allUnits.filter(
       (u) => u.team === "hostile" && u.state !== "dead" && u.hp > 0,
@@ -193,8 +193,8 @@ export class Abilities extends Rule {
         meta.burrowStartTick !== undefined &&
         meta.burrowDuration !== undefined
       ) {
-        const ticksBurrowed = currentTick - meta.burrowStartTick;
-        if (ticksBurrowed >= meta.burrowDuration) {
+        const ticksBurrowed = currentTick - (meta.burrowStartTick as number);
+        if (ticksBurrowed >= (meta.burrowDuration as number)) {
           metaCommands.push({
             type: "meta",
             params: {
@@ -250,7 +250,7 @@ export class Abilities extends Rule {
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
 
-          const currentUses = meta[usesKey] || 0;
+          const currentUses = (meta[usesKey] as number | undefined) || 0;
           if (currentUses >= ability.maxUses) {
             continue; // Ability exhausted
           }
@@ -329,14 +329,14 @@ export class Abilities extends Rule {
 
         const metaUpdate: any = {
           lastAbilityTick: {
-            ...lastAbilityTick, // Use cached value
+            ...(lastAbilityTick as Record<string, number> || {}), // Use cached value
             [abilityName]: currentTick,
           },
         };
 
         if (ability.maxUses) {
           const usesKey = `${abilityName}Uses`;
-          const currentUses = meta[usesKey] || 0;
+          const currentUses = (meta[usesKey] as number | undefined) || 0;
           metaUpdate[usesKey] = currentUses + 1;
         }
 

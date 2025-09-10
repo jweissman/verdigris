@@ -173,9 +173,9 @@ export class BiomeEffects extends Rule {
   execute(context: TickContext): QueuedCommand[] {
     this.commands = [];
 
-    const sim = (context as any).sim;
-    if (sim && sim.weather && sim.weather.current === "rain") {
-      const intensity = sim.weather.intensity || 0.5;
+    const weather = context.getWeather();
+    if (weather && weather.current === "rain") {
+      const intensity = weather.intensity || 0.5;
       const humidityIncrease = 0.005 * intensity;
 
       for (let x = 0; x < context.getFieldWidth(); x++) {

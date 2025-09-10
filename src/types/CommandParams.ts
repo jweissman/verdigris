@@ -13,6 +13,10 @@ export interface MoveParams extends BaseCommandParams {
   dy?: number;
 }
 
+export interface MovesParams extends BaseCommandParams {
+  moves: Map<string, { dx: number; dy: number }>;
+}
+
 // Combat commands
 export interface StrikeParams extends BaseCommandParams {
   targetId?: string;
@@ -89,6 +93,21 @@ export interface GroundPoundParams extends BaseCommandParams {
 }
 
 // Status effect commands
+export interface StatusEffect {
+  type: string;
+  duration: number;
+  intensity?: number;
+}
+
+export interface ApplyStatusEffectParams extends BaseCommandParams {
+  unitId: string;
+  effect: StatusEffect;
+}
+
+export interface UpdateStatusEffectsParams extends BaseCommandParams {
+  unitId: string;
+}
+
 export interface HealParams extends BaseCommandParams {
   targetId: string;
   amount: number;
@@ -120,6 +139,15 @@ export interface SpawnParams extends BaseCommandParams {
 
 export interface RemoveParams extends BaseCommandParams {
   unitId: string;
+}
+
+// Chain weapon params
+export interface ChainWeaponParams extends BaseCommandParams {
+  action: "equip" | "swing" | "update";
+  velocity?: Vec2;
+  direction?: "left" | "right" | "up" | "down";
+  power?: number;
+  isAttack?: boolean;
 }
 
 // Hero command params

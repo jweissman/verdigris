@@ -40,6 +40,8 @@ export interface TickContext {
   isSandstormActive(): boolean;
   getSandstormIntensity(): number;
   getSandstormDuration(): number;
+  isLightningActive(): boolean;
+  getWeather(): { current: string; intensity: number } | null;
   getQueuedEvents(): readonly any[];
 
   getUnitIndex(unitId: string): number | undefined;
@@ -255,6 +257,14 @@ export class TickContextImpl implements TickContext {
 
   getSandstormDuration(): number {
     return this.sim.getSandstormDuration();
+  }
+
+  isLightningActive(): boolean {
+    return (this.sim as any).lightningActive || false;
+  }
+
+  getWeather(): { current: string; intensity: number } | null {
+    return (this.sim as any).weather || null;
   }
 
   getQueuedEvents(): readonly any[] {

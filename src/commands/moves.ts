@@ -1,12 +1,13 @@
 import { Command } from "../rules/command";
+import { MovesParams } from "../types/CommandParams";
 
 /**
  * Batch move command - applies multiple unit movements in a single optimized pass
  * Much faster than individual move commands as it avoids proxy lookups
  */
-export class MovesCommand extends Command {
-  execute(unitId: string | null, params: Record<string, any>): void {
-    const moves = params.moves as Map<string, { dx: number; dy: number }>;
+export class MovesCommand extends Command<MovesParams> {
+  execute(unitId: string | null, params: MovesParams): void {
+    const moves = params.moves;
     if (!moves || moves.size === 0) return;
 
     const transform = this.sim.getTransform();
@@ -19,8 +20,8 @@ export class MovesCommand extends Command {
       if (!unit) continue;
 
       const movementRate =
-        unit.meta?.movementRate || (unit.tags?.includes("hero") ? 1 : 2);
-      const lastMoveTick = unit.meta?.lastMoveTick || 0;
+        (unit.meta?.movementRate as number | undefined) || (unit.tags?.includes("hero") ? 1 : 2);
+      const lastMoveTick = (unit.meta?.lastMoveTick as number | undefined) || 0;
 
       if (currentTick - lastMoveTick < movementRate) {
         continue;

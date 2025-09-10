@@ -260,10 +260,9 @@ export class MeleeCombat extends Rule {
     const heroRange = 3.5; // Much wider range for hero
     const heroRangeSq = heroRange * heroRange;
 
-    const arrays = (context as any).sim?.unitArrays;
-    const coldData = (context as any).sim?.unitColdData;
-
-    if (arrays && coldData) {
+    const arrays = context.getArrays();
+    
+    if (arrays) {
       const activeIndices = arrays.activeIndices;
       const count = activeIndices.length;
 
@@ -274,7 +273,7 @@ export class MeleeCombat extends Rule {
         const attackerId = arrays.unitIds[idxA];
         if (this.engagements.has(attackerId)) continue;
 
-        const coldA = coldData.get(attackerId);
+        const coldA = context.getUnitColdData(attackerId);
         if (
           coldA?.meta?.jumping ||
           coldA?.tags?.includes("noncombatant") ||
@@ -326,7 +325,7 @@ export class MeleeCombat extends Rule {
 
               if (!inCone) continue;
 
-              const coldB = coldData.get(targetId);
+              const coldB = context.getUnitColdData(targetId);
               if (
                 coldB?.meta?.jumping ||
                 coldB?.tags?.includes("noncombatant") ||

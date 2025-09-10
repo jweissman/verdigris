@@ -1,12 +1,14 @@
-import { Command, CommandParams } from "../rules/command";
+import { Command } from "../rules/command";
+import { ParticleParams } from "../types/CommandParams";
 import { Transform } from "../core/transform";
+import { Vec2 } from "../types/Vec2";
 
 /**
  * Particle command - adds a particle effect
  * Params:
  *   particle: object - Particle data to add
  */
-export class ParticleCommand extends Command {
+export class ParticleCommand extends Command<ParticleParams> {
   private transform: Transform;
 
   constructor(sim: any, transform: Transform) {
@@ -14,26 +16,36 @@ export class ParticleCommand extends Command {
     this.transform = transform;
   }
 
-  execute(unitId: string | null, params: CommandParams): void {
-    const particle = params.particle || params;
-    if (!particle) {
+  execute(unitId: string | null, params: ParticleParams): void {
+    // Support both nested particle object and direct params
+    const particleData = params.particle || {
+      pos: params.pos || { x: 0, y: 0 },
+      vel: params.vel || { x: 0, y: 0 },
+      lifetime: params.lifetime || 100,
+      type: params.type || "generic",
+      color: params.color || "#FFFFFF",
+      radius: params.radius || 0.5,
+      z: params.z || 0,
+    };
+
+    if (!particleData) {
       console.warn("ParticleCommand: No particle data provided");
       return;
     }
 
-    const lifetime = particle.lifetime || particle.ttl || 100;
+    const lifetime = particleData.lifetime || 100;
 
     this.sim.particleArrays.addParticle({
-      id: particle.id,
-      pos: particle.pos || { x: 0, y: 0 },
-      vel: particle.vel || { x: 0, y: 0 },
+      id: (particleData as any).id,
+      pos: particleData.pos || { x: 0, y: 0 },
+      vel: particleData.vel || { x: 0, y: 0 },
       lifetime: lifetime,
-      type: particle.type,
-      color: particle.color,
-      radius: particle.radius || particle.size || 0.5,
-      z: particle.z || 0,
-      landed: particle.landed || false,
-      targetCell: particle.targetCell,
+      type: particleData.type || "generic",
+      color: particleData.color || "#FFFFFF",
+      radius: particleData.radius || 0.5,
+      z: particleData.z || 0,
+      landed: (particleData as any).landed || false,
+      targetCell: (particleData as any).targetCell,
     });
   }
 }
