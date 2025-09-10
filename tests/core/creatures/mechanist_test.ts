@@ -406,8 +406,8 @@ describe('Mechanist Showcase', () => {
     sim.step();
     
 
-    expect(simRoller.meta.lastAbilityTick?.chargeAttack).toBeLessThanOrEqual(sim.ticks);
-    expect(simZapper.meta.lastAbilityTick?.zapHighest).toBeLessThanOrEqual(sim.ticks + 1); // May trigger immediately
+    expect((simRoller.meta.lastAbilityTick as any)?.chargeAttack).toBeLessThanOrEqual(sim.ticks);
+    expect((simZapper.meta.lastAbilityTick as any)?.zapHighest).toBeLessThanOrEqual(sim.ticks + 1); // May trigger immediately
   });
 
   it('should verify mechanist synergy with constructs', () => {

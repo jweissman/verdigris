@@ -354,7 +354,7 @@ export class UnitRenderer {
     if (!rig) return;
 
     // Convert object to array if needed
-    let parts = rig;
+    let parts: any[] = rig as any;
     if (!Array.isArray(rig)) {
       // It's an object with named parts - convert to array in drawing order
       const drawOrder = [

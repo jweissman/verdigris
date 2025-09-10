@@ -28,10 +28,10 @@ describe('Hero Rig Engine Integration', () => {
     
     
     expect(riggedHero?.meta?.rig).toBeDefined();
-    expect(riggedHero?.meta?.rig?.length).toBe(7); // 7 body parts
+    expect((riggedHero?.meta?.rig as any[])?.length).toBe(7); // 7 body parts
     
 
-    const torso = riggedHero?.meta?.rig?.find((p: any) => p.name === 'torso');
+    const torso = (riggedHero?.meta?.rig as any[])?.find((p: any) => p.name === 'torso');
     
     expect(torso).toBeDefined();
     expect(torso?.sprite).toBe('hero-torso');
@@ -55,7 +55,7 @@ describe('Hero Rig Engine Integration', () => {
 
     sim.step();
     const hero1 = sim.units.find(u => u.id === 'breathing_hero');
-    const torso1 = hero1?.meta?.rig?.find((p: any) => p.name === 'torso');
+    const torso1 = (hero1?.meta?.rig as any[])?.find((p: any) => p.name === 'torso');
     const initialY = torso1?.offset?.y || 0;
     
     
@@ -65,7 +65,7 @@ describe('Hero Rig Engine Integration', () => {
     }
     
     const hero2 = sim.units.find(u => u.id === 'breathing_hero');
-    const torso2 = hero2?.meta?.rig?.find((p: any) => p.name === 'torso');
+    const torso2 = (hero2?.meta?.rig as any[])?.find((p: any) => p.name === 'torso');
     const finalY = torso2?.offset?.y || 0;
     
     

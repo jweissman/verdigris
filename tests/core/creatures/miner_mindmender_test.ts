@@ -78,7 +78,7 @@ describe('Miner and Mindmender Units', () => {
       expect(minerUnit?.meta.currentOre).toBe(0);
       
 
-      minerUnit.meta.currentOre += 1;
+      (minerUnit.meta.currentOre as number) += 1;
       expect(minerUnit.meta.currentOre).toBe(1);
       
 
@@ -146,8 +146,8 @@ describe('Miner and Mindmender Units', () => {
         Math.pow(distantAlly.pos.y - mindmenderUnit.pos.y, 2)
       );
       
-      expect(nearDistance).toBeLessThanOrEqual(mindmenderUnit.meta.psychicRange);
-      expect(farDistance).toBeGreaterThan(mindmenderUnit.meta.psychicRange);
+      expect(nearDistance).toBeLessThanOrEqual(mindmenderUnit.meta.psychicRange as number);
+      expect(farDistance).toBeGreaterThan(mindmenderUnit.meta.psychicRange as number);
     });
 
     it('should track shield and confuse durations', () => {
@@ -217,7 +217,7 @@ describe('Miner and Mindmender Units', () => {
         Math.pow(minerUnit.pos.x - mindmenderUnit.pos.x, 2) + 
         Math.pow(minerUnit.pos.y - mindmenderUnit.pos.y, 2)
       );
-      expect(distance).toBeLessThanOrEqual(mindmenderUnit.meta.psychicRange);
+      expect(distance).toBeLessThanOrEqual(mindmenderUnit.meta.psychicRange as number);
     });
   });
 });

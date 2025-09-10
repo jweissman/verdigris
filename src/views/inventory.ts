@@ -181,7 +181,7 @@ export class InventoryView {
     });
 
     // HP graph
-    const hpHistory = hero.meta?.hpHistory || [hero.hp];
+    const hpHistory = (hero.meta?.hpHistory as number[]) || [hero.hp];
     elements.push({
       type: "frame",
       x: 165,

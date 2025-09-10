@@ -385,7 +385,7 @@ export class MeleeCombat extends Rule {
 
           if (distSq > meleeRangeSq) continue;
 
-          const coldB = coldData.get(targetId);
+          const coldB = context.getUnitColdData(targetId);
           if (
             coldB?.meta?.jumping ||
             coldB?.tags?.includes("noncombatant") ||

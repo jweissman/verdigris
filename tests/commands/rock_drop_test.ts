@@ -13,7 +13,7 @@ test("rock drop command creates visible falling rock entity", () => {
     pos: { x: 10, y: 10 },
     hp: 100,
     maxHp: 100,
-    team: "player",
+    team: "friendly",
     meta: {},
     tags: ["hero"],
     intendedMove: { x: 0, y: 0 }
@@ -22,8 +22,7 @@ test("rock drop command creates visible falling rock entity", () => {
   console.log("Initial units:", sim.units.length);
   
   // Create and execute rock drop command
-  const rockDrop = new RockDrop();
-  rockDrop.sim = sim;
+  const rockDrop = new RockDrop(sim);
   rockDrop.execute(heroId, {
     targetX: 15,
     targetY: 10
@@ -37,7 +36,7 @@ test("rock drop command creates visible falling rock entity", () => {
   console.log("Spawn command:", JSON.stringify(spawnCommand, null, 2));
   
   // Verify rock entity properties
-  const rockUnit = spawnCommand?.params.unit;
+  const rockUnit = spawnCommand?.params.unit as any;
   expect(rockUnit).toBeTruthy();
   expect(rockUnit.type).toBe("effect");
   expect(rockUnit.id).toContain("rock_");
@@ -73,15 +72,14 @@ test("rock drop with custom damage and radius parameters", () => {
     pos: { x: 10, y: 10 },
     hp: 100,
     maxHp: 100,
-    team: "player",
+    team: "friendly",
     meta: {},
     tags: ["hero"],
     intendedMove: { x: 0, y: 0 }
   });
   
   // Create rock drop with custom parameters
-  const rockDrop = new RockDrop();
-  rockDrop.sim = sim;
+  const rockDrop = new RockDrop(sim);
   rockDrop.execute(heroId, {
     targetX: 20,
     targetY: 20,
@@ -93,7 +91,7 @@ test("rock drop with custom damage and radius parameters", () => {
   const spawnCommand = sim.queuedCommands.find(cmd => cmd.type === "spawn");
   expect(spawnCommand).toBeTruthy();
   
-  const rockUnit = spawnCommand?.params.unit;
+  const rockUnit = spawnCommand?.params.unit as any;
   expect(rockUnit.meta.damage).toBe(100);
   expect(rockUnit.meta.radius).toBe(3);
   
@@ -110,20 +108,19 @@ test("rock drop targeting - defaults to unit position if no target specified", (
     pos: { x: 25, y: 30 },
     hp: 100,
     maxHp: 100,
-    team: "player",
+    team: "friendly",
     meta: {},
     tags: ["hero"],
     intendedMove: { x: 0, y: 0 }
   });
   
   // Execute without specific target
-  const rockDrop = new RockDrop();
-  rockDrop.sim = sim;
+  const rockDrop = new RockDrop(sim);
   rockDrop.execute(heroId, {});
   
   // Find the spawn command
   const spawnCommand = sim.queuedCommands.find(cmd => cmd.type === "spawn");
-  const rockUnit = spawnCommand?.params.unit;
+  const rockUnit = spawnCommand?.params.unit as any;
   
   // Should drop at hero's position
   expect(rockUnit.pos.x).toBe(25);

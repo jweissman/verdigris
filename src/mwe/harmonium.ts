@@ -13,7 +13,7 @@ export class HarmoniumGame extends Game {
     this.sim.sceneBackground = "grad";
     
     // Add simple AI for units to attack
-    this.sim.rules.push(new SimpleAI(this.sim));
+    this.sim.rulebook.push(new SimpleAI());
     
     // Create battle lines
     this.setupMages();

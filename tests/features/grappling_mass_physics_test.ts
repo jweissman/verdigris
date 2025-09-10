@@ -305,7 +305,7 @@ describe('Grappling Mass Physics', () => {
 
 
     const finalHeavy = sim.units.find(u => u.id === 'heavy');
-    expect(finalHeavy!.meta.movementPenalty).toBeGreaterThanOrEqual(firstPenalty);
+    expect(finalHeavy!.meta.movementPenalty as number).toBeGreaterThanOrEqual(firstPenalty);
   });
 
   test('pinned units cannot move even with intended movement', () => {

@@ -18,11 +18,16 @@ export interface UnitMeta {
   jumpBuffered?: boolean;
   jumpBufferTick?: number;
   bufferedJumpParams?: unknown;
+  coyoteTimeLeft?: number;
+  wasGrounded?: boolean;
+  lastJumpTime?: number;
+  movementPenalty?: number;
   
   z?: number; // Vertical position for 3D effects
   falling?: boolean;
   fallSpeed?: number;
   targetZ?: number;
+  flying?: boolean;
   
   // Combat
   facing?: "left" | "right";
@@ -38,19 +43,36 @@ export interface UnitMeta {
   lastMoveTime?: number;
   lastBlinkTime?: number;
   lastDashTime?: number;
+  lastAIAttack?: number;
+  lastAction?: number;
   
   // Status effects
   stunned?: boolean;
   stunDuration?: number;
   frozen?: boolean;
   frozenDuration?: number;
+  frozenTint?: {
+    color?: string;
+    alpha?: number;
+  };
   chilled?: boolean;
   chillIntensity?: number;
   chillDuration?: number;
-  chillTrigger?: boolean;
+  chillTrigger?: {
+    position?: Vec2;
+    radius?: number;
+  } | boolean;
   onFire?: boolean;
   fireDuration?: number;
   electrified?: boolean;
+  statusEffects?: any[]; // Array of status effect objects
+  perdurance?: string; // Type of damage resistance
+  
+  // Environmental effects
+  temperature?: number;
+  humidity?: number;
+  winterActive?: boolean;
+  desertActive?: boolean;
   
   // Abilities
   primaryAbility?: string;
@@ -86,17 +108,55 @@ export interface UnitMeta {
   teleported?: boolean;
   teleportedAtTick?: number;
   
+  // Tossing
+  tossing?: boolean;
+  tossProgress?: number;
+  tossOrigin?: Vec2;
+  tossTarget?: Vec2;
+  tossForce?: number;
+  
+  // Grappling and Tethering
+  grappled?: boolean;
+  grappledBy?: string;
+  grappledDuration?: number;
+  grappleSource?: Vec2;
+  grappleHit?: boolean;
+  grapplerID?: string;
+  grappleOrigin?: Vec2;
+  grappleRange?: number;
+  pinDuration?: number;
+  grapplingRange?: number;
+  harpoonRange?: number;
+  armorPiercing?: number;
+  tethered?: boolean;
+  tetherPoint?: Vec2;
+  maxTetherDistance?: number;
+  
+  // Lightning
+  lightningPath?: Vec2[];
+  lightningBoostDuration?: number;
+  
+  // Shield
+  frostShield?: any;
+  
+  // Airdrop
+  airborne?: boolean;
+  airdropVelocity?: Vec2;
+  dropping?: boolean;
+  dropSpeed?: number;
+  
   // Size
   huge?: boolean;
   phantom?: boolean;
   parentId?: string;
+  width?: number;
+  height?: number;
   
   // Rock/projectile specific
   lifetime?: number;
   frameCount?: number;
   frameSpeed?: number;
   tall?: boolean;
-  height?: number;
   immobile?: boolean;
   damage?: number;
   radius?: number;
@@ -111,6 +171,50 @@ export interface UnitMeta {
   // Chain weapon
   chainSegments?: Vec2[];
   chainLength?: number;
+  
+  // Segmented creatures
+  segmentCount?: number;
+  segmentPositions?: Vec2[];
+  segments?: any[];
+  segmentIndex?: number;
+  segment?: boolean;
+  segmentSlowdown?: number;
+  originalSpeed?: number;
+  moveSpeed?: number;
+  pinned?: boolean;
+  
+  // Damage system
+  pendingDamage?: {
+    amount?: number;
+    aspect?: string;
+    source?: string;
+  };
+  brittle?: boolean;
+  damageTaken?: number;
+  
+  // Additional properties from error analysis
+  show?: boolean; // For renderer
+  chargeAttack?: unknown;
+  zapHighest?: unknown;
+  rig?: unknown;
+  meta?: unknown;
+  pos?: Vec2;
+  color?: unknown;
+  alpha?: unknown;
+  
+  // Rope climbing
+  climbProgress?: number;
+  climbDirection?: number;
+  lineStart?: Vec2;
+  lineEnd?: Vec2;
+  
+  // Health tracking
+  hpHistory?: number[];
+  
+  // Mining
+  currentOre?: number;
+  oreCarryCapacity?: number;
+  psychicRange?: number;
   
   // Misc
   smoothX?: number | null;

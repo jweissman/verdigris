@@ -12,7 +12,7 @@ export class SceneMetadata extends Command {
     switch (metadataType) {
       case "bg":
       case "background":
-        this.sim.setBackground(value);
+        this.sim.setBackground(value as string);
         break;
 
       case "strip":

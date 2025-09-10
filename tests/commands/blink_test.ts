@@ -4,7 +4,7 @@ import { Blink } from "../../src/commands/blink";
 
 test("blink command actually teleports unit instantly without interpolation", () => {
   const sim = new Simulator(40, 40);
-  sim.debug = true;
+  (sim as any).debug = true;
   
   // Create a hero unit at position (10, 10)
   const heroId = "test-hero";
@@ -14,7 +14,7 @@ test("blink command actually teleports unit instantly without interpolation", ()
     pos: { x: 10, y: 10 },
     hp: 100,
     maxHp: 100,
-    team: "player",
+    team: "friendly",
     meta: {
       facing: "right"
     },
@@ -27,8 +27,7 @@ test("blink command actually teleports unit instantly without interpolation", ()
   console.log(`Initial position: (${initialPos.x}, ${initialPos.y})`);
   
   // Create and execute blink command to teleport to (20, 10)
-  const blinkCommand = new Blink();
-  blinkCommand.sim = sim;
+  const blinkCommand = new Blink(sim);
   blinkCommand.execute(heroId, {
     targetX: 20,
     targetY: 10
@@ -100,7 +99,7 @@ test("blink auto-targets enemy and teleports behind them", () => {
     pos: { x: 10, y: 10 },
     hp: 100,
     maxHp: 100,
-    team: "player",
+    team: "friendly",
     meta: { facing: "right" },
     tags: ["hero"],
     intendedMove: { x: 0, y: 0 }
@@ -112,15 +111,14 @@ test("blink auto-targets enemy and teleports behind them", () => {
     pos: { x: 15, y: 10 },
     hp: 50,
     maxHp: 50,
-    team: "enemy",
+    team: "hostile",
     meta: {},
     tags: ["enemy"],
     intendedMove: { x: 0, y: 0 }
   });
   
   // Execute blink without specific target (should auto-target)
-  const blinkCommand = new Blink();
-  blinkCommand.sim = sim;
+  const blinkCommand = new Blink(sim);
   blinkCommand.execute(heroId, {});
   
   // Find move command

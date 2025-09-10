@@ -27,7 +27,7 @@ test("blink should skip interpolation in renderer", () => {
     pos: { x: 10, y: 10 },
     hp: 100,
     maxHp: 100,
-    team: "player",
+    team: "friendly",
     meta: {
       controlled: true
     },

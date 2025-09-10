@@ -52,7 +52,7 @@ export class AICommand extends Command {
         continue;
       }
 
-      postures.set(unit.id, posture || "wait");
+      postures.set(unit.id, (posture as string) || "wait");
     }
 
     const proxyManager = this.sim.getProxyManager();

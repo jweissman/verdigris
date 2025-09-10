@@ -187,10 +187,10 @@ export class SegmentedCreatures extends Rule {
       this.pathHistory.set(parentId, pathHistory);
 
       segments.forEach((segment, index) => {
-        const pathIndex = segment.meta.segmentIndex || index + 1;
+        const pathIndex = (segment.meta.segmentIndex as number) || index + 1;
 
         if (pathIndex < pathHistory.length) {
-          const targetPos = pathHistory[pathIndex];
+          const targetPos = pathHistory[pathIndex as number];
 
           if (segment.pos.x !== targetPos.x || segment.pos.y !== targetPos.y) {
             const dx = targetPos.x - segment.pos.x;
@@ -226,7 +226,7 @@ export class SegmentedCreatures extends Rule {
 
     groups.forEach((segments) => {
       segments.sort(
-        (a, b) => (a.meta.segmentIndex || 0) - (b.meta.segmentIndex || 0),
+        (a, b) => ((a.meta.segmentIndex as number) || 0) - ((b.meta.segmentIndex as number) || 0),
       );
     });
 
@@ -272,7 +272,7 @@ export class SegmentedCreatures extends Rule {
             .getAllUnits()
             .find((u) => u.id === segment.meta.parentId);
           if (parent) {
-            const transferDamage = Math.floor(segment.meta.damageTaken * 0.5);
+            const transferDamage = Math.floor((segment.meta.damageTaken as number) * 0.5);
             if (transferDamage > 0) {
               commands.push({
                 type: "damage",
@@ -311,7 +311,7 @@ export class SegmentedCreatures extends Rule {
                 u.meta.segment &&
                 u.meta.parentId === segment.meta.parentId &&
                 Math.abs(
-                  (u.meta.segmentIndex || 0) - segment.meta.segmentIndex,
+                  ((u.meta.segmentIndex as number) || 0) - (segment.meta.segmentIndex as number),
                 ) === 1,
             );
 
@@ -361,7 +361,7 @@ export class SegmentedCreatures extends Rule {
                 meta: {
                   segmentSlowdown: speedPenalty,
                   originalSpeed: originalSpeed,
-                  moveSpeed: originalSpeed * (1 - speedPenalty),
+                  moveSpeed: (originalSpeed as number) * (1 - speedPenalty),
                 },
               },
             });

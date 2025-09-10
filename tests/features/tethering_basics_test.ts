@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { Simulator } from '../../src/core/simulator';
+import { Vec2 } from '../../src/types/Vec2';
 import Encyclopaedia from '../../src/dmg/encyclopaedia';
 
 describe('Tethering Basics - Step by Step', () => {
@@ -174,19 +175,19 @@ describe('Tethering Basics - Step by Step', () => {
     
 
     if (tetheredUnit.meta.tethered) {
-      const tetherPoint = tetheredUnit.meta.tetherPoint;
+      const tetherPoint = tetheredUnit.meta.tetherPoint as Vec2;
       const intendedX = tetheredUnit.intendedMove.x;
       const intendedY = tetheredUnit.intendedMove.y;
       
-      const dx = intendedX - tetherPoint.x;
-      const dy = intendedY - tetherPoint.y;
+      const dx = intendedX - (tetherPoint as any).x;
+      const dy = intendedY - (tetherPoint as any).y;
       const intendedDist = Math.sqrt(dx * dx + dy * dy);
       
-      if (intendedDist > tetheredUnit.meta.maxTetherDistance) {
+      if (intendedDist > (tetheredUnit.meta.maxTetherDistance as number)) {
 
-        const ratio = tetheredUnit.meta.maxTetherDistance / intendedDist;
-        tetheredUnit.pos.x = tetherPoint.x + dx * ratio;
-        tetheredUnit.pos.y = tetherPoint.y + dy * ratio;
+        const ratio = (tetheredUnit.meta.maxTetherDistance as number) / intendedDist;
+        tetheredUnit.pos.x = (tetherPoint as any).x + dx * ratio;
+        tetheredUnit.pos.y = (tetherPoint as any).y + dy * ratio;
       } else {
         tetheredUnit.pos = { ...tetheredUnit.intendedMove };
       }

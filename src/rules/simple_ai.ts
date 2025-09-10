@@ -1,6 +1,6 @@
 import { Rule } from "./rule";
 import { TickContext } from "../core/tick_context";
-import { QueuedCommand } from "../types/Command";
+import { QueuedCommand } from "../core/command_handler";
 
 /**
  * Simple AI rule that makes units with attack abilities target enemies

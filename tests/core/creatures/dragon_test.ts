@@ -82,7 +82,7 @@ describe('Dragon Test', () => {
     
 
     expect(lancer.meta.armorPiercing).toBeGreaterThan(0);
-    expect(lancer.meta.harpoonRange).toBeGreaterThan(normalGrappler.meta.grapplingRange || 8);
+    expect(lancer.meta.harpoonRange as number).toBeGreaterThan((normalGrappler.meta.grapplingRange as number) || 8);
     
 
     expect(sim.units.length).toBeGreaterThanOrEqual(3);

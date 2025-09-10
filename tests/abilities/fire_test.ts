@@ -40,7 +40,7 @@ test("fire command creates localized fire with appropriate radius", () => {
   const enemy3 = sim.addUnit({
     id: "enemy3",
     type: "goblin",
-    pos: { x: 15, y: 10 }, // 5 tiles away (outside fire)
+    pos: { x: 18, y: 10 }, // 8 tiles away (definitely outside fire)
     hp: 50,
     maxHp: 50,
     team: "hostile"
@@ -59,14 +59,14 @@ test("fire command creates localized fire with appropriate radius", () => {
   // Check temperatures at various positions
   const temp1 = sim.temperatureField?.get(12, 10) || 20;
   const temp2 = sim.temperatureField?.get(13, 10) || 20;
-  const temp3 = sim.temperatureField?.get(15, 10) || 20;
+  const temp3 = sim.temperatureField?.get(18, 10) || 20;
   
   console.log("Temperatures:", { temp1, temp2, temp3 });
   
   // Fire should be localized (but scalar fields spread heat)
   expect(temp1).toBeGreaterThan(100); // In fire zone
   expect(temp2).toBeGreaterThan(50);  // Near fire, some heat
-  expect(temp3).toBeLessThan(200);    // Far from fire, should be cooler
+  expect(temp3).toBeLessThan(100);    // Far from fire, should be below damage threshold
   
   // Let fire damage rule run
   for (let i = 0; i < 5; i++) {

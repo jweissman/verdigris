@@ -28,8 +28,8 @@ describe('Hero Animation Rule', () => {
     );
     
     expect(metaCommand).toBeDefined();
-    expect(metaCommand?.params?.meta?.rig).toBeDefined();
-    expect(metaCommand?.params?.meta?.rig?.length).toBe(7); // 7 body parts
+    expect(((metaCommand?.params?.meta as any)?.rig as any[])).toBeDefined();
+    expect(((metaCommand?.params?.meta as any)?.rig as any[])?.length).toBe(7); // 7 body parts
   });
   
   test('rig parts have correct properties', () => {
@@ -51,7 +51,7 @@ describe('Hero Animation Rule', () => {
       c.type === 'meta' && c.params?.unitId === 'hero1'
     );
     
-    const rig = metaCommand?.params?.meta?.rig;
+    const rig = (metaCommand?.params?.meta as any)?.rig as any[];
     expect(rig).toBeDefined();
     
 
@@ -77,7 +77,7 @@ describe('Hero Animation Rule', () => {
 
     sim.step();
     const hero1 = sim.units.find(u => u.id === 'hero1');
-    const torso1 = hero1?.meta?.rig?.find((p: any) => p.name === 'torso');
+    const torso1 = (hero1?.meta?.rig as any[])?.find((p: any) => p.name === 'torso');
     const initialOffset = torso1?.offset?.y || 0;
     const initialFrame = torso1?.frame || 0;
     
@@ -88,7 +88,7 @@ describe('Hero Animation Rule', () => {
     
 
     const hero2 = sim.units.find(u => u.id === 'hero1');
-    const torso2 = hero2?.meta?.rig?.find((p: any) => p.name === 'torso');
+    const torso2 = (hero2?.meta?.rig as any[])?.find((p: any) => p.name === 'torso');
     const finalOffset = torso2?.offset?.y || 0;
     const finalFrame = torso2?.frame || 0;
     

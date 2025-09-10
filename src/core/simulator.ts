@@ -566,6 +566,12 @@ class Simulator {
 
     const proxy = this.proxyManager.getProxy(index);
     this.unitCache.set(u.id, proxy);
+    
+    // Insert into gridPartition immediately for spatial queries
+    if (proxy) {
+      this.gridPartition.insert(proxy);
+    }
+    
     return proxy;
   }
 
@@ -594,6 +600,12 @@ class Simulator {
 
     const proxy = this.proxyManager.getProxy(index);
     this.unitCache.set(newUnit.id, proxy);
+    
+    // Insert into gridPartition immediately for spatial queries
+    if (proxy) {
+      this.gridPartition.insert(proxy);
+    }
+    
     return proxy;
   }
 

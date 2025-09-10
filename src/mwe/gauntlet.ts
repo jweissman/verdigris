@@ -295,8 +295,8 @@ if (typeof window !== "undefined") {
     });
     
     // Camera follow hero
-    const originalShow = game.renderer.show.bind(game.renderer);
-    game.renderer.show = function() {
+    const originalRender = game.renderer.render.bind(game.renderer);
+    game.renderer.render = function() {
       const hero = game.sim.units.find(u => u.id === "hero");
       if (hero && this.ctx) {
         // Center camera on hero
@@ -309,7 +309,7 @@ if (typeof window !== "undefined") {
         this.ctx.translate(Math.min(0, offsetX), 0);
       }
       
-      originalShow();
+      originalRender();
       
       if (this.ctx) {
         this.ctx.restore();

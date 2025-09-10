@@ -1,5 +1,6 @@
 import { Rule } from "./rule";
 import { Unit } from "../types/Unit";
+import { Vec2 } from "../types/Vec2";
 import type { TickContext } from "../core/tick_context";
 import type { QueuedCommand } from "../core/command_handler";
 
@@ -119,7 +120,7 @@ export class StatusEffects extends Rule {
   }
 
   private applyChillFromTrigger(context: TickContext, unit: Unit): void {
-    const trigger = unit.meta.chillTrigger;
+    const trigger = unit.meta.chillTrigger as { position?: Vec2; radius?: number };
     const centerPos = trigger.position || unit.pos;
     const radius = trigger.radius || 2;
 

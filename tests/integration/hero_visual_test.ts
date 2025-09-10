@@ -78,10 +78,10 @@ describe('Hero Visual Rendering', () => {
 
     
     expect(riggedHero?.meta?.rig).toBeDefined();
-    expect(riggedHero?.meta?.rig?.length).toBe(7);
+    expect((riggedHero?.meta?.rig as any[])?.length).toBe(7);
     
 
-    for (const part of riggedHero?.meta?.rig || []) {
+    for (const part of (riggedHero?.meta?.rig as any[]) || []) {
       const sprite = sprites.get(part.sprite);
 
       expect(sprite).toBeDefined();

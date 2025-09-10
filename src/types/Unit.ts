@@ -31,6 +31,7 @@ export interface Unit {
   mass: number;
   dmg?: number; // Base damage for the unit
   type?: string; // Unit type identifier
+  kind?: string; // Unit kind identifier
   tags?: string[];
   abilities: Array<string>;
   lastAbilityTick?: { [name: string]: number };

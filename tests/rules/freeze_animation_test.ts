@@ -83,8 +83,8 @@ describe('FreezeAnimation', () => {
     
     // Should have frozen tint
     expect(unit.meta?.frozenTint).toBeDefined();
-    expect(unit.meta?.frozenTint?.color).toBe('#4682B4'); // Steel blue
-    expect(unit.meta?.frozenTint?.alpha).toBeGreaterThan(0);
+    expect((unit.meta?.frozenTint as any)?.color).toBe('#4682B4'); // Steel blue
+    expect((unit.meta?.frozenTint as any)?.alpha).toBeGreaterThan(0);
   });
   
   test('creates ice shards periodically', () => {

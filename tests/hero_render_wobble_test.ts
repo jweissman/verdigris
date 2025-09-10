@@ -145,7 +145,7 @@ describe("Hero Rendering Wobble Issue", () => {
         tick: i,
         intendedMove: { ...hero.intendedMove },
         pos: { ...hero.pos },
-        rig: hero.meta?.rig ? [...hero.meta.rig] : null,
+        rig: hero.meta?.rig ? [...(hero.meta.rig as any[])] : null,
       });
       
       console.log(`Tick ${i}: intendedMove=(${hero.intendedMove.x}, ${hero.intendedMove.y}), pos=(${hero.pos.x}, ${hero.pos.y})`);
@@ -200,10 +200,10 @@ describe("Hero Rendering Wobble Issue", () => {
       
       // Capture rig state
       const rigParts = hero.meta?.rig;
-      if (rigParts && rigParts.length > 0) {
+      if (rigParts && (rigParts as any[]).length > 0) {
         rigStates.push({
           tick: i,
-          rig: [...rigParts],
+          rig: [...(rigParts as any[])],
           pos: { ...hero.pos },
         });
         
